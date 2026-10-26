@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Mizon.Windows.InfoWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Mizon.Windows"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:icon="using:FluentIcons.WinUI" xmlns:dev="using:DevWinUI"
+    mc:Ignorable="d"
+    Title="InfoWindow">
+
+   
+
+    <Grid>
+        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,0,10" Orientation="Horizontal">
+            <dev:BubbleButton Padding="0" Width="48" BubbleForeground="#EE1441" Height="48" BorderBrush="#EE1441" CornerRadius="30">
+                <icon:SymbolIcon VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#EE1441" FontSize="20" Symbol="Heart"/>
+            </dev:BubbleButton>
+            <ToggleButton Padding="0" Foreground="PaleVioletRed" BorderBrush="PaleVioletRed" Width="48" Margin="6" Height="48" CornerRadius="35">
+                <icon:SymbolIcon VerticalAlignment="Center" HorizontalAlignment="Center" Symbol="Lightbulb"/>
+            </ToggleButton>
+            <ToggleButton Padding="0" Foreground="LawnGreen" BorderBrush="LawnGreen" Width="48" Margin="6" Height="48" CornerRadius="35">
+                <icon:SymbolIcon VerticalAlignment="Center" HorizontalAlignment="Center" Symbol="WalkieTalkie"/>
+            </ToggleButton>
+            <ToggleButton Padding="0" Foreground="Orange" BorderBrush="Orange" Width="48" Margin="6" Height="48" CornerRadius="35">
+                <icon:SymbolIcon VerticalAlignment="Center" HorizontalAlignment="Center" Symbol="Dust"/>
+            </ToggleButton>
+            <ToggleButton Padding="0" Foreground="Orchid" BorderBrush="Orchid" Width="48" Margin="6" Height="48" CornerRadius="35">
+                <icon:SymbolIcon VerticalAlignment="Center" HorizontalAlignment="Center" Symbol="Earth"/>
+            </ToggleButton>
+        </StackPanel>
+    </Grid>
+</Window>

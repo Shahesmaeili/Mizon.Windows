@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Mizon.Windows.Pages.VPNPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Mizon.Windows.Pages"
+    NavigationCacheMode="Enabled"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:dev="using:DevWinUI" xmlns:icon="using:FluentIcons.WinUI"
+    mc:Ignorable="d">
+
+    <Grid>
+        <dev:Particle IsPointerEnable="True" Density="5" LineColor="{ThemeResource CardBackgroundFillColorSecondary}"/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,32,0,0">
+            <Grid Margin="14,0" Width="140" CornerRadius="8" Padding="16" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                    <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" FontSize="26" Symbol="ArrowDownload"/>
+
+                    <StackPanel Orientation="Vertical" Margin="8,0,0,0">
+                        <TextBlock Text="Download" FontWeight="Bold" Opacity="0.9"/>
+                        <TextBlock Text="244 MB" FontStyle="Italic" Opacity="0.7" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <Grid Margin="14,0" Width="140" CornerRadius="8" Padding="16" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                    <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" FontSize="26" Symbol="TopSpeed"/>
+
+                    <StackPanel Orientation="Vertical" Margin="8,0,0,0">
+                        <TextBlock Text="Ping" FontWeight="Bold" Opacity="0.9"/>
+                        <TextBlock Text="244 MB" FontStyle="Italic" Opacity="0.7" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <Grid Margin="14,0" Width="140" CornerRadius="8" Padding="16" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                    <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" FontSize="26" Symbol="ArrowUpload"/>
+
+                    <StackPanel Orientation="Vertical" Margin="8,0,0,0">
+                        <TextBlock Text="Upload" FontWeight="Bold" Opacity="0.9"/>
+                        <TextBlock Text="244 MB" FontStyle="Italic" Opacity="0.7" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+  
+        
+        
+
+        <Border Canvas.ZIndex="1000000" Width="350" Height="350" CornerRadius="350" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+            <Border Width="310" Height="310" CornerRadius="350" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                <Border Width="290" BorderThickness="0" BorderBrush="{ThemeResource SystemAccentColor}" Height="290" CornerRadius="350" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+
+                    <Border Width="210" Height="210" CornerRadius="350" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                        <Border Width="100" Height="100" CornerRadius="350" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                            <Button HorizontalAlignment="Center" Opacity="0.8" Background="White" VerticalAlignment="Center" Width="80" Height="80" CornerRadius="80">
+                                <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" FontSize="26" Symbol="Power"/>
+
+                            </Button>
+                        </Border>
+                    </Border>
+                </Border>
+            </Border>
+        </Border>
+    </Grid>
+</Page>

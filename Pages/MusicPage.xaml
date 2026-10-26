@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Mizon.Windows.Pages.MusicPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Mizon.Windows.Pages"
+    xmlns:common="using:Mizon.Windows.Common"
+    NavigationCacheMode="Enabled"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:ui="using:CommunityToolkit.WinUI" xmlns:media="using:CommunityToolkit.WinUI.Media" xmlns:icon="using:FluentIcons.WinUI" xmlns:usercontrols="using:Mizon.Windows.UserControls" xmlns:dev="using:DevWinUI" xmlns:viewmodels="using:Mizon.Windows.ViewModels.Items"
+    mc:Ignorable="d">
+
+
+
+    <Grid Padding="10,10,10,0" MaxWidth="1920">
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+
+            <InfoBar Margin="8" Severity="Informational" FlowDirection="RightToLeft"
+    IsOpen="True" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+    IsIconVisible="True"
+    IsClosable="True"
+    Title="عنوان"
+    Message="این یک متن طولانی هست برای تست کردن این قسمت که چطور میشه؟" />
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" MaxWidth="320" MinWidth="200"/>
+                    <ColumnDefinition Width="6*"/>
+                    <ColumnDefinition Width="2*" MaxWidth="320" MinWidth="200"/>
+                </Grid.ColumnDefinitions>
+
+
+
+                <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Hidden">
+                    <Grid Margin="8">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <usercontrols:MusicTopUserControl Grid.Column="1"/>
+
+                            
+
+                            <Grid Grid.Row="1">
+
+                                <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled" VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button BorderBrush="{ThemeResource SystemAccentColor}" CornerRadius="8" Height="180" Margin="0,16" Width="100" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Vertical">
+                                            <icon:SymbolIcon Margin="4" Symbol="AgentsAdd"/>
+                                            <TextBlock FontSize="12" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="افزودن استوری"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <ItemsRepeater ItemsSource="{Binding Stories}">
+                                        <ItemsRepeater.Layout>
+                                            <StackLayout Orientation="Horizontal" Spacing="8"/>
+                                        </ItemsRepeater.Layout>
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="viewmodels:StoryItemViewModel">
+                                                <Button Click="StoryCard_Click" PointerEntered="StoryCard_PointerEntered" PointerExited="StoryCard_PointerExited" Tag="{x:Bind}" Padding="0" Width="100" Height="180" Margin="0,16" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondary}" Opacity="0.8">
+                                                    <Button.OpacityTransition>
+                                                        <ScalarTransition Duration="0:0:0.18"/>
+                                                    </Button.OpacityTransition>
+                                                    <Grid>
+                                                        <Image Source="{x:Bind PreviewImagePath, Mode=OneWay}" Stretch="UniformToFill"/>
+                                                        <Rectangle Fill="#3D0D2238"/>
+                                                        <Grid VerticalAlignment="Top" Margin="8">
+                                                            <Ellipse Width="28" Height="28" StrokeThickness="2" Stroke="{ThemeResource SystemAccentColor}">
+                                                                <Ellipse.Fill>
+                                                                    <ImageBrush ImageSource="{x:Bind CreatorProfileImagePath, Mode=OneWay}" Stretch="UniformToFill"/>
+                                                                </Ellipse.Fill>
+                                                            </Ellipse>
+                                                        </Grid>
+                                                        <StackPanel VerticalAlignment="Bottom" Margin="8" Spacing="2">
+                                                            <TextBlock Text="{x:Bind CreatorDisplayName}" Foreground="White" FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Text="{x:Bind Title}" Foreground="White" FontSize="11" MaxLines="2" TextWrapping="WrapWholeWords" TextTrimming="CharacterEllipsis"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                    </StackPanel>
+                                </ScrollViewer>
+
+                            </Grid>
+
+
+                            <Grid Grid.Row="2">
+                                <ScrollViewer
+                                    HorizontalScrollBarVisibility="Hidden"
+                                    HorizontalScrollMode="Enabled"
+                                    VerticalScrollMode="Disabled"
+                                    VerticalScrollBarVisibility="Disabled">
+                                    <ItemsRepeater ItemsSource="{Binding MusicGenreTypes, Mode=OneWay}">
+                                        <ItemsRepeater.Layout>
+                                            <StackLayout Orientation="Horizontal" Spacing="8"/>
+                                        </ItemsRepeater.Layout>
+
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="viewmodels:MusicGenreTypeItemViewModel">
+                                                <Button
+                                                    Width="154"
+                                                    Height="112"
+                                                    Margin="0,12"
+                                                    Padding="0"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    VerticalContentAlignment="Stretch"
+                                                    Background="Transparent"
+                                                    BorderThickness="0"
+                                                    CornerRadius="10"
+                                                    common:CursorExtensions.Cursor="Hand">
+                                                    <Grid FlowDirection="RightToLeft">
+                                                        <Border CornerRadius="10" Background="{ThemeResource CardBackgroundFillColorSecondary}"/>
+                                                        <Border CornerRadius="10" BorderThickness="1" BorderBrush="{x:Bind AccentBrush, Mode=OneWay}" Opacity="0.55"/>
+                                                        <Border Width="46" Height="46" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="23" Background="{x:Bind AccentBrush, Mode=OneWay}" Opacity="0.18"/>
+                                                        <icon:SymbolIcon Margin="10" HorizontalAlignment="Right" VerticalAlignment="Top" Width="46" Height="46" Symbol="{x:Bind IconSymbol, Mode=OneWay}" Foreground="{x:Bind AccentBrush, Mode=OneWay}" FontSize="21"/>
+
+                                                        <StackPanel Margin="12,12,62,0" VerticalAlignment="Top">
+                                                            <TextBlock Text="{x:Bind PersianTitle, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Text="{x:Bind Title, Mode=OneWay}" Margin="0,3,0,0" FontSize="10" Opacity="0.58" TextTrimming="CharacterEllipsis"/>
+                                                        </StackPanel>
+
+                                                        <StackPanel Margin="12,0" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                                            <TextBlock Text="{x:Bind MusicsCountText, Mode=OneWay}" FontWeight="Bold" FontSize="23" Foreground="{x:Bind AccentBrush, Mode=OneWay}"/>
+                                                            <TextBlock Text="آهنگ" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="9" Opacity="0.55" Margin="0,-3,0,8"/>
+                                                        </StackPanel>
+
+                                                        <Border Height="3" VerticalAlignment="Bottom" CornerRadius="0,0,10,10" Background="{x:Bind AccentBrush, Mode=OneWay}" Opacity="0.9"/>
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                </ScrollViewer>
+                            </Grid>
+
+                            <Grid Grid.Row="3" Margin="0,8,0,24">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <SelectorBar x:Name="SelectorBar1">
+                                    <SelectorBarItem x:Name="SelectorBarItemRecent" Text="Recent" Icon="Clock" />
+                                    <SelectorBarItem x:Name="SelectorBarItemShared" Text="Shared" Icon="Share" />
+                                    <SelectorBarItem x:Name="SelectorBarItemFavorites" Text="Favorites" Icon="Favorite" />
+                                </SelectorBar>
+
+                                <StackPanel Grid.Row="1" Spacing="18" Margin="0,16,0,0">
+                                    <Grid>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <icon:SymbolIcon Symbol="Clock" Foreground="{ThemeResource SystemAccentColor}"/>
+                                            <TextBlock Text="اخیراً پخش شده" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="16" FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                        <HyperlinkButton Content="نمایش همه" HorizontalAlignment="Right" FontSize="12" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"/>
+                                    </Grid>
+
+                                    <ScrollViewer HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled">
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <Button Width="148" Height="214" Padding="0" CornerRadius="10" common:CursorExtensions.Cursor="Hand">
+                                                <Grid><Image Source="/Assets/image1.jpeg" Stretch="UniformToFill"/><Rectangle VerticalAlignment="Bottom" Height="72" Fill="#B0141926"/><StackPanel VerticalAlignment="Bottom" Margin="10"><TextBlock Text="In The Dark" FontWeight="SemiBold"/><TextBlock Text="Dua Lipa • 3:42" Opacity="0.65" FontSize="11"/></StackPanel><Border Width="30" Height="30" CornerRadius="15" Background="{ThemeResource SystemAccentColor}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8"><icon:SymbolIcon Symbol="Play" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border></Grid>
+                                            </Button>
+                                            <Button Width="148" Height="214" Padding="0" CornerRadius="10" common:CursorExtensions.Cursor="Hand">
+                                                <Grid><Image Source="/Assets/image2.jpeg" Stretch="UniformToFill"/><Rectangle VerticalAlignment="Bottom" Height="72" Fill="#B0141926"/><StackPanel VerticalAlignment="Bottom" Margin="10"><TextBlock Text="After Hours" FontWeight="SemiBold"/><TextBlock Text="The Weeknd • 4:01" Opacity="0.65" FontSize="11"/></StackPanel><icon:SymbolIcon Symbol="Heart" Foreground="Salmon" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10"/></Grid>
+                                            </Button>
+                                            <Button Width="148" Height="214" Padding="0" CornerRadius="10" common:CursorExtensions.Cursor="Hand">
+                                                <Grid><Image Source="/Assets/image3.jpeg" Stretch="UniformToFill"/><Rectangle VerticalAlignment="Bottom" Height="72" Fill="#B0141926"/><StackPanel VerticalAlignment="Bottom" Margin="10"><TextBlock Text="Midnight City" FontWeight="SemiBold"/><TextBlock Text="M83 • 4:04" Opacity="0.65" FontSize="11"/></StackPanel><Border Width="30" Height="30" CornerRadius="15" Background="#A0000000" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8"><icon:SymbolIcon Symbol="Play" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border></Grid>
+                                            </Button>
+                                            <Button Width="148" Height="214" Padding="0" CornerRadius="10" common:CursorExtensions.Cursor="Hand">
+                                                <Grid><Image Source="/Assets/image4.jpeg" Stretch="UniformToFill"/><Rectangle VerticalAlignment="Bottom" Height="72" Fill="#B0141926"/><StackPanel VerticalAlignment="Bottom" Margin="10"><TextBlock Text="One More Night" FontWeight="SemiBold"/><TextBlock Text="Maroon 5 • 3:39" Opacity="0.65" FontSize="11"/></StackPanel><icon:SymbolIcon Symbol="MoreHorizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8"/></Grid>
+                                            </Button>
+                                        </StackPanel>
+                                    </ScrollViewer>
+
+                                    <Grid>
+                                        <StackPanel Orientation="Horizontal" Spacing="8"><icon:SymbolIcon Symbol="Sparkle" Foreground="Gold"/><TextBlock Text="برای تو" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="16" FontWeight="SemiBold"/></StackPanel>
+                                    </Grid>
+
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Height="112" Padding="12" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" CornerRadius="10" Background="#242C4A"><Grid><icon:SymbolIcon Symbol="Fire" FontSize="30" Foreground="Orange"/><StackPanel VerticalAlignment="Bottom"><TextBlock Text="ترندهای امروز" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontWeight="SemiBold"/><TextBlock Text="۲۴ آهنگ تازه" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Opacity="0.7" FontSize="11"/></StackPanel></Grid></Button>
+                                        <Button Grid.Column="1" Height="112" Padding="12" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" CornerRadius="10" Background="#213E3A"><Grid><icon:SymbolIcon Symbol="Headphones" FontSize="30" Foreground="MediumAquamarine"/><StackPanel VerticalAlignment="Bottom"><TextBlock Text="Focus Session" FontWeight="SemiBold"/><TextBlock Text="برای تمرکز امروز" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Opacity="0.7" FontSize="11"/></StackPanel></Grid></Button>
+                                        <Button Grid.Column="2" Height="112" Padding="12" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" CornerRadius="10" Background="#402B4E"><Grid><icon:SymbolIcon Symbol="Heart" FontSize="30" Foreground="Violet"/><StackPanel VerticalAlignment="Bottom"><TextBlock Text="Mood: Dreamy" FontWeight="SemiBold"/><TextBlock Text="براساس سلیقهٔ تو" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Opacity="0.7" FontSize="11"/></StackPanel></Grid></Button>
+                                    </Grid>
+
+                                    <Grid>
+                                        <StackPanel Orientation="Horizontal" Spacing="8"><icon:SymbolIcon Symbol="People" Foreground="{ThemeResource SystemAccentColor}"/><TextBlock Text="دوستانت اخیراً گوش داده‌اند" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="16" FontWeight="SemiBold"/></StackPanel>
+                                    </Grid>
+
+                                    <StackPanel Spacing="6">
+                                        <Grid Padding="8" Background="{ThemeResource CardBackgroundFillColorSecondary}" CornerRadius="8"><Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><PersonPicture Width="36" Height="36" ProfilePicture="/Assets/photo2.jpg"/><StackPanel Grid.Column="1" Margin="8,0" VerticalAlignment="Center"><TextBlock Text="سارا این آهنگ را دوست داشت" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="12"/><TextBlock Text="Blinding Lights • The Weeknd" Opacity="0.6" FontSize="11"/></StackPanel><Button Grid.Column="2" VerticalAlignment="Center" CornerRadius="16" Padding="8,4"><icon:SymbolIcon Symbol="Play" FontSize="14"/></Button></Grid>
+                                        <Grid Padding="8" Background="{ThemeResource CardBackgroundFillColorSecondary}" CornerRadius="8"><Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><PersonPicture Width="36" Height="36" ProfilePicture="/Assets/photo4.jpg"/><StackPanel Grid.Column="1" Margin="8,0" VerticalAlignment="Center"><TextBlock Text="امیر پلی‌لیست جدید ساخت" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="12"/><TextBlock Text="Late Night Drive • 18 آهنگ" Opacity="0.6" FontSize="11"/></StackPanel><Button Grid.Column="2" VerticalAlignment="Center" CornerRadius="16" Padding="8,4"><icon:SymbolIcon Symbol="ArrowRight" FontSize="14"/></Button></Grid>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+
+
+                        </Grid>
+
+                    </Grid>
+                </ScrollViewer>
+
+
+                <ScrollViewer Grid.Column="2"
+                              FlowDirection="RightToLeft"
+                              VerticalScrollBarVisibility="Hidden"
+                              VerticalScrollMode="Enabled"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+
+                    <ScrollViewer x:Name="Animated_ScrollViewer"
+                    Margin="8"
+                     MaxWidth="300"
+                                  Height="200"
+                                  VerticalScrollBarVisibility="Hidden"
+                    ViewChanging="Animated_ScrollViewer_ViewChanging">
+                        <ItemsRepeater x:Name="animatedScrollRepeater" >
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Button HorizontalAlignment="Stretch" Padding="12,8" Margin="0,4" CornerRadius="9" HorizontalContentAlignment="Stretch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <Border Width="26" Height="26" CornerRadius="13" Background="{ThemeResource SystemAccentColor}"><icon:SymbolIcon Symbol="Play" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                                            <TextBlock Grid.Column="1" Text="{x:Bind}" Margin="8,0" VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                            <icon:SymbolIcon Grid.Column="2" Symbol="ChevronRight" FontSize="14" Opacity="0.55" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </ScrollViewer>
+
+
+                    <Grid Margin="8,12,8,4" MaxWidth="300">
+                        <TextBlock Text="آخرین نظرها" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="14" FontWeight="SemiBold"/>
+                        <Button HorizontalAlignment="Right" Padding="4,0" Background="Transparent"><TextBlock Text="مشاهده همه" Foreground="{ThemeResource SystemAccentColor}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10"/></Button>
+                    </Grid>
+
+                    <Grid FlowDirection="RightToLeft" MaxWidth="300" Padding="8" CornerRadius="10" Margin="8,4" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Width="4" CornerRadius="2" Background="{ThemeResource SystemAccentColor}"/>
+
+                        <PersonPicture Margin="8" Grid.Column="1" Width="32" ProfilePicture="/Assets/photo.jpg" />
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Opacity="0.9" FontSize="12" FontWeight="SemiBold" Text="نیلوفر"/>
+                            <TextBlock FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Opacity="0.65" FontSize="10" Text="به شدت آهنگ جذابیههه ✨"/>
+                        </StackPanel>
+
+                    </Grid>
+
+                    <Grid FlowDirection="RightToLeft" MaxWidth="300" Padding="8" CornerRadius="10" Margin="8,4" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Width="4" CornerRadius="2" Background="#FFB56B"/>
+
+                        <PersonPicture Margin="8" Grid.Column="1" Width="32" ProfilePicture="/Assets/photo.jpg" />
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Opacity="0.9" FontSize="12" FontWeight="SemiBold" Text="آرین"/>
+                            <TextBlock FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Opacity="0.65" FontSize="10" Text="این ترک رو به پلی‌لیستم اضافه کردم."/>
+                        </StackPanel>
+
+                    </Grid>
+
+                    <Grid FlowDirection="RightToLeft" MinWidth="240" MaxWidth="300" Padding="8" CornerRadius="10" Margin="8,4" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Width="4" CornerRadius="2" Background="#FF8EC7"/>
+
+                        <PersonPicture Margin="8" Grid.Column="1" Width="32" ProfilePicture="/Assets/photo.jpg" />
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Opacity="0.9" FontSize="12" FontWeight="SemiBold" Text="مهسا"/>
+                            <TextBlock FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Opacity="0.65" FontSize="10" Text="کاورش هم خیلی قشنگه."/>
+                        </StackPanel>
+
+                    </Grid>
+
+                    <Grid FlowDirection="RightToLeft" MinWidth="240" MaxWidth="300" Padding="8" CornerRadius="10" Margin="8,4" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Width="4" CornerRadius="2" Background="#7BD9C2"/>
+
+                        <PersonPicture Margin="8" Grid.Column="1" Width="32" ProfilePicture="/Assets/photo.jpg" />
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Opacity="0.9" FontSize="12" FontWeight="SemiBold" Text="سام"/>
+                            <TextBlock FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Opacity="0.65" FontSize="10" Text="میشه شبیه این هم پیشنهاد بدی؟"/>
+                        </StackPanel>
+
+                    </Grid>
+
+                    <Grid Margin="8,12,8,0" Padding="12" CornerRadius="10" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                        <StackPanel Spacing="10">
+                            <Grid>
+                                <TextBlock Text="در صف پخش" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontWeight="SemiBold"/>
+                                <TextBlock HorizontalAlignment="Right" Text="۳ آهنگ" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11" Opacity="0.6"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="38"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <Border Width="34" Height="34" CornerRadius="7"><Image Source="/Assets/image2.jpeg" Stretch="UniformToFill"/></Border>
+                                <StackPanel Grid.Column="1" Margin="8,0" VerticalAlignment="Center"><TextBlock Text="Another Love" FontSize="12"/><TextBlock Text="Tom Odell" FontSize="10" Opacity="0.6"/></StackPanel>
+                                <icon:SymbolIcon Grid.Column="2" Symbol="MoreHorizontal" FontSize="16" VerticalAlignment="Center" Opacity="0.65"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="38"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <Border Width="34" Height="34" CornerRadius="7"><Image Source="/Assets/image3.jpeg" Stretch="UniformToFill"/></Border>
+                                <StackPanel Grid.Column="1" Margin="8,0" VerticalAlignment="Center"><TextBlock Text="Midnight City" FontSize="12"/><TextBlock Text="M83" FontSize="10" Opacity="0.6"/></StackPanel>
+                                <TextBlock Grid.Column="2" Text="۴:۰۳" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" VerticalAlignment="Center" Opacity="0.55"/>
+                            </Grid>
+                            <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="8,5" CornerRadius="7"><TextBlock Text="مشاهدهٔ صف پخش" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11"/></Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="8,12,8,12" Padding="12" CornerRadius="10" Background="#1F3548">
+                        <StackPanel Spacing="9">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icon:SymbolIcon Symbol="Sparkle" Foreground="Gold"/><TextBlock Text="انتخاب امروز" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontWeight="SemiBold"/></StackPanel>
+                            <TextBlock Text="حال‌وهوای امروزت چیه؟" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="12" Opacity="0.85"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6"><Button Padding="8,4" CornerRadius="12"><TextBlock Text="آرام" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11"/></Button><Button Padding="8,4" CornerRadius="12"><TextBlock Text="پر انرژی" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11"/></Button><Button Padding="8,4" CornerRadius="12"><TextBlock Text="غمگین" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11"/></Button></StackPanel>
+                            <TextBlock Text="۱٬۲۸۴ نفر رأی داده‌اند" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" Opacity="0.55"/>
+                        </StackPanel>
+                    </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+
+
+                <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Hidden">
+                    <StackPanel Orientation="Vertical">
+
+
+                        <Grid MinWidth="180" MaxWidth="300" Padding="14" CornerRadius="10" Margin="8" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                            <StackPanel Spacing="10">
+                                <StackPanel Spacing="8" Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="مود سریع" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="14" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                                        <TextBlock Text="پیشنهادها را با حال‌وهوایت هماهنگ کن" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" Opacity="0.62"/>
+                                    </StackPanel>
+                                    <Border VerticalAlignment="Center" Width="28" Height="28" CornerRadius="14" Background="#226EA8FE">
+                                        <icon:SymbolIcon Symbol="Sparkle" Foreground="{ThemeResource SystemAccentColor}"  FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <Grid x:Name="QuickMoodGrid" ColumnSpacing="8" RowSpacing="0">
+                                    <Grid.RowDefinitions><RowDefinition Height="72"/><RowDefinition Height="72"/></Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+                                    <ToggleButton Grid.Row="0" HorizontalAlignment="Stretch" Grid.Column="0" IsChecked="True" Click="ToggleButton_Click" Padding="9" CornerRadius="9" BorderBrush="#7F75B7FF" Background="#1E75B7FF" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" common:CursorExtensions.Cursor="Hand">
+                                        <Grid FlowDirection="RightToLeft"><Grid.ColumnDefinitions><ColumnDefinition Width="32"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Border Width="30" Height="30" CornerRadius="15" Background="#3275B7FF"><icon:SymbolIcon Symbol="Lightbulb" FontSize="15" Foreground="#A9D5FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><StackPanel Grid.Column="1" Margin="7,0,0,0" VerticalAlignment="Center"><TextBlock Text="آرامش" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11" FontWeight="SemiBold"/><TextBlock Text="Chill" FontSize="9" Opacity="0.6"/></StackPanel></Grid>
+                                    </ToggleButton>
+
+                                    <ToggleButton Grid.Row="0" HorizontalAlignment="Stretch" Grid.Column="1" Click="ToggleButton_Click" Padding="9" CornerRadius="9" BorderBrush="#506DD5AA" Background="#18596C9C" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" common:CursorExtensions.Cursor="Hand">
+                                        <Grid FlowDirection="RightToLeft"><Grid.ColumnDefinitions><ColumnDefinition Width="32"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Border Width="30" Height="30" CornerRadius="15" Background="#30596C9C"><icon:SymbolIcon Symbol="Headphones" FontSize="15" Foreground="MediumAquamarine" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><StackPanel Grid.Column="1" Margin="7,0,0,0" VerticalAlignment="Center"><TextBlock Text="تمرکز" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11" FontWeight="SemiBold"/><TextBlock Text="Focus" FontSize="9" Opacity="0.6"/></StackPanel></Grid>
+                                    </ToggleButton>
+
+                                    <ToggleButton Grid.Row="1" HorizontalAlignment="Stretch" Grid.Column="0" Click="ToggleButton_Click" Padding="9" CornerRadius="9" BorderBrush="#50F1A552" Background="#1E5F8A42" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" common:CursorExtensions.Cursor="Hand">
+                                        <Grid FlowDirection="RightToLeft"><Grid.ColumnDefinitions><ColumnDefinition Width="32"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Border Width="30" Height="30" CornerRadius="15" Background="#305F8A42"><icon:SymbolIcon Symbol="Fire" FontSize="15" Foreground="#FFBB72" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><StackPanel Grid.Column="1" Margin="7,0,0,0" VerticalAlignment="Center"><TextBlock Text="انرژی" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11" FontWeight="SemiBold"/><TextBlock Text="Energy" FontSize="9" Opacity="0.6"/></StackPanel></Grid>
+                                    </ToggleButton>
+
+                                    <ToggleButton Grid.Row="1" HorizontalAlignment="Stretch" Grid.Column="1" Click="ToggleButton_Click" Padding="9" CornerRadius="9" BorderBrush="#508F72D3" Background="#1E6D4B93" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" common:CursorExtensions.Cursor="Hand">
+                                        <Grid FlowDirection="RightToLeft"><Grid.ColumnDefinitions><ColumnDefinition Width="32"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Border Width="30" Height="30" CornerRadius="15" Background="#306D4B93"><icon:SymbolIcon Symbol="Clock" FontSize="15" Foreground="#D8C1FF" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><StackPanel Grid.Column="1" Margin="7,0,0,0" VerticalAlignment="Center"><TextBlock Text="نوستالژی" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11" FontWeight="SemiBold"/><TextBlock Text="Memories" FontSize="9" Opacity="0.6"/></StackPanel></Grid>
+                                    </ToggleButton>
+                                </Grid>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid MinWidth="180" MaxWidth="300" Padding="16" CornerRadius="6" Margin="8" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+
+                            <StackPanel Orientation="Vertical">
+
+
+                                <Grid x:Name="ShadowCastGrid" Background="Red"/>
+                                <dev:OffsetBox ShowShadowOnHover="False">
+
+                                    <Border x:Name="ShadowRect" PointerPressed="ShadowRect_PointerPressed" Padding="0" Translation="0,0,39" Loaded="ShadowRect_Loaded" CornerRadius="8" >
+                                        <Border.Shadow>
+                                            <ThemeShadow x:Name="shadow" />
+                                        </Border.Shadow>
+                                        <Image  Source="/Assets/image1.jpeg" />
+
+                                    </Border>
+                                </dev:OffsetBox>
+                                <PipsPager HorizontalAlignment="Center" Margin="0" Padding="0"
+    Orientation="Horizontal"
+    PreviousButtonVisibility="Visible"
+    NextButtonVisibility="Visible" />
+                                <Grid Margin="0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Column="0" ElementSoundMode="Off" Click="Button_Click" Margin="2" Width="34" Padding="0" Height="34" CornerRadius="30">
+                                        <icon:SymbolIcon FontSize="10" Symbol="ArrowLeft"/>
+                                    </Button>
+
+                                    <Button Grid.Column="1" Margin="2" Width="34" Padding="0" Height="34" CornerRadius="30">
+                                        <icon:SymbolIcon FontSize="10" Symbol="ArrowRight"/>
+                                    </Button>
+
+                                    <TextBlock TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Opacity="0.9" Grid.Column="2" Margin="2" FontSize="16" HorizontalAlignment="Right" FontWeight="Bold" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="عنوان تست"/>
+
+                                </Grid>
+                                <TextBlock FontSize="12" FlowDirection="RightToLeft" TextWrapping="Wrap" Opacity="0.6" HorizontalAlignment="Right" FontWeight="Bold" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="عنوان تست جهت نمایش یک متن بزرگ به که صورت دو خطی نمایش داده میشود."/>
+
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid MinWidth="180" BorderThickness="0" BorderBrush="{ThemeResource CardBackgroundFillColorSecondary}" Height="80" MaxWidth="300" Padding="16" CornerRadius="6" Margin="8" Background="{ThemeResource SystemAccentColor}">
+                            <Grid>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="کتابخانهٔ تو" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontWeight="SemiBold"/>
+                                    <TextBlock Text="۱۲۸ آهنگ • ۷ پلی‌لیست" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11" Opacity="0.75" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <icon:SymbolIcon Symbol="MusicNote2" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="26" Opacity="0.8"/>
+                            </Grid>
+                        </Grid>
+
+                        <Grid MinWidth="180" MaxWidth="300" Padding="14" CornerRadius="8" Margin="8" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                            <StackPanel Spacing="9">
+                                <TextBlock Text="فعالیت این هفته" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontWeight="SemiBold"/>
+                                <Grid Height="6" CornerRadius="3" Background="#2AFFFFFF"><Grid.ColumnDefinitions><ColumnDefinition Width="72*"/><ColumnDefinition Width="28*"/></Grid.ColumnDefinitions><Border CornerRadius="3" Background="{ThemeResource SystemAccentColor}"/></Grid>
+                                <Grid><TextBlock Text="۸ ساعت و ۴۲ دقیقه شنیدی" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11" Opacity="0.7"/><TextBlock HorizontalAlignment="Right" Text="+۱۸٪" Foreground="MediumAquamarine" FontSize="11"/></Grid>
+                            </StackPanel>
+                        </Grid>
+
+
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+
+
+    </Grid>
+
+</Page>

@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+  xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+  xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
+  IgnorableNamespaces="uap rescap com desktop4 desktop5">
+
+  <Identity
+    Name="83999a60-c1ad-4cca-af16-4c69bf4a0067"
+    Publisher="CN=alish"
+    Version="1.0.0.0"
+    ProcessorArchitecture="x64" />
+
+  <mp:PhoneIdentity PhoneProductId="83999a60-c1ad-4cca-af16-4c69bf4a0067" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+
+  <Properties>
+    <DisplayName>Mizon.Windows</DisplayName>
+    <PublisherDisplayName>alish</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="$targetentrypoint$">
+      <uap:VisualElements
+        DisplayName="Mizon.Windows"
+        Description="Mizon.Windows"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+
+
+		<Extensions>
+			<uap:Extension Category="windows.protocol">
+				<uap:Protocol Name="mizon">
+					<uap:DisplayName>Mizon App</uap:DisplayName>
+				</uap:Protocol>
+			</uap:Extension>
+
+			<com:Extension Category="windows.comServer">
+				<com:ComServer>
+					<com:SurrogateServer DisplayName="Mizon File Explorer commands">
+						<com:Class
+							Id="E72D6A3B-29A8-4B1F-B0FB-D78D3DF8B8B7"
+							Path="ExplorerCommands\Mizon.Windows.ExplorerCommands.comhost.dll"
+							ThreadingModel="STA" />
+						<com:Class
+							Id="C1B40E19-79ED-4A8A-A099-9F7B4A5DD7E3"
+							Path="ExplorerCommands\Mizon.Windows.ExplorerCommands.comhost.dll"
+							ThreadingModel="STA" />
+					</com:SurrogateServer>
+				</com:ComServer>
+			</com:Extension>
+
+			<desktop4:Extension Category="windows.fileExplorerContextMenus">
+				<desktop4:FileExplorerContextMenus>
+					<desktop5:ItemType Type="*">
+						<desktop5:Verb
+							Id="Mizon"
+							Clsid="E72D6A3B-29A8-4B1F-B0FB-D78D3DF8B8B7" />
+					</desktop5:ItemType>
+					<desktop5:ItemType Type="Directory">
+						<desktop5:Verb
+							Id="MizonDirectory"
+							Clsid="E72D6A3B-29A8-4B1F-B0FB-D78D3DF8B8B7" />
+					</desktop5:ItemType>
+					<desktop5:ItemType Type="Directory\Background">
+						<desktop5:Verb
+							Id="MizonSiloDesktop"
+							Clsid="C1B40E19-79ED-4A8A-A099-9F7B4A5DD7E3" />
+					</desktop5:ItemType>
+				</desktop4:FileExplorerContextMenus>
+			</desktop4:Extension>
+
+
+			<uap:Extension Category="windows.shareTarget" Executable="Mizon.Windows.exe" EntryPoint="Mizon.Windows.App">
+				<uap:ShareTarget>
+					<uap:SupportedFileTypes>
+						<uap:FileType>.txt</uap:FileType>
+					</uap:SupportedFileTypes>
+		
+				</uap:ShareTarget>
+			</uap:Extension>
+		</Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+	  <DeviceCapability Name="bluetooth" />
+	  <DeviceCapability Name="bluetooth.genericAttributeProfile" />
+	  <DeviceCapability Name="location" />
+
+  </Capabilities>
+
+	
+
+
+
+
+</Package>

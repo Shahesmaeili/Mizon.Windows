@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="Mizon.Windows.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Mizon.Windows" xmlns:converters="using:Mizon.Windows.Converters" RequestedTheme="Dark">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <ResourceDictionary Source="Generic.xaml"/>
+                <ResourceDictionary Source="Themes/StoreCarousel.xaml"/>
+                <!-- Other merged dictionaries here -->
+
+                <ResourceDictionary Source="ms-appx:///DevWinUI/Themes/Generic.xaml" />
+
+            </ResourceDictionary.MergedDictionaries>
+            <!-- Other app resources here -->
+
+            <FontFamily x:Key="IranSansFont">ms-appx:///Assets/Fonts/IRANSANS.TTF#IRANSans</FontFamily>
+
+            <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+            <converters:NullOrEmptyToCollapsedConverter x:Key="NullOrEmptyToCollapsedConverter"/>
+            <converters:CollectionToVisibilityConverter x:Key="CollectionToVisibilityConverter"/>
+            <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
+            <converters:BoolToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

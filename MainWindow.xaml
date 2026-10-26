@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Mizon.Windows.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Mizon.Windows"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+
+    Title="Mizon.Windows">
+  
+    <Grid x:Name="RootGrid">
+
+        <Grid.Resources>
+            <!--<SolidColorBrush x:Key="TeachingTipTransientBackground" 
+                 Color="{ThemeResource DesktopAcrylicTransparentBrush}" />-->
+
+
+         
+                
+
+        </Grid.Resources>
+
+        <!--<Grid Background="Red" x:Name="DragAreaOverlayGrid" IsHitTestVisible="False" HorizontalAlignment="Stretch" Height="48" VerticalAlignment="Top"/>-->
+
+        <Frame x:Name="MainFrame"/>
+
+
+
+        <TeachingTip x:Name="MainTeachingTip"  Style="{ThemeResource TransparentTeachingTipStyle}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FlowDirection="RightToLeft" IsLightDismissEnabled="True" PlacementMargin="20" >
+            <TeachingTip.IconSource>
+                <SymbolIconSource Symbol="Emoji" />
+            </TeachingTip.IconSource>
+         
+        </TeachingTip>
+
+
+        <!--<Button Content="asdasd" Click="Button_Click_1">
+            
+        </Button>-->
+    </Grid>
+</Window>

@@ -1,0 +1,1244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Mizon.Windows.Pages.MusicsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Mizon.Windows.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:common="using:Mizon.Windows.Common"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    NavigationCacheMode="Enabled" 
+    xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:icon="using:FluentIcons.WinUI" xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
+    mc:Ignorable="d"
+    xmlns:dev="using:DevWinUI"
+    xmlns:media="using:CommunityToolkit.WinUI.Media"
+    xmlns:toolkit="using:CommunityToolkit.WinUI"
+    xmlns:lottie="using:CommunityToolkit.WinUI.Lottie" xmlns:viewmodels="using:Mizon.Windows.ViewModels" xmlns:viewmodelsItems="using:Mizon.Windows.ViewModels.Items" xmlns:converters="using:Mizon.Windows.Converters" xmlns:lvc="using:LiveChartsCore.SkiaSharpView.WinUI" d:DataContext="{d:DesignInstance Type=viewmodels:MusicPageViewModel}"
+    Loaded="MainWindow_Loaded"
+    xmlns:skia="using:LiveChartsCore.SkiaSharpView"
+    SizeChanged="Page_SizeChanged">
+
+    <Page.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+        <ControlTemplate x:Key="MusicPlaylistMenuFlyoutItemTemplate" TargetType="MenuFlyoutItem">
+            <CheckBox
+                MinWidth="220"
+                Margin="16,8"
+                IsChecked="{Binding ContainsCurrentMusic, Mode=TwoWay}"
+                Click="MusicPlaylistCheckBox_Click">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border CornerRadius="8" Width="48" Height="48" Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                        <Image Stretch="Fill" Source="{Binding LastMusicCoverImagePath}"/>
+                    </Border>
+
+                    <StackPanel Orientation="Vertical" VerticalAlignment="Center" Grid.Column="1" Margin="12,0">
+                        <TextBlock FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="12" Opacity="0.9" Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" Opacity="0.7" FontStyle="Italic" Text="{Binding MusicsCountText}"/>
+                    </StackPanel>
+                </Grid>
+            </CheckBox>
+        </ControlTemplate>
+
+        <DataTemplate x:Key="MusicDetailsCardTemplate" x:DataType="viewmodelsItems:MusicDetailsMusicItemViewModel">
+            <dev:OffsetBox ShowShadowOnHover="False">
+                <Button Tag="{x:Bind}" Click="MusicDetailsMusicCard_Click" Padding="0" Width="260" Height="300" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondary}" common:CursorExtensions.Cursor="Hand">
+                    <Grid Padding="16">
+                        <Border CornerRadius="8" VerticalAlignment="Top" Height="184">
+                            <Image Source="{x:Bind CoverImagePath, Mode=OneWay}" Stretch="UniformToFill"/>
+                        </Border>
+                        <Border Width="60" Height="60" CornerRadius="30" Margin="16,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Background="#CC000000">
+                            <icon:SymbolIcon HorizontalAlignment="Center" VerticalAlignment="Center" Symbol="Play"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Bottom" Spacing="5">
+                            <TextBlock Text="{x:Bind Title, Mode=OneWay}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{x:Bind PersianTitle, Mode=OneWay}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11" Opacity="0.75" TextTrimming="CharacterEllipsis"/>
+                            <Grid>
+                                <ItemsRepeater ItemsSource="{x:Bind Contributors, Mode=OneWay}">
+                                    <ItemsRepeater.Layout><StackLayout Orientation="Horizontal" Spacing="4"/></ItemsRepeater.Layout>
+                                    <ItemsRepeater.ItemTemplate>
+                                        <DataTemplate x:DataType="viewmodelsItems:MusicDetailsContributorItemViewModel">
+                                            <TextBlock Text="{x:Bind FullName, Mode=OneWay}" FontSize="10" Opacity="0.7" TextTrimming="CharacterEllipsis"/>
+                                        </DataTemplate>
+                                    </ItemsRepeater.ItemTemplate>
+                                </ItemsRepeater>
+                                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
+                                    <icon:SymbolIcon Symbol="Heart" FontSize="14" Foreground="{ThemeResource SystemAccentColor}"/>
+                                    <TextBlock Text="{x:Bind LikesCountText, Mode=OneWay}" FontSize="11" Opacity="0.8"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </Button>
+            </dev:OffsetBox>
+        </DataTemplate>
+    </Page.Resources>
+
+    <Grid x:Name="MainGrid" MaxWidth="1920">
+
+
+
+        <ScrollViewer VerticalScrollBarVisibility="Hidden" VerticalScrollMode="Auto" HorizontalScrollMode="Disabled">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+
+                    <RowDefinition Height="*"/>
+
+                </Grid.RowDefinitions>
+
+                <Grid Margin="32,16,32,0" VerticalAlignment="Top" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+
+
+
+                    <Grid>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
+
+
+                        <Grid x:Name="TopGrid" Margin="32,32,32,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Grid.ChildrenTransitions>
+                                <TransitionCollection>
+                                    <RepositionThemeTransition IsStaggeringEnabled="False" />
+                                </TransitionCollection>
+                            </Grid.ChildrenTransitions>
+
+
+                            <Grid x:Name="ShadowCastGrid" Grid.Column="0" />
+                            <Border Width="280" x:Name="MusicBorder" Loaded="MusicBorder_Loaded" Height="280" Grid.Column="0" Translation="0,0,50" CornerRadius="8">
+                                <Border.Shadow>
+                                    <ThemeShadow x:Name="shadow" />
+                                </Border.Shadow>
+                                <Grid>
+                                    <!--<Image Stretch="Fill" Source="/Assets/image1.jpeg">
+                                    </Image>-->
+
+                                    <Image common:CursorExtensions.Cursor="Hand" Stretch="Fill" x:Name="CoverImage" PointerPressed="Image_PointerPressed" Source="{Binding CoverImagePath}">
+
+                                        <Image.Lights>
+                                            <dev:AmbLight/>
+                                            <dev:HoverLight/>
+                                            <dev:RippleLight/>
+                                        </Image.Lights>
+                                    </Image>
+                                </Grid>
+                            </Border>
+
+                            <Grid x:Name="MusicInforationGrid" Grid.Column="1" Margin="32,16,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+
+                                    <StackPanel VerticalAlignment="Top" Orientation="Horizontal">
+
+                                        <Grid >
+                                            <Button x:Name="PlayPauseButton" Padding="0" common:CursorExtensions.Cursor="Hand" Command="{Binding PlayCommand}" Width="60" Height="60" CornerRadius="30">
+                                                <Grid>
+                                                    <dev:WaveProgressBar Value="{Binding MusicDownloadProgress, Mode=OneWay}" Visibility="{Binding IsMusicDownloading, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" WaveThickness="0" Background="Transparent" Width="60" Height="60" ShowText="False"/>
+                                                    <controls:MorphingGeometry
+                                                        Width="30"
+                                                        Height="30"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        AnimationDuration="0:0:0.5"
+                                                        FillColor="#80FFFFFF"
+                                                        PrimarySymbol="Play"
+                                                        SecondarySymbol="Pause"
+                                                        IconVariant="Regular"
+                                                        IsSecondary="{Binding IsPlaying, Mode=OneWay}" />
+                                                </Grid>
+
+                                            </Button>
+
+                                            <ToggleButton IsChecked="{Binding IsRepeatEnabled, Mode=TwoWay}" common:CursorExtensions.Cursor="Hand"  HorizontalAlignment="Right" Margin="0,0,-4,-8" Padding="0" VerticalAlignment="Bottom" CornerRadius="20" Width="30" Height="30">
+                                                <icon:SymbolIcon IconVariant="Regular" Foreground="#80FFFFFF" FontSize="12" Symbol="ArrowRepeatAll">
+
+                                                </icon:SymbolIcon>
+                                            </ToggleButton>
+                                        </Grid>
+
+
+                                    </StackPanel>
+
+
+
+                                    <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock 
+                                                TextTrimming="CharacterEllipsis"
+                                                IsTextSelectionEnabled="True"
+                                                FontWeight="Bold"
+                                                FontSize="24"
+                                                Text="{Binding Title, Mode=OneWay}"/>
+
+                                            <TextBlock 
+                                                TextTrimming="CharacterEllipsis" 
+                                                IsTextSelectionEnabled="True" 
+                                                FontSize="22"
+                                                Margin="8,0,0,0"
+                                                FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" 
+                                                Text="{Binding PersianTitle, Mode=OneWay}"
+                                                Visibility="{Binding PersianTitle, Mode=OneWay, Converter={StaticResource NullOrEmptyToCollapsedConverter}}"/>
+
+                                            <TextBlock 
+                                                TextTrimming="CharacterEllipsis" 
+                                                Margin="8,0,0,0" 
+                                                Foreground="{ThemeResource SystemAccentColor}" 
+                                                VerticalAlignment="Center" 
+                                                common:CursorExtensions.Cursor="Hand"  
+                                                FontSize="20" 
+                                                Text="{Binding AlbumTitle, Mode=OneWay}"
+                                                Visibility="{Binding AlbumPublicId, Mode=OneWay, Converter={StaticResource NullToCollapsedConverter}}"/>
+
+                                            <Button common:CursorExtensions.Cursor="Hand" BorderBrush="{ThemeResource SystemAccentColor}" CornerRadius="8" Margin="16,0,0,0" BorderThickness="1" Height="34" VerticalAlignment="Center" >
+                                                <Button.Resources>
+                                                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{ThemeResource SystemAccentColorDark1}" />
+                                                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{ThemeResource SystemAccentColorDark1}" />
+                                                </Button.Resources>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <icon:SymbolIcon IconVariant="Regular" Foreground="#80FFFFFF" FontSize="18" Symbol="Eye"/>
+                                                    <TextBlock Foreground="#80FFFFFF" Margin="8,0,0,0" Text="{Binding ViewsCount, Mode=OneWay}"/>
+
+                                                    <Grid Width="1" CornerRadius="1" Background="#80FFFFFF" Margin="8,2"/>
+
+                                                    <icon:SymbolIcon IconVariant="Regular" Foreground="#80FFFFFF" FontSize="18" Symbol="EyeLines"/>
+                                                    <TextBlock Foreground="#80FFFFFF" Margin="8,0,0,0" Text="{Binding LiveViewsCount, Mode=OneWay}"/>
+
+                                                </StackPanel>
+                                            </Button>
+
+                                            <!--<Button common:CursorExtensions.Cursor="Hand" BorderBrush="Gold" CornerRadius="8" Margin="8,0,0,0" BorderThickness="1" Height="34" VerticalAlignment="Center" >
+                                                <Button.Resources>
+                                                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Gold" />
+                                                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Gold" />
+                                                </Button.Resources>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <icon:SymbolIcon IconVariant="Regular" Foreground="Gold" FontSize="18" Symbol="Scratchpad"/>
+                                                    <TextBlock Foreground="Gold" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="12" Margin="8,0,0,0" Text="پیش نمایش"/>
+                                                </StackPanel>
+                                            </Button>-->
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <HyperlinkButton 
+                                                Content="{Binding LableTitle, Mode=OneWay}"
+                                                Visibility="{Binding LablePublicId, Mode=OneWay, Converter={StaticResource NullToCollapsedConverter}}"/>
+
+
+                                            <ItemsRepeater 
+                                                ItemsSource="{Binding Genres, Mode=OneWay}">
+                                                <ItemsRepeater.Layout>
+                                                    <StackLayout Orientation="Horizontal" Spacing="4"/>
+                                                </ItemsRepeater.Layout>
+
+                                                <ItemsRepeater.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button 
+                                                            Content="{Binding Title, Mode=OneWay}"
+                                                            Padding="6,4"
+                                                            FontSize="10"
+                                                            CornerRadius="8"
+                                                            BorderThickness="0"
+                                                            Foreground="#B2FFFFFF"
+                                                            common:CursorExtensions.Cursor="Hand"/>
+                                                    </DataTemplate>
+                                                </ItemsRepeater.ItemTemplate>
+                                            </ItemsRepeater>
+
+
+
+                                            <TextBlock Margin="8,0,0,0" Foreground="#B2FFFFFF" VerticalAlignment="Center" FontSize="14" Text="{Binding Duration, Mode=OneWay}"/>
+
+                                        </StackPanel>
+
+                                       
+
+                                    </StackPanel>
+
+                                </StackPanel>
+
+                                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+
+                                    <TextBlock 
+                                        Text="{Binding CurrentPosition, Mode=OneWay}" 
+                                        Foreground="#B2FFFFFF" 
+                                        Margin="8,0" 
+                                        VerticalAlignment="Center"/>
+
+
+                                    <Button Margin="2,0" Background="{ThemeResource SystemAccentColor}" Padding="10" Click="Button_Click" common:CursorExtensions.Cursor="Hand">
+                                        <icon:SymbolIcon Opacity="0.8" FontSize="16" Symbol="ArrowDownload"/>
+                                    </Button>
+
+
+                                    <Button Margin="2,0" Padding="10" Command="{Binding DesktopShortcutCommand}" common:CursorExtensions.Cursor="Hand">
+                                        <icon:SymbolIcon Opacity="0.5" FontSize="16" Symbol="Desktop"/>
+                                    </Button>
+                                    <Button Margin="2,0" Padding="10" common:CursorExtensions.Cursor="Hand">
+                                        <icon:SymbolIcon Opacity="0.5" FontSize="16" Symbol="PictureInPicture"/>
+                                    </Button>
+                                    <Button Margin="2,0" Command="{Binding CopyLinkCommand}" Padding="10" common:CursorExtensions.Cursor="Hand">
+                                        <icon:SymbolIcon Opacity="0.5" FontSize="16" Symbol="Copy"/>
+                                    </Button>
+                                </StackPanel>
+
+
+                                <!--<ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled" HorizontalScrollMode="Enabled">
+                                <Canvas  Height="100" MinWidth="1000" HorizontalAlignment="Left" Margin="0,16" x:Name="EqualizerCanvas"/>
+                            </ScrollViewer>-->
+
+                                <ScrollViewer Grid.Row="1"
+                                              HorizontalScrollBarVisibility="Hidden"
+                                              VerticalScrollMode="Disabled"
+                                              HorizontalScrollMode="Enabled">
+                                    <Grid Width="1500" Height="110">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="6*" />
+                                            <RowDefinition Height="3*" />
+                                        </Grid.RowDefinitions>
+
+                                        <ItemsRepeater Grid.RowSpan="2" ItemsSource="{Binding Bars}">
+
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate>
+                                                <!-- عرض 6 همان 2px bar به‌علاوهٔ فاصلهٔ دو طرف آن است؛
+                                                     بنابراین فضای بین barها هم hit-target همین item می‌ماند. -->
+                                                <Grid x:Name="EqualizerGrid" Width="6" Background="Transparent">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="6*"/>
+                                                        <RowDefinition Height="3*"/>
+                                                    </Grid.RowDefinitions>
+                                                    <!-- ردیف بالا فقط برای نمایش پیش‌نمایش و seek است. -->
+                                                    <Grid Background="Transparent"
+                                                          common:CursorExtensions.Cursor="Hand"
+                                                          PointerPressed="TopEqualizerGrid_PointerPressed"
+                                                          PointerEntered="TopEqualizerGrid_PointerEntered"
+                                                          PointerExited="TopEqualizerGrid_PointerExited">
+                                                        <Border Width="2" CornerRadius="1"
+                                                                Height="{Binding TopHeight}"
+                                                                Background="{Binding TopColor}"
+                                                                VerticalAlignment="Bottom">
+                                                            <Border.BackgroundTransition>
+                                                                <BrushTransition Duration="0:0:0.3"/>
+                                                            </Border.BackgroundTransition>
+                                                        </Border>
+                                                    </Grid>
+
+                                                    <!-- ردیف پایین فقط نقطهٔ ثبت کامنت همان لحظه از آهنگ است. -->
+                                                    <Grid Grid.Row="1" Background="Transparent"
+                                                          common:CursorExtensions.Cursor="Hand"
+                                                          PointerPressed="BottomEqualizerGrid_PointerPressed"
+                                                          PointerEntered="BottomEqualizerGrid_PointerEntered"
+                                                          PointerExited="BottomEqualizerGrid_PointerExited">
+                                                        <Border Width="2" CornerRadius="1"
+                                                                Height="{Binding BottomHeight}"
+                                                                Background="{Binding BottomColor}"
+                                                                VerticalAlignment="Top" Margin="0,6,0,0">
+                                                            <Border.BackgroundTransition>
+                                                                <BrushTransition Duration="0:0:0.18"/>
+                                                            </Border.BackgroundTransition>
+                                                        </Border>
+                                                    </Grid>
+
+                                                </Grid>
+
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+
+                                        <ItemsRepeater.Layout>
+                                            <StackLayout Orientation="Horizontal" />
+                                        </ItemsRepeater.Layout>
+                                        </ItemsRepeater>
+
+                                        <!-- خطوط بخش‌های خوانندگی؛ فعلاً دادهٔ نمایشی هاردکد شده است. -->
+                                        <ItemsControl Grid.Row="1" ItemsSource="{Binding VocalSegments}" IsHitTestVisible="False">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <Canvas Width="1500" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemContainerStyle>
+                                                <Style TargetType="ContentPresenter">
+                                                    <Setter Property="HorizontalAlignment" Value="Left" />
+                                                </Style>
+                                            </ItemsControl.ItemContainerStyle>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Width="{Binding Width}" Opacity="0.8" Height="2"
+                                                            VerticalAlignment="Top" Margin="0,2,0,0" Background="{Binding Color}" CornerRadius="2">
+                                                        <Border.RenderTransform>
+                                                            <TranslateTransform X="{Binding CanvasLeft}" />
+                                                        </Border.RenderTransform>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <!-- شنونده‌های زنده روی نوارهای بالایی waveform قرار می‌گیرند. -->
+                                        <ItemsControl Grid.RowSpan="2" ItemsSource="{Binding MusicListeners}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <Canvas Width="1500" Height="110" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Width="20" Height="20" Padding="0" Opacity="0.8"
+                                                            BorderThickness="1" BorderBrush="{Binding BorderBrush}"
+                                                            CornerRadius="10" common:CursorExtensions.Cursor="Hand"
+                                                            ToolTipService.ToolTip="در حال شنیدن">
+                                                        <Button.RenderTransform>
+                                                            <TranslateTransform X="{Binding CanvasLeft}" Y="64" />
+                                                        </Button.RenderTransform>
+                                                        <Image Source="{Binding ImageSource}" Stretch="Fill" />
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <!-- markerهای کامنت دقیقاً روی قسمت پایینی waveform قرار می‌گیرند. -->
+                                        <ItemsControl Grid.RowSpan="2" ItemsSource="{Binding EqualizerComments}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <Canvas Width="1500" Height="110" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemContainerStyle>
+                                                <Style TargetType="ContentPresenter">
+                                                    <Setter Property="Canvas.ZIndex" Value="{Binding ZIndex}" />
+                                                </Style>
+                                            </ItemsControl.ItemContainerStyle>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Width="28" Margin="0,4,0,0" Height="28" Opacity="0.5" BorderBrush="White" CornerRadius="14"
+                                                            Padding="0" Command="{Binding Command}" PointerEntered="Button_PointerEntered">
+                                                        <Button.RenderTransform>
+                                                            <TranslateTransform X="{Binding CanvasLeft}" Y="{Binding CanvasTop}" />
+                                                        </Button.RenderTransform>
+                                                        <Image Source="{Binding ImageSource}" Stretch="UniformToFill" />
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+                                </ScrollViewer>
+
+                                <!--<ItemsControl Margin="0,66,0,0" Grid.Row="1" ItemsSource="{Binding EqualizerComments, Mode=OneWay}">
+
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Canvas Width="800"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style TargetType="ContentPresenter">
+                                        -->
+                                <!-- مستقیماً از CanvasLeft و CanvasTop استفاده می‌کنیم -->
+                                <!--
+                                        <Setter Property="Canvas.Left" Value="{Binding CanvasLeft, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Setter Property="Canvas.Top" Value="{Binding CanvasTop}" />
+                                        <Setter Property="Canvas.ZIndex" Value="{Binding ZIndex}" />
+                                    </Style>
+                                </ItemsControl.ItemContainerStyle>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button 
+                                           
+                                            Width="{Binding Width}" 
+                            Height="{Binding Height}"
+                            Opacity="{Binding Opacity}"
+                            BorderBrush="White"
+                            CornerRadius="14"
+                            Padding="0"
+                                                PointerEntered="Button_PointerEntered"
+                            Command="{Binding Command}">
+                                            <Image Source="{Binding ImageSource}" />
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+
+                            </ItemsControl>-->
+
+                                <StackPanel Margin="0,8,0,0" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left">
+
+                                    <dev:BubbleButton Width="48" x:Name="LikeButton" Click="LikeButton_Click" common:CursorExtensions.Cursor="Hand" BubbleForeground="#EE1441" Padding="0" UseLayoutRounding="True" Height="48" BorderThickness="1" BorderBrush="#EE1441" CornerRadius="24">
+                                        <dev:BubbleButton.Resources>
+                                            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#EE1441" />
+                                            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#EE1441" />
+                                        </dev:BubbleButton.Resources>
+                                        <icon:SymbolIcon IconVariant="Regular" Opacity="0.5" Foreground="#EE1441" FontSize="20" Symbol="Heart"/>
+                                    </dev:BubbleButton>
+
+                                    <Button x:Name="LikesButton" BorderThickness="1" common:CursorExtensions.Cursor="Hand" Margin="-8,0,4,0" Height="36"  >
+                                        <TextBlock Text="256 Likes" Margin="10,0,4,0" VerticalAlignment="Center"/>
+
+                                    </Button>
+
+
+
+
+                                    <DropDownButton FontSize="13" Margin="4,0" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Content="افزودن به پلی لیست">
+                                        <DropDownButton.Flyout>
+
+                                            <MenuFlyout x:Name="MusicPlaylistsMenuFlyout" Placement="Bottom" Opened="MusicPlaylistsFlyout_Opened">
+
+                                                <MenuFlyoutItem>
+                                                    <MenuFlyoutItem.Template>
+                                                        <ControlTemplate TargetType="MenuFlyoutItem">
+                                                            <Grid Padding="16,8">
+                                                                <Button Click="CreateMusicPlaylistButton_Click" FlowDirection="RightToLeft" HorizontalAlignment="Stretch" common:CursorExtensions.Cursor="Hand">
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <icon:SymbolIcon Opacity="0.6" Foreground="White" FontSize="16" Symbol="Add"/>
+                                                                        <TextBlock Margin="8,0,0,0" FontSize="12" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="ساخت پلی لیست جدید"/>
+                                                                    </StackPanel>
+                                                                </Button>
+                                                            </Grid>
+                                                        </ControlTemplate>
+                                                    </MenuFlyoutItem.Template>
+                                                </MenuFlyoutItem>
+                                            </MenuFlyout>
+                                        </DropDownButton.Flyout>
+                                    </DropDownButton>
+
+
+                                    <DropDownButton FontSize="13" Margin="4,0" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Content="دستگاه پخش کننده">
+                                        <DropDownButton.Flyout>
+
+
+
+                                            <Flyout x:Name="AudioRenderMenuFlyout" Placement="Bottom">
+
+                                                <!--<Flyout.SystemBackdrop>
+                                                    <DesktopAcrylicBackdrop/>
+                                                </Flyout.SystemBackdrop>
+                                                <Flyout.FlyoutPresenterStyle>
+                                                    <Style TargetType="FlyoutPresenter">
+                                                        --><!--<Setter Property="Background" Value="{ThemeResource SystemControlAcrylicWindowBrush}"/>-->
+                                                        <!-- یا برای کنترل بیشتر: -->
+                                                        <!--<Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorSecondary}">
+                  
+              </Setter>--><!--
+                                                        <Setter Property="Width" Value="400"/>
+                                                        <Setter Property="CornerRadius" Value="8"/>
+                                                    </Style>
+                                                </Flyout.FlyoutPresenterStyle>-->
+                                                <ListView ItemsSource="{Binding AudioDevices}" SelectedItem="{Binding SelectedAudioDevice, Mode=TwoWay}" SelectionMode="Single">
+                                                                <ListView.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Grid Margin="0,8" MinWidth="220">
+                                                                            <Grid>
+                                                                                <StackPanel Orientation="Vertical" Margin="12,0">
+
+                                                                                    <TextBlock FontSize="12" Opacity="0.9" Text="{Binding Title}"/>
+
+                                                                                    <StackPanel Orientation="Horizontal"   Margin="0,4,0,0">
+
+                                                                                        <icon:SymbolIcon Symbol="Speaker2"  FontSize="12" Opacity="0.7"/>
+
+                                                                                        <StackPanel Orientation="Horizontal" Visibility="{Binding HasVolumePercentage, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                                                            <TextBlock FontSize="10" Opacity="0.7" Margin="4,0,0,0" Text="صدا:"/>
+                                                                                            <TextBlock FontSize="10" Opacity="0.7" Text="{Binding VolumePercentage}"/>
+                                                                                            <TextBlock FontSize="10" Opacity="0.7" Text="٪"/>
+                                                                                        </StackPanel>
+
+                                                                                        <StackPanel Orientation="Horizontal" Margin="12,0,0,0" Visibility="{Binding HasBatteryLevel, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                                                            <icon:SymbolIcon Symbol="BatterySaver" FontSize="12" Opacity="0.7"/>
+                                                                                            <TextBlock FontSize="10" Opacity="0.7" Margin="4,0,0,0" Text="{Binding BatteryLevel}"/>
+                                                                                            <TextBlock FontSize="10" Opacity="0.7" Text="٪"/>
+                                                                                        </StackPanel>
+                                                                                    </StackPanel>
+
+                                                                                </StackPanel>
+                                                                            </Grid>
+
+                                                                        </Grid>
+
+                                                                    </DataTemplate>
+                                                                </ListView.ItemTemplate>
+
+                                                </ListView>
+                                            </Flyout>
+                                        </DropDownButton.Flyout>
+                                    </DropDownButton>
+
+                                </StackPanel>
+
+                                <ItemsRepeater 
+                                    VerticalAlignment="Top" 
+                                    Margin="0,14,0,0" 
+                                    HorizontalAlignment="Right"
+                                    Grid.Row="2"
+                                    ItemsSource="{Binding Reactions, Mode=OneWay}">
+                                    <ItemsRepeater.Resources>
+                                        <converters:BoolToBrushConverter x:Key="ReactionBorderConverter" NullBrush="Transparent" FalseBrush="Transparent" TrueBrush="#0078D4"/>
+                                    </ItemsRepeater.Resources>
+                                    <ItemsRepeater.Layout>
+                                        <StackLayout Orientation="Horizontal" Spacing="4"/>
+                                    </ItemsRepeater.Layout>
+
+                                    <ItemsRepeater.ItemTemplate>
+                                        <DataTemplate>
+                                            <ToggleButton 
+                                                common:CursorExtensions.Cursor="Hand" 
+                                                Foreground="#B2FFFFFF" 
+                                                FontSize="10" 
+                                                Padding="6,4,6,4" 
+                                                CornerRadius="8"
+                                                IsChecked="{Binding ReactedByMe, Mode=OneWay}"
+                                                Command="{Binding DataContext.ReactionCommand, ElementName=MainGrid}"
+                                                CommandParameter="{Binding MusicReactionTypePublicId}"
+                                                BorderThickness="0">
+
+                                                <StackPanel Orientation="Horizontal">
+                                                    <StackPanel.ChildrenTransitions>
+                                                        <TransitionCollection>
+                                                            <RepositionThemeTransition IsStaggeringEnabled="False" />
+                                                        </TransitionCollection>
+                                                    </StackPanel.ChildrenTransitions>
+                                                    <TextBlock 
+                                                        FontSize="16" 
+                                                        Text="{Binding Emoji}"/>
+                                                    <TextBlock 
+                                                        FontSize="14" 
+                                                        VerticalAlignment="Center" 
+                                                        Foreground="#80FFFFFF" 
+                                                        Margin="4,0,0,0" 
+                                                        Visibility="{Binding Count, Converter={StaticResource IntToVisibilityConverter}}"
+                                                        Text="{Binding Count}"/>
+                                                </StackPanel>
+                                            </ToggleButton>
+                                        </DataTemplate>
+                                    </ItemsRepeater.ItemTemplate>
+                                </ItemsRepeater>
+
+
+
+
+
+                                <Grid Margin="0,12,0,0" Grid.Row="3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+
+
+                                    <ItemsRepeater Grid.Column="0" ItemsSource="{Binding Contributors, Mode=OneWay}">
+                                        <ItemsRepeater.Layout>
+                                            <StackLayout Orientation="Horizontal" Spacing="6"/>
+                                        </ItemsRepeater.Layout>
+
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button common:CursorExtensions.Cursor="Hand" Padding="0" CornerRadius="12,4,4,12">
+                                                    <Grid>
+                                                        <StackPanel Orientation="Horizontal">
+
+                                                            <Border CornerRadius="12" Width="24" Height="24" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                                                                <Grid>
+                                                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9" FontWeight="SemiBold" Text="{Binding Initials}" />
+                                                                    <Image Source="{Binding ImageSource}" Stretch="UniformToFill" Visibility="{Binding ImageSource, Converter={StaticResource NullOrEmptyToCollapsedConverter}}"/>
+                                                                </Grid>
+                                                            </Border>
+
+                                                            <TextBlock VerticalAlignment="Center" Margin="6,2" Opacity="0.8" Text="{Binding FullName}" FontSize="12"/>
+
+                                                            <Grid Width="1" Margin="2,4" Background="White" Opacity="0.2"/>
+
+                                                            <icon:SymbolIcon Symbol="{Binding ContributorSymbol}" Margin="4,0,6,0" FontSize="12" Opacity="0.7" ToolTipService.ToolTip="{Binding ContributorTypeDisplayName}"/>
+
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+
+
+
+                                    <dev:EdgeLighting Grid.Column="1" CornerRadius="8" IsLighting="True" HighlightOffset="0" FadeOffset="0.5" MidOffset="0.3" StrokeThickness="1">
+                                        <StackPanel Orientation="Horizontal" BorderThickness="0" Margin="8">
+                                            <icon:SymbolIcon Opacity="0.6" IconVariant="Color" FontSize="18" Symbol="Premium"/>
+                                            <TextBlock Margin="8,0,8,0" Opacity="0.7" Text="Doughnut"/>
+                                        </StackPanel>
+                                    </dev:EdgeLighting>
+                                </Grid>
+                            </Grid>
+
+
+                            <Slider x:Name="VolumeSlider" Grid.Column="2" Value="{Binding Volume, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Margin="16,0,0,0" Orientation="Vertical" TickFrequency="1" TickPlacement="Outside" Maximum="100" Minimum="0"/>
+
+                        </Grid>
+
+                        <Grid Margin="32,16,32,16" Visibility="Collapsed" Grid.Row="1">
+
+
+
+                            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+
+
+                                <ToggleButton IsChecked="{Binding IsReverbEffectDefinitionEnabled, Mode=TwoWay}" Margin="4" CornerRadius="18">
+                                    <StackPanel Orientation="Horizontal">
+                                        <icon:SymbolIcon Opacity="0.6" Foreground="White" FontSize="20" Symbol="BreakoutRoom"/>
+                                        <TextBlock Margin="8,0,0,0" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="حموم"/>
+                                    </StackPanel>
+                                </ToggleButton>
+
+                                <ToggleButton Margin="4" CornerRadius="18">
+                                    <StackPanel Orientation="Horizontal">
+                                        <icon:SymbolIcon Opacity="0.6" Foreground="White" FontSize="20" Symbol="Speaker2"/>
+                                        <TextBlock Margin="8,0,0,0" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="بیس"/>
+                                    </StackPanel>
+                                </ToggleButton>
+
+                                <ToggleButton Margin="4" CornerRadius="18">
+                                    <StackPanel Orientation="Horizontal">
+                                        <icon:SymbolIcon Opacity="0.6" Foreground="White" FontSize="20" Symbol="SkipForward30"/>
+                                        <TextBlock Margin="8,0,0,0" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="سه بعدی"/>
+                                    </StackPanel>
+                                </ToggleButton>
+
+                                <ToggleButton Margin="4" CornerRadius="18">
+                                    <StackPanel Orientation="Horizontal">
+                                        <icon:SymbolIcon Opacity="0.6" Foreground="White" FontSize="20" Symbol="BoxMultipleCheckmark"/>
+                                        <TextBlock Margin="8,0,0,0" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="اکو"/>
+                                    </StackPanel>
+                                </ToggleButton>
+
+                                <ToggleButton Margin="4" CornerRadius="18">
+                                    <StackPanel Orientation="Horizontal">
+                                        <icon:SymbolIcon Opacity="0.6" Foreground="White" FontSize="20" Symbol="Mic"/>
+                                        <TextBlock Margin="8,0,0,0" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="بدون صدا"/>
+                                    </StackPanel>
+                                </ToggleButton>
+                            </StackPanel>
+
+                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+
+                                <Grid BorderThickness="1" Margin="4,0" BorderBrush="{ThemeResource CardBackgroundFillColorSecondary}" CornerRadius="8" Padding="4">
+                                    <Button common:CursorExtensions.Cursor="Hand" CornerRadius="8" BorderBrush="Transparent" Padding="0" Width="100" Height="40">
+                                        <Grid>
+                                            <Image Stretch="Fill" Source="/Assets/Cover2.jpg"/>
+                                            <Grid Opacity="0.5" Background="{ThemeResource SystemChromeAltHighColor}"/>
+                                            <icon:SymbolIcon Opacity="0.7" Foreground="White" FontSize="20" Symbol="Video"/>
+                                        </Grid>
+                                    </Button>
+                                </Grid>
+
+
+                            </StackPanel>
+                        </Grid>
+
+                        <Expander Grid.Row="2" Margin="0,20,0,0" CornerRadius="0,0,8,8" HorizontalAlignment="Stretch" Padding="0"
+                                  Visibility="{Binding HasLyrics, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Expander.Header>
+                                <Grid>
+                                    <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                                        <icon:SymbolIcon Opacity="0.6" Foreground="White" FontSize="20" Symbol="TextAlignCenter"/>
+                                        <TextBlock FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Opacity="0.8" VerticalAlignment="Center" Margin="8,0,0,0" Text="متن آهنگ"/>
+                                    </StackPanel>
+
+                                   
+
+                                    <TextBlock FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+                                               Text="{Binding CurrentLyricText}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Foreground="#B2FFFFFF"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxWidth="420"/>
+
+
+                                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8" Margin="0,0,0,0">
+                                     
+
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="6"
+                 Visibility="{Binding IsStemMixerEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <icon:SymbolIcon Symbol="MusicNote1" FontSize="14" Opacity="0.65"/>
+                                            <Slider Width="150" Minimum="-100" Maximum="100" Value="{Binding StemMixBalance, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            <icon:SymbolIcon Symbol="Mic" FontSize="14" Opacity="0.65"/>
+                                        </StackPanel>
+
+
+                                        <ToggleButton IsChecked="{Binding IsStemMixerEnabled, Mode=TwoWay}"
+IsEnabled="{Binding IsStemMixAvailable}"
+CornerRadius="8"
+Padding="10,6"
+ToolTipService.ToolTip="میکس صدای خواننده و موسیقی">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <icon:SymbolIcon Symbol="Mic" FontSize="16" Opacity="0.8"/>
+                                                <ProgressRing Width="14" Height="14" IsActive="{Binding IsStemMixerLoading}" Visibility="{Binding IsStemMixerLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                        </ToggleButton>
+
+                                    </StackPanel>
+
+                                </Grid>
+                            </Expander.Header>
+                            <Expander.Content>
+                                <ScrollViewer MaxHeight="480" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                    <ItemsRepeater ItemsSource="{Binding Lyrics}" Margin="16,8,16,16">
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="viewmodelsItems:MusicLyricLineItemViewModel">
+                                                <Border Background="{Binding Background}" CornerRadius="8" Padding="10,8" Margin="0,3">
+                                                    <StackPanel FlowDirection="RightToLeft" Spacing="4">
+                                                        <!-- Lines with no word timing are highlighted as a whole. -->
+                                                        <TextBlock Text="{Binding UntimedText}"
+                                                                   FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+                                                                   FontSize="14"
+                                                                   TextAlignment="Right"
+                                                                   TextWrapping="Wrap"/>
+
+                                                        <!-- Timed words are rendered separately so only the active word receives the blue background. -->
+                                                        <ItemsRepeater ItemsSource="{Binding Words}">
+                                                            <ItemsRepeater.Layout>
+                                                                <StackLayout Orientation="Horizontal" Spacing="4" />
+                                                            </ItemsRepeater.Layout>
+                                                            <ItemsRepeater.ItemTemplate>
+                                                                <DataTemplate x:DataType="viewmodelsItems:MusicLyricWordItemViewModel">
+                                                                    <Border Background="{Binding Background}" CornerRadius="5" Padding="4,2">
+                                                                        <TextBlock Text="{Binding Text}"
+                                                                                   FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+                                                                                   FontSize="14" />
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsRepeater.ItemTemplate>
+                                                        </ItemsRepeater>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                        <ItemsRepeater.Layout>
+                                            <StackLayout Spacing="4" />
+                                        </ItemsRepeater.Layout>
+                                    </ItemsRepeater>
+                                </ScrollViewer>
+                            </Expander.Content>
+                        </Expander>
+                    </Grid>
+
+                </Grid>
+
+                <Grid Grid.Row="1">
+                    <Grid Margin="32,16,32,0">
+                        <WrapPanel ItemSpacing="16" LineSpacing="16" HorizontalAlignment="Stretch">
+                            <WrapPanel.ChildrenTransitions>
+                                <TransitionCollection>
+                                    <RepositionThemeTransition IsStaggeringEnabled="False" />
+                                </TransitionCollection>
+                            </WrapPanel.ChildrenTransitions>
+                            <Grid MinWidth="300" CornerRadius="8" Height="100" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="White" IconVariant="Color" FontSize="40" Symbol="Heart"/>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Vertical">
+                                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+
+                                            <StackPanel Margin="6,4" Orientation="Vertical">
+                                                <Grid>
+                                                    <dev:StorageRing PercentCritical="50" Value="67" ValueRingThickness="3" Height="34" Width="34" TrackRingThickness="1"/>
+
+                                                    <TextBlock FontSize="10" Opacity="0.8" Text="67" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Grid>
+
+                                                <TextBlock HorizontalAlignment="Center" Opacity="0.8" Margin="0,4,0,0" Text="HR"/>
+                                            </StackPanel>
+
+                                            <StackPanel Margin="6,4" Orientation="Vertical">
+                                                <Grid>
+                                                    <dev:StorageRing PercentCritical="50" Value="29" ValueRingThickness="3" Height="34" Width="34" TrackRingThickness="1"/>
+
+                                                    <TextBlock FontSize="10" Opacity="0.8" Text="29" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Grid>
+
+                                                <TextBlock HorizontalAlignment="Center" Opacity="0.8" Margin="0,4,0,0" Text="VR"/>
+                                            </StackPanel>
+
+                                            <StackPanel Margin="6,4" Orientation="Vertical">
+                                                <Grid>
+                                                    <dev:StorageRing PercentCritical="50" Value="11" PercentCaution="0" ValueRingThickness="3" Height="34" Width="34" TrackRingThickness="1"/>
+
+                                                    <TextBlock FontSize="10" Opacity="0.8" Text="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Grid>
+
+                                                <TextBlock HorizontalAlignment="Center" Opacity="0.8" Margin="0,4,0,0" Text="SW"/>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <StackPanel FlowDirection="RightToLeft" HorizontalAlignment="Right" Orientation="Horizontal">
+                                            <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Margin="16,0,0,0" Foreground="White" FontSize="10" Symbol="Note"/>
+                                            <TextBlock Margin="4,0,0,0" Opacity="0.6" FontSize="10" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="افزایش 17 درصدی ضربان قلب"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+
+
+                                    <Button Grid.Column="2" HorizontalAlignment="Right" CornerRadius="0,8,8,0" VerticalAlignment="Stretch">
+                                        <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center"  Foreground="White" FontSize="12" Symbol="ArrowRight"/>
+
+                                    </Button>
+                                </Grid>
+                            </Grid>
+
+                            <Grid MinWidth="300" CornerRadius="8" Height="100" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="White" IconVariant="Color" FontSize="40" Symbol="Comment"/>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Orientation="Vertical">
+
+                                        <StackPanel Margin="2" FlowDirection="RightToLeft" HorizontalAlignment="Right" Orientation="Horizontal">
+                                            <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="14" Symbol="Comment"/>
+                                            <TextBlock Margin="4,0,0,0" Opacity="0.8" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="دیدگاه کاربران:"/>
+                                            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Opacity="0.7" FontSize="10" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="خیلی خفن"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="2" FlowDirection="RightToLeft" HorizontalAlignment="Right" Orientation="Horizontal">
+                                            <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="14" Symbol="Calendar"/>
+                                            <TextBlock Margin="4,0,0,0" Opacity="0.8" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="میزان رضایت:"/>
+                                            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Opacity="0.7" FontSize="10" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="79 درصد"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="2" FlowDirection="RightToLeft" HorizontalAlignment="Right" Orientation="Horizontal">
+                                            <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="14" Symbol="Sanitize"/>
+                                            <TextBlock Margin="4,0,0,0" Opacity="0.8" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="تعداد دیدگاه ها:"/>
+                                            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Opacity="0.7" FontSize="10" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="747 دیدگاه"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+
+
+                                    <Button Grid.Column="2" common:CursorExtensions.Cursor="Hand" HorizontalAlignment="Right" CornerRadius="0,8,8,0" VerticalAlignment="Stretch">
+                                        <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center"  Foreground="White" FontSize="12" Symbol="ArrowRight"/>
+
+                                    </Button>
+                                </Grid>
+                            </Grid>
+
+
+                            <Grid MinWidth="300" CornerRadius="8" Height="100" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="White" IconVariant="Color" FontSize="40" Symbol="SlideTextSparkle"/>
+
+                                    <StackPanel Orientation="Vertical" Grid.Column="1" Margin="14" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+
+                                        <lvc:CartesianChart HorizontalAlignment="Stretch" MinHeight="60" VerticalAlignment="Stretch" Background="Transparent">
+                                            <lvc:CartesianChart.XAxes>
+                                                <lvc:AxesCollection>
+
+
+                                                    <lvc:XamlAxis ShowSeparatorLines="False" Labels="{x:Null}"  LabelsRotation="0"
+                                                                  Labeler="{Binding EmptyLabeler}"
+    LabelsPaint="{x:Null}" TicksPaint="{lvc:SolidColorPaint Color='#232323'}" SeparatorsPaint="{lvc:SolidColorPaint Color='#00000000'}">
+
+
+
+                                                    </lvc:XamlAxis>
+                                                </lvc:AxesCollection>
+                                            </lvc:CartesianChart.XAxes>
+
+                                            <lvc:CartesianChart.YAxes>
+                                                <lvc:AxesCollection>
+                                                    <lvc:XamlAxis ShowSeparatorLines="False" Labels="{x:Null}"
+                                                                   Labeler="{Binding EmptyLabeler}"
+    LabelsPaint="{x:Null}" TicksPaint="{lvc:SolidColorPaint Color='#232323'}" SeparatorsPaint="{lvc:SolidColorPaint Color='#00000000'}"/>
+                                                </lvc:AxesCollection>
+
+                                            </lvc:CartesianChart.YAxes>
+                                            <lvc:CartesianChart.Series>
+                                                <lvc:SeriesCollection>
+                                                    <lvc:XamlLineSeries
+                Values="{Binding Values}"
+                Fill="{x:Null}"
+                                
+                                            
+                GeometrySize="4"
+                LineSmoothness="30">
+
+
+
+
+                                                    </lvc:XamlLineSeries>
+                                                </lvc:SeriesCollection>
+                                            </lvc:CartesianChart.Series>
+                                        </lvc:CartesianChart>
+
+
+                                        <StackPanel FlowDirection="RightToLeft" HorizontalAlignment="Right" Orientation="Horizontal">
+                                            <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Margin="16,0,0,0" Foreground="White" FontSize="10" Symbol="Note"/>
+                                            <TextBlock Margin="4,0,0,0" Opacity="0.6" FontSize="10" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="افزایش 17 درصدی ضربان قلب"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+
+
+                                    <Button Grid.Column="2" common:CursorExtensions.Cursor="Hand" HorizontalAlignment="Right" CornerRadius="0,8,8,0" VerticalAlignment="Stretch">
+                                        <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center"  Foreground="White" FontSize="12" Symbol="ArrowRight"/>
+
+                                    </Button>
+                                </Grid>
+                            </Grid>
+
+                            <Grid MinWidth="300"  CornerRadius="8" Height="100" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="White" IconVariant="Color" FontSize="40" Symbol="Agents"/>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Orientation="Vertical">
+
+                                        <StackPanel Margin="2" FlowDirection="RightToLeft" HorizontalAlignment="Right" Orientation="Horizontal">
+                                            <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="14" Symbol="Comment"/>
+                                            <TextBlock Margin="4,0,0,0" Opacity="0.8" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="دیدگاه کاربران:"/>
+                                            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Opacity="0.7" FontSize="10" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="خیلی خفن"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="2" FlowDirection="RightToLeft" HorizontalAlignment="Right" Orientation="Horizontal">
+                                            <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="14" Symbol="Calendar"/>
+                                            <TextBlock Margin="4,0,0,0" Opacity="0.8" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="میزان رضایت:"/>
+                                            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Opacity="0.7" FontSize="10" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="79 درصد"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="2" FlowDirection="RightToLeft" HorizontalAlignment="Right" Orientation="Horizontal">
+                                            <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="14" Symbol="Sanitize"/>
+                                            <TextBlock Margin="4,0,0,0" Opacity="0.8" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="تعداد دیدگاه ها:"/>
+                                            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Opacity="0.7" FontSize="10" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="747 دیدگاه"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+
+
+                                    <Button Grid.Column="2" common:CursorExtensions.Cursor="Hand" HorizontalAlignment="Right" CornerRadius="0,8,8,0" VerticalAlignment="Stretch">
+                                        <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center"  Foreground="White" FontSize="12" Symbol="ArrowRight"/>
+
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </WrapPanel>
+                    </Grid>
+                </Grid>
+
+
+                <Grid Grid.Row="2" Margin="32,0,0,0">
+
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled" VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button BorderBrush="{ThemeResource SystemAccentColor}" CornerRadius="8" Height="180" Margin="0,16" Width="100" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Vertical">
+                                    <icon:SymbolIcon Margin="4" Symbol="AgentsAdd"/>
+                                    <TextBlock FontSize="12" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="افزودن استوری"/>
+                                </StackPanel>
+                            </Button>
+
+                            <ItemsRepeater ItemsSource="{Binding Stories}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Orientation="Horizontal" Spacing="8"/>
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="viewmodelsItems:StoryItemViewModel">
+                                        <Button Click="StoryCard_Click" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" PointerEntered="StoryCard_PointerEntered" common:CursorExtensions.Cursor="Hand" PointerExited="StoryCard_PointerExited" Tag="{x:Bind}" Padding="0" Width="100" Height="180" Margin="0,16" CornerRadius="8" BorderThickness="0" Opacity="0.6">
+                                            <Button.OpacityTransition>
+                                                <ScalarTransition />
+                                            </Button.OpacityTransition>
+                                            <Grid>
+                                                <Image Source="{x:Bind PreviewImagePath, Mode=OneWay}" Stretch="UniformToFill"/>
+                                                <Rectangle Fill="#3D0D2238"/>
+                                                <!--<dev:LinearGradientBlurPanel TintColor="#99000000"  Height="100" VerticalAlignment="Bottom" MaxBlurAmount="100" StartPoint="0,1" EndPoint="1,0.62"/>-->
+                                                <Ellipse Width="28" Height="28" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Top" StrokeThickness="1" Stroke="White">
+                                                    <Ellipse.Fill>
+                                                        <ImageBrush ImageSource="{x:Bind CreatorProfileImagePath, Mode=OneWay}" Stretch="UniformToFill"/>
+                                                    </Ellipse.Fill>
+                                                </Ellipse>
+                                                <StackPanel VerticalAlignment="Bottom" Margin="8" Spacing="2">
+                                                    <TextBlock Text="{x:Bind CreatorDisplayName}" Foreground="White" FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{x:Bind Title}" Foreground="White" FontSize="11" MaxLines="2" TextWrapping="WrapWholeWords" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                </Grid>
+
+
+                <Grid Grid.Row="3" Margin="32,16,32,60">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <dev:SelectorBarSegmented HorizontalContentAlignment="Stretch" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" CornerRadius="8" HorizontalAlignment="Stretch">
+                        <SelectorBarItem Icon="Find" Tapped="AlbumDetailsTab_Tapped" Visibility="{Binding HasMusicAlbum, Converter={StaticResource BooleanToVisibilityConverter}}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="{Binding AlbumTitle}" />
+                        <SelectorBarItem Icon="Home" Tapped="ContributorDetailsTab_Tapped" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="دیگر آهنگ‌های خواننده‌ها" />
+                        <SelectorBarItem Icon="Home" Tapped="CommentsDetailsTab_Tapped" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="نظرات" />
+                        <SelectorBarItem Icon="Home" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="ریمیکس‌ها" />
+                    </dev:SelectorBarSegmented>
+
+                    <Grid Grid.Row="1" Margin="0,16,0,0">
+                        <ScrollViewer Visibility="{Binding IsAlbumDetailsSelected, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalScrollBarVisibility="Hidden" HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled">
+                            <ItemsRepeater ItemsSource="{Binding AlbumMusics}" ItemTemplate="{StaticResource MusicDetailsCardTemplate}">
+                                <ItemsRepeater.Layout><StackLayout Orientation="Horizontal" Spacing="12"/></ItemsRepeater.Layout>
+                            </ItemsRepeater>
+                        </ScrollViewer>
+
+                        <ScrollViewer Visibility="{Binding IsContributorDetailsSelected, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalScrollBarVisibility="Hidden" HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled">
+                            <ItemsRepeater ItemsSource="{Binding ContributorMusics}" ItemTemplate="{StaticResource MusicDetailsCardTemplate}">
+                                <ItemsRepeater.Layout><StackLayout Orientation="Horizontal" Spacing="12"/></ItemsRepeater.Layout>
+                            </ItemsRepeater>
+                        </ScrollViewer>
+
+                        <ScrollViewer Visibility="{Binding IsCommentsDetailsSelected, Converter={StaticResource BooleanToVisibilityConverter}}" VerticalScrollBarVisibility="Hidden">
+                            <ItemsRepeater ItemsSource="{Binding MusicDetailsComments}">
+                                <ItemsRepeater.Layout><StackLayout Spacing="8"/></ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="viewmodelsItems:MusicDetailsCommentItemViewModel">
+                                        <Grid Width="420" Padding="12" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="42"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                            <Ellipse Width="34" Height="34" VerticalAlignment="Top"><Ellipse.Fill><ImageBrush ImageSource="{x:Bind ProfileImagePath, Mode=OneWay}" Stretch="UniformToFill"/></Ellipse.Fill></Ellipse>
+                                            <StackPanel Grid.Column="1" Spacing="3">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="{x:Bind FullName, Mode=OneWay}" FontWeight="SemiBold" FontSize="12"/>
+                                                    <TextBlock Text="{x:Bind Username, Mode=OneWay}" Opacity="0.55" FontSize="11"/>
+                                                    <TextBlock Text="{x:Bind TimestampText, Mode=OneWay}" Foreground="{ThemeResource SystemAccentColor}" FontSize="11"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{x:Bind Text, Mode=OneWay}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="12" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+
+
+                <!--<ScrollViewer Grid.Row="3" x:Name="Viewer"
+    ZoomMode="Enabled"
+    MinZoomFactor="0.1"
+    MaxZoomFactor="5.0"
+    HorizontalScrollBarVisibility="Auto"
+    VerticalScrollBarVisibility="Auto">
+
+                <Canvas x:Name="MainCanvas"
+            Width="1920"
+            Height="1920"
+            Background="Transparent"
+                           PointerPressed="Canvas_PointerPressed"
+            PointerMoved="Canvas_PointerMoved"
+            PointerReleased="Canvas_PointerReleased"
+            PointerCanceled="Canvas_PointerReleased"/>
+            </ScrollViewer>-->
+
+            </Grid>
+
+        </ScrollViewer>
+
+        <!-- نمایش بزرگ کاور: از همان فایل کش‌شدهٔ موسیقی استفاده می‌کند و به هیچ asset نمونه‌ای وابسته نیست. -->
+        <Grid x:Name="SmokeGrid" Opacity="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed"
+              IsTabStop="True" KeyDown="SmokeGrid_KeyDown">
+            <Grid.OpacityTransition>
+                <ScalarTransition Duration="0:0:0.8"/>
+            </Grid.OpacityTransition>
+
+            <Grid.Background>
+                <SolidColorBrush Color="{ThemeResource SystemChromeAltHighColor}" Opacity="0.9" />
+            </Grid.Background>
+            <Grid>
+                <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="0" BorderThickness="0"
+                        Background="Transparent" Click="BackButton_Click"
+                        ToolTipService.ToolTip="بستن پیش‌نمایش کاور" />
+                <Image Source="{Binding CoverImagePath, Mode=OneWay}"
+                       Stretch="UniformToFill"
+                       Opacity="0.12"
+                       IsHitTestVisible="False" />
+                <Rectangle Fill="#B0000000" IsHitTestVisible="False" />
+
+                <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Orientation="Horizontal" Spacing="8" Margin="16" Canvas.ZIndex="1">
+                    <Button Click="ResetCoverZoomButton_Click" Height="40" Width="40"
+                            ToolTipService.ToolTip="بازنشانی بزرگ‌نمایی" AutomationProperties.Name="بازنشانی بزرگ‌نمایی">
+                        <icon:SymbolIcon Symbol="ArrowReset" />
+                    </Button>
+                    <Button Click="BackButton_Click" Height="40" Width="40"
+                    ToolTipService.ToolTip="Close" AutomationProperties.Name="Close">
+                        <Button.Content>
+                            <SymbolIcon Symbol="Clear" />
+                        </Button.Content>
+                    </Button>
+                </StackPanel>
+
+                <Border x:Name="IamgeBorder" CornerRadius="12" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        MaxWidth="900" MaxHeight="800" Margin="72" Background="{ThemeResource CardBackgroundFillColorSecondary}" Canvas.ZIndex="1">
+                    <ScrollViewer x:Name="CoverPreviewScrollViewer"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollMode="Enabled"
+                                  VerticalScrollMode="Enabled"
+                                  ZoomMode="Enabled"
+                                  MinZoomFactor="1"
+                                  MaxZoomFactor="4"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Stretch">
+                        <Image x:Name="ExpandedCoverImage"
+                               Source="{Binding CoverImagePath, Mode=OneWay}"
+                               Stretch="Uniform"
+                               MaxWidth="900"
+                               MaxHeight="800" />
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!--<dev:GooeyButton x:Name="gooeyButton" Margin="32" Background="{ThemeResource SystemAccentColor}" VerticalAlignment="Bottom"
+                    HorizontalAlignment="Right">
+            <dev:GooeyButton.Content>
+                <icon:SymbolIcon Foreground="#B2FFFFFF" Symbol="DocumentAdd"/>
+
+            </dev:GooeyButton.Content>
+            <dev:GooeyButton.ItemTemplate>
+                <DataTemplate>
+                    <SymbolIcon Symbol="{Binding}" />
+                </DataTemplate>
+            </dev:GooeyButton.ItemTemplate>
+        </dev:GooeyButton>-->
+    </Grid>
+</Page>

@@ -1,0 +1,320 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<Compile Remove="ExplorerCommands\**\*.cs" />
+		<!-- WindowsSearch is a sibling project. Its generated obj files must not be
+		     compiled into the WinUI application. -->
+		<Compile Remove="WindowsSearch\**\*.cs" />
+	</ItemGroup>
+
+	<Target Name="BuildExplorerCommands" BeforeTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+		<MSBuild Projects="ExplorerCommands\Mizon.Windows.ExplorerCommands.csproj" Targets="Build" Properties="Configuration=$(Configuration);Platform=x64;BuildProjectReferences=false" />
+	</Target>
+
+	<Target Name="SynchronizeExplorerCommandsAppxLayout" AfterTargets="Build;_CreateTestLayout" DependsOnTargets="BuildExplorerCommands" Condition="Exists('$(TargetDir)AppX')">
+		<PropertyGroup>
+			<ExplorerCommandsPackageVersion>1.0.$([System.DateTime]::UtcNow.ToString('yy'))$([System.DateTime]::UtcNow.DayOfYear.ToString('000')).$([System.DateTime]::UtcNow.ToString('HHmm'))</ExplorerCommandsPackageVersion>
+		</PropertyGroup>
+		<ItemGroup>
+			<ExplorerCommandsPayload Include="$(MSBuildProjectDirectory)\ExplorerCommands\bin\x64\$(Configuration)\net10.0-windows10.0.22621.0\win-x64\*.*" />
+		</ItemGroup>
+
+		<MakeDir Directories="$(TargetDir)AppX\ExplorerCommands" />
+		<Copy SourceFiles="@(ExplorerCommandsPayload)" DestinationFiles="@(ExplorerCommandsPayload->'$(TargetDir)AppX\ExplorerCommands\%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+		<Copy SourceFiles="$(MSBuildProjectDirectory)\ExplorerCommands\Assets\Silo.ico" DestinationFiles="$(TargetDir)AppX\ExplorerCommands\Silo.ico" SkipUnchangedFiles="true" Condition="Exists('$(MSBuildProjectDirectory)\ExplorerCommands\Assets\Silo.ico')" />
+		<Exec Command="powershell -NoProfile -Command &quot;[xml]$manifest = Get-Content '$(TargetDir)AppX\AppxManifest.xml'; $namespaces = New-Object System.Xml.XmlNamespaceManager($manifest.NameTable); $namespaces.AddNamespace('foundation', 'http://schemas.microsoft.com/appx/manifest/foundation/windows10'); $namespaces.AddNamespace('com', 'http://schemas.microsoft.com/appx/manifest/com/windows10'); $server = $manifest.SelectSingleNode('/foundation:Package/foundation:Applications/foundation:Application/foundation:Extensions/com:Extension/com:ComServer/com:SurrogateServer', $namespaces); $class = $server.SelectSingleNode('com:Class[@Id=''C1B40E19-79ED-4A8A-A099-9F7B4A5DD7E3'']', $namespaces); if ($null -eq $class) { $class = $manifest.CreateElement('com', 'Class', 'http://schemas.microsoft.com/appx/manifest/com/windows10'); $class.SetAttribute('Id', 'C1B40E19-79ED-4A8A-A099-9F7B4A5DD7E3'); $class.SetAttribute('Path', 'ExplorerCommands\Mizon.Windows.ExplorerCommands.comhost.dll'); $class.SetAttribute('ThreadingModel', 'STA'); [void]$server.AppendChild($class) }; $resource = $manifest.SelectSingleNode('/foundation:Package/foundation:Resources/foundation:Resource', $namespaces); $resource.SetAttribute('Language', 'en-US'); $manifest.Save('$(TargetDir)AppX\AppxManifest.xml')&quot;" />
+		<Exec Command="powershell -NoProfile -Command &quot;[xml]$manifest = Get-Content '$(TargetDir)AppX\AppxManifest.xml'; $manifest.Package.Identity.Version = '$(ExplorerCommandsPackageVersion)'; $manifest.Save('$(TargetDir)AppX\AppxManifest.xml')&quot;" />
+	</Target>
+
+	<Target Name="RestartMizonExplorerCommandHost" AfterTargets="SynchronizeExplorerCommandsAppxLayout">
+		<Exec Command="powershell -NoProfile -Command &quot;$hosts = Get-CimInstance Win32_Process -Filter 'Name = ''DllHost.exe''' | Where-Object { $_.CommandLine -match 'E72D6A3B-29A8-4B1F-B0FB-D78D3DF8B8B7' -or $_.CommandLine -match 'C1B40E19-79ED-4A8A-A099-9F7B4A5DD7E3' }; $hosts | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }&quot;" IgnoreExitCode="true" />
+	</Target>
+
+	<ItemGroup>
+		<Content Include="ExplorerCommands\bin\x64\$(Configuration)\net10.0-windows10.0.22621.0\win-x64\*.*">
+			<Link>ExplorerCommands\%(Content.Filename)%(Content.Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
+		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+		<RootNamespace>Mizon.Windows</RootNamespace>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<Platforms>x86;x64;ARM64</Platforms>
+		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+		<PublishProfile>win-$(Platform).pubxml</PublishProfile>
+		<UseWinUI>true</UseWinUI>
+		<EnableMsixTooling>true</EnableMsixTooling>
+		<Nullable>enable</Nullable>
+		<LangVersion>preview</LangVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+		<UseWinRT>true</UseWinRT>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Remove="Assets\Animation.gif" />
+		<None Remove="Assets\Cover1.jpg" />
+		<None Remove="Assets\Cover2.jpg" />
+		<None Remove="Assets\Fonts\IRANSANS.TTF" />
+		<None Remove="Assets\Lotties\oz.json" />
+		<None Remove="Assets\Lotties\Telegramlogo.json" />
+		<None Remove="Assets\photo.jpg" />
+		<None Remove="Assets\photo2.jpg" />
+		<None Remove="Assets\photo3.jpg" />
+		<None Remove="Assets\photo4.jpg" />
+		<None Remove="Assets\photo5.jpg" />
+		<None Remove="Assets\photo6.jpg" />
+		<None Remove="Generic.xaml" />
+		<None Remove="InfoWindow.xaml" />
+		<None Remove="Pages\HomePage.xaml" />
+		<None Remove="Pages\LoginPage.xaml" />
+		<None Remove="Pages\MusicItemPage.xaml" />
+		<None Remove="Pages\MusicPage.xaml" />
+		<None Remove="Pages\MusicsPage.xaml" />
+		<None Remove="Pages\VPNPage.xaml" />
+		<None Remove="Pages\WelcomePage.xaml" />
+		<None Remove="UserControls\MusicTopUserControl.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Assets\SplashScreen.scale-200.png" />
+		<Content Include="Assets\LockScreenLogo.scale-200.png" />
+		<Content Include="Assets\Square150x150Logo.scale-200.png" />
+		<Content Include="Assets\Square44x44Logo.scale-200.png" />
+		<Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+		<Content Include="Assets\StoreLogo.png" />
+		<Content Include="Assets\Wide310x150Logo.scale-200.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Manifest Include="$(ApplicationManifest)" />
+	</ItemGroup>
+
+	<!--
+    Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
+    Tools extension to be activated for this project even if the Windows App SDK Nuget
+    package has not yet been restored.
+  -->
+	<ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+		<ProjectCapability Include="Msix" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.Shimmer" Version="0.1.250828-build.2223" />
+		<PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.3.260402-preview2" />
+		<PackageReference Include="CommunityToolkit.WinUI.Behaviors" Version="8.3.260402-preview2" />
+		<PackageReference Include="CommunityToolkit.WinUI.Lottie" Version="8.2.250604" />
+		<PackageReference Include="CommunityToolkit.WinUI.Media" Version="8.3.260402-preview2" />
+		<PackageReference Include="DevWinUI" Version="10.4.1" />
+		<PackageReference Include="DevWinUI.Shader" Version="10.1.0" />
+		<PackageReference Include="FluentIcons.WinUI" Version="2.2.339.1" />
+		<PackageReference Include="LiveChartsCore.SkiaSharpView.WinUI" Version="2.1.0-dev-798" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="10.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="10.0.8" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
+		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.29648.1000-preview" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="2.4.1-experimental" />
+		<PackageReference Include="OpenRGB.NET" Version="3.1.1" />
+		<PackageReference Include="RGB.NET.Devices.Asus" Version="3.2.0" />
+		<PackageReference Include="RGB.NET.Devices.OpenRGB" Version="3.2.0" />
+		<PackageReference Include="RGB.NET.Devices.Razer" Version="3.2.0" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Update="Assets\Animation.gif">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\Cover1.jpg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\Cover2.jpg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\image1.jpeg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\image2.jpeg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\image3.jpeg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\image4.jpeg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\Lotties\oz.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\Lotties\Telegramlogo.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Update="Assets\photo.jpg">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\photo2.jpg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\photo3.jpg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\photo4.jpg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\photo5.jpg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\photo6.jpg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\story.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Pages\MusicsPage.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Pages\HomePage.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Generic.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Pages\LoginPage.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Assets\Icons\TaskbarThumbnailIcons\" />
+	  <Folder Include="Models\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="UserControls\MusicTopUserControl.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Pages\MusicItemPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Pages\MusicPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Pages\WelcomePage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+
+	<!--
+    Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
+    Explorer "Package and Publish" context menu entry to be enabled for this project even if
+    the Windows App SDK Nuget package has not yet been restored.
+  -->
+	<PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+		<HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+	</PropertyGroup>
+
+	<!-- Publish Properties -->
+	<PropertyGroup>
+		<PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
+		<PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
+		<PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
+		<PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.runtime\2.0.0-experimental3\buildTransitive\..\include\WindowsAppSDK-VersionInfo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.runtime\2.0.0-experimental3\buildTransitive\..\include\WindowsAppSDK-VersionInfo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.runtime\2.0.0-experimental3\buildTransitive\..\include\WindowsAppSDK-VersionInfo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.runtime\2.0.0-experimental3\buildTransitive\..\include\WindowsAppSDK-VersionInfo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.runtime\2.0.0-experimental3\buildTransitive\..\include\WindowsAppSDK-VersionInfo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.runtime\2.0.0-experimental3\buildTransitive\..\include\WindowsAppSDK-VersionInfo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.runtime\2.0.0-experimental3\buildTransitive\..\include\WindowsAppSDK-VersionInfo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.runtime\2.0.0-experimental3\buildTransitive\..\include\WindowsAppSDK-VersionInfo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.runtime\2.0.0-experimental3\buildTransitive\..\include\WindowsAppSDK-VersionInfo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.foundation\2.0.8-experimental\buildTransitive\..\include\DeploymentManagerAutoInitializer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.foundation\2.0.8-experimental\buildTransitive\..\include\DeploymentManagerAutoInitializer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.foundation\2.0.8-experimental\buildTransitive\..\include\DeploymentManagerAutoInitializer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.foundation\2.0.8-experimental\buildTransitive\..\include\DeploymentManagerAutoInitializer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.foundation\2.0.8-experimental\buildTransitive\..\include\DeploymentManagerAutoInitializer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.foundation\2.0.8-experimental\buildTransitive\..\include\DeploymentManagerAutoInitializer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.foundation\2.0.8-experimental\buildTransitive\..\include\DeploymentManagerAutoInitializer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.foundation\2.0.8-experimental\buildTransitive\..\include\DeploymentManagerAutoInitializer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.foundation\2.0.8-experimental\buildTransitive\..\include\DeploymentManagerAutoInitializer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.foundation\2.0.8-experimental\buildTransitive\..\include\DeploymentManagerAutoInitializer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.runtime\2.0.0-experimental3\buildTransitive\..\include\WindowsAppSDK-VersionInfo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.foundation\2.0.8-experimental\buildTransitive\..\include\DeploymentManagerAutoInitializer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="C:\Users\Ali\.nuget\packages\microsoft.windowsappsdk.foundation\2.0.8-experimental\buildTransitive\..\include\DeploymentManagerAutoInitializer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Mizon.API\Mizon.API.Client\Mizon.API.Client.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="InfoWindow.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Pages\VPNPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+</Project>

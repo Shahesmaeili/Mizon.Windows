@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Mizon.Windows.Pages.LoginPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Mizon.Windows.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    xmlns:common="using:Mizon.Windows.Common"
+    Background="Transparent"
+    xmlns:lottie="using:CommunityToolkit.WinUI.Lottie" xmlns:icon="using:FluentIcons.WinUI" xmlns:dev="using:DevWinUI" xmlns:viewmodels="using:Mizon.Windows.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:LoginPageViewModel}"
+    FontFamily="{StaticResource IranSansFont}" Loaded="Page_Loaded">
+
+    <Grid>
+        <dev:Stars Background="Transparent" HorizontalAlignment="Center" VerticalAlignment="Center" FlowDirection="LeftToRight" NumberOfSmallTwinklingStars="1002" NumberOfBigMovingStars="1001" Width="0" Height="0"/>
+
+        <dev:FlipSide HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="MainFlipSide" IsFlipped="True" >
+            <dev:FlipSide.Side1>
+                <StackPanel Orientation="Vertical" Padding="28" Height="440" FlowDirection="RightToLeft" CornerRadius="8" VerticalAlignment="Center" HorizontalAlignment="Center" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                    <StackPanel Orientation="Horizontal">
+                        <icon:SymbolIcon Grid.Column="0" FontSize="20" Symbol="PersonAccounts"/>
+                        <TextBlock FontSize="18" Margin="8,0" FontWeight="Bold" FontFamily="{StaticResource IranSansFont}" Text="ورود به حساب"/>
+                    </StackPanel>
+
+                    <StackPanel FlowDirection="LeftToRight" VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Vertical">
+                        <!--<AnimatedVisualPlayer Height="140" Width="140" >
+            <lottie:LottieVisualSource UriSource="https://lottie.host/a06ab30a-3db3-4b35-a48d-c2489bc62d6b/IA6iylQbDp.json" />
+        </AnimatedVisualPlayer>-->
+                        <Image Source="/Assets/Animation.gif" Height="140" Width="140" Margin="18"/>
+
+                        <TextBox Margin="4" IsEnabled="{Binding ControlsIsEnabled}" Text="{Binding Path=EmailAddressOrUsername, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Width="240" Style="{ThemeResource CustomTextBoxStyle}" PlaceholderText="Email"/>
+                        <PasswordBox Margin="4" IsEnabled="{Binding ControlsIsEnabled}" Password="{Binding Path=Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Width="240" Style="{ThemeResource CustomPasswordBoxStyle}" PlaceholderText="Password"/>
+                        <Button common:CursorExtensions.Cursor="Hand" IsEnabled="{Binding LoginButtonIsEnabled}" Margin="4" Click="Button_Click" FontFamily="{StaticResource IranSansFont}" Width="240" Content="ورود"/>
+                        <HyperlinkButton Click="HyperlinkButton_Click" IsEnabled="{Binding ControlsIsEnabled}" FontFamily="{StaticResource IranSansFont}" Margin="4" Width="240" Content="حساب ندارم"/>
+                    </StackPanel>
+                </StackPanel>
+            </dev:FlipSide.Side1>
+            <dev:FlipSide.Side2>
+                <StackPanel Orientation="Vertical" Padding="28" Height="500" FlowDirection="RightToLeft" CornerRadius="8" VerticalAlignment="Center" HorizontalAlignment="Center" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                    <StackPanel Orientation="Horizontal">
+                        <icon:SymbolIcon Grid.Column="0" FontSize="20" Symbol="PersonAccounts"/>
+                        <TextBlock FontSize="18" Margin="8,0" FontWeight="Bold" FontFamily="{StaticResource IranSansFont}" Text="ساخت حساب"/>
+                    </StackPanel>
+
+                    <StackPanel FlowDirection="LeftToRight" VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Vertical">
+                        <!--<AnimatedVisualPlayer Height="140" Width="140" >
+            <lottie:LottieVisualSource UriSource="https://lottie.host/a06ab30a-3db3-4b35-a48d-c2489bc62d6b/IA6iylQbDp.json" />
+        </AnimatedVisualPlayer>-->
+                        <Image Source="/Assets/Animation.gif" Height="140" Width="140" Margin="18"/>
+
+                        <TextBox Margin="4" GotFocus="TextBox_GotFocus" IsEnabled="{Binding ControlsIsEnabled}" KeyDown="PasswordBox_KeyDown" Text="{Binding Path=EmailAddressOrUsername, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Width="240" Style="{ThemeResource CustomTextBoxStyle}" PlaceholderText="Email"/>
+                        <PasswordBox Margin="4" IsEnabled="{Binding ControlsIsEnabled}" KeyDown="PasswordBox_KeyDown" Password="{Binding Path=Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Width="240" Style="{ThemeResource CustomPasswordBoxStyle}" PlaceholderText="Password"/>
+                        <Button common:CursorExtensions.Cursor="Hand"  IsEnabled="{Binding LoginButtonIsEnabled}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="4" Click="Button_Click" FontFamily="{StaticResource IranSansFont}" Width="240">
+                            <Grid>
+                                <TextBlock Text="ورود" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <ProgressRing IsActive="{Binding ShowProgressBar}" Width="24" Height="24" Margin="0,0,8,0" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Button>
+                        <HyperlinkButton Click="HyperlinkButton_Click" IsEnabled="{Binding ControlsIsEnabled}" FontFamily="{StaticResource IranSansFont}" Margin="4" Width="240" Content="حساب ندارم"/>
+                    </StackPanel>
+                </StackPanel>
+            </dev:FlipSide.Side2>
+        </dev:FlipSide >
+
+
+    </Grid>
+
+    <Page.BottomAppBar>
+        <AppBar Background="{ThemeResource CardBackgroundFillColorSecondary}">
+            <StackPanel Orientation="Horizontal">
+                <AppBarButton Margin="8,8,4,8" Padding="0">
+                    <AppBarButton.Resources>
+                        <Style TargetType="AppBarButton">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="AppBarButton">
+                                        <ContentPresenter/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </AppBarButton.Resources>
+                    <AppBarButton.Content>
+                        <Button common:CursorExtensions.Cursor="Hand">
+                            <StackPanel Orientation="Vertical">
+                                <icon:SymbolIcon FontSize="24" VerticalAlignment="Center" Symbol="WebAsset"/>
+                                <TextBlock FontSize="12" VerticalAlignment="Center" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="وبسایت"/>
+                            </StackPanel>
+                        </Button>
+                       
+                    </AppBarButton.Content>
+                </AppBarButton>
+
+
+                <AppBarButton Margin="4,8,8,8" Padding="0">
+                    <AppBarButton.Resources>
+                        <Style TargetType="AppBarButton">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="AppBarButton">
+                                        <ContentPresenter/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </AppBarButton.Resources>
+                    <AppBarButton.Content>
+                        <Button common:CursorExtensions.Cursor="Hand">
+                            <StackPanel Orientation="Vertical">
+                                <icon:SymbolIcon FontSize="24" VerticalAlignment="Center" Symbol="XboxController"/>
+                                <TextBlock FontSize="12" VerticalAlignment="Center" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="وبسایت"/>
+                            </StackPanel>
+                        </Button>
+
+                    </AppBarButton.Content>
+                </AppBarButton>
+            </StackPanel>
+        </AppBar>
+    </Page.BottomAppBar>
+</Page>

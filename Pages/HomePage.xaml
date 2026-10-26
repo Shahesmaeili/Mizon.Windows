@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Mizon.Windows.Pages.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Mizon.Windows.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:common="using:Mizon.Windows.Common"
+    NavigationCacheMode="Enabled"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:icon="using:FluentIcons.WinUI" xmlns:labs="using:CommunityToolkit.Labs.WinUI" xmlns:dev="using:DevWinUI" xmlns:media="using:CommunityToolkit.WinUI.Media" xmlns:datatemplateselectors="using:Mizon.Windows.Pages.DataTemplateSelectors" xmlns:lottie="using:CommunityToolkit.WinUI.Lottie" xmlns:viewmodels="using:Mizon.Windows.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:HomePageViewModel}"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" 
+     Color="Transparent" />
+
+
+        <SolidColorBrush x:Key="NavigationViewContentBackground" 
+Color="Transparent" />
+
+    </Page.Resources>
+
+    <Grid>
+        <Grid x:Name="DragAreaOverlay"
+      Height="48"
+      VerticalAlignment="Top"
+      Background="Transparent"
+      IsHitTestVisible="False"/>
+        
+        <NavigationView Background="Transparent" ElementSoundMode="Default" SelectionChanged="NavigationViewMain_SelectionChanged" IsSettingsVisible="False" CanDrag="False" IsBackEnabled="True" IsBackButtonVisible="Auto" BackRequested="NavigationViewMain_BackRequested" x:Name="NavigationViewMain" PaneDisplayMode="Top">
+            <NavigationView.PaneCustomContent>
+                <Grid x:Name="DragAreaOverlayGrid" Background="Transparent">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                    </Grid.ColumnDefinitions>
+
+      
+
+
+                    <Grid Grid.Column="1" MaxWidth="600">
+
+
+                        <AutoSuggestBox x:Name="SearchBox"
+                                        ItemsSource="{Binding MainSearch}"
+                                        common:MizonMaterialAttach.UseAcrylicBackground="True"
+                                        CornerRadius="8"
+                                        BorderBrush="Transparent"
+                                        PlaceholderText="Search music, movies and more"
+                                        QueryIcon="Zoom"
+                                        VerticalAlignment="Center"
+                                        TextChanged="SearchBox_TextChanged"
+                                        SuggestionChosen="SearchBox_SuggestionChosen">
+
+
+                            <AutoSuggestBox.Resources>
+   
+
+                                <Style TargetType="ListView">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="CornerRadius" Value="8" />
+                                    <Setter Property="BorderThickness" Value="1" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="Padding" Value="5" />
+                                    <Setter Property="Margin" Value="0" />
+                                    <Setter Property="ScrollViewer.HorizontalScrollMode" Value="Disabled" />
+                                    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+
+                                </Style>
+
+
+                                <DataTemplate x:Key="ClientItemTemplate">
+                                    <Grid Padding="8,6" ColumnSpacing="8" MinWidth="310">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="48"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="40" Height="40" CornerRadius="20" VerticalAlignment="Center" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                                            <Image Source="{Binding ProfileImagePath}" Stretch="UniformToFill"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Username}" FontSize="12" Opacity="0.65" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+
+                                <DataTemplate x:Key="MusicItemTemplate">
+                                    <Grid Padding="8,6" ColumnSpacing="8" MinWidth="310">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="48"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="40" Height="40" CornerRadius="8" VerticalAlignment="Center" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                                            <Image Source="{Binding CoverImagePath}" Stretch="UniformToFill"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding PersianTitle}" FontSize="12" Opacity="0.65" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </AutoSuggestBox.Resources>
+                            <AutoSuggestBox.ItemTemplateSelector>
+                                <datatemplateselectors:MainSearchDataTemplateSelector 
+                                ClientDataTemplate="{StaticResource ClientItemTemplate}"
+                                MusicDataTemplate="{StaticResource MusicItemTemplate}"/>
+                            </AutoSuggestBox.ItemTemplateSelector>
+         
+                        </AutoSuggestBox>
+
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Center" BorderThickness="0" CornerRadius="8" Background="Transparent" Margin="0,0,38,0">
+                            <icon:SymbolIcon FontSize="12" Opacity="0.8" Symbol="Mic"/>
+
+                        </Button>
+                    </Grid>
+                    <!--<AnimatedVisualPlayer Grid.Column="2" Height="32" Width="32" >
+                        <lottie:LottieVisualSource UriSource="ms-appx:///Assets/Lotties/oz.json" />
+</AnimatedVisualPlayer>-->
+
+
+                    <Grid CornerRadius="8,16,16,8" Grid.Column="3" HorizontalAlignment="Right" Margin="8,0,148,0"  VerticalAlignment="Center" Background="#0FFFFFFF">
+                        <StackPanel Orientation="Horizontal">
+
+                            <dev:ParallaxTilt Margin="8,0,8,0">
+
+                                <TextBlock VerticalAlignment="Center" FontSize="16" Text="🤢" />
+                            </dev:ParallaxTilt>
+                            <Button 
+                                Command="{Binding ProfileCommand}"
+                        x:Name="ProfilePersonButtton"
+BorderThickness="0"
+                               
+common:CursorExtensions.Cursor="Hand"
+VerticalAlignment="Center" 
+Width="32" 
+                        Height="32"
+                        Padding="0"
+                        CornerRadius="16">
+                                <Button.Flyout>
+                                    <MenuFlyout Placement="BottomEdgeAlignedRight" >
+                                        <MenuFlyout.SystemBackdrop>
+                                            <DesktopAcrylicBackdrop/>
+                                        </MenuFlyout.SystemBackdrop>
+                                        <MenuFlyout.MenuFlyoutPresenterStyle>
+                                            <Style TargetType="FlyoutPresenter">
+                                                <!--<Setter Property="Background" Value="{ThemeResource SystemControlAcrylicWindowBrush}"/>-->
+                                                <!-- یا برای کنترل بیشتر: -->
+                                                <!--<Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorSecondary}">
+                                            
+                                        </Setter>-->
+                                                <Setter Property="Width" Value="400"/>
+                                                <Setter Property="CornerRadius" Value="8"/>
+                                            </Style>
+                                        </MenuFlyout.MenuFlyoutPresenterStyle>
+                                        <MenuFlyoutItem>
+                                            <MenuFlyoutItem.Template>
+                                                <ControlTemplate TargetType="MenuFlyoutItem">
+                                                    <Grid Padding="16,8">
+
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="auto"/>
+                                                            <RowDefinition Height="*"/>
+                                                        </Grid.RowDefinitions>
+
+                                                        <Grid Grid.Row="0">
+                                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                                                <icon:SymbolIcon FontSize="20" IconVariant="Color" Symbol="DesignIdeas"/>
+                                                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Opacity="0.8" Text="Mizon"/>
+                                                            </StackPanel>
+
+                                                            <HyperlinkButton Margin="0,0,-8,0" Command="{Binding LogoutCommand}" HorizontalAlignment="Right" common:CursorExtensions.Cursor="Hand" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" Content="خروج از حساب"/>
+                                                        </Grid>
+
+                                                        <Grid Grid.Row="1" Margin="0,10,0,0">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <!-- Profile image -->
+                                                            <Ellipse Width="54" Height="54">
+                                                                <Ellipse.Fill>
+                                                                    <ImageBrush ImageSource="{Binding ProfileImagePath}"/>
+                                                                </Ellipse.Fill>
+                                                            </Ellipse>
+
+                                                            <!-- User name -->
+                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="{Binding FirstName}" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{Binding LastName}" Margin="4,0" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="{Binding NickName}" FontWeight="Light"/>
+                                                                </StackPanel>
+                                                                <TextBlock Text="{Binding EmailAddress}" IsTextSelectionEnabled="True" FontSize="12" Opacity="0.6"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Grid>
+                                                </ControlTemplate>
+                                            </MenuFlyoutItem.Template>
+                                        </MenuFlyoutItem>
+
+                                        <MenuFlyoutSeparator/>
+
+                                        <!-- Normal items -->
+                                        <MenuFlyoutItem Width="320" FontSize="12" FlowDirection="RightToLeft" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="بورد">
+                                            <MenuFlyoutItem.Icon>
+                                                <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="Board"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                        <MenuFlyoutItem FontSize="12" FlowDirection="RightToLeft" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="دانلود ها">
+                                            <MenuFlyoutItem.Icon>
+                                                <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="DocumentFolder"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                        <MenuFlyoutItem FontSize="12" FlowDirection="RightToLeft" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="تنظیمات">
+                                            <MenuFlyoutItem.Icon>
+                                                <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="Settings"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                        <MenuFlyoutItem FontSize="12" FlowDirection="RightToLeft" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="خروج از حساب">
+                                            <MenuFlyoutItem.Icon>
+                                                <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="DismissCircle"/>
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                        <!--<Grid MinWidth="260">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <StackPanel Orientation="Horizontal">
+                                        <PersonPicture Width="60" Height="60" ProfilePicture="/Assets/photo.jpg"/>
+                                        <StackPanel VerticalAlignment="Center" Margin="8,0,0,0">
+                                            <TextBlock Text="Ali Shahesmaeili" FontSize="14" FontWeight="Bold"/>
+                                            <TextBlock Text="Gold Account" FontSize="12"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>-->
+
+                                    </MenuFlyout>
+                                </Button.Flyout>
+
+                                <Image Stretch="Fill" Source="{Binding ProfileImagePath}"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+
+
+
+
+
+
+
+                </Grid>
+            </NavigationView.PaneCustomContent>
+
+            <NavigationView.MenuItems>
+                <NavigationViewItem Tag="MusicsPage" common:CursorExtensions.Cursor="Hand">
+                    <NavigationViewItem.Content>
+                        <StackPanel common:CursorExtensions.Cursor="Hand" Orientation="Horizontal">
+                            <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="Headphones"/>
+                            <TextBlock Margin="8,0,0,0" Text="Musics"/>
+                        </StackPanel>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>
+                <NavigationViewItem Tag="SamplePage2" common:CursorExtensions.Cursor="Hand">
+                    <NavigationViewItem.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="Video"/>
+                            <TextBlock Margin="8,0,0,0" Text="TV and Movies"/>
+                        </StackPanel>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>
+                <NavigationViewItem Tag="SamplePage2" common:CursorExtensions.Cursor="Hand">
+                    <NavigationViewItem.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="Apps"/>
+                            <TextBlock Margin="8,0,0,0" Text="Apps"/>
+                        </StackPanel>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>
+
+                <NavigationViewItem Tag="VPNPage" common:CursorExtensions.Cursor="Hand">
+                    <NavigationViewItem.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="Shield"/>
+                            <TextBlock Margin="8,0,0,0" Text="VPN"/>
+                        </StackPanel>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid VerticalAlignment="Top" Visibility="Collapsed" Background="#08FFFFFF" Height="80">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="6"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="*"/>
+
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0" Width="6" Background="{ThemeResource SystemAccentColor}"/>
+
+                    <Grid Margin="16,0" Grid.Column="1" >
+                        <ProgressRing IsActive="True" Width="64" Height="64"/>
+                        <PersonPicture VerticalAlignment="Center" HorizontalAlignment="Center" Height="60" Width="60" ProfilePicture="/Assets/photo.jpg" />
+                    </Grid>
+
+                    <Grid Grid.Column="2">
+                        <Button Content="asd"/>
+
+                        <Slider Grid.Column="2" VerticalAlignment="Center" AutomationProperties.Name="simple slider"/>
+                    </Grid>
+                </Grid>
+
+                <Frame x:Name="InternalFrame" Grid.Row="1"/>
+            </Grid>
+        </NavigationView>
+
+
+        <ProgressBar Background="Transparent" IsIndeterminate="{Binding Path=IsIndeterminateTopProgressBar, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top"/>
+
+    </Grid>
+</Page>

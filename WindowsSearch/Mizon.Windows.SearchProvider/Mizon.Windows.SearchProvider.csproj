@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PlatformTarget>x64</PlatformTarget>
+    <PublishAot>true</PublishAot>
+    <NativeLib>Shared</NativeLib>
+    <SelfContained>true</SelfContained>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <StripSymbols>false</StripSymbols>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <AssemblyName>Mizon.Windows.SearchProvider</AssemblyName>
+  </PropertyGroup>
+</Project>
