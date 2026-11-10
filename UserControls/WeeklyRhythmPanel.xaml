@@ -1,0 +1,149 @@
+<UserControl
+    x:Class="Mizon.Windows.UserControls.WeeklyRhythmPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icon="using:FluentIcons.WinUI"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:items="using:Mizon.Windows.ViewModels.Items"
+    xmlns:uc="using:Mizon.Windows.UserControls"
+    Loaded="Panel_Loaded"
+    Unloaded="Panel_Unloaded"
+    SizeChanged="Panel_SizeChanged">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="MusicAccent" Color="#91DEC5" />
+        <SolidColorBrush x:Key="VideoAccent" Color="#B9A3EC" />
+        <Style x:Key="RhythmCaption" TargetType="TextBlock" BasedOn="{StaticResource DiscoveryWidgetCaption}">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style x:Key="DayButtonStyle" TargetType="ToggleButton">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="UseSystemFocusVisuals" Value="True" />
+            <Setter Property="FocusVisualPrimaryBrush" Value="{StaticResource MusicAccent}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <controls:AuthInputActionSurface CornerRadius="7" Background="Transparent">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal"><VisualState.Setters><Setter Target="HoverTint.Opacity" Value="0" /><Setter Target="HoverOutline.Opacity" Value="0" /><Setter Target="DayContent.Opacity" Value="1" /><Setter Target="SelectedMark.Opacity" Value="0" /></VisualState.Setters></VisualState>
+                                    <VisualState x:Name="PointerOver"><VisualState.Setters><Setter Target="HoverTint.Opacity" Value="0.035" /><Setter Target="HoverOutline.Opacity" Value="0.28" /><Setter Target="DayContent.Opacity" Value="1" /><Setter Target="SelectedMark.Opacity" Value="0" /></VisualState.Setters></VisualState>
+                                    <VisualState x:Name="Pressed"><VisualState.Setters><Setter Target="HoverTint.Opacity" Value="0.06" /><Setter Target="HoverOutline.Opacity" Value="0.4" /><Setter Target="DayContent.Opacity" Value="0.7" /><Setter Target="SelectedMark.Opacity" Value="0" /></VisualState.Setters></VisualState>
+                                    <VisualState x:Name="Disabled"><VisualState.Setters><Setter Target="HoverTint.Opacity" Value="0" /><Setter Target="HoverOutline.Opacity" Value="0" /><Setter Target="DayContent.Opacity" Value="0.4" /><Setter Target="SelectedMark.Opacity" Value="0" /></VisualState.Setters></VisualState>
+                                    <VisualState x:Name="Checked"><VisualState.Setters><Setter Target="HoverTint.Opacity" Value="0" /><Setter Target="HoverOutline.Opacity" Value="0" /><Setter Target="DayContent.Opacity" Value="1" /><Setter Target="SelectedMark.Opacity" Value="1" /></VisualState.Setters></VisualState>
+                                    <VisualState x:Name="CheckedPointerOver"><VisualState.Setters><Setter Target="HoverTint.Opacity" Value="0.035" /><Setter Target="HoverOutline.Opacity" Value="0.28" /><Setter Target="DayContent.Opacity" Value="1" /><Setter Target="SelectedMark.Opacity" Value="1" /></VisualState.Setters></VisualState>
+                                    <VisualState x:Name="CheckedPressed"><VisualState.Setters><Setter Target="HoverTint.Opacity" Value="0.06" /><Setter Target="HoverOutline.Opacity" Value="0.4" /><Setter Target="DayContent.Opacity" Value="0.7" /><Setter Target="SelectedMark.Opacity" Value="1" /></VisualState.Setters></VisualState>
+                                    <VisualState x:Name="CheckedDisabled"><VisualState.Setters><Setter Target="HoverTint.Opacity" Value="0" /><Setter Target="HoverOutline.Opacity" Value="0" /><Setter Target="DayContent.Opacity" Value="0.4" /><Setter Target="SelectedMark.Opacity" Value="1" /></VisualState.Setters></VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter x:Name="DayContent" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+                            <Border x:Name="HoverTint" CornerRadius="7" Background="{StaticResource MusicAccent}" Opacity="0" IsHitTestVisible="False">
+                                <Border.OpacityTransition><ScalarTransition Duration="0:0:0.14" /></Border.OpacityTransition>
+                            </Border>
+                            <Border x:Name="HoverOutline" CornerRadius="7" BorderBrush="{StaticResource MusicAccent}" BorderThickness="1" Opacity="0" IsHitTestVisible="False">
+                                <Border.OpacityTransition><ScalarTransition Duration="0:0:0.14" /></Border.OpacityTransition>
+                            </Border>
+                            <Border x:Name="SelectedMark" Width="12" Height="2" CornerRadius="1" Background="{StaticResource MusicAccent}" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,1" Opacity="0" IsHitTestVisible="False"/>
+                        </controls:AuthInputActionSurface>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <DataTemplate x:Key="DayTemplate" x:DataType="items:WeeklyRhythmDayItemViewModel">
+                <Grid RowSpacing="6" Padding="1,0,1,7" FlowDirection="LeftToRight">
+                    <Grid.RowDefinitions><RowDefinition Height="90" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <StackPanel x:Name="BarStack" VerticalAlignment="Bottom" HorizontalAlignment="Center" Width="12" Spacing="2" Margin="0,0,0,1" AutomationProperties.AccessibilityView="Raw">
+                        <Border Height="{x:Bind VideoBarHeight}" CornerRadius="4,4,1,1" Background="{StaticResource VideoAccent}" Opacity="0.85" />
+                        <Border Height="{x:Bind MusicBarHeight}" CornerRadius="1,1,4,4">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#ABEDD9" Offset="0" />
+                                    <GradientStop Color="#6DBBA6" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Grid.Row="1" Text="{x:Bind ShortName}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="9" TextAlignment="Center" TextTrimming="CharacterEllipsis" Opacity="0.7" AutomationProperties.AccessibilityView="Raw" />
+                </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Border Style="{StaticResource DiscoveryWidgetSurface}">
+        <Grid RowSpacing="12" FlowDirection="LeftToRight">
+            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+            <StackPanel Style="{StaticResource DiscoveryWidgetHeader}">
+                <uc:DiscoverySectionHeader Title="ریتم هفتهٔ تو" Icon="ArrowTrending" AccentColor="#91DEC5" IsCompact="True" />
+                <TextBlock Text="مرور شنیدن‌های این هفته" Style="{StaticResource RhythmCaption}" />
+            </StackPanel>
+            <Grid x:Name="RhythmBody" Grid.Row="1" RowSpacing="8">
+                <Grid.ColumnDefinitions><ColumnDefinition x:Name="ChartColumn" Width="*" /><ColumnDefinition x:Name="SummaryColumn" Width="0" /></Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <StackPanel x:Name="SummaryArea" Spacing="6">
+                    <StackPanel Spacing="1" HorizontalAlignment="Right">
+                        <TextBlock Text="{x:Bind Summary.TotalDurationText, Mode=OneWay}" AutomationProperties.Name="{x:Bind Summary.TotalAccessibleText, Mode=OneWay}" FontSize="32" FontWeight="Light" CharacterSpacing="-50" HorizontalAlignment="Right" FlowDirection="LeftToRight" />
+                        <TextBlock Text="ساعت همراه موسیقی و تصویر" Style="{StaticResource RhythmCaption}" />
+                    </StackPanel>
+                    <Grid ColumnSpacing="7">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <Border CornerRadius="7" Padding="6,3" Background="#1391DEC5" BorderBrush="#2491DEC5" BorderThickness="1" VerticalAlignment="Center">
+                            <TextBlock Text="{x:Bind Summary.ComparisonText, Mode=OneWay}" FontSize="11" Foreground="{StaticResource MusicAccent}" FontWeight="SemiBold" FlowDirection="LeftToRight" />
+                        </Border>
+                        <TextBlock Grid.Column="1" Text="{x:Bind Summary.ComparisonDescription, Mode=OneWay}" Style="{StaticResource RhythmCaption}" FontSize="8" VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid ColumnSpacing="7">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <Border Grid.Column="1" Padding="2,0">
+                            <StackPanel Spacing="2">
+                                <Grid ColumnSpacing="4">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="4" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="موسیقی" Style="{StaticResource RhythmCaption}" FontSize="8" />
+                                    <Border Grid.Column="1" Width="4" Height="4" CornerRadius="2" Background="{StaticResource MusicAccent}" VerticalAlignment="Center" />
+                                </Grid>
+                                <TextBlock Text="{x:Bind Summary.MusicDurationText, Mode=OneWay}" FontSize="12" Foreground="{StaticResource MusicAccent}" HorizontalAlignment="Right" />
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="2,0">
+                            <StackPanel Spacing="2">
+                                <Grid ColumnSpacing="4">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="4" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="موزیک‌ویدیو" Style="{StaticResource RhythmCaption}" FontSize="8" />
+                                    <Border Grid.Column="1" Width="4" Height="4" CornerRadius="2" Background="{StaticResource VideoAccent}" VerticalAlignment="Center" />
+                                </Grid>
+                                <TextBlock Text="{x:Bind Summary.VideoDurationText, Mode=OneWay}" FontSize="12" Foreground="{StaticResource VideoAccent}" HorizontalAlignment="Right" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+                <Grid x:Name="ChartArea" Grid.Row="1" RowSpacing="6">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <Grid>
+                        <Grid Height="90" VerticalAlignment="Top" IsHitTestVisible="False">
+                            <Grid.RowDefinitions><RowDefinition /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+                            <Border Height="1" VerticalAlignment="Bottom" Background="#0EFFFFFF" />
+                            <Border Grid.Row="1" Height="1" VerticalAlignment="Bottom" Background="#0EFFFFFF" />
+                            <Border Grid.Row="2" Height="1" VerticalAlignment="Bottom" Background="#20FFFFFF" />
+                        </Grid>
+                        <Grid x:Name="DayColumnsHost" ColumnSpacing="3" AutomationProperties.Name="شنیدن روزهای هفته" />
+                    </Grid>
+                    <Border x:Name="SelectedDayDetail" Grid.Row="1" Padding="8,4" CornerRadius="8" Background="#0791DEC5" BorderBrush="#1691DEC5" BorderThickness="1">
+                            <Grid ColumnSpacing="6">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <TextBlock x:Name="SelectedDayDuration" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource MusicAccent}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="SelectedDayName" Grid.Column="1" Style="{StaticResource RhythmCaption}" FontSize="10" Opacity="0.9" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                            </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+            <StackPanel x:Name="PreviewLabel" Grid.Row="2" Style="{StaticResource DiscoveryWidgetFooter}">
+                <Grid ColumnSpacing="7">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <Border Height="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="نمونهٔ طراحی · جزئیات با انتخاب روز" Style="{StaticResource DiscoveryWidgetFooterCaption}" />
+                </Grid>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

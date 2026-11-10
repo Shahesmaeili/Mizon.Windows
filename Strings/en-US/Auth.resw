@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="WelcomeTitle" xml:space="preserve"><value>Welcome to Mizon</value></data>
+  <data name="WelcomeBack" xml:space="preserve"><value>Welcome back</value></data>
+  <data name="WelcomeBackNamed" xml:space="preserve"><value>Welcome back, {0}</value><comment>{0} is the account display name. Preserve the placeholder.</comment></data>
+  <data name="WelcomeTagline" xml:space="preserve"><value>Music for every mood.</value></data>
+  <data name="WelcomeCheckingTitle" xml:space="preserve"><value>Checking your account</value></data>
+  <data name="WelcomeInitialDetail" xml:space="preserve"><value>Getting your music space ready.</value></data>
+  <data name="WelcomeCheckingDetail" xml:space="preserve"><value>Your music world is just a moment away.</value></data>
+  <data name="WelcomeProfileTitle" xml:space="preserve"><value>Preparing your profile</value></data>
+  <data name="WelcomeProfileDetail" xml:space="preserve"><value>It all starts with your taste.</value></data>
+  <data name="WelcomeReadyTitle" xml:space="preserve"><value>Ready for your music</value></data>
+  <data name="WelcomeReadyDetail" xml:space="preserve"><value>Opening your music page.</value></data>
+  <data name="WelcomeConnectionErrorTitle" xml:space="preserve"><value>Couldn't connect</value></data>
+  <data name="WelcomeConnectionErrorDetail" xml:space="preserve"><value>Check your internet or server connection and try again.</value></data>
+  <data name="WelcomeAccountProgress" xml:space="preserve"><value>Preparing your account</value></data>
+  <data name="WelcomeAppProgress" xml:space="preserve"><value>Getting Mizon ready</value></data>
+  <data name="WelcomeLogin" xml:space="preserve"><value>Sign in</value></data>
+  <data name="WelcomeRetry" xml:space="preserve"><value>Try again</value></data>
+  <data name="ShowcaseMusicTitle" xml:space="preserve"><value>For listening and watching</value></data>
+  <data name="ShowcaseMusicDescription" xml:space="preserve"><value>Songs, music videos, and playlists to match your mood.</value></data>
+  <data name="ShowcaseCinemaTitle" xml:space="preserve"><value>A story for every moment</value></data>
+  <data name="ShowcaseCinemaDescription" xml:space="preserve"><value>Explore movies and series alongside everything else in Mizon.</value></data>
+  <data name="ShowcaseVpnTitle" xml:space="preserve"><value>A place to connect</value></data>
+  <data name="ShowcaseVpnDescription" xml:space="preserve"><value>Find VPN alongside your music, movies, and series.</value></data>
+  <data name="ShowcaseMusic" xml:space="preserve"><value>Music</value></data>
+  <data name="ShowcaseCinema" xml:space="preserve"><value>Movies &amp; series</value></data>
+  <data name="ShowcaseVpn" xml:space="preserve"><value>VPN</value></data>
+  <data name="ShowcaseMusicAction" xml:space="preserve"><value>Show music and music videos</value></data>
+  <data name="ShowcaseCinemaAction" xml:space="preserve"><value>Show movies and series</value></data>
+  <data name="ShowcaseVpnAction" xml:space="preserve"><value>Show VPN</value></data>
+  <data name="AuthAccountLabel" xml:space="preserve"><value>Mizon account</value></data>
+  <data name="AuthLoginHeading" xml:space="preserve"><value>Welcome back</value></data>
+  <data name="AuthRegisterHeading" xml:space="preserve"><value>You belong here</value></data>
+  <data name="AuthLoginDescription" xml:space="preserve"><value>Sign in with your username or email.</value></data>
+  <data name="AuthRegisterDescription" xml:space="preserve"><value>Create your account. Your world of Mizon awaits.</value></data>
+  <data name="AuthLoginIdentifierLabel" xml:space="preserve"><value>Username or email</value></data>
+  <data name="AuthLoginIdentifierHelp" xml:space="preserve"><value>Enter your account username or email.</value></data>
+  <data name="AuthPasswordLabel" xml:space="preserve"><value>Password</value></data>
+  <data name="AuthLoginPasswordHelp" xml:space="preserve"><value>Enter your password. Use the button beside the field to show or hide it.</value></data>
+  <data name="AuthShowPassword" xml:space="preserve"><value>Show password</value></data>
+  <data name="AuthHidePassword" xml:space="preserve"><value>Hide password</value></data>
+  <data name="AuthPasswordRevealHelp" xml:space="preserve"><value>Shows or hides your password.</value></data>
+  <data name="AuthPasswordVisible" xml:space="preserve"><value>Password is visible</value></data>
+  <data name="AuthPasswordHidden" xml:space="preserve"><value>Password is hidden</value></data>
+  <data name="AuthPasswordPeekHelp" xml:space="preserve"><value>Press and hold to show your password.</value></data>
+  <data name="AuthLoginErrorTitle" xml:space="preserve"><value>Could not sign in</value></data>
+  <data name="AuthRegisterErrorTitle" xml:space="preserve"><value>Could not create account</value></data>
+  <data name="AuthRetryTitle" xml:space="preserve"><value>Try again</value></data>
+  <data name="AuthLoginSubmit" xml:space="preserve"><value>Sign in to Mizon</value></data>
+  <data name="AuthLoginSubmitHelp" xml:space="preserve"><value>Checks your details and signs you in.</value></data>
+  <data name="AuthRegisterSubmit" xml:space="preserve"><value>Create account and sign in</value></data>
+  <data name="AuthRegisterSubmitHelp" xml:space="preserve"><value>Creates your account with these details and signs you in.</value></data>
+  <data name="AuthModeSwitchHelp" xml:space="preserve"><value>Switches between sign in and account creation. You can switch back during the animation.</value></data>
+  <data name="AuthCreateAccount" xml:space="preserve"><value>Create an account</value></data>
+  <data name="AuthSignInAccount" xml:space="preserve"><value>Sign in to your account</value></data>
+  <data name="AuthFirstNameLabel" xml:space="preserve"><value>First name</value></data>
+  <data name="AuthLastNameLabel" xml:space="preserve"><value>Last name</value></data>
+  <data name="AuthFirstNameHelp" xml:space="preserve"><value>Enter your first name, up to 60 characters.</value></data>
+  <data name="AuthLastNameHelp" xml:space="preserve"><value>Enter your last name, up to 60 characters.</value></data>
+  <data name="AuthUsernameLabel" xml:space="preserve"><value>Username</value></data>
+  <data name="AuthUsernameHelp" xml:space="preserve"><value>Use 3–32 characters: English letters, numbers, periods, or underscores.</value></data>
+  <data name="AuthUsernameHint" xml:space="preserve"><value>3–32 characters: English letters, numbers, periods, or underscores</value></data>
+  <data name="AuthEmailLabel" xml:space="preserve"><value>Email</value></data>
+  <data name="AuthEmailHelp" xml:space="preserve"><value>Enter a valid email address.</value></data>
+  <data name="AuthRegisterPasswordHelp" xml:space="preserve"><value>Choose a password with 8–128 characters.</value></data>
+  <data name="AuthConfirmPasswordLabel" xml:space="preserve"><value>Confirm password</value></data>
+  <data name="AuthConfirmPasswordHelp" xml:space="preserve"><value>Enter your chosen password again.</value></data>
+  <data name="AuthHasAccountPrompt" xml:space="preserve"><value>Already have an account?</value></data>
+  <data name="AuthNoAccountPrompt" xml:space="preserve"><value>New to Mizon?</value></data>
+  <data name="AuthRegisterFooter" xml:space="preserve"><value>Everything you love, in one account.</value></data>
+  <data name="AuthLoginFooter" xml:space="preserve"><value>Your account. Your world of Mizon.</value></data>
+  <data name="AuthRegisterProgress" xml:space="preserve"><value>Creating your account…</value></data>
+  <data name="AuthLoginProgress" xml:space="preserve"><value>Signing in…</value></data>
+  <data name="AuthInvalidIdentifierError" xml:space="preserve"><value>Your username or email contains an invalid character.</value></data>
+  <data name="AuthInvalidNameError" xml:space="preserve"><value>First and last names must each contain 1–60 characters.</value></data>
+  <data name="AuthInvalidUsernameError" xml:space="preserve"><value>Your username must contain 3–32 English letters, numbers, periods, or underscores.</value></data>
+  <data name="AuthInvalidEmailError" xml:space="preserve"><value>Enter a valid email address with no more than 128 characters.</value></data>
+  <data name="AuthInvalidPasswordError" xml:space="preserve"><value>Your password must contain 8–128 characters.</value></data>
+  <data name="AuthPasswordMismatchError" xml:space="preserve"><value>Your passwords do not match.</value></data>
+  <data name="AuthInvalidRegistrationError" xml:space="preserve"><value>Some details are invalid. Check your name, email, and password.</value></data>
+  <data name="AuthUsernameTakenError" xml:space="preserve"><value>That username is already taken. Try another one.</value></data>
+  <data name="AuthEmailTakenError" xml:space="preserve"><value>An account already uses this email. Sign in or use another email.</value></data>
+  <data name="AuthRegistrationUnavailableError" xml:space="preserve"><value>Account creation is temporarily unavailable. Try again in a moment.</value></data>
+  <data name="AuthInvalidCredentialsError" xml:space="preserve"><value>Your username, email, or password is incorrect.</value></data>
+  <data name="AuthUpdateRequiredError" xml:space="preserve"><value>Update the app to sign in.</value></data>
+  <data name="AuthConnectionError" xml:space="preserve"><value>Could not connect to the server. Check your internet connection and try again.</value></data>
+  <data name="AuthTooManyAttemptsError" xml:space="preserve"><value>Too many attempts. Please try again later.</value></data>
+  <data name="AuthRegistrationFailedError" xml:space="preserve"><value>Could not create your account. Please try again.</value></data>
+  <data name="AuthLoginFailedError" xml:space="preserve"><value>Could not sign in. Please try again.</value></data>
+  <data name="AuthPageName" xml:space="preserve"><value>Mizon sign in and registration</value></data>
+  <data name="AuthPageHelp" xml:space="preserve"><value>Use Tab to move between fields and buttons.</value></data>
+  <data name="AuthModeLogin" xml:space="preserve"><value>Sign-in form</value></data>
+  <data name="AuthModeRegister" xml:space="preserve"><value>Registration form</value></data>
+  <data name="AuthSubmittingLogin" xml:space="preserve"><value>Checking sign-in details</value></data>
+  <data name="AuthSubmittingRegister" xml:space="preserve"><value>Creating your account</value></data>
+  <data name="WindowTitleLogin" xml:space="preserve"><value>Sign in</value></data>
+  <data name="WindowTitleRegister" xml:space="preserve"><value>Sign up</value></data>
+  <data name="WindowTitleWelcome" xml:space="preserve"><value>Welcome</value></data>
+  <data name="LanguagePickerName" xml:space="preserve"><value>App language</value></data>
+  <data name="LanguagePickerHelp" xml:space="preserve"><value>Change the language without leaving this page.</value></data>
+  <data name="LanguageChangedAnnouncement" xml:space="preserve"><value>App language changed to English.</value></data>
+  <data name="ClearInputName" xml:space="preserve"><value>Clear text</value></data>
+  <data name="ClearInputHelp" xml:space="preserve"><value>Clears this field.</value></data>
+</root>

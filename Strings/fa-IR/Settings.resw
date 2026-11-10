@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Title" xml:space="preserve"><value>تنظیمات</value></data>
+  <data name="Subtitle" xml:space="preserve"><value>میزون، به سلیقهٔ تو</value></data>
+  <data name="SavedLocally" xml:space="preserve"><value>تغییرات این دستگاه خودکار ذخیره می‌شوند</value></data>
+  <data name="Account" xml:space="preserve"><value>حساب کاربری</value></data>
+  <data name="Security" xml:space="preserve"><value>امنیت و حریم خصوصی</value></data>
+  <data name="Language" xml:space="preserve"><value>زبان برنامه</value></data>
+  <data name="Appearance" xml:space="preserve"><value>تم و شخصی‌سازی</value></data>
+  <data name="Notifications" xml:space="preserve"><value>اعلان‌ها</value></data>
+  <data name="Storage" xml:space="preserve"><value>فایل‌ها و فضای ذخیره‌سازی</value></data>
+  <data name="Updates" xml:space="preserve"><value>نسخه و به‌روزرسانی</value></data>
+  <data name="Platforms" xml:space="preserve"><value>میزون در دستگاه‌های دیگر</value></data>
+  <data name="AccountDescription" xml:space="preserve"><value>اطلاعات حسابی که با آن وارد میزون شده‌ای.</value></data>
+  <data name="SecurityDescription" xml:space="preserve"><value>دسترسی به حساب و امنیت این دستگاه را مدیریت کن.</value></data>
+  <data name="LanguageDescription" xml:space="preserve"><value>زبان را همین‌جا عوض کن؛ بدون بستن برنامه.</value></data>
+  <data name="AppearanceDescription" xml:space="preserve"><value>همان فضای شفاف؛ با روشنایی دلخواه تو.</value></data>
+  <data name="NotificationsDescription" xml:space="preserve"><value>کنترل اینکه چه زمانی و چگونه باخبر شوی.</value></data>
+  <data name="StorageDescription" xml:space="preserve"><value>فایل‌های دانلودشده و مسیرهای واقعی این دستگاه.</value></data>
+  <data name="UpdatesDescription" xml:space="preserve"><value>نسخهٔ نصب‌شده و اطلاعات لازم برای پشتیبانی.</value></data>
+  <data name="PlatformsDescription" xml:space="preserve"><value>تجربهٔ میزون روی موبایل، ساعت، دسکتاپ و وب.</value></data>
+  <data name="DisplayName" xml:space="preserve"><value>نام نمایشی</value></data>
+  <data name="Username" xml:space="preserve"><value>نام کاربری</value></data>
+  <data name="FullName" xml:space="preserve"><value>نام و نام خانوادگی</value></data>
+  <data name="Email" xml:space="preserve"><value>ایمیل</value></data>
+  <data name="RefreshAccount" xml:space="preserve"><value>به‌روزرسانی اطلاعات</value></data>
+  <data name="ReadOnlyAccount" xml:space="preserve"><value>ویرایش اطلاعات حساب پس از آماده‌شدن سرویس آن فعال می‌شود.</value></data>
+  <data name="SignOut" xml:space="preserve"><value>خروج از این حساب</value></data>
+  <data name="SignOutDescription" xml:space="preserve"><value>این دستگاه از حساب فعلی خارج می‌شود.</value></data>
+  <data name="Password" xml:space="preserve"><value>تغییر گذرواژه</value></data>
+  <data name="Sessions" xml:space="preserve"><value>دستگاه‌ها و نشست‌های فعال</value></data>
+  <data name="TwoFactor" xml:space="preserve"><value>تأیید دومرحله‌ای</value></data>
+  <data name="ComingSoon" xml:space="preserve"><value>به‌زودی</value></data>
+  <data name="ServicePending" xml:space="preserve"><value>این قابلیت هنوز به سرویس حساب متصل نشده است.</value></data>
+  <data name="WindowsSecurity" xml:space="preserve"><value>گزینه‌های ورود ویندوز</value></data>
+  <data name="WindowsPrivacy" xml:space="preserve"><value>حریم خصوصی ویندوز</value></data>
+  <data name="OpenSettings" xml:space="preserve"><value>باز کردن تنظیمات ویندوز</value></data>
+  <data name="LanguageChoice" xml:space="preserve"><value>زبان نمایش</value></data>
+  <data name="LanguageHint" xml:space="preserve"><value>فارسی و انگلیسی در ورود، ثبت‌نام، خوش‌آمدگویی و تنظیمات پشتیبانی می‌شوند. ترجمهٔ بخش‌های دیگر به‌تدریج اضافه می‌شود.</value></data>
+  <data name="ActionsLanguageHint" xml:space="preserve"><value>زبان اکشن‌های فعال ویندوز هم با انتخابت هماهنگ می‌شود؛ ممکن است لازم باشد پنل اکشن‌ها را دوباره باز کنی.</value></data>
+  <data name="ThemeChoice" xml:space="preserve"><value>ظاهر برنامه</value></data>
+  <data name="ThemeSystem" xml:space="preserve"><value>هماهنگ با ویندوز</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>روشن</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>تیره</value></data>
+  <data name="ThemeHint" xml:space="preserve"><value>تغییر بلافاصله اعمال می‌شود. گزینهٔ هماهنگ با ویندوز، تغییرات تم سیستم را دنبال می‌کند.</value></data>
+  <data name="BackdropChoice" xml:space="preserve"><value>پس‌زمینهٔ پنجره</value></data>
+  <data name="BackdropDescription" xml:space="preserve"><value>جلوهٔ شیشه‌ای یا رنگ برگرفته از تصویر زمینه را برای پنجرهٔ اصلی انتخاب کن.</value></data>
+  <data name="BackdropAcrylic" xml:space="preserve"><value>اکریلیک · شیشهٔ کلاسیک</value></data>
+  <data name="BackdropAcrylicBase" xml:space="preserve"><value>اکریلیک · شیشهٔ مات</value></data>
+  <data name="BackdropAcrylicThin" xml:space="preserve"><value>اکریلیک · شیشهٔ شفاف</value></data>
+  <data name="BackdropMica" xml:space="preserve"><value>مایکا · رنگ تصویر زمینه</value></data>
+  <data name="BackdropMicaAlt" xml:space="preserve"><value>مایکا جایگزین · رنگ عمیق‌تر تصویر زمینه</value></data>
+  <data name="BackdropHint" xml:space="preserve"><value>انتخابت روی این دستگاه ذخیره می‌شود. وقتی شفافیت در دسترس نباشد، ویندوز ممکن است پس‌زمینهٔ ساده نشان دهد.</value></data>
+  <data name="BackdropHighContrast" xml:space="preserve"><value>پس‌زمینهٔ ساده از تم کنتراست ویندوز پیروی می‌کند. انتخاب جلوهٔ تو ذخیره شده است.</value></data>
+  <data name="BackdropTransparencyDisabled" xml:space="preserve"><value>شفافیت ویندوز خاموش است. با روشن‌شدن آن، جلوهٔ انتخابی دوباره نمایش داده می‌شود.</value></data>
+  <data name="BackdropUnsupported" xml:space="preserve"><value>این جلوه روی دستگاه در دسترس نیست. پس‌زمینهٔ ساده و هماهنگ با تم نمایش داده می‌شود.</value></data>
+  <data name="BackdropUnavailable" xml:space="preserve"><value>نمایش این جلوه ممکن نشد. پس‌زمینهٔ ساده و هماهنگ با تم نمایش داده می‌شود.</value></data>
+  <data name="AppearanceSaveError" xml:space="preserve"><value>ظاهر تغییر کرد، اما ذخیره نشد. برای تلاش دوباره، انتخابت را تغییر بده.</value></data>
+  <data name="VisualEffects" xml:space="preserve"><value>انیمیشن و جلوه‌های ویندوز</value></data>
+  <data name="VisualEffectsHint" xml:space="preserve"><value>تنظیمات دسترس‌پذیری ویندوز، حرکت و شفافیت سیستم را کنترل می‌کند.</value></data>
+  <data name="NotificationWindows" xml:space="preserve"><value>اعلان‌های ویندوز</value></data>
+  <data name="NotificationWindowsHint" xml:space="preserve"><value>مجوز اعلان، مزاحم نشوید و نمایش روی صفحهٔ قفل را در ویندوز مدیریت کن.</value></data>
+  <data name="NotificationActivity" xml:space="preserve"><value>فعالیت دوستان و پاسخ‌ها</value></data>
+  <data name="NotificationRelease" xml:space="preserve"><value>آهنگ‌ها و قسمت‌های جدید</value></data>
+  <data name="NotificationDownload" xml:space="preserve"><value>پایان دانلود</value></data>
+  <data name="NotificationPending" xml:space="preserve"><value>تنظیم جداگانهٔ این اعلان‌ها پس از اتصال سرویس اعلان فعال می‌شود.</value></data>
+  <data name="StoredFiles" xml:space="preserve"><value>فایل‌های ذخیره‌شده</value></data>
+  <data name="CacheLabel" xml:space="preserve"><value>دانلودها و کش رسانه</value></data>
+  <data name="CacheHint" xml:space="preserve"><value>آهنگ، کاور، عکس و رسانه‌های استوری؛ فایل‌های کامل دوباره دانلود نمی‌شوند.</value></data>
+  <data name="OpenFolder" xml:space="preserve"><value>باز کردن پوشه</value></data>
+  <data name="RefreshStorage" xml:space="preserve"><value>محاسبهٔ دوباره</value></data>
+  <data name="Scanning" xml:space="preserve"><value>در حال بررسی فایل‌ها…</value></data>
+  <data name="StorageNotScanned" xml:space="preserve"><value>هنوز بررسی نشده</value></data>
+  <data name="StorageFilesFormat" xml:space="preserve"><value>{0:N0} فایل کامل</value></data>
+  <data name="StoragePendingFormat" xml:space="preserve"><value>{0:N0} فایل موقت یا در حال دانلود</value></data>
+  <data name="StorageError" xml:space="preserve"><value>بررسی فضای ذخیره‌سازی انجام نشد؛ دوباره تلاش کن.</value></data>
+  <data name="FolderError" xml:space="preserve"><value>پوشه باز نشد؛ دسترسی به مسیر را بررسی کن.</value></data>
+  <data name="DataFolder" xml:space="preserve"><value>داده‌های محلی برنامه</value></data>
+  <data name="LogsFolder" xml:space="preserve"><value>گزارش‌های عیب‌یابی</value></data>
+  <data name="StorageSafeHint" xml:space="preserve"><value>مسیر فعلی نمایش داده می‌شود. انتقال یا پاک‌سازی فایل‌ها در زمان پخش و دانلود هنوز فعال نیست.</value></data>
+  <data name="InstalledVersion" xml:space="preserve"><value>نسخهٔ نصب‌شده</value></data>
+  <data name="VersionUnavailable" xml:space="preserve"><value>نسخه در دسترس نیست</value></data>
+  <data name="Framework" xml:space="preserve"><value>محیط اجرا</value></data>
+  <data name="Architecture" xml:space="preserve"><value>معماری</value></data>
+  <data name="CopyVersion" xml:space="preserve"><value>کپی اطلاعات نسخه</value></data>
+  <data name="VersionCopied" xml:space="preserve"><value>اطلاعات نسخه کپی شد.</value></data>
+  <data name="AutomaticUpdates" xml:space="preserve"><value>به‌روزرسانی خودکار</value></data>
+  <data name="UpdatePending" xml:space="preserve"><value>سرویس انتشار و بررسی نسخه هنوز تنظیم نشده است.</value></data>
+  <data name="SystemSettingsError" xml:space="preserve"><value>تنظیمات ویندوز باز نشد.</value></data>
+  <data name="Android" xml:space="preserve"><value>اندروید</value></data>
+  <data name="WearOS" xml:space="preserve"><value>ساعت اندرویدی</value></data>
+  <data name="iPhone" xml:space="preserve"><value>آیفون و آیپد</value></data>
+  <data name="AppleWatch" xml:space="preserve"><value>اپل واچ</value></data>
+  <data name="Mac" xml:space="preserve"><value>مک</value></data>
+  <data name="Web" xml:space="preserve"><value>نسخهٔ وب</value></data>
+  <data name="PlatformPending" xml:space="preserve"><value>لینک دریافت پس از انتشار اضافه می‌شود.</value></data>
+  <data name="Phone" xml:space="preserve"><value>موبایل</value></data>
+  <data name="Watch" xml:space="preserve"><value>ساعت هوشمند</value></data>
+  <data name="Desktop" xml:space="preserve"><value>دسکتاپ</value></data>
+  <data name="Browser" xml:space="preserve"><value>مرورگر</value></data>
+  <data name="NoProfile" xml:space="preserve"><value>پروفایل میزون</value></data>
+  <data name="SettingsNavigation" xml:space="preserve"><value>بخش‌های تنظیمات</value></data>
+  <data name="ClipboardError" xml:space="preserve"><value>اطلاعات نسخه کپی نشد؛ دوباره تلاش کن.</value></data>
+  <data name="VersionDetails" xml:space="preserve"><value>اطلاعات نسخه</value></data>
+  <data name="AiConnections" xml:space="preserve"><value>اتصال‌های هوش مصنوعی</value></data>
+  <data name="AiConnectionsDescription" xml:space="preserve"><value>انتخاب کن کدام دستیارها به میزون دسترسی داشته باشند و هر اتصال چه کارهایی بتواند انجام بدهد.</value></data>
+</root>

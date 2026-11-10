@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="StatusPending" xml:space="preserve"><value>منتظر اجازهٔ شما</value></data>
+  <data name="StatusApproved" xml:space="preserve"><value>متصل · دسترسی تأیید شده</value></data>
+  <data name="StatusApprovedOffline" xml:space="preserve"><value>آفلاین · مجوز ذخیره شده</value></data>
+  <data name="SessionScopeHint" xml:space="preserve"><value>این کلاینت با تنظیم قدیمی وصل شده و شناسهٔ اتصال ماندگار ندارد. مجوز آن فقط تا پایان همین اتصال معتبر است.</value></data>
+  <data name="StorageErrorTitle" xml:space="preserve"><value>ذخیرهٔ مجوزها انجام نشد</value></data>
+  <data name="StorageReadError" xml:space="preserve"><value>مجوزهای ذخیره‌شده خوانده نشدند و دسترسی خودکار داده نمی‌شود. دسترسی به فایل‌ها را بررسی کن؛ «لغو همه» مجوزهای ذخیره‌شده را پاک و این بخش را از نو آماده می‌کند.</value></data>
+  <data name="StorageSaveError" xml:space="preserve"><value>مجوز ذخیره نشد و دسترسی جدیدی داده نشد. دوباره تلاش کن.</value></data>
+  <data name="StorageRevokeError" xml:space="preserve"><value>دسترسی فعلاً قطع شد، اما حذف مجوز از حافظهٔ دائمی انجام نشد؛ ممکن است پس از اجرای دوباره برگردد. دوباره «لغو دسترسی» یا «لغو همه» را بزن.</value></data>
+  <data name="StatusDenied" xml:space="preserve"><value>درخواست رد شده</value></data>
+  <data name="StatusRevoked" xml:space="preserve"><value>مجوز دسترسی لغو شده</value></data>
+  <data name="StatusDisconnected" xml:space="preserve"><value>اتصال قطع شده</value></data>
+  <data name="ActiveOperation" xml:space="preserve"><value>عملیات در حال اجرا</value></data>
+  <data name="NeverUsed" xml:space="preserve"><value>هنوز عملیاتی انجام نشده</value></data>
+  <data name="SummaryFormat" xml:space="preserve"><value>{0} اتصال · {1} مجاز · {2} در حال فعالیت</value></data>
+  <data name="ConnectedLabel" xml:space="preserve"><value>شروع اتصال</value></data>
+  <data name="AccessRequestedTitle" xml:space="preserve"><value>یک دستیار هوش مصنوعی می‌خواهد متصل شود</value></data>
+  <data name="AccessRequestedMessage" xml:space="preserve"><value>پیش از دادن دسترسی، نام و مجوزهای آن را در میزون بررسی کن.</value></data>
+  <data name="ManageConnections" xml:space="preserve"><value>اتصال‌های هوش مصنوعی</value></data>
+  <data name="Close" xml:space="preserve"><value>بستن</value></data>
+  <data name="ConnectionError" xml:space="preserve"><value>باز کردن اتصال هوش مصنوعی انجام نشد. دوباره تلاش کن.</value></data>
+  <data name="ConsentScopeHint" xml:space="preserve"><value>مجوز این کلاینت در حساب ویندوز تو رمزگذاری و ذخیره می‌شود و پس از اجرای دوباره هم باقی می‌ماند؛ تا وقتی خودت از همین‌جا لغوش کنی. فقط مجوزهای انتخاب‌شده حفظ می‌شوند.</value></data>
+  <data name="EnableConnections" xml:space="preserve"><value>پذیرش درخواست اتصال هوش مصنوعی</value></data>
+  <data name="Enabled" xml:space="preserve"><value>پذیرش درخواست فعال است</value></data>
+  <data name="Disabled" xml:space="preserve"><value>دسترسی غیرفعال است</value></data>
+  <data name="EnableConnectionsHelp" xml:space="preserve"><value>کلاینت‌های MCP مثل Codex و Claude می‌توانند به صفحه‌های خوش‌آمد، ورود و ثبت‌نام و با مجوز جداگانه به تنظیمات ظاهر دسترسی داشته باشند. هر کلاینت جدید ابتدا به تأیید تو نیاز دارد. خاموش کردن این گزینه دسترسی را موقتاً متوقف می‌کند؛ مجوزهای ذخیره‌شده پاک نمی‌شوند.</value></data>
+  <data name="Connections" xml:space="preserve"><value>اتصال‌ها و فعالیت‌ها</value></data>
+  <data name="RevokeAll" xml:space="preserve"><value>لغو همه</value></data>
+  <data name="RevokeAllHelp" xml:space="preserve"><value>مجوز همهٔ کلاینت‌ها، حتی کلاینت‌های آفلاین، را پاک کن و عملیات جاری آن‌ها را متوقف کن.</value></data>
+  <data name="NoConnections" xml:space="preserve"><value>اتصال‌های هوش مصنوعی تو اینجا هستند</value></data>
+  <data name="NoConnectionsHint" xml:space="preserve"><value>یک کلاینت MCP را به میزون وصل کن. درخواست آن را اینجا می‌بینی؛ پیش از تأیید تو نمی‌تواند اطلاعات برنامه را بخواند یا کنترلش کند.</value></data>
+  <data name="SelfReportedIdentity" xml:space="preserve"><value>نام و نسخه را خود کلاینت اعلام می‌کند و هویت تأییدشده نیستند. لوگوها فقط نشان تصویری داخل برنامه‌اند و هویت کلاینت را ثابت نمی‌کنند. فقط اتصالی را تأیید کن که خودت شروع کرده‌ای.</value></data>
+  <data name="Busy" xml:space="preserve"><value>در حال انجام عملیات در میزون</value></data>
+  <data name="Permissions" xml:space="preserve"><value>مجوزهای این کلاینت</value></data>
+  <data name="PermissionRead" xml:space="preserve"><value>خواندن وضعیت صفحه</value></data>
+  <data name="PermissionReadHint" xml:space="preserve"><value>مشاهدهٔ وضعیت صفحه و فرم. گذرواژه و توکن هرگز برگردانده نمی‌شوند.</value></data>
+  <data name="PermissionControl" xml:space="preserve"><value>جابه‌جایی و تکمیل فرم‌ها</value></data>
+  <data name="PermissionControlHint" xml:space="preserve"><value>باز کردن صفحه‌های ورود و ثبت‌نام، تکمیل یا پاک کردن فیلدها، تلاش دوباره در خوش‌آمد و تغییر زبان برنامه.</value></data>
+  <data name="PermissionSubmit" xml:space="preserve"><value>ورود به حساب یا ساخت حساب</value></data>
+  <data name="PermissionSubmitHint" xml:space="preserve"><value>ارسال فرم به سرور؛ نیازمند مجوز کنترل فرم‌هاست و در ابتدا خاموش است.</value></data>
+  <data name="ChangeScopesHint" xml:space="preserve"><value>برای تغییر مجوزها، اول دسترسی را لغو کن، مجوزها را تغییر بده و دوباره تأیید کن.</value></data>
+  <data name="LastActivity" xml:space="preserve"><value>آخرین عملیات</value></data>
+  <data name="Approve" xml:space="preserve"><value>تأیید دسترسی</value></data>
+  <data name="Deny" xml:space="preserve"><value>رد درخواست</value></data>
+  <data name="Revoke" xml:space="preserve"><value>لغو دسترسی</value></data>
+  <data name="RevokeHelp" xml:space="preserve"><value>مجوز ذخیره‌شدهٔ این کلاینت را پاک و تمام اتصال‌ها و عملیات جاری آن را از دسترسی محروم کن. برای اتصال بعدی دوباره به تأیید تو نیاز دارد.</value></data>
+  <data name="VersionFormat" xml:space="preserve"><value>نسخهٔ {0}</value></data>
+  <data name="VersionNotProvided" xml:space="preserve"><value>نسخه اعلام نشده</value></data>
+  <data name="ActionNameFormat" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="ReadState" xml:space="preserve"><value>خواندن وضعیت صفحه</value></data>
+  <data name="OpenPage" xml:space="preserve"><value>باز کردن صفحهٔ ورود یا ثبت‌نام</value></data>
+  <data name="FillForm" xml:space="preserve"><value>تکمیل فیلدهای فرم</value></data>
+  <data name="SubmitForm" xml:space="preserve"><value>ارسال فرم ورود یا ثبت‌نام</value></data>
+  <data name="ClearForm" xml:space="preserve"><value>پاک کردن فیلدهای فرم</value></data>
+  <data name="RetryWelcome" xml:space="preserve"><value>تلاش دوباره برای آماده‌سازی صفحهٔ خوش‌آمد</value></data>
+  <data name="ChangeLanguage" xml:space="preserve"><value>تغییر زبان برنامه</value></data>
+  <data name="AuthenticationGroup" xml:space="preserve"><value>ورود و ثبت‌نام</value></data>
+  <data name="AppearanceGroup" xml:space="preserve"><value>ظاهر برنامه</value></data>
+  <data name="AppearanceGroupHint" xml:space="preserve"><value>مجوز جداگانه برای پوسته و جنس پس‌زمینهٔ پنجره. تأیید قبلی ورود، دسترسی به ظاهر را نمی‌دهد. برای افزودن آن، دسترسی را لغو کنید، مجوزهای زیر را انتخاب کنید و دوباره تأیید کنید.</value></data>
+  <data name="PermissionAppearanceRead" xml:space="preserve"><value>خواندن تنظیمات ظاهر</value></data>
+  <data name="PermissionAppearanceReadHint" xml:space="preserve"><value>خواندن پوسته و جنس پنجرهٔ انتخاب‌شده، ظاهر مؤثر و وضعیت جایگزین.</value></data>
+  <data name="PermissionAppearanceControl" xml:space="preserve"><value>تغییر پوسته و جنس پنجره</value></data>
+  <data name="PermissionAppearanceControlHint" xml:space="preserve"><value>اعمال و ذخیرهٔ حالت روشن، تیره یا سیستم و گونه‌های اکریلیک یا میکا. این مجوز دسترسی به دیگر تنظیمات را نمی‌دهد.</value></data>
+  <data name="ReadAppearance" xml:space="preserve"><value>در حال خواندن تنظیمات ظاهر</value></data>
+  <data name="ChangeAppearance" xml:space="preserve"><value>در حال تغییر پوسته و جنس پنجره</value></data>
+  <data name="NavigationGroup" xml:space="preserve"><value>صفحه‌ها و دیپ‌لینک‌ها</value></data>
+  <data name="NavigationGroupHint" xml:space="preserve"><value>مجوز مستقل برای باز کردن مقصدهای مشخص برنامه؛ شامل خواندن محتوای صفحه‌ها، تغییر تنظیمات یا عملیات پخش نیست.</value></data>
+  <data name="PermissionNavigationRead" xml:space="preserve"><value>خواندن مقصد فعلی</value></data>
+  <data name="PermissionNavigationReadHint" xml:space="preserve"><value>خواندن صفحهٔ فعلی و دیپ‌لینک در انتظار، شامل شناسه‌های عمومی یا متن جستجوی آن.</value></data>
+  <data name="PermissionNavigationControl" xml:space="preserve"><value>باز کردن مقصدهای برنامه</value></data>
+  <data name="PermissionNavigationControlHint" xml:space="preserve"><value>باز کردن صفحه‌های مشخص، کامنت آهنگ، استوری یا جستجوی داخل برنامه؛ بدون ارسال فرم، پخش و دانلود خودکار آهنگ یا تغییر تنظیمات. مقصدهای محتوا نیاز به ورود دارند.</value></data>
+  <data name="ReadNavigation" xml:space="preserve"><value>در حال خواندن مقصد فعلی</value></data>
+  <data name="OpenDestination" xml:space="preserve"><value>در حال باز کردن مقصد برنامه</value></data>
+  <data name="TaskbarGroup" xml:space="preserve"><value>پین برنامه در تسک‌بار</value></data>
+  <data name="TaskbarGroupHint" xml:space="preserve"><value>مجوز مستقل برای وضعیت و درخواست پین خود میزون؛ تأیید نهایی همچنان در پنجرهٔ ویندوز با شماست.</value></data>
+  <data name="PermissionTaskbarRead" xml:space="preserve"><value>خواندن وضعیت پین میزون</value></data>
+  <data name="PermissionTaskbarReadHint" xml:space="preserve"><value>بررسی وضعیت واقعی پین، پشتیبانی و مجاز بودن درخواست؛ بدون دسترسی به برنامه‌های دیگر تسک‌بار.</value></data>
+  <data name="PermissionTaskbarControl" xml:space="preserve"><value>درخواست افزودن میزون به تسک‌بار</value></data>
+  <data name="PermissionTaskbarControlHint" xml:space="preserve"><value>فقط هنگام درخواست شما و حضور برنامه در پیش‌زمینه، تأیید ویندوز را نشان می‌دهد؛ بدون تأیید خودکار یا حذف پین.</value></data>
+  <data name="ReadTaskbarPin" xml:space="preserve"><value>در حال بررسی وضعیت پین تسک‌بار</value></data>
+  <data name="RequestTaskbarPin" xml:space="preserve"><value>در حال درخواست تأیید پین تسک‌بار</value></data>
+</root>

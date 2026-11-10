@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <StartupObject>ProviderAbiTests</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Exercise the actual ABI implementation, including its ownership code. -->
+    <Compile Include="..\Mizon.Windows.PaletteProvider\*.cs" Link="Production\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Services\PaletteAuthenticationStore.cs" Link="Integration\PaletteAuthenticationStore.cs" />
+    <ProjectReference Include="..\..\..\..\Mizon.API\Mizon.API.Client\Mizon.API.Client.csproj" />
+  </ItemGroup>
+</Project>

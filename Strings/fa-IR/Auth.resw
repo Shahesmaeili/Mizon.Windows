@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="WelcomeTitle" xml:space="preserve"><value>به میزون خوش آمدی</value></data>
+  <data name="WelcomeBack" xml:space="preserve"><value>خوش برگشتی</value></data>
+  <data name="WelcomeBackNamed" xml:space="preserve"><value>خوش برگشتی، {0}</value><comment>{0} is the account display name. Preserve the placeholder.</comment></data>
+  <data name="WelcomeTagline" xml:space="preserve"><value>هر حال‌وهوا، یک موسیقی.</value></data>
+  <data name="WelcomeCheckingTitle" xml:space="preserve"><value>در حال بررسی حساب</value></data>
+  <data name="WelcomeInitialDetail" xml:space="preserve"><value>داریم فضای موسیقی تو را آماده می‌کنیم.</value></data>
+  <data name="WelcomeCheckingDetail" xml:space="preserve"><value>یک لحظه تا رسیدن به دنیای موسیقی تو.</value></data>
+  <data name="WelcomeProfileTitle" xml:space="preserve"><value>در حال آماده‌سازی پروفایل</value></data>
+  <data name="WelcomeProfileDetail" xml:space="preserve"><value>همه‌چیز با سلیقهٔ تو شروع می‌شود.</value></data>
+  <data name="WelcomeReadyTitle" xml:space="preserve"><value>آماده‌ایم؛ بریم سراغ موسیقی</value></data>
+  <data name="WelcomeReadyDetail" xml:space="preserve"><value>در حال باز کردن صفحهٔ موسیقی تو.</value></data>
+  <data name="WelcomeConnectionErrorTitle" xml:space="preserve"><value>ارتباط برقرار نشد</value></data>
+  <data name="WelcomeConnectionErrorDetail" xml:space="preserve"><value>اتصال اینترنت یا سرور را بررسی کن و دوباره امتحان کن.</value></data>
+  <data name="WelcomeAccountProgress" xml:space="preserve"><value>در حال آماده‌سازی حساب</value></data>
+  <data name="WelcomeAppProgress" xml:space="preserve"><value>در حال آماده‌سازی میزون</value></data>
+  <data name="WelcomeLogin" xml:space="preserve"><value>ورود به حساب</value></data>
+  <data name="WelcomeRetry" xml:space="preserve"><value>تلاش دوباره</value></data>
+  <data name="ShowcaseMusicTitle" xml:space="preserve"><value>برای شنیدن و دیدن</value></data>
+  <data name="ShowcaseMusicDescription" xml:space="preserve"><value>از آهنگ و موزیک‌ویدیو تا پلی‌لیست‌هایی که حال‌وهوایت را می‌سازند.</value></data>
+  <data name="ShowcaseCinemaTitle" xml:space="preserve"><value>قصه‌ای برای هر لحظه</value></data>
+  <data name="ShowcaseCinemaDescription" xml:space="preserve"><value>فیلم‌ها و سریال‌ها را در کنار بخش‌های دیگر میزون دنبال کن.</value></data>
+  <data name="ShowcaseVpnTitle" xml:space="preserve"><value>جایی برای اتصال</value></data>
+  <data name="ShowcaseVpnDescription" xml:space="preserve"><value>بخش VPN هم کنار موسیقی، فیلم و سریال در دسترس توست.</value></data>
+  <data name="ShowcaseMusic" xml:space="preserve"><value>موسیقی</value></data>
+  <data name="ShowcaseCinema" xml:space="preserve"><value>فیلم و سریال</value></data>
+  <data name="ShowcaseVpn" xml:space="preserve"><value>VPN</value></data>
+  <data name="ShowcaseMusicAction" xml:space="preserve"><value>نمایش موسیقی و موزیک‌ویدیو</value></data>
+  <data name="ShowcaseCinemaAction" xml:space="preserve"><value>نمایش فیلم و سریال</value></data>
+  <data name="ShowcaseVpnAction" xml:space="preserve"><value>نمایش وی‌پی‌ان</value></data>
+  <data name="AuthAccountLabel" xml:space="preserve"><value>حساب میزون</value></data>
+  <data name="AuthLoginHeading" xml:space="preserve"><value>خوش برگشتی</value></data>
+  <data name="AuthRegisterHeading" xml:space="preserve"><value>جای تو اینجاست</value></data>
+  <data name="AuthLoginDescription" xml:space="preserve"><value>با نام کاربری یا ایمیلت وارد شو.</value></data>
+  <data name="AuthRegisterDescription" xml:space="preserve"><value>حسابت را بساز؛ دنیای میزون منتظر توست.</value></data>
+  <data name="AuthLoginIdentifierLabel" xml:space="preserve"><value>نام کاربری یا ایمیل</value></data>
+  <data name="AuthLoginIdentifierHelp" xml:space="preserve"><value>نام کاربری یا ایمیل حساب خود را وارد کن.</value></data>
+  <data name="AuthPasswordLabel" xml:space="preserve"><value>رمز عبور</value></data>
+  <data name="AuthLoginPasswordHelp" xml:space="preserve"><value>رمز حساب خود را وارد کن. برای دیدن یا پنهان کردن آن از دکمهٔ کنار کادر استفاده کن.</value></data>
+  <data name="AuthShowPassword" xml:space="preserve"><value>نمایش رمز عبور</value></data>
+  <data name="AuthHidePassword" xml:space="preserve"><value>پنهان کردن رمز عبور</value></data>
+  <data name="AuthPasswordRevealHelp" xml:space="preserve"><value>نمایش رمز عبور را روشن یا خاموش می‌کند.</value></data>
+  <data name="AuthPasswordVisible" xml:space="preserve"><value>رمز عبور نمایان است</value></data>
+  <data name="AuthPasswordHidden" xml:space="preserve"><value>رمز عبور پنهان است</value></data>
+  <data name="AuthPasswordPeekHelp" xml:space="preserve"><value>برای دیدن رمز عبور، این دکمه را نگه دار.</value></data>
+  <data name="AuthLoginErrorTitle" xml:space="preserve"><value>ورود انجام نشد</value></data>
+  <data name="AuthRegisterErrorTitle" xml:space="preserve"><value>حساب ساخته نشد</value></data>
+  <data name="AuthRetryTitle" xml:space="preserve"><value>دوباره امتحان کن</value></data>
+  <data name="AuthLoginSubmit" xml:space="preserve"><value>ورود به میزون</value></data>
+  <data name="AuthLoginSubmitHelp" xml:space="preserve"><value>اطلاعات را برای ورود به حساب بررسی می‌کند.</value></data>
+  <data name="AuthRegisterSubmit" xml:space="preserve"><value>ساخت حساب و ورود</value></data>
+  <data name="AuthRegisterSubmitHelp" xml:space="preserve"><value>حساب را با اطلاعات واردشده می‌سازد و وارد برنامه می‌شود.</value></data>
+  <data name="AuthModeSwitchHelp" xml:space="preserve"><value>فرم ورود و ساخت حساب را جابه‌جا می‌کند؛ هنگام چرخش هم می‌توانی برگردی.</value></data>
+  <data name="AuthCreateAccount" xml:space="preserve"><value>ساخت حساب جدید</value></data>
+  <data name="AuthSignInAccount" xml:space="preserve"><value>ورود به حساب</value></data>
+  <data name="AuthFirstNameLabel" xml:space="preserve"><value>نام</value></data>
+  <data name="AuthLastNameLabel" xml:space="preserve"><value>نام خانوادگی</value></data>
+  <data name="AuthFirstNameHelp" xml:space="preserve"><value>نام خود را وارد کن؛ حداکثر ۶۰ نویسه.</value></data>
+  <data name="AuthLastNameHelp" xml:space="preserve"><value>نام خانوادگی خود را وارد کن؛ حداکثر ۶۰ نویسه.</value></data>
+  <data name="AuthUsernameLabel" xml:space="preserve"><value>نام کاربری</value></data>
+  <data name="AuthUsernameHelp" xml:space="preserve"><value>نام کاربری باید ۳ تا ۳۲ نویسه باشد: حروف انگلیسی، عدد، نقطه یا زیرخط.</value></data>
+  <data name="AuthUsernameHint" xml:space="preserve"><value>۳ تا ۳۲ نویسه؛ حروف انگلیسی، عدد، نقطه یا زیرخط</value></data>
+  <data name="AuthEmailLabel" xml:space="preserve"><value>ایمیل</value></data>
+  <data name="AuthEmailHelp" xml:space="preserve"><value>یک نشانی ایمیل معتبر وارد کن.</value></data>
+  <data name="AuthRegisterPasswordHelp" xml:space="preserve"><value>رمزی با ۸ تا ۱۲۸ نویسه انتخاب کن.</value></data>
+  <data name="AuthConfirmPasswordLabel" xml:space="preserve"><value>تکرار رمز عبور</value></data>
+  <data name="AuthConfirmPasswordHelp" xml:space="preserve"><value>همان رمزی را که انتخاب کرده‌ای دوباره وارد کن.</value></data>
+  <data name="AuthHasAccountPrompt" xml:space="preserve"><value>قبلاً حساب ساخته‌ای؟</value></data>
+  <data name="AuthNoAccountPrompt" xml:space="preserve"><value>هنوز حساب نداری؟</value></data>
+  <data name="AuthRegisterFooter" xml:space="preserve"><value>همهٔ علاقه‌هایت، در یک حساب.</value></data>
+  <data name="AuthLoginFooter" xml:space="preserve"><value>دنیای میزون، با حساب تو.</value></data>
+  <data name="AuthRegisterProgress" xml:space="preserve"><value>در حال ساخت حساب…</value></data>
+  <data name="AuthLoginProgress" xml:space="preserve"><value>در حال ورود…</value></data>
+  <data name="AuthInvalidIdentifierError" xml:space="preserve"><value>نام کاربری یا ایمیل دارای نویسهٔ نامعتبر است.</value></data>
+  <data name="AuthInvalidNameError" xml:space="preserve"><value>نام و نام خانوادگی باید بین ۱ تا ۶۰ نویسه باشند.</value></data>
+  <data name="AuthInvalidUsernameError" xml:space="preserve"><value>نام کاربری باید ۳ تا ۳۲ نویسه و فقط شامل حروف انگلیسی، عدد، نقطه یا زیرخط باشد.</value></data>
+  <data name="AuthInvalidEmailError" xml:space="preserve"><value>یک آدرس ایمیل معتبر، با حداکثر ۱۲۸ نویسه وارد کن.</value></data>
+  <data name="AuthInvalidPasswordError" xml:space="preserve"><value>رمز عبور باید بین ۸ تا ۱۲۸ نویسه باشد.</value></data>
+  <data name="AuthPasswordMismatchError" xml:space="preserve"><value>رمز عبور و تکرار آن یکسان نیستند.</value></data>
+  <data name="AuthInvalidRegistrationError" xml:space="preserve"><value>اطلاعات واردشده معتبر نیست. نام، ایمیل و رمز عبورت را بررسی کن.</value></data>
+  <data name="AuthUsernameTakenError" xml:space="preserve"><value>این نام کاربری قبلاً انتخاب شده. یک نام دیگر امتحان کن.</value></data>
+  <data name="AuthEmailTakenError" xml:space="preserve"><value>با این ایمیل قبلاً حساب ساخته شده. وارد حسابت شو یا ایمیل دیگری وارد کن.</value></data>
+  <data name="AuthRegistrationUnavailableError" xml:space="preserve"><value>ساخت حساب موقتاً امکان‌پذیر نیست. چند لحظهٔ دیگر دوباره امتحان کن.</value></data>
+  <data name="AuthInvalidCredentialsError" xml:space="preserve"><value>نام کاربری، ایمیل یا رمز عبور درست نیست.</value></data>
+  <data name="AuthUpdateRequiredError" xml:space="preserve"><value>این نسخهٔ برنامه امکان ورود ندارد. برنامه را به‌روزرسانی کن.</value></data>
+  <data name="AuthConnectionError" xml:space="preserve"><value>ارتباط با سرور برقرار نشد. اتصال اینترنت را بررسی کن و دوباره امتحان کن.</value></data>
+  <data name="AuthTooManyAttemptsError" xml:space="preserve"><value>تعداد تلاش‌ها زیاد شده. کمی بعد دوباره امتحان کن.</value></data>
+  <data name="AuthRegistrationFailedError" xml:space="preserve"><value>ساخت حساب انجام نشد. لطفاً دوباره امتحان کن.</value></data>
+  <data name="AuthLoginFailedError" xml:space="preserve"><value>ورود انجام نشد. لطفاً دوباره امتحان کن.</value></data>
+  <data name="AuthPageName" xml:space="preserve"><value>ورود و ثبت نام میزون</value></data>
+  <data name="AuthPageHelp" xml:space="preserve"><value>با کلید تب بین کادرها و دکمه‌ها جابه‌جا شو.</value></data>
+  <data name="AuthModeLogin" xml:space="preserve"><value>فرم ورود به حساب</value></data>
+  <data name="AuthModeRegister" xml:space="preserve"><value>فرم ساخت حساب</value></data>
+  <data name="AuthSubmittingLogin" xml:space="preserve"><value>در حال بررسی اطلاعات ورود</value></data>
+  <data name="AuthSubmittingRegister" xml:space="preserve"><value>در حال ساخت حساب</value></data>
+  <data name="WindowTitleLogin" xml:space="preserve"><value>ورود</value></data>
+  <data name="WindowTitleRegister" xml:space="preserve"><value>ثبت نام</value></data>
+  <data name="WindowTitleWelcome" xml:space="preserve"><value>خوش آمدید</value></data>
+  <data name="LanguagePickerName" xml:space="preserve"><value>زبان برنامه</value></data>
+  <data name="LanguagePickerHelp" xml:space="preserve"><value>زبان را بدون بستن صفحه تغییر بده.</value></data>
+  <data name="LanguageChangedAnnouncement" xml:space="preserve"><value>زبان برنامه فارسی شد.</value></data>
+  <data name="ClearInputName" xml:space="preserve"><value>پاک کردن متن</value></data>
+  <data name="ClearInputHelp" xml:space="preserve"><value>متن این کادر را پاک می‌کند.</value></data>
+</root>

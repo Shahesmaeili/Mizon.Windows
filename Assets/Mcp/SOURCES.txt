@@ -1,0 +1,4 @@
+OpenAI and Claude marks: LobeHub/lobe-icons (MIT; accompanying license).
+https://github.com/lobehub/lobe-icons/tree/master/packages/static-svg/icons
+Retrieved 2026-11-09. OpenAI mono mark tinted green; explicit SVG sizes for WinUI.
+Bundled identity hints only; MCP client-provided names are not verified publishers.

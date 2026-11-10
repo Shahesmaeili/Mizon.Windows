@@ -1,0 +1,115 @@
+<UserControl x:Class="Mizon.Windows.UserControls.AuthShowcase"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icon="using:FluentIcons.WinUI"
+    xmlns:common="using:Mizon.Windows.Common" xmlns:controls="using:Mizon.Windows.Controls"
+    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Language="{x:Bind Localization.LanguageTag, Mode=OneWay}"
+    FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+    HorizontalContentAlignment="Stretch" MaxWidth="430" Background="Transparent">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="TextReadingOrder" Value="UseFlowDirection" />
+        </Style>
+        <Style x:Key="SceneSelector" TargetType="controls:AuthSceneSelector">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="Padding" Value="8,9" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="UseSystemFocusVisuals" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="controls:AuthSceneSelector">
+                        <!-- Only this fixed rectangle participates in hit testing. -->
+                        <Grid Background="Transparent">
+                            <Grid x:Name="SelectorSurface" Background="{ThemeResource AuthSurfaceBrush}" CornerRadius="{TemplateBinding CornerRadius}" IsHitTestVisible="False">
+                                <Border x:Name="SelectorTint" Background="{TemplateBinding Foreground}" CornerRadius="{TemplateBinding CornerRadius}" />
+                                <ContentPresenter x:Name="SelectorContent" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                  Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center" />
+                                <Border x:Name="SelectorLine" Height="2" Width="20" CornerRadius="1" Background="{TemplateBinding Foreground}"
+                                        VerticalAlignment="Bottom" HorizontalAlignment="Center" />
+                            </Grid>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <StackPanel Spacing="14">
+        <Grid ColumnSpacing="12" HorizontalAlignment="Stretch" FlowDirection="LeftToRight" AutomationProperties.AccessibilityView="Raw">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <Border Height="1" VerticalAlignment="Center" Background="{ThemeResource AuthShowcaseRuleBrush}">
+            </Border>
+            <TextBlock Grid.Column="1" Text="MIZON" FontFamily="Segoe UI Variable Display" FontSize="29" FontWeight="SemiBold" CharacterSpacing="150" Foreground="{ThemeResource AuthBrandBrush}" FlowDirection="LeftToRight" />
+        </Grid>
+        <Viewbox Height="280" MaxWidth="400" Stretch="Uniform" HorizontalAlignment="Center" FlowDirection="LeftToRight" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+            <Grid x:Name="SceneStage" Width="400" Height="400">
+                <Grid x:Name="MusicScene" Width="400" Height="400">
+                    <Ellipse Width="342" Height="342" Fill="{ThemeResource AuthAccentAmbientBrush}" /><Ellipse Width="278" Height="278" Fill="{ThemeResource AuthAccentAmbientBrush}" />
+                    <Grid x:Name="MusicOrbit" Width="400" Height="400">
+                        <Ellipse Width="340" Height="340" Stroke="{ThemeResource AuthAccentTintBrush}" StrokeThickness="1" />
+                        <Canvas Width="400" Height="400"><Ellipse Canvas.Left="195" Canvas.Top="25" Width="10" Height="10" Fill="{ThemeResource AuthAccentBrush}" /><Ellipse Canvas.Left="48" Canvas.Top="282" Width="5" Height="5" Fill="{ThemeResource AuthAccentBorderBrush}" /><Ellipse Canvas.Left="338" Canvas.Top="282" Width="5" Height="5" Fill="{ThemeResource AuthPurpleBrush}" /></Canvas>
+                    </Grid>
+                    <Ellipse Width="270" Height="270" Stroke="{ThemeResource AuthPurpleTintBrush}" StrokeThickness="1" StrokeDashArray="1,8" />
+                    <Border Width="156" Height="156" CornerRadius="50" BorderBrush="{ThemeResource AuthAccentWashBrush}" BorderThickness="1" Rotation="12" />
+                    <Border x:Name="MusicCore" Width="132" Height="132" CornerRadius="42" BorderThickness="1" BorderBrush="{ThemeResource AuthAccentBorderBrush}" Background="{ThemeResource AuthMusicCoreBackgroundBrush}">
+                        <icon:SymbolIcon Symbol="Headphones" IconVariant="Color" FontSize="66" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <Border Width="230" VerticalAlignment="Bottom" Margin="0,0,0,28" Padding="14,12" CornerRadius="16" BorderBrush="{ThemeResource AuthAccentTintBrush}" BorderThickness="1" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                        <StackPanel x:Name="MusicBars" Orientation="Horizontal" Spacing="6" Height="34" HorizontalAlignment="Center">
+                            <Border Width="3" Height="8" CornerRadius="2" Background="{ThemeResource AuthAccentBorderBrush}" VerticalAlignment="Center" /><Border Width="3" Height="15" CornerRadius="2" Background="{ThemeResource AuthAccentEmphasisBrush}" VerticalAlignment="Center" /><Border Width="3" Height="24" CornerRadius="2" Background="{ThemeResource AuthAccentBrush}" VerticalAlignment="Center" /><Border Width="3" Height="17" CornerRadius="2" Background="{ThemeResource AuthAccentBrush}" VerticalAlignment="Center" /><Border Width="3" Height="30" CornerRadius="2" Background="{ThemeResource AuthAccentBrush}" VerticalAlignment="Center" /><Border Width="3" Height="34" CornerRadius="2" Background="{ThemeResource AuthAccentBrush}" VerticalAlignment="Center" /><Border Width="3" Height="21" CornerRadius="2" Background="{ThemeResource AuthAccentBrush}" VerticalAlignment="Center" /><Border Width="3" Height="29" CornerRadius="2" Background="{ThemeResource AuthPurpleBrush}" VerticalAlignment="Center" /><Border Width="3" Height="16" CornerRadius="2" Background="{ThemeResource AuthPurpleBrush}" VerticalAlignment="Center" /><Border Width="3" Height="25" CornerRadius="2" Background="{ThemeResource AuthPurpleBrush}" VerticalAlignment="Center" /><Border Width="3" Height="12" CornerRadius="2" Background="{ThemeResource AuthPurpleEmphasisBrush}" VerticalAlignment="Center" /><Border Width="3" Height="7" CornerRadius="2" Background="{ThemeResource AuthPurpleBorderBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,72,57,0" Width="44" Height="44" CornerRadius="14" Background="{ThemeResource AuthPurpleWashBrush}" BorderBrush="{ThemeResource AuthPurpleTintBrush}" BorderThickness="1"><icon:SymbolIcon Symbol="Video" FontSize="22" Foreground="{ThemeResource AuthPurpleBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                </Grid>
+                <Grid x:Name="CinemaScene" Width="400" Height="400" Visibility="Collapsed">
+                    <Ellipse Width="340" Height="340" Fill="{ThemeResource AuthPurpleAmbientBrush}" /><Ellipse Width="270" Height="270" Stroke="{ThemeResource AuthPurpleWashBrush}" StrokeThickness="1" />
+                    <Border Width="280" Height="178" CornerRadius="24" Background="{ThemeResource AuthPurpleAmbientBrush}" BorderBrush="{ThemeResource AuthPurpleTintBrush}" BorderThickness="1" Rotation="-9" Margin="0,0,0,34" />
+                    <Border Width="280" Height="178" CornerRadius="24" Background="{ThemeResource AuthWarmAmbientBrush}" BorderBrush="{ThemeResource AuthWarmTintBrush}" BorderThickness="1" Rotation="7" Margin="0,0,0,16" />
+                    <Grid x:Name="CinemaScreen" Width="282" Height="184" CornerRadius="23" BorderBrush="{ThemeResource AuthPurpleBorderBrush}" BorderThickness="1" Background="{ThemeResource AuthCinemaBackgroundBrush}">
+                        <Grid.Clip><RectangleGeometry Rect="0,0,282,184" /></Grid.Clip>
+                        <Border x:Name="CinemaGlint" Width="76" Height="220" HorizontalAlignment="Left" IsHitTestVisible="False" Background="{ThemeResource AuthShineBackgroundBrush}">
+                            <Border.RenderTransform><RotateTransform Angle="-20" /></Border.RenderTransform>
+                        </Border>
+                        <Grid Width="66" Height="66" CornerRadius="33" Background="{ThemeResource AuthWarmWashBrush}" BorderBrush="{ThemeResource AuthWarmBorderBrush}" BorderThickness="1"><icon:SymbolIcon Symbol="Play" Foreground="{ThemeResource AuthWarmBrush}" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center" /></Grid>
+                        <Grid Height="3" Margin="22,0,22,20" VerticalAlignment="Bottom" Background="{ThemeResource AuthDividerBrush}" CornerRadius="2"><Border Width="94" HorizontalAlignment="Left" CornerRadius="2" Background="{ThemeResource AuthPurpleEmphasisBrush}" /></Grid>
+                    </Grid>
+                    <Border Width="52" Height="52" CornerRadius="16" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,58,39,0" Background="{ThemeResource AuthPurpleWashBrush}" BorderBrush="{ThemeResource AuthPurpleBorderBrush}" BorderThickness="1"><icon:SymbolIcon Symbol="Filmstrip" FontSize="28" Foreground="{ThemeResource AuthPurpleBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                    <StackPanel Orientation="Horizontal" Spacing="9" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,58"><Border Width="54" Height="32" CornerRadius="10" BorderBrush="{ThemeResource AuthPurpleTintBrush}" BorderThickness="1" Background="{ThemeResource AuthPurpleWashBrush}"><icon:SymbolIcon Symbol="Video" FontSize="17" Foreground="{ThemeResource AuthPurpleBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><Border Width="54" Height="32" CornerRadius="10" BorderBrush="{ThemeResource AuthWarmTintBrush}" BorderThickness="1" Background="{ThemeResource AuthWarmWashBrush}"><icon:SymbolIcon Symbol="Tv" FontSize="17" Foreground="{ThemeResource AuthWarmBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><Border Width="54" Height="32" CornerRadius="10" BorderBrush="{ThemeResource AuthAccentTintBrush}" BorderThickness="1" Background="{ThemeResource AuthAccentWashBrush}"><icon:SymbolIcon Symbol="MoviesAndTv" FontSize="17" Foreground="{ThemeResource AuthAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border></StackPanel>
+                </Grid>
+                <Grid x:Name="VpnScene" Width="400" Height="400" Visibility="Collapsed">
+                    <Ellipse x:Name="VpnPulse" Width="290" Height="290" Stroke="{ThemeResource AuthGreenTintBrush}" StrokeThickness="1.5" />
+                    <Ellipse Width="310" Height="310" Stroke="{ThemeResource AuthGreenTintBrush}" StrokeThickness="1" Fill="{ThemeResource AuthGreenAmbientBrush}" /><Ellipse Width="144" Height="310" Stroke="{ThemeResource AuthGreenWashBrush}" StrokeThickness="1" /><Ellipse Width="310" Height="116" Stroke="{ThemeResource AuthGreenWashBrush}" StrokeThickness="1" />
+                    <Grid x:Name="VpnOrbit" Width="400" Height="400"><Canvas Width="400" Height="400"><Ellipse Canvas.Left="194" Canvas.Top="39" Width="12" Height="12" Fill="{ThemeResource AuthGreenTintBrush}" /><Ellipse Canvas.Left="197" Canvas.Top="42" Width="6" Height="6" Fill="{ThemeResource AuthGreenBrush}" /></Canvas></Grid>
+                    <Canvas Width="400" Height="400">
+                        <Line X1="87" Y1="101" X2="200" Y2="200" Stroke="{ThemeResource AuthGreenTintBrush}" StrokeThickness="1" StrokeDashArray="3,5" /><Line X1="310" Y1="112" X2="200" Y2="200" Stroke="{ThemeResource AuthGreenTintBrush}" StrokeThickness="1" StrokeDashArray="3,5" /><Line X1="90" Y1="294" X2="200" Y2="200" Stroke="{ThemeResource AuthGreenTintBrush}" StrokeThickness="1" StrokeDashArray="3,5" /><Line X1="314" Y1="291" X2="200" Y2="200" Stroke="{ThemeResource AuthGreenTintBrush}" StrokeThickness="1" StrokeDashArray="3,5" />
+                        <Border Canvas.Left="68" Canvas.Top="82" Width="38" Height="38" CornerRadius="12" Background="{ThemeResource AuthGreenWashBrush}" BorderBrush="{ThemeResource AuthGreenBorderBrush}" BorderThickness="1"><icon:SymbolIcon Symbol="Globe" FontSize="21" Foreground="{ThemeResource AuthGreenBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                        <Border Canvas.Left="291" Canvas.Top="93" Width="38" Height="38" CornerRadius="12" Background="{ThemeResource AuthAccentWashBrush}" BorderBrush="{ThemeResource AuthAccentBorderBrush}" BorderThickness="1"><icon:SymbolIcon Symbol="Desktop" FontSize="20" Foreground="{ThemeResource AuthAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                        <Border Canvas.Left="71" Canvas.Top="275" Width="38" Height="38" CornerRadius="12" Background="{ThemeResource AuthAccentWashBrush}" BorderBrush="{ThemeResource AuthAccentBorderBrush}" BorderThickness="1"><icon:SymbolIcon Symbol="WiFi" FontSize="20" Foreground="{ThemeResource AuthAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                        <Border Canvas.Left="295" Canvas.Top="272" Width="38" Height="38" CornerRadius="12" Background="{ThemeResource AuthGreenWashBrush}" BorderBrush="{ThemeResource AuthGreenBorderBrush}" BorderThickness="1"><icon:SymbolIcon Symbol="Globe" FontSize="21" Foreground="{ThemeResource AuthGreenBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                    </Canvas>
+                    <Border Width="136" Height="136" CornerRadius="43" BorderBrush="{ThemeResource AuthGreenBorderBrush}" BorderThickness="1" Background="{ThemeResource AuthShieldBackgroundBrush}">
+                        <icon:SymbolIcon Symbol="ShieldLock" FontSize="72" Foreground="{ThemeResource AuthGreenBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </Grid>
+            </Grid>
+        </Viewbox>
+        <StackPanel x:Name="CaptionHost" Spacing="8" MinHeight="106" HorizontalAlignment="Stretch">
+            <TextBlock x:Name="SceneTitle" FontSize="24" FontWeight="SemiBold" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" TextWrapping="Wrap" />
+            <TextBlock x:Name="SceneDescription" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" TextWrapping="Wrap" />
+        </StackPanel>
+        <Grid ColumnSpacing="6">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <controls:AuthSceneSelector x:Name="MusicSelector" Grid.Column="0" Style="{StaticResource SceneSelector}" Foreground="{ThemeResource AuthAccentBrush}" Tag="0" Click="Scene_Click" IsChecked="True" AutomationProperties.Name="{x:Bind Localization.GetString('ShowcaseMusicAction', Localization.Revision), Mode=OneWay}">
+                <Grid ColumnSpacing="5"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><icon:SymbolIcon Symbol="Headphones" FontSize="16" VerticalAlignment="Center" /><TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('ShowcaseMusic', Localization.Revision), Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" TextWrapping="Wrap" FontSize="11" VerticalAlignment="Center" /></Grid>
+            </controls:AuthSceneSelector>
+            <controls:AuthSceneSelector x:Name="CinemaSelector" Grid.Column="1" Style="{StaticResource SceneSelector}" Foreground="{ThemeResource AuthPurpleBrush}" Tag="1" Click="Scene_Click" AutomationProperties.Name="{x:Bind Localization.GetString('ShowcaseCinemaAction', Localization.Revision), Mode=OneWay}">
+                <Grid ColumnSpacing="5"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><icon:SymbolIcon Symbol="MoviesAndTv" FontSize="16" VerticalAlignment="Center" /><TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('ShowcaseCinema', Localization.Revision), Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" TextWrapping="Wrap" FontSize="11" VerticalAlignment="Center" /></Grid>
+            </controls:AuthSceneSelector>
+            <controls:AuthSceneSelector x:Name="VpnSelector" Grid.Column="2" Style="{StaticResource SceneSelector}" Foreground="{ThemeResource AuthGreenBrush}" Tag="2" Click="Scene_Click" AutomationProperties.Name="{x:Bind Localization.GetString('ShowcaseVpnAction', Localization.Revision), Mode=OneWay}">
+                <Grid ColumnSpacing="5"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><icon:SymbolIcon Symbol="ShieldLock" FontSize="16" VerticalAlignment="Center" /><TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('ShowcaseVpn', Localization.Revision), Mode=OneWay}" FlowDirection="LeftToRight" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FontFamily="Segoe UI" FontSize="11" VerticalAlignment="Center" /></Grid>
+            </controls:AuthSceneSelector>
+        </Grid>
+    </StackPanel>
+</UserControl>

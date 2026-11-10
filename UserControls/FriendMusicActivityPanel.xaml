@@ -1,0 +1,142 @@
+<UserControl
+    x:Class="Mizon.Windows.UserControls.FriendMusicActivityPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icon="using:FluentIcons.WinUI"
+    xmlns:common="using:Mizon.Windows.Common"
+    xmlns:items="using:Mizon.Windows.ViewModels.Items"
+    xmlns:uc="using:Mizon.Windows.UserControls"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    Loaded="Panel_Loaded"
+    Unloaded="Panel_Unloaded"
+    SizeChanged="Panel_SizeChanged">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="FriendAccent" Color="#9DCEC4" />
+        <Style x:Key="ActivityCaption" TargetType="TextBlock" BasedOn="{StaticResource DiscoveryWidgetCaption}" />
+        <Style x:Key="ActivityButton" TargetType="Button" BasedOn="{StaticResource DiscoveryWidgetButton}">
+            <Setter Property="FocusVisualPrimaryBrush" Value="{StaticResource FriendAccent}" />
+        </Style>
+        <DataTemplate x:Key="ActivityTemplate" x:DataType="items:FriendMusicActivityItemViewModel">
+            <Button x:Name="ActivityCard" Style="{StaticResource ActivityButton}" Tag="{x:Bind}" Click="Activity_Click" IsEnabled="{x:Bind CanOpen, Mode=OneWay}" AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}" AutomationProperties.HelpText="{x:Bind NavigationHelpText, Mode=OneWay}" ToolTipService.ToolTip="{x:Bind AutomationName, Mode=OneWay}">
+                <Grid CornerRadius="11" BorderBrush="#0DFFFFFF" BorderThickness="1" Background="#06FFFFFF">
+                    <Border CornerRadius="10" Opacity="0.08" IsHitTestVisible="False">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                                <GradientStop Color="{x:Bind AccentColor, Mode=OneWay}" Offset="0" />
+                                <GradientStop Color="Transparent" Offset="0.8" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    <Grid Margin="11" RowSpacing="10" FlowDirection="LeftToRight">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid x:Name="IdentityRow" ColumnSpacing="9">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="36" /></Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center" Spacing="2">
+                                <TextBlock x:Name="FriendName" Text="{x:Bind DisplayName, Mode=OneWay}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="12" FontWeight="SemiBold" TextAlignment="Start" TextReadingOrder="UseFlowDirection" HorizontalAlignment="Stretch" FlowDirection="RightToLeft" TextTrimming="CharacterEllipsis" />
+                                <TextBlock x:Name="ActivityDescription" Text="{x:Bind ActionText, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="9" TextWrapping="Wrap" MaxLines="2" />
+                            </StackPanel>
+                            <Grid Grid.Column="1" Width="36" Height="36" VerticalAlignment="Center">
+                                <Grid CornerRadius="13" BorderThickness="1" Padding="2" Background="#10000000">
+                                    <Grid.BorderBrush><SolidColorBrush Color="{x:Bind AccentColor, Mode=OneWay}" Opacity="0.65" /></Grid.BorderBrush>
+                                    <PersonPicture DisplayName="{x:Bind DisplayName, Mode=OneWay}" ProfilePicture="{x:Bind ProfileImage, Mode=OneWay}" Width="30" Height="30" AutomationProperties.AccessibilityView="Raw" />
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Height="1" ColumnSpacing="5">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="16" /></Grid.ColumnDefinitions>
+                            <Border Background="{ThemeResource CardStrokeColorDefaultBrush}" Opacity="0.7" />
+                            <Border Grid.Column="1" CornerRadius="0.5" Opacity="0.65">
+                                <Border.Background><SolidColorBrush Color="{x:Bind AccentColor, Mode=OneWay}" /></Border.Background>
+                            </Border>
+                        </Grid>
+                        <Grid Grid.Row="2" x:Name="ContentInfo" ColumnSpacing="10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="64" /></Grid.ColumnDefinitions>
+                            <StackPanel Spacing="4" VerticalAlignment="Center">
+                                <TextBlock Text="{x:Bind ContentTitle, Mode=OneWay}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" TextAlignment="Start" TextReadingOrder="UseFlowDirection" HorizontalAlignment="Stretch" FlowDirection="RightToLeft" />
+                                <TextBlock x:Name="ContentSubtitle" Text="{x:Bind Subtitle, Mode=OneWay}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="9" TextTrimming="CharacterEllipsis" TextAlignment="Start" TextReadingOrder="UseFlowDirection" HorizontalAlignment="Stretch" FlowDirection="RightToLeft" Opacity="0.55" />
+                                <Grid HorizontalAlignment="Right" Margin="0,2,0,0" ColumnSpacing="5">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{x:Bind ContentKindTitle, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="8" Opacity="0.9">
+                                        <TextBlock.Foreground><SolidColorBrush Color="{x:Bind AccentColor, Mode=OneWay}" /></TextBlock.Foreground>
+                                    </TextBlock>
+                                    <icon:SymbolIcon Grid.Column="1" Symbol="{x:Bind ActionSymbol, Mode=OneWay}" FontSize="10" VerticalAlignment="Center">
+                                        <icon:SymbolIcon.Foreground><SolidColorBrush Color="{x:Bind AccentColor, Mode=OneWay}" /></icon:SymbolIcon.Foreground>
+                                    </icon:SymbolIcon>
+                                </Grid>
+                            </StackPanel>
+                            <Grid Grid.Column="1" x:Name="CoverHost" Width="64" Height="64" CornerRadius="10" Background="#14FFFFFF" VerticalAlignment="Center">
+                                <icon:SymbolIcon Symbol="MusicNote1" FontSize="24" Opacity="0.25" HorizontalAlignment="Center" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                                <Image x:Name="CardArtwork" Source="{x:Bind CoverImage, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
+                                <Border VerticalAlignment="Bottom" Height="28">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="Transparent" Offset="0" />
+                                            <GradientStop Color="#73000000" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="18" Height="18" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="4" CornerRadius="6" Background="#AD16212A" BorderBrush="#30FFFFFF" BorderThickness="1">
+                                    <icon:SymbolIcon Symbol="ArrowUpRight" FontSize="8" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <TextBlock Grid.Row="3" Text="{x:Bind TimeText, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="9" Opacity="0.5" />
+                    </Grid>
+                </Grid>
+            </Button>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Border Style="{StaticResource DiscoveryWidgetSurface}">
+        <Grid x:Name="PanelRoot" RowSpacing="12" FlowDirection="LeftToRight">
+            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+            <StackPanel Style="{StaticResource DiscoveryWidgetHeader}">
+                <uc:DiscoverySectionHeader Title="دوستانت چه می‌شنوند؟" Icon="People" AccentColor="#9DCEC4" IsCompact="True" />
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <Border Padding="6,2" CornerRadius="5" Background="#0E9DCEC4" BorderBrush="#159DCEC4" BorderThickness="1">
+                        <TextBlock x:Name="CountText" FontSize="9" Foreground="{StaticResource FriendAccent}" />
+                    </Border>
+                    <TextBlock Grid.Column="1" Text="ردپای موسیقی دوستانت" Style="{StaticResource ActivityCaption}" VerticalAlignment="Center" />
+                </Grid>
+            </StackPanel>
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <Grid x:Name="ActivityItemsHost" RowSpacing="10" ColumnSpacing="0" Visibility="{x:Bind ViewModel.ItemsVisibility, Mode=OneWay}">
+                    <Grid.ColumnDefinitions><ColumnDefinition x:Name="FirstColumn" Width="*" /><ColumnDefinition x:Name="SecondColumn" Width="0" /></Grid.ColumnDefinitions>
+                </Grid>
+                <Border Padding="12,18" CornerRadius="11" BorderBrush="#189DCEC4" BorderThickness="1" Visibility="{x:Bind ViewModel.EmptyVisibility, Mode=OneWay}">
+                    <StackPanel Spacing="10">
+                        <icon:SymbolIcon Symbol="People" FontSize="28" Foreground="{StaticResource FriendAccent}" Opacity="0.8" HorizontalAlignment="Right" AutomationProperties.AccessibilityView="Raw" />
+                        <TextBlock Text="{x:Bind ViewModel.EmptyTitle, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="12" FontWeight="SemiBold" Opacity="1" TextWrapping="Wrap" />
+                        <TextBlock Text="{x:Bind ViewModel.EmptyDescription, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="11" TextWrapping="Wrap" TextTrimming="None" />
+                    </StackPanel>
+                </Border>
+                <StackPanel Grid.Row="1" Spacing="12" Padding="10" Visibility="{x:Bind ViewModel.ErrorVisibility, Mode=OneWay}">
+                    <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="11" TextWrapping="Wrap" TextTrimming="None" />
+                    <Button Style="{StaticResource DiscoveryWidgetFooterButton}" Click="Refresh_Click" Background="#079DCEC4" FocusVisualPrimaryBrush="{StaticResource FriendAccent}" AutomationProperties.Name="دریافت دوبارهٔ فعالیت دوستان">
+                        <TextBlock Text="تلاش دوباره" Style="{StaticResource ActivityCaption}" FontSize="11" TextAlignment="Center" Foreground="{StaticResource FriendAccent}" Opacity="1" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+            <StackPanel Grid.Row="2" Style="{StaticResource DiscoveryWidgetFooter}">
+                <Grid ColumnSpacing="7">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <Border Height="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="جدیدترین لحظه‌های موسیقی" Style="{StaticResource DiscoveryWidgetFooterCaption}" />
+                </Grid>
+                <Button Style="{StaticResource DiscoveryWidgetFooterButton}" Click="More_Click" Visibility="{x:Bind ViewModel.MoreVisibility, Mode=OneWay}" Background="#079DCEC4" FocusVisualPrimaryBrush="{StaticResource FriendAccent}" AutomationProperties.Name="نمایش همهٔ فعالیت‌های فالوینگ‌ها">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <icon:SymbolIcon Symbol="ArrowLeft" FontSize="13" Foreground="{StaticResource FriendAccent}" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                        <TextBlock Grid.Column="1" Text="همهٔ فعالیت‌ها" Style="{StaticResource ActivityCaption}" FontSize="11" Foreground="{StaticResource FriendAccent}" Opacity="1" VerticalAlignment="Center" />
+                    </Grid>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

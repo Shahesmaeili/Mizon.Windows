@@ -1,0 +1,80 @@
+[
+  {
+    "file": "MoeinBust.glb",
+    "title": "Moein head-and-torso reconstruction",
+    "author": "AI-assisted reconstruction; reference photos: Mehrshad Adkins 01 / Mehrshad.Adkins",
+    "source": "https://commons.wikimedia.org/wiki/File:Moein_Live_in_Toronto_2023.jpg",
+    "license": "CC-BY-SA-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "sha256": "c14f3341b7a7545e05cfbfae670fdb17ab3efc6d1326131ef1367543d24c13e9",
+    "provenance": "Moein-generation.json",
+    "attribution": "MOEIN-ATTRIBUTION.md",
+    "isPhysicalScan": false
+  },
+  {
+    "file": "SamFashionScan.glb",
+    "title": "Sam",
+    "author": "CODAME / ModBod3d",
+    "authorUrl": "https://sketchfab.com/codame",
+    "source": "https://sketchfab.com/3d-models/sam-63df8fa83674482d9ad9160a538e7307",
+    "download": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-038/63df8fa83674482d9ad9160a538e7307.glb",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "sha256": "8dd813fa17e674d5353f0c8133906df64c92301df7efcc25a93bb764b348f1cf"
+  },
+  {
+    "file": "KanaScan.glb",
+    "title": "018 Kana No-rig-free",
+    "author": "ddd (endonoriko)",
+    "authorUrl": "https://sketchfab.com/endonoriko",
+    "source": "https://sketchfab.com/3d-models/018-kana-no-rig-free-2dfac98e05984069a46bf3bd6a512e67",
+    "download": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-087/2dfac98e05984069a46bf3bd6a512e67.glb",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "sha256": "84ff4248e8fa538dffd8ccfaba6b1ef57b87ab988b4ec03656f1742250b08db1"
+  },
+  {
+    "file": "AyaScan.glb",
+    "title": "AYA2",
+    "author": "3D Lab. Kyoto",
+    "authorUrl": "https://sketchfab.com/alekssvet",
+    "source": "https://sketchfab.com/3d-models/aya2-e8a80cbc797248f0a50506ecb60fda4a",
+    "download": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-148/e8a80cbc797248f0a50506ecb60fda4a.glb",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "sha256": "93b0d0b489dfa39415e106e2852d2e10ed1748d23bcb1ddc45aa9889d99283dc"
+  },
+  {
+    "file": "KatyPerry.glb",
+    "title": "Katy Perry",
+    "author": "Minipoo",
+    "authorUrl": "https://sketchfab.com/Pocky2022",
+    "source": "https://sketchfab.com/3d-models/katy-perry-768d7d3e946043d184e77bd2d474d843",
+    "download": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-126/768d7d3e946043d184e77bd2d474d843.glb",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "sha256": "b435e222184ec422526ad014dc2f5a7985373c9081ed04454260c56028cfb335"
+  },
+  {
+    "file": "PapaEmeritusIII.glb",
+    "title": "GHOST Singer Papa Emeritus III",
+    "author": "Claudia Luehl",
+    "authorUrl": "https://sketchfab.com/clodbc",
+    "source": "https://sketchfab.com/3d-models/ghost-singer-papa-emeritus-iii-48ad5a2714914de1a2456582c2c76233",
+    "download": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-073/48ad5a2714914de1a2456582c2c76233.glb",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "sha256": "5c6ed82fd15cd70ecaa17f241387e1aea92537a47f006d75b1a0b8883d8c862b"
+  },
+  {
+    "file": "ReggaeSinger.glb",
+    "title": "Rastaman (jamaican singer)",
+    "author": "Mayantique",
+    "authorUrl": "https://sketchfab.com/mayantique",
+    "source": "https://sketchfab.com/3d-models/rastaman-jamaican-singer-d27b5fcd41db44eab24efd1c79d9b0da",
+    "download": "https://huggingface.co/datasets/allenai/objaverse/resolve/main/glbs/000-083/d27b5fcd41db44eab24efd1c79d9b0da.glb",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "sha256": "ce61629a62a7ef8d6d92bd668218f88d1be88759c3c463dfba2da2439a658ffe"
+  }
+]

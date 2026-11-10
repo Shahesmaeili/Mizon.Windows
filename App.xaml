@@ -10,6 +10,9 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <ResourceDictionary Source="Generic.xaml"/>
                 <ResourceDictionary Source="Themes/StoreCarousel.xaml"/>
+                <ResourceDictionary Source="Themes/AuthColors.xaml"/>
+                <ResourceDictionary Source="Themes/AuthControls.xaml"/>
+                <ResourceDictionary Source="Themes/DiscoveryWidgetStyles.xaml"/>
                 <!-- Other merged dictionaries here -->
 
                 <ResourceDictionary Source="ms-appx:///DevWinUI/Themes/Generic.xaml" />

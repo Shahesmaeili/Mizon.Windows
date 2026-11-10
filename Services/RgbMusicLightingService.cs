@@ -5,6 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace Mizon.Windows.Services;
 
@@ -12,13 +15,23 @@ namespace Mizon.Windows.Services;
 /// Drives the OpenRGB surface from server-authored waveform frames. It never reads the
 /// local audio stream, so every device renders the same beat envelope for a given track.
 /// </summary>
-public sealed class RgbMusicLightingService
+public sealed class RgbMusicLightingService : IDisposable
 {
     private const int TargetFrameIntervalMilliseconds = 33;
     private readonly List<WaveformResponse> _waveforms = [];
     private readonly List<RgbColor> _palette = [];
     private static readonly RgbColor PausedColor = new(230, 255, 13);
-    private RGBSurface? _surface;
+    private readonly Channel<RgbColor> _outputFrames = Channel.CreateBounded<RgbColor>(new BoundedChannelOptions(1)
+    {
+        SingleReader = true,
+        SingleWriter = true,
+        FullMode = BoundedChannelFullMode.DropOldest,
+        AllowSynchronousContinuations = false
+    });
+    private Task? _outputTask;
+    private Microsoft.UI.Xaml.Window? _shutdownWindow;
+    private volatile bool _isAvailable;
+    private int _disposed;
     private float _maximumRms = 1f;
     private float _maximumTransient = 1f;
     private const double MinimumPlaybackBrightness = 0.40d;
@@ -27,10 +40,13 @@ public sealed class RgbMusicLightingService
     private bool _initializationAttempted;
     private bool _isPaused;
 
-    public bool IsAvailable => _surface is not null && _surface.Devices.Any();
+    public bool IsAvailable => _isAvailable && Volatile.Read(ref _disposed) == 0;
 
     public void Configure(MusicLightingProfileResponse profile, IEnumerable<WaveformResponse> waveforms)
     {
+        if (Volatile.Read(ref _disposed) != 0)
+            return;
+
         _isPaused = false;
         _waveforms.Clear();
         _waveforms.AddRange(waveforms.OrderBy(x => x.OffsetInMilliseconds));
@@ -92,10 +108,15 @@ public sealed class RgbMusicLightingService
 
     private void EnsureInitialized()
     {
-        if (_initializationAttempted)
+        if (_initializationAttempted || Volatile.Read(ref _disposed) != 0)
             return;
 
         _initializationAttempted = true;
+        _shutdownWindow = App.MainMizonWindow;
+        if (_shutdownWindow is not null)
+            _shutdownWindow.Closed += MainWindow_Closed;
+
+        RGBSurface? surface = null;
         try
         {
             var definition = new OpenRGBServerDefinition
@@ -108,15 +129,19 @@ public sealed class RgbMusicLightingService
             OpenRGBDeviceProvider.Instance.AddDeviceDefinition(definition);
             OpenRGBDeviceProvider.Instance.Initialize(throwExceptions: false);
 
-            var surface = new RGBSurface();
+            surface = new RGBSurface();
             surface.Attach(OpenRGBDeviceProvider.Instance.Devices);
-            _surface = surface;
+            _isAvailable = surface.Devices.Any();
+            var outputSurface = surface;
+            _outputTask = Task.Run(() => ProcessOutputFramesAsync(outputSurface));
+            surface = null; // The output worker now owns cleanup, including during shutdown.
         }
         catch (Exception exception)
         {
             // OpenRGB is optional. A missing server/device must never interrupt music playback.
             AppLog.Error("OpenRGB initialization failed.", exception);
-            _surface = null;
+            _isAvailable = false;
+            surface?.Dispose();
         }
     }
 
@@ -141,7 +166,7 @@ public sealed class RgbMusicLightingService
 
     private void ApplyFrame(RgbColor color, double brightness)
     {
-        if (_surface is null)
+        if (!IsAvailable)
             return;
 
         // Preserve the PrimaryAccentColor hue, but normalize its value so a naturally dark
@@ -151,13 +176,58 @@ public sealed class RgbMusicLightingService
         var red = (byte)Math.Round(Math.Min(255d, color.Red * colorScale * brightness));
         var green = (byte)Math.Round(Math.Min(255d, color.Green * colorScale * brightness));
         var blue = (byte)Math.Round(Math.Min(255d, color.Blue * colorScale * brightness));
-        foreach (var device in _surface.Devices)
-        {
-            foreach (var led in device)
-                led.Color = new RGB.NET.Core.Color(255, (int)red, (int)green, (int)blue);
-        }
+        // A slow driver retains only the latest pending color; UI/audio callbacks
+        // never wait for hardware I/O and never create a task for each frame.
+        _outputFrames.Writer.TryWrite(new RgbColor(red, green, blue));
+    }
 
-        _surface.Update();
+    private async Task ProcessOutputFramesAsync(RGBSurface surface)
+    {
+        try
+        {
+            await foreach (var color in _outputFrames.Reader.ReadAllAsync().ConfigureAwait(false))
+            {
+                if (Volatile.Read(ref _disposed) != 0)
+                    break;
+
+                foreach (var device in surface.Devices)
+                    foreach (var led in device)
+                        led.Color = new RGB.NET.Core.Color(255, (int)color.Red, (int)color.Green, (int)color.Blue);
+
+                surface.Update();
+            }
+        }
+        catch (Exception exception)
+        {
+            AppLog.Error("OpenRGB frame output failed.", exception);
+        }
+        finally
+        {
+            _isAvailable = false;
+            _outputFrames.Writer.TryComplete();
+            try { surface.Dispose(); }
+            catch (Exception exception) { AppLog.Error("OpenRGB surface cleanup failed.", exception); }
+        }
+    }
+
+    private void MainWindow_Closed(object? sender, Microsoft.UI.Xaml.WindowEventArgs args) => Dispose();
+
+    public void Dispose()
+    {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            return;
+
+        _isAvailable = false;
+        _outputFrames.Writer.TryComplete();
+        var window = _shutdownWindow;
+        _shutdownWindow = null;
+        if (window is not null)
+        {
+            if (window.DispatcherQueue.HasThreadAccess)
+                window.Closed -= MainWindow_Closed;
+            else
+                window.DispatcherQueue.TryEnqueue(() => window.Closed -= MainWindow_Closed);
+        }
     }
 
     private int FindWaveformIndex(int offsetInMilliseconds)

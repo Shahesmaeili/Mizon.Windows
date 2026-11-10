@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="StatusPending" xml:space="preserve"><value>Waiting for your permission</value></data>
+  <data name="StatusApproved" xml:space="preserve"><value>Connected · access approved</value></data>
+  <data name="StatusApprovedOffline" xml:space="preserve"><value>Offline · permission saved</value></data>
+  <data name="SessionScopeHint" xml:space="preserve"><value>This client uses an older configuration without a persistent pairing identity. Its permission lasts only for this connection.</value></data>
+  <data name="StorageErrorTitle" xml:space="preserve"><value>Permissions could not be saved</value></data>
+  <data name="StorageReadError" xml:space="preserve"><value>Saved permissions could not be read; automatic access is blocked. Check file access. Revoke all clears the saved permissions and resets this store.</value></data>
+  <data name="StorageSaveError" xml:space="preserve"><value>The permission was not saved and no new access was granted. Try again.</value></data>
+  <data name="StorageRevokeError" xml:space="preserve"><value>Access is blocked for now, but the saved permission could not be removed and may return after a restart. Try Revoke access or Revoke all again.</value></data>
+  <data name="StatusDenied" xml:space="preserve"><value>Request denied</value></data>
+  <data name="StatusRevoked" xml:space="preserve"><value>Access revoked</value></data>
+  <data name="StatusDisconnected" xml:space="preserve"><value>Disconnected</value></data>
+  <data name="ActiveOperation" xml:space="preserve"><value>Current operation</value></data>
+  <data name="NeverUsed" xml:space="preserve"><value>No operations yet</value></data>
+  <data name="SummaryFormat" xml:space="preserve"><value>{0} connected · {1} approved · {2} active</value></data>
+  <data name="ConnectedLabel" xml:space="preserve"><value>Connection started</value></data>
+  <data name="AccessRequestedTitle" xml:space="preserve"><value>An AI client wants to connect</value></data>
+  <data name="AccessRequestedMessage" xml:space="preserve"><value>Review its name and permissions in Mizon before allowing access.</value></data>
+  <data name="ManageConnections" xml:space="preserve"><value>AI connections</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="ConnectionError" xml:space="preserve"><value>The AI connection could not be opened. Try again.</value></data>
+  <data name="ConsentScopeHint" xml:space="preserve"><value>This client's permission is encrypted in your Windows account and stays approved across restarts until you revoke it here. Only the selected permissions are remembered.</value></data>
+  <data name="EnableConnections" xml:space="preserve"><value>Allow AI connection requests</value></data>
+  <data name="Enabled" xml:space="preserve"><value>Requests enabled</value></data>
+  <data name="Disabled" xml:space="preserve"><value>Access disabled</value></data>
+  <data name="EnableConnectionsHelp" xml:space="preserve"><value>MCP clients such as Codex or Claude can access Welcome, Sign in and Create account, plus appearance settings with separate permission. Each new client needs your initial approval. Turning this off temporarily suspends access without deleting saved permissions.</value></data>
+  <data name="Connections" xml:space="preserve"><value>Connections &amp; activity</value></data>
+  <data name="RevokeAll" xml:space="preserve"><value>Revoke all</value></data>
+  <data name="RevokeAllHelp" xml:space="preserve"><value>Remove every client's saved permission, including offline clients, and cancel all active operations.</value></data>
+  <data name="NoConnections" xml:space="preserve"><value>Your AI connections appear here</value></data>
+  <data name="NoConnectionsHint" xml:space="preserve"><value>Connect an MCP client to Mizon. You will see its request here before it can read or control the app.</value></data>
+  <data name="SelfReportedIdentity" xml:space="preserve"><value>The client provides its name and version; these are not verified identities. Logos are bundled visual labels, not proof of the client’s identity. Approve only a connection you started.</value></data>
+  <data name="Busy" xml:space="preserve"><value>Performing an operation in Mizon</value></data>
+  <data name="Permissions" xml:space="preserve"><value>Permissions for this client</value></data>
+  <data name="PermissionRead" xml:space="preserve"><value>Read page state</value></data>
+  <data name="PermissionReadHint" xml:space="preserve"><value>Read page and form status. Passwords and tokens are never returned.</value></data>
+  <data name="PermissionControl" xml:space="preserve"><value>Navigate and fill forms</value></data>
+  <data name="PermissionControlHint" xml:space="preserve"><value>Open authentication pages, fill or clear fields, retry Welcome and change the app language.</value></data>
+  <data name="PermissionSubmit" xml:space="preserve"><value>Sign in or create an account</value></data>
+  <data name="PermissionSubmitHint" xml:space="preserve"><value>Submit forms to the server. Requires permission to control forms; disabled by default.</value></data>
+  <data name="ChangeScopesHint" xml:space="preserve"><value>To change permissions, revoke access first, edit the permissions, then approve again.</value></data>
+  <data name="LastActivity" xml:space="preserve"><value>Last operation</value></data>
+  <data name="Approve" xml:space="preserve"><value>Approve access</value></data>
+  <data name="Deny" xml:space="preserve"><value>Deny</value></data>
+  <data name="Revoke" xml:space="preserve"><value>Revoke access</value></data>
+  <data name="RevokeHelp" xml:space="preserve"><value>Remove this client's saved permission and block all of its connections and active operations. It will need your approval again.</value></data>
+  <data name="VersionFormat" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="VersionNotProvided" xml:space="preserve"><value>Version not provided</value></data>
+  <data name="ActionNameFormat" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="ReadState" xml:space="preserve"><value>Reading page state</value></data>
+  <data name="OpenPage" xml:space="preserve"><value>Opening an authentication page</value></data>
+  <data name="FillForm" xml:space="preserve"><value>Filling form fields</value></data>
+  <data name="SubmitForm" xml:space="preserve"><value>Submitting the authentication form</value></data>
+  <data name="ClearForm" xml:space="preserve"><value>Clearing form fields</value></data>
+  <data name="RetryWelcome" xml:space="preserve"><value>Retrying Welcome initialization</value></data>
+  <data name="ChangeLanguage" xml:space="preserve"><value>Changing the app language</value></data>
+  <data name="AuthenticationGroup" xml:space="preserve"><value>Authentication</value></data>
+  <data name="AppearanceGroup" xml:space="preserve"><value>Appearance</value></data>
+  <data name="AppearanceGroupHint" xml:space="preserve"><value>Separate permission for theme and window material. Existing authentication approval does not grant appearance access. To add it, revoke access, select these permissions, then approve again.</value></data>
+  <data name="PermissionAppearanceRead" xml:space="preserve"><value>Read appearance settings</value></data>
+  <data name="PermissionAppearanceReadHint" xml:space="preserve"><value>Read the chosen and effective theme, window material and fallback status.</value></data>
+  <data name="PermissionAppearanceControl" xml:space="preserve"><value>Change theme and window material</value></data>
+  <data name="PermissionAppearanceControlHint" xml:space="preserve"><value>Apply and save light, dark or system mode and Acrylic or Mica variants. Does not grant access to other settings.</value></data>
+  <data name="ReadAppearance" xml:space="preserve"><value>Reading appearance settings</value></data>
+  <data name="ChangeAppearance" xml:space="preserve"><value>Changing theme and window material</value></data>
+  <data name="NavigationGroup" xml:space="preserve"><value>Pages and deep links</value></data>
+  <data name="NavigationGroupHint" xml:space="preserve"><value>Separate permission for opening declared destinations. This does not grant access to page contents, settings changes or playback actions.</value></data>
+  <data name="PermissionNavigationRead" xml:space="preserve"><value>Read the current destination</value></data>
+  <data name="PermissionNavigationReadHint" xml:space="preserve"><value>Read the current page and pending deep link, including its public IDs or search text.</value></data>
+  <data name="PermissionNavigationControl" xml:space="preserve"><value>Open app destinations</value></data>
+  <data name="PermissionNavigationControlHint" xml:space="preserve"><value>Open declared pages, a music comment, a story or in-app search. Does not submit forms, automatically play/download music or change settings. Content destinations require sign-in.</value></data>
+  <data name="ReadNavigation" xml:space="preserve"><value>Reading the current destination</value></data>
+  <data name="OpenDestination" xml:space="preserve"><value>Opening an app destination</value></data>
+  <data name="TaskbarGroup" xml:space="preserve"><value>Taskbar pinning</value></data>
+  <data name="TaskbarGroupHint" xml:space="preserve"><value>Separate access to Mizon's pin status and pin request. Windows still asks you for final confirmation.</value></data>
+  <data name="PermissionTaskbarRead" xml:space="preserve"><value>Read Mizon's pin status</value></data>
+  <data name="PermissionTaskbarReadHint" xml:space="preserve"><value>Read actual pin status, support and request availability without reading other taskbar apps.</value></data>
+  <data name="PermissionTaskbarControl" xml:space="preserve"><value>Request pinning Mizon</value></data>
+  <data name="PermissionTaskbarControlHint" xml:space="preserve"><value>At your request while Mizon is in the foreground, show Windows' confirmation. Cannot confirm automatically or unpin apps.</value></data>
+  <data name="ReadTaskbarPin" xml:space="preserve"><value>Checking taskbar pin status</value></data>
+  <data name="RequestTaskbarPin" xml:space="preserve"><value>Requesting taskbar pin confirmation</value></data>
+</root>

@@ -1,0 +1,70 @@
+<UserControl
+    x:Class="Mizon.Windows.UserControls.McpAccessPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icon="using:FluentIcons.WinUI"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:local="using:Mizon.Windows.UserControls"
+    xmlns:items="using:Mizon.Windows.ViewModels.Items"
+    FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+    Language="{x:Bind Localization.LanguageTag, Mode=OneWay}"
+    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+    Loaded="Panel_Loaded" Unloaded="Panel_Unloaded">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="ms-appx:///UserControls/McpAccessStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <StackPanel Spacing="16" HorizontalAlignment="Stretch">
+        <InfoBar IsOpen="{x:Bind Access.HasStorageError, Mode=OneWay}" IsClosable="False" Severity="Error"
+                 Title="{x:Bind Text('StorageErrorTitle', Localization.Revision), Mode=OneWay}"
+                 Message="{x:Bind Access.StorageError, Mode=OneWay}" AutomationProperties.LiveSetting="Assertive"/>
+        <Border Style="{StaticResource McpCard}">
+            <StackPanel Spacing="12">
+                <ToggleSwitch IsOn="{x:Bind Access.IsEnabled, Mode=TwoWay}"
+                    Header="{x:Bind Text('EnableConnections', Localization.Revision), Mode=OneWay}"
+                    OnContent="{x:Bind Text('Enabled', Localization.Revision), Mode=OneWay}"
+                    OffContent="{x:Bind Text('Disabled', Localization.Revision), Mode=OneWay}"
+                    AutomationProperties.Name="{x:Bind Text('EnableConnections', Localization.Revision), Mode=OneWay}"
+                    AutomationProperties.HelpText="{x:Bind Text('EnableConnectionsHelp', Localization.Revision), Mode=OneWay}"/>
+                <TextBlock Text="{x:Bind Text('EnableConnectionsHelp', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                <Border Height="1" Background="{ThemeResource McpStroke}"/>
+                <TextBlock Text="{x:Bind Text('ConsentScopeHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+            </StackPanel>
+        </Border>
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center" Spacing="3">
+                <TextBlock Text="{x:Bind Text('Connections', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold" FontSize="16" AutomationProperties.HeadingLevel="Level3"/>
+                <TextBlock Text="{x:Bind Access.Summary, Mode=OneWay}" Style="{StaticResource McpCaption}" AutomationProperties.LiveSetting="Polite"/>
+            </StackPanel>
+            <controls:AuthActionButton Grid.Column="1" Style="{StaticResource McpAction}" Click="RevokeAll_Click"
+                IsEnabled="{x:Bind Access.HasConnections, Mode=OneWay}"
+                AutomationProperties.Name="{x:Bind Text('RevokeAll', Localization.Revision), Mode=OneWay}"
+                AutomationProperties.HelpText="{x:Bind Text('RevokeAllHelp', Localization.Revision), Mode=OneWay}">
+                <TextBlock Text="{x:Bind Text('RevokeAll', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" TextAlignment="Center"/>
+            </controls:AuthActionButton>
+        </Grid>
+        <Border Style="{StaticResource McpCard}" Visibility="{x:Bind EmptyVisibility(Access.HasConnections), Mode=OneWay}">
+            <StackPanel Spacing="10" Padding="4,12">
+                <icon:SymbolIcon Symbol="Bot" FontSize="34" Foreground="{ThemeResource McpAccent}" HorizontalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
+                <TextBlock Text="{x:Bind Text('NoConnections', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" TextAlignment="Center" FontWeight="SemiBold"/>
+                <TextBlock Text="{x:Bind Text('NoConnectionsHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}" TextAlignment="Center"/>
+            </StackPanel>
+        </Border>
+        <ItemsRepeater ItemsSource="{x:Bind Access.Connections, Mode=OneWay}">
+            <ItemsRepeater.Layout><StackLayout Spacing="14"/></ItemsRepeater.Layout>
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate x:DataType="items:McpConnectionItemViewModel">
+                    <local:McpConnectionCard ViewModel="{x:Bind}" HorizontalAlignment="Stretch"/>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+        <TextBlock Text="{x:Bind Text('SelfReportedIdentity', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}" Margin="4,0,4,4"/>
+    </StackPanel>
+</UserControl>

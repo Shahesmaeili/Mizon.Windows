@@ -1,0 +1,269 @@
+{
+  "version": 3,
+  "actions": [
+    {
+      "id": "Mizon.OpenLogin",
+      "description": "ورود به حساب میزون",
+      "icon": "ms-resource://Files/Assets/JumpList/FullSize/Person.png",
+      "displaysUI": true,
+      "usesGenerativeAI": false,
+      "isAvailable": true,
+      "allowedAppInvokers": [
+        "*"
+      ],
+      "inputs": [],
+      "inputCombinations": [
+        {
+          "inputs": [],
+          "description": "باز کردن صفحه ورود به حساب میزون"
+        }
+      ],
+      "invocation": {
+        "type": "COM",
+        "clsid": "25F10A63-B41E-4B39-97AD-7B781CA81D89"
+      }
+    },
+    {
+      "id": "Mizon.OpenRegister",
+      "description": "ساخت حساب میزون",
+      "icon": "ms-resource://Files/Assets/JumpList/FullSize/PersonAdd.png",
+      "displaysUI": true,
+      "usesGenerativeAI": false,
+      "isAvailable": true,
+      "allowedAppInvokers": [
+        "*"
+      ],
+      "inputs": [],
+      "inputCombinations": [
+        {
+          "inputs": [],
+          "description": "باز کردن فرم ثبت نام در میزون"
+        }
+      ],
+      "invocation": {
+        "type": "COM",
+        "clsid": "25F10A63-B41E-4B39-97AD-7B781CA81D89"
+      }
+    },
+    {
+      "id": "Mizon.OpenMusic",
+      "description": "موسیقی در میزون",
+      "icon": "ms-resource://Files/Assets/JumpList/FullSize/Headphones.png",
+      "displaysUI": true,
+      "usesGenerativeAI": false,
+      "isAvailable": false,
+      "allowedAppInvokers": [
+        "*"
+      ],
+      "inputs": [],
+      "inputCombinations": [
+        {
+          "inputs": [],
+          "description": "باز کردن بخش آهنگ‌ها، موزیک‌ویدیوها و پلی‌لیست‌های میزون"
+        }
+      ],
+      "invocation": {
+        "type": "COM",
+        "clsid": "25F10A63-B41E-4B39-97AD-7B781CA81D89"
+      }
+    },
+    {
+      "id": "Mizon.OpenMovies",
+      "description": "فیلم و سریال در میزون",
+      "icon": "ms-resource://Files/Assets/JumpList/FullSize/Video.png",
+      "displaysUI": true,
+      "usesGenerativeAI": false,
+      "isAvailable": false,
+      "allowedAppInvokers": [
+        "*"
+      ],
+      "inputs": [],
+      "inputCombinations": [
+        {
+          "inputs": [],
+          "description": "باز کردن بخش فیلم‌ها و سریال‌های میزون"
+        }
+      ],
+      "invocation": {
+        "type": "COM",
+        "clsid": "25F10A63-B41E-4B39-97AD-7B781CA81D89"
+      }
+    },
+    {
+      "id": "Mizon.OpenApps",
+      "description": "برنامه‌ها در میزون",
+      "icon": "ms-resource://Files/Assets/JumpList/FullSize/Apps.png",
+      "displaysUI": true,
+      "usesGenerativeAI": false,
+      "isAvailable": false,
+      "allowedAppInvokers": [
+        "*"
+      ],
+      "inputs": [],
+      "inputCombinations": [
+        {
+          "inputs": [],
+          "description": "باز کردن بخش برنامه‌های میزون"
+        }
+      ],
+      "invocation": {
+        "type": "COM",
+        "clsid": "25F10A63-B41E-4B39-97AD-7B781CA81D89"
+      }
+    },
+    {
+      "id": "Mizon.OpenVpn",
+      "description": "VPN در میزون",
+      "icon": "ms-resource://Files/Assets/JumpList/FullSize/Shield.png",
+      "displaysUI": true,
+      "usesGenerativeAI": false,
+      "isAvailable": false,
+      "allowedAppInvokers": [
+        "*"
+      ],
+      "inputs": [],
+      "inputCombinations": [
+        {
+          "inputs": [],
+          "description": "باز کردن بخش اتصال و مدیریت VPN میزون"
+        }
+      ],
+      "invocation": {
+        "type": "COM",
+        "clsid": "25F10A63-B41E-4B39-97AD-7B781CA81D89"
+      }
+    },
+    {
+      "id": "Mizon.OpenLogin.English",
+      "description": "Sign in to Mizon",
+      "icon": "ms-resource://Files/Assets/JumpList/FullSize/Person.png",
+      "displaysUI": true,
+      "usesGenerativeAI": false,
+      "isAvailable": false,
+      "allowedAppInvokers": [
+        "*"
+      ],
+      "inputs": [],
+      "inputCombinations": [
+        {
+          "inputs": [],
+          "description": "Open the Mizon sign-in page"
+        }
+      ],
+      "invocation": {
+        "type": "COM",
+        "clsid": "25F10A63-B41E-4B39-97AD-7B781CA81D89"
+      }
+    },
+    {
+      "id": "Mizon.OpenRegister.English",
+      "description": "Create a Mizon account",
+      "icon": "ms-resource://Files/Assets/JumpList/FullSize/PersonAdd.png",
+      "displaysUI": true,
+      "usesGenerativeAI": false,
+      "isAvailable": false,
+      "allowedAppInvokers": [
+        "*"
+      ],
+      "inputs": [],
+      "inputCombinations": [
+        {
+          "inputs": [],
+          "description": "Open the Mizon registration form"
+        }
+      ],
+      "invocation": {
+        "type": "COM",
+        "clsid": "25F10A63-B41E-4B39-97AD-7B781CA81D89"
+      }
+    },
+    {
+      "id": "Mizon.OpenMusic.English",
+      "description": "Music in Mizon",
+      "icon": "ms-resource://Files/Assets/JumpList/FullSize/Headphones.png",
+      "displaysUI": true,
+      "usesGenerativeAI": false,
+      "isAvailable": false,
+      "allowedAppInvokers": [
+        "*"
+      ],
+      "inputs": [],
+      "inputCombinations": [
+        {
+          "inputs": [],
+          "description": "Open Mizon music, music videos, and playlists"
+        }
+      ],
+      "invocation": {
+        "type": "COM",
+        "clsid": "25F10A63-B41E-4B39-97AD-7B781CA81D89"
+      }
+    },
+    {
+      "id": "Mizon.OpenMovies.English",
+      "description": "Movies and series in Mizon",
+      "icon": "ms-resource://Files/Assets/JumpList/FullSize/Video.png",
+      "displaysUI": true,
+      "usesGenerativeAI": false,
+      "isAvailable": false,
+      "allowedAppInvokers": [
+        "*"
+      ],
+      "inputs": [],
+      "inputCombinations": [
+        {
+          "inputs": [],
+          "description": "Open Mizon movies and series"
+        }
+      ],
+      "invocation": {
+        "type": "COM",
+        "clsid": "25F10A63-B41E-4B39-97AD-7B781CA81D89"
+      }
+    },
+    {
+      "id": "Mizon.OpenApps.English",
+      "description": "Apps in Mizon",
+      "icon": "ms-resource://Files/Assets/JumpList/FullSize/Apps.png",
+      "displaysUI": true,
+      "usesGenerativeAI": false,
+      "isAvailable": false,
+      "allowedAppInvokers": [
+        "*"
+      ],
+      "inputs": [],
+      "inputCombinations": [
+        {
+          "inputs": [],
+          "description": "Open the Mizon apps section"
+        }
+      ],
+      "invocation": {
+        "type": "COM",
+        "clsid": "25F10A63-B41E-4B39-97AD-7B781CA81D89"
+      }
+    },
+    {
+      "id": "Mizon.OpenVpn.English",
+      "description": "VPN in Mizon",
+      "icon": "ms-resource://Files/Assets/JumpList/FullSize/Shield.png",
+      "displaysUI": true,
+      "usesGenerativeAI": false,
+      "isAvailable": false,
+      "allowedAppInvokers": [
+        "*"
+      ],
+      "inputs": [],
+      "inputCombinations": [
+        {
+          "inputs": [],
+          "description": "Open Mizon VPN connection and management"
+        }
+      ],
+      "invocation": {
+        "type": "COM",
+        "clsid": "25F10A63-B41E-4B39-97AD-7B781CA81D89"
+      }
+    }
+  ]
+}

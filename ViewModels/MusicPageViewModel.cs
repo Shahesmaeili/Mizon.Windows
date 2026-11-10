@@ -1,5 +1,6 @@
-﻿using FluentIcons.Common;
+using FluentIcons.Common;
 using Microsoft.UI.Dispatching;
+using Symbol = FluentIcons.Common.Symbol;
 using Mizon.API;
 using Mizon.API.Client.Operations.Musics;
 using Mizon.API.Client.Requests.Musics;
@@ -33,10 +34,11 @@ public enum PlayState
     Playing, Paused, Idle,
 }
 
-public class MusicPageViewModel : MainViewModel
+public partial class MusicPageViewModel : MainViewModel
 {
     private readonly TeachingTipService _teachingTipService;
     private readonly IShortcutService _shortcutService;
+    private bool _isCreatingDesktopShortcut;
     private readonly Mizon.API.Client.Operations.Media.MediaDownloader _mediaDownloader;
     private readonly RgbMusicLightingService _rgbMusicLightingService;
 
@@ -44,6 +46,8 @@ public class MusicPageViewModel : MainViewModel
     private readonly DispatcherQueueTimer _audioDeviceDetailsTimer;
     private readonly DispatcherQueueTimer _musicListenerPositionTimer;
     private bool _isAudioRenderWatcherRunning;
+    private bool _isAudioDeviceDetailsRefreshing;
+    private bool _audioDeviceDetailsRefreshPending;
     private readonly HashSet<string> _batteryCheckedDeviceIds = [];
     private readonly HashSet<Guid> _musicListenerAvatarMediaIds = [];
     private readonly Dictionary<Guid, string> _musicListenerAvatarPaths = [];
@@ -65,7 +69,6 @@ public class MusicPageViewModel : MainViewModel
     private Guid _musicMediaPublicId { get; set; }
     private TimeSpan _musicDuration;
     private MediaResponse? _musicMediaResponse;
-    private Task? _musicDownloadTask;
     private bool _isPlaybackTransitioning;
     private bool _isStemMixerSwitching;
     private int _stemMixBalanceUpdateVersion;
@@ -76,6 +79,9 @@ public class MusicPageViewModel : MainViewModel
     private readonly SemaphoreSlim _musicPlaylistMembershipLock = new(1, 1);
 
     public ObservableCollection<StoryItemViewModel> Stories { get; } = [];
+    public ObservableCollection<StoryItemViewModel> HomeStories { get; } = [];
+    public bool IsHomeStoriesLoading { get => field; private set => SetField(ref field, value); } = true;
+    public string HomeStoriesMessage { get => field; private set => SetField(ref field, value); } = string.Empty;
 
     public bool IsMusicDownloading
     {
@@ -120,6 +126,12 @@ public class MusicPageViewModel : MainViewModel
     {
         get => _coverImagePath;
         set => SetField(ref _coverImagePath, value);
+    }
+
+    public string? PrimaryAccentColor
+    {
+        get => field;
+        private set => SetField(ref field, value);
     }
 
     private double _coverDownloadProgress;
@@ -288,18 +300,22 @@ public class MusicPageViewModel : MainViewModel
         }
     }
 
+    private readonly MusicPlaybackActivityService _playbackActivity;
+
     public MusicPageViewModel(MizonApi mizonApi,
-        MizonSocket mizonSocket,
+        Lazy<MizonSocket> mizonSocket,
         NavigationService navigationService,
         DispatcherQueue dispatcherQueue,
         IAudioPlayerService audioPlayerService,
         Mizon.API.Client.Operations.Media.MediaDownloader downloader,
         RgbMusicLightingService rgbMusicLightingService,
         IShortcutService shortcutService,
-        TeachingTipService teachingTipService)
+        TeachingTipService teachingTipService,
+        MusicPlaybackActivityService playbackActivity)
         : base(mizonApi, mizonSocket, navigationService, audioPlayerService)
     {
         _mediaDownloader = downloader;
+        _playbackActivity = playbackActivity;
         _rgbMusicLightingService = rgbMusicLightingService;
         _dispatcherQueue = dispatcherQueue;
         _audioDeviceDetailsTimer = _dispatcherQueue.CreateTimer();
@@ -315,7 +331,7 @@ public class MusicPageViewModel : MainViewModel
         MizonSocket.MusicListenerRemoved += MizonSocket_MusicListenerRemoved;
         PlayCommand = new RelayCommand(PlayAsync);
         CopyLinkCommand = new RelayCommand(CopyLinkAsync);
-        DesktopShortcutCommand = new RelayCommand(DesktopShortcutAsync);
+        DesktopShortcutCommand = new RelayCommand(DesktopShortcutAsync, (_, _) => !_isCreatingDesktopShortcut);
         ReactionCommand = new RelayCommand(ReactionAsync);
 
         _audioPlayerService.PositionUpdated += AudioPlayerService_PositionUpdated;
@@ -498,6 +514,24 @@ public class MusicPageViewModel : MainViewModel
     public ObservableCollection<MusicVocalSegmentItemViewModel> VocalSegments { get; } = [];
     public ObservableCollection<MusicGenreItemViewModel> Genres { get; } = [];
     public ObservableCollection<MusicGenreTypeItemViewModel> MusicGenreTypes { get; } = [];
+    // The home page's existing preview data, shared by one card template.
+    public IReadOnlyList<RecentlyPlayedMusicItemViewModel> RecentlyPlayedMusics { get; } =
+    [
+        new() { Title = "In The Dark", Artist = "Dua Lipa", DurationText = "3:42", CoverImagePath = "/Assets/image1.jpeg", LikesCount = 12480,
+            Contributors = [new() { DisplayName = "Dua Lipa" }] },
+        new() { Title = "After Hours", Artist = "The Weeknd", DurationText = "4:01", CoverImagePath = "/Assets/image2.jpeg", LikesCount = 28640,
+            Contributors = [new() { DisplayName = "The Weeknd" }] },
+        new() { Title = "Midnight City", Artist = "M83", DurationText = "4:04", CoverImagePath = "/Assets/image3.jpeg", LikesCount = 8952,
+            Contributors = [new() { DisplayName = "M83" }] },
+        new() { Title = "One More Night", Artist = "Maroon 5", DurationText = "3:39", CoverImagePath = "/Assets/image4.jpeg", LikesCount = 18320,
+            Contributors = [new() { DisplayName = "Maroon 5" }] }
+    ];
+    public IReadOnlyList<MusicRecommendationItemViewModel> MusicRecommendations { get; } =
+    [
+        new() { Title = "ترندهای امروز", Description = "۲۴ آهنگ تازه", IconSymbol = Symbol.Fire, AccentBrush = new(Color.FromArgb(255, 251, 146, 90)) },
+        new() { Title = "Focus Session", Description = "برای تمرکز امروز", IconSymbol = Symbol.Headphones, AccentBrush = new(Color.FromArgb(255, 86, 211, 174)) },
+        new() { Title = "Mood: Dreamy", Description = "براساس سلیقهٔ تو", IconSymbol = Symbol.Heart, AccentBrush = new(Color.FromArgb(255, 192, 151, 245)) }
+    ];
     public ObservableCollection<MusicDetailsMusicItemViewModel> AlbumMusics { get; } = [];
     public ObservableCollection<MusicDetailsMusicItemViewModel> ContributorMusics { get; } = [];
     public ObservableCollection<MusicDetailsCommentItemViewModel> MusicDetailsComments { get; } = [];
@@ -750,7 +784,7 @@ public class MusicPageViewModel : MainViewModel
         {
             if (e.ToPageType == typeof(MusicPage))
             {
-                _ = GetMusicGenreTypesAsync();
+                // The home page owns and cancels widget requests in its Loaded/Unloaded lifecycle.
                 return;
             }
 
@@ -762,16 +796,10 @@ public class MusicPageViewModel : MainViewModel
                     {
                         // The page/view-model is cached. Navigating to the same
                         // song again must not reset playback or re-fetch data.
-                        if (musicPublicId == _musicPublicId)
+                        if (musicPublicId == _musicPublicId && _musicLoadCancellationTokenSource?.IsCancellationRequested == false)
                             return;
 
-                        _musicLoadCancellationTokenSource?.Cancel();
-                        _musicLoadCancellationTokenSource?.Dispose();
-                        _musicLoadCancellationTokenSource = new CancellationTokenSource();
-
-                        ResetMusicPresentation();
-                        _musicPublicId = musicPublicId;
-                        _ = LoadMusicAsync(musicPublicId, _musicLoadCancellationTokenSource.Token);
+                        BeginMusicLoad(musicPublicId);
                     }
                     else
                     {
@@ -787,8 +815,9 @@ public class MusicPageViewModel : MainViewModel
 
             }
         }
-        else
+        else if (e.FromPageType == typeof(MusicsPage))
         {
+            // Library/list navigation must not cancel a background queue's song load.
             _musicLoadCancellationTokenSource?.Cancel();
             StopAudioRenderWatching();
             _musicListenerPositionTimer.Stop();
@@ -824,11 +853,14 @@ public class MusicPageViewModel : MainViewModel
             if (!IsCurrentMusicLoad(musicPublicId, cancellationToken))
                 return;
 
-            _ = LoadAudioRenders();
-            StartAudioRenderWatching();
+            if (NavigationService.CurrentInternalPage is MusicsPage)
+            {
+                StartAudioRenderWatching();
+                _ = LoadAudioRenders();
+            }
             LoadHardCodedVocalSegments();
             await GetMusicCommentsAsync(musicPublicId, cancellationToken);
-            if (IsCurrentMusicLoad(musicPublicId, cancellationToken))
+            if (IsCurrentMusicLoad(musicPublicId, cancellationToken) && NavigationService.CurrentInternalPage is MusicsPage)
                 _musicListenerPositionTimer.Start();
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -841,32 +873,13 @@ public class MusicPageViewModel : MainViewModel
         }
     }
 
-    private async Task GetMusicGenreTypesAsync()
-    {
-        var response = await MizonApi.SendRequestAsync(new MusicGenreTypesOperation(new()));
-        if (!response.IsSuccess)
-            return;
-
-        MusicGenreTypes.Clear();
-        response.Content!.MusicGenreTypes.ForEach(musicGenreType =>
-        {
-            MusicGenreTypes.Add(new()
-            {
-                PublicId = musicGenreType.PublicId,
-                Title = musicGenreType.Title,
-                PersianTitle = musicGenreType.PersianTitle,
-                AccentColorHex = musicGenreType.AccentColorHex,
-                IconSymbolName = musicGenreType.IconSymbol,
-                MusicsCount = musicGenreType.MusicsCount
-            });
-        });
-    }
-
     public Task SelectAlbumDetailsAsync()
     {
         if (!HasMusicAlbum)
             return Task.CompletedTask;
 
+        _commentDetailsRequestVersion++;
+        ClearFocusedMusicComment();
         IsAlbumDetailsSelected = true;
         IsContributorDetailsSelected = false;
         IsCommentsDetailsSelected = false;
@@ -875,6 +888,8 @@ public class MusicPageViewModel : MainViewModel
 
     public Task SelectContributorDetailsAsync()
     {
+        _commentDetailsRequestVersion++;
+        ClearFocusedMusicComment();
         IsAlbumDetailsSelected = false;
         IsContributorDetailsSelected = true;
         IsCommentsDetailsSelected = false;
@@ -883,6 +898,7 @@ public class MusicPageViewModel : MainViewModel
 
     public Task SelectCommentsDetailsAsync()
     {
+        ClearFocusedMusicComment();
         IsAlbumDetailsSelected = false;
         IsContributorDetailsSelected = false;
         IsCommentsDetailsSelected = true;
@@ -969,56 +985,76 @@ public class MusicPageViewModel : MainViewModel
         _dispatcherQueue.TryEnqueue(() => music.CoverImagePath = imagePath);
     }
 
-    private async Task GetMusicDetailsCommentsAsync(Guid musicPublicId, CancellationToken cancellationToken)
+    private async Task<bool> GetMusicDetailsCommentsAsync(Guid musicPublicId, CancellationToken cancellationToken, Guid? commentPublicId = null)
     {
         if (musicPublicId == Guid.Empty)
-            return;
+            return false;
 
+        var requestVersion = ++_commentDetailsRequestVersion;
         var response = await MizonApi.SendRequestAsync(new MusicCommentsOperation(new()
         {
-            MusicPublicId = musicPublicId
+            MusicPublicId = musicPublicId,
+            MusicCommentPublicId = commentPublicId
         }), cancellationToken);
 
-        if (!response.IsSuccess || !IsCurrentMusicLoad(musicPublicId, cancellationToken))
-            return;
+        if (!response.IsSuccess || response.Content is null || !IsCurrentMusicLoad(musicPublicId, cancellationToken)
+            || requestVersion != _commentDetailsRequestVersion || !IsCommentsDetailsSelected)
+            return false;
 
-        MusicDetailsComments.Clear();
+        if (commentPublicId is not null && response.Content!.MusicComments.Count == 0)
+        {
+            var unavailable = MusicDetailsComments.FirstOrDefault(x => x.PublicId == commentPublicId);
+            if (unavailable is not null) MusicDetailsComments.Remove(unavailable);
+            return false;
+        }
+
+        ClearFocusedMusicComment();
+        if (commentPublicId is null) MusicDetailsComments.Clear();
         foreach (var comment in response.Content!.MusicComments)
         {
-            var item = new MusicDetailsCommentItemViewModel
+            var item = CreateCommentItem(comment);
+            if (commentPublicId is not null)
             {
-                PublicId = comment.PublicId,
-                ClientPublicId = comment.ClientPublicId,
-                FirstName = comment.FirstName,
-                LastName = comment.LastName,
-                Username = comment.Username,
-                Text = comment.Text,
-                Timestamp = comment.Timestamp,
-                ProfileMediaPublicId = comment.ProfileMediaPublicId
-            };
-
-            MusicDetailsComments.Add(item);
+                var existing = MusicDetailsComments.FirstOrDefault(x => x.PublicId == comment.PublicId);
+                if (existing is not null)
+                    MusicDetailsComments[MusicDetailsComments.IndexOf(existing)] = item;
+                else
+                    MusicDetailsComments.Insert(0, item);
+                item.IsActivityTarget = true;
+                HasFocusedMusicComment = true;
+            }
+            else MusicDetailsComments.Add(item);
             if (item.ProfileMediaPublicId is Guid profileMediaPublicId)
                 _ = LoadMusicDetailsCommentProfileAsync(item, profileMediaPublicId, cancellationToken);
         }
+        return true;
     }
 
     private async Task LoadMusicDetailsCommentProfileAsync(MusicDetailsCommentItemViewModel comment, Guid mediaPublicId, CancellationToken cancellationToken)
     {
-        var mediaResponse = await MizonApi.SendRequestAsync(new MediaOperation(new MediaRequest
+        try
         {
-            MediaPublicId = mediaPublicId
-        }), cancellationToken);
+            var mediaResponse = await MizonApi.SendRequestAsync(new MediaOperation(new MediaRequest
+            {
+                MediaPublicId = mediaPublicId
+            }), cancellationToken);
 
-        if (!mediaResponse.IsSuccess || mediaResponse.Content is null)
-            return;
+            if (!mediaResponse.IsSuccess || mediaResponse.Content is null)
+                return;
 
-        var imagePath = await _mediaDownloader.DownloadToCacheAsync(
-            mediaResponse.Content,
-            new Uri(mediaResponse.Content.StoragePath),
-            cancellationToken: cancellationToken);
+            var imagePath = await _mediaDownloader.DownloadToCacheAsync(
+                mediaResponse.Content,
+                new Uri(mediaResponse.Content.StoragePath),
+                cancellationToken: cancellationToken);
 
-        _dispatcherQueue.TryEnqueue(() => comment.ProfileImagePath = imagePath);
+            _dispatcherQueue.TryEnqueue(() =>
+            {
+                if (!cancellationToken.IsCancellationRequested && MusicDetailsComments.Contains(comment))
+                    comment.ProfileImagePath = imagePath;
+            });
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+        catch (Exception exception) { AppLog.Error("Music comment profile image could not be loaded.", exception); }
     }
 
     private bool IsCurrentMusicLoad(Guid musicPublicId, CancellationToken cancellationToken) =>
@@ -1026,6 +1062,8 @@ public class MusicPageViewModel : MainViewModel
 
     private void ResetMusicPresentation()
     {
+        IsMusicDownloading = false;
+        MusicDownloadProgress = 0;
         _musicFilePublicId = Guid.Empty;
         _musicMediaPublicId = Guid.Empty;
         _musicDuration = TimeSpan.Zero;
@@ -1051,6 +1089,7 @@ public class MusicPageViewModel : MainViewModel
         LableTitle = null;
         LablePublicId = null;
         CoverImagePath = null;
+        PrimaryAccentColor = null;
         CoverDownloadProgress = 0;
         CoverDownloadSpeed = 0;
         Duration = string.Empty;
@@ -1065,6 +1104,8 @@ public class MusicPageViewModel : MainViewModel
         AlbumMusics.Clear();
         ContributorMusics.Clear();
         MusicDetailsComments.Clear();
+        _commentDetailsRequestVersion++;
+        HasFocusedMusicComment = false;
         HasMusicAlbum = false;
         IsAlbumDetailsSelected = false;
         IsContributorDetailsSelected = false;
@@ -1085,14 +1126,20 @@ public class MusicPageViewModel : MainViewModel
         _musicListenerAvatarPaths.Clear();
     }
 
-    public async Task MarkStoryAsViewedAsync(StoryItemViewModel story, CancellationToken cancellationToken = default)
+    public async Task<bool> MarkStoryAsViewedAsync(StoryItemViewModel story, CancellationToken cancellationToken = default)
     {
         if (story.ViewedByMe)
-            return;
+            return true;
 
         var response = await MizonApi.SendRequestAsync(new StoryViewOperation(new() { StoryPublicId = story.PublicId }), cancellationToken);
         if (response.IsSuccess)
-            _dispatcherQueue.TryEnqueue(() => story.ViewedByMe = true);
+            _dispatcherQueue.TryEnqueue(() =>
+            {
+                story.ViewedByMe = true;
+                foreach (var item in HomeStories.Concat(Stories).Where(item => item.PublicId == story.PublicId))
+                    item.ViewedByMe = true;
+            });
+        return response.IsSuccess;
     }
 
     public async Task<Mizon.API.Client.Responses.Stories.StoryResponse?> GetStoryDetailsAsync(StoryItemViewModel story, CancellationToken cancellationToken = default)
@@ -1107,8 +1154,16 @@ public class MusicPageViewModel : MainViewModel
         if (!response.IsSuccess || response.Content is null)
             return null;
 
-        _ = CacheStoryMediaAsync(response.Content, cancellationToken);
-        return response.Content.StoragePath;
+        if (!Uri.TryCreate(response.Content.StoragePath, UriKind.Absolute, out var storageUri))
+            return null;
+
+        return await _mediaDownloader.DownloadToCacheAsync(response.Content, storageUri, cancellationToken: cancellationToken);
+    }
+
+    public async Task<Mizon.API.Client.Responses.Stories.StoryResponse?> SetStoryLikedAsync(Guid storyPublicId, bool liked, CancellationToken cancellationToken)
+    {
+        var response = await MizonApi.SendRequestAsync(new StoryLikeOperation(new() { StoryPublicId = storyPublicId, Liked = liked }), cancellationToken);
+        return response.IsSuccess ? response.Content : null;
     }
 
     private async Task GetMusicStoriesAsync(Guid musicPublicId, CancellationToken cancellationToken)
@@ -1121,6 +1176,7 @@ public class MusicPageViewModel : MainViewModel
         {
             PublicId = story.PublicId,
             PreviewMediaPublicId = story.PreviewMediaPublicId,
+            CreatorProfileMediaPublicId = story.CreatorProfileMediaPublicId,
             CreatorFirstName = story.CreatorFirstName,
             CreatorLastName = story.CreatorLastName,
             Title = story.Title,
@@ -1136,25 +1192,25 @@ public class MusicPageViewModel : MainViewModel
 
         foreach (var pair in response.Content.Stories.Zip(items))
         {
-            _ = LoadStoryImageAsync(pair.Second, pair.First.PreviewMediaPublicId, false, cancellationToken);
+            _ = LoadStoryImageSafelyAsync(pair.Second, pair.First.PreviewMediaPublicId, false, cancellationToken);
             if (pair.First.CreatorProfileMediaPublicId is Guid profileMediaPublicId)
-                _ = LoadStoryImageAsync(pair.Second, profileMediaPublicId, true, cancellationToken);
+                _ = LoadStoryImageSafelyAsync(pair.Second, profileMediaPublicId, true, cancellationToken);
         }
     }
 
-    private async Task CacheStoryMediaAsync(MediaResponse media, CancellationToken cancellationToken)
+    private async Task LoadStoryImageSafelyAsync(StoryItemViewModel story, Guid mediaPublicId, bool profile,
+        CancellationToken cancellationToken, Func<bool>? canApply = null)
     {
-        if (!Uri.TryCreate(media.StoragePath, UriKind.Absolute, out var storageUri))
-            return;
-
-        await _mediaDownloader.DownloadToCacheAsync(
-            media,
-            storageUri,
-            cancellationToken: cancellationToken);
+        try { await LoadStoryImageAsync(story, mediaPublicId, profile, cancellationToken, canApply); }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+        catch (Exception exception) { AppLog.Error("Story preview could not be loaded.", exception); }
     }
 
-    private async Task LoadStoryImageAsync(StoryItemViewModel story, Guid mediaPublicId, bool profile, CancellationToken cancellationToken)
+    private async Task LoadStoryImageAsync(StoryItemViewModel story, Guid mediaPublicId, bool profile,
+        CancellationToken cancellationToken, Func<bool>? canApply = null)
     {
+        if (canApply is not null && !await UpdateStoryImagesOnDispatcherAsync(static () => { }, cancellationToken, canApply))
+            return;
         var response = await MizonApi.SendRequestAsync(new MediaOperation(new() { MediaPublicId = mediaPublicId }), cancellationToken);
         if (!response.IsSuccess || response.Content is null || !Uri.TryCreate(response.Content.StoragePath, UriKind.Absolute, out var storageUri))
             return;
@@ -1164,13 +1220,48 @@ public class MusicPageViewModel : MainViewModel
             storageUri,
             cancellationToken: cancellationToken);
 
-        _dispatcherQueue.TryEnqueue(() =>
+        await UpdateStoryImagesOnDispatcherAsync(() =>
         {
             if (profile)
                 story.CreatorProfileImagePath = imagePath;
             else
                 story.PreviewImagePath = imagePath;
-        });
+        }, cancellationToken, canApply);
+    }
+
+    private async Task<bool> UpdateStoryImagesOnDispatcherAsync(Action update, CancellationToken cancellationToken,
+        Func<bool>? canApply = null)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_dispatcherQueue.HasThreadAccess)
+        {
+            if (canApply?.Invoke() == false) return false;
+            update();
+            return true;
+        }
+
+        var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var registration = cancellationToken.Register(() => completion.TrySetCanceled(cancellationToken));
+        if (!_dispatcherQueue.TryEnqueue(() =>
+        {
+            try
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    completion.TrySetCanceled(cancellationToken);
+                    return;
+                }
+                if (canApply?.Invoke() == false)
+                {
+                    completion.TrySetResult(false);
+                    return;
+                }
+                update();
+                completion.TrySetResult(true);
+            }
+            catch (Exception exception) { completion.TrySetException(exception); }
+        })) completion.TrySetResult(false);
+        return await completion.Task.ConfigureAwait(false);
     }
 
     private void MizonSocket_EntityViewersCountChanged(object? sender, MizonSocket.EntityViewersCountChangedEventArgs e)
@@ -1200,18 +1291,26 @@ public class MusicPageViewModel : MainViewModel
 
     private async Task DesktopShortcutAsync(object? parameter, CancellationToken cancellationToken)
     {
-        if (_musicPublicId == Guid.Empty)
+        if (_musicPublicId == Guid.Empty || _isCreatingDesktopShortcut)
             return;
 
+        var musicId = _musicPublicId;
+        _isCreatingDesktopShortcut = true;
+        DesktopShortcutCommand.RaiseCanExecuteChanged();
         try
         {
-            await _shortcutService.CreateMusicDesktopShortcutAsync(_musicPublicId, Title, PersianTitle, CoverImagePath);
+            await _shortcutService.CreateMusicDesktopShortcutAsync(musicId, Title, PersianTitle, CoverImagePath);
             _teachingTipService.ShowMessage("ایجاد شد", "شورتکات این آهنگ در دسکتاپ شما ساخته شد.", "باشه!");
         }
         catch (Exception exception)
         {
-            AppLog.Error($"Music desktop shortcut could not be created. MusicPublicId='{_musicPublicId}'.", exception);
+            AppLog.Error($"Music desktop shortcut could not be created. MusicPublicId='{musicId}'.", exception);
             _teachingTipService.ShowMessage("خطا", "ساخت شورتکات روی دسکتاپ انجام نشد.", "باشه!");
+        }
+        finally
+        {
+            _isCreatingDesktopShortcut = false;
+            DesktopShortcutCommand.RaiseCanExecuteChanged();
         }
     }
 
@@ -1477,10 +1576,12 @@ public class MusicPageViewModel : MainViewModel
         if (_isPlaybackTransitioning)
             return;
 
+        var musicPublicId = _musicPublicId;
         _isPlaybackTransitioning = true;
 
         try
         {
+            var startingTrack = _audioPlayerService.AudioPlayerState == AudioPlayerState.Idle;
             switch (_audioPlayerService.AudioPlayerState)
             {
                 case AudioPlayerState.Playing:
@@ -1510,7 +1611,7 @@ public class MusicPageViewModel : MainViewModel
                         break;
                     }
 
-                    _musicDownloadTask ??= DownloadMusicAsync(mediaResponse);
+                    _ = EnsureMusicDownloadAsync(mediaResponse);
                     var storageUri = new Uri(mediaResponse.StoragePath);
                     if (storageUri.IsFile)
                         await _audioPlayerService.PlayAsync(storageUri.LocalPath);
@@ -1520,6 +1621,17 @@ public class MusicPageViewModel : MainViewModel
                     break;
             }
 
+            if (startingTrack && _audioPlayerService.AudioPlayerState == AudioPlayerState.Playing)
+            {
+                // Node creation is asynchronous; navigation may have changed the page meanwhile.
+                if (_musicPublicId != musicPublicId)
+                {
+                    await _audioPlayerService.StopAsync();
+                    return;
+                }
+                _playingMusicPublicId = musicPublicId;
+                _playbackActivity.RecordStarted(_playingMusicPublicId);
+            }
             UpdateColors();
         }
         finally
@@ -1682,12 +1794,19 @@ public class MusicPageViewModel : MainViewModel
 
     private async Task LoadAudioRenders()
     {
+        var watcher = _audioRenderDeviceWatcher;
+        if (!IsCurrentAudioRenderWatcher(watcher))
+            return;
+
         try
         {
             var devices = await DeviceInformation.FindAllAsync(MediaDevice.GetAudioRenderSelector());
             AppLog.Information($"Audio render enumeration completed. Count={devices.Count}. Devices=[{string.Join(" | ", devices.Select(device => $"{device.Name} ({device.Id})"))}].");
             _dispatcherQueue.TryEnqueue(() =>
             {
+                if (!IsCurrentAudioRenderWatcher(watcher))
+                    return;
+
                 SynchronizeAudioDevices(devices);
                 _ = RefreshAudioDeviceDetailsAsync();
             });
@@ -1716,6 +1835,10 @@ public class MusicPageViewModel : MainViewModel
 
     private void StopAudioRenderWatching()
     {
+        _isAudioRenderWatcherRunning = false;
+        _audioDeviceDetailsRefreshPending = false;
+        _batteryCheckedDeviceIds.Clear();
+
         if (_audioRenderDeviceWatcher is not null)
         {
             _audioRenderDeviceWatcher.Added -= AudioRenderDeviceWatcherAdded;
@@ -1726,15 +1849,21 @@ public class MusicPageViewModel : MainViewModel
 
         _audioRenderDeviceWatcher = null;
         _audioDeviceDetailsTimer.Stop();
-        _isAudioRenderWatcherRunning = false;
         AppLog.Information("Audio render device watcher stopped.");
     }
+
+    private bool IsCurrentAudioRenderWatcher(DeviceWatcher? watcher) =>
+        _isAudioRenderWatcherRunning && watcher is not null && ReferenceEquals(watcher, _audioRenderDeviceWatcher);
 
     private void AudioRenderDeviceWatcherRemoved(DeviceWatcher sender, DeviceInformationUpdate args)
     {
         AppLog.Information($"Audio render device removed. Id='{args.Id}'.");
         _dispatcherQueue.TryEnqueue(() =>
         {
+            if (!IsCurrentAudioRenderWatcher(sender))
+                return;
+
+            _batteryCheckedDeviceIds.Remove(args.Id);
             var audioDevice = AudioDevices.FirstOrDefault(device => device.Id == args.Id);
             if (audioDevice is null)
                 return;
@@ -1750,11 +1879,19 @@ public class MusicPageViewModel : MainViewModel
     private void AudioRenderDeviceWatcherAdded(DeviceWatcher sender, DeviceInformation args)
     {
         AppLog.Information($"Audio render device added. Name='{args.Name}', Id='{args.Id}'.");
-        _dispatcherQueue.TryEnqueue(() => UpsertAudioDevice(args));
+        _dispatcherQueue.TryEnqueue(() =>
+        {
+            if (IsCurrentAudioRenderWatcher(sender))
+                UpsertAudioDevice(args);
+        });
     }
 
     private void AudioRenderDeviceWatcherUpdated(DeviceWatcher sender, DeviceInformationUpdate args) =>
-        _ = RefreshAudioRenderAfterUpdateAsync(args.Id);
+        _dispatcherQueue.TryEnqueue(() =>
+        {
+            if (IsCurrentAudioRenderWatcher(sender))
+                _ = RefreshAudioRenderAfterUpdateAsync(args.Id);
+        });
 
     private async Task RefreshAudioRenderAfterUpdateAsync(string deviceId)
     {
@@ -1806,38 +1943,78 @@ public class MusicPageViewModel : MainViewModel
 
     private async Task RefreshAudioDeviceDetailsAsync()
     {
-        var devices = AudioDevices.ToArray();
-        var hasUncheckedBatteryDevices = devices.Any(device => !_batteryCheckedDeviceIds.Contains(device.Id));
-        var bluetoothBatteryDevices = hasUncheckedBatteryDevices
-            ? await BluetoothBatteryReader.GetPairedDevicesAsync()
-            : [];
+        if (!_isAudioRenderWatcherRunning)
+            return;
 
-        var volumeTasks = devices.Select(async device => new
+        // Timer ticks and watcher bursts share one refresh. A request arriving during
+        // an await asks for one fresh pass instead of starting overlapping device I/O.
+        _audioDeviceDetailsRefreshPending = true;
+        if (_isAudioDeviceDetailsRefreshing)
+            return;
+
+        _isAudioDeviceDetailsRefreshing = true;
+        try
         {
-            Device = device,
-            VolumePercentage = await Task.Run(() => AudioEndpointVolumeReader.TryGetVolumePercentage(device.Id)),
-            BatteryLevel = await TryReadBatteryLevelAsync(device, bluetoothBatteryDevices)
-        });
+            while (_audioDeviceDetailsRefreshPending && _isAudioRenderWatcherRunning)
+            {
+                _audioDeviceDetailsRefreshPending = false;
+                var watcher = _audioRenderDeviceWatcher;
+                try
+                {
+                    var devices = AudioDevices.ToArray();
+                    var hasUncheckedBatteryDevices = devices.Any(device => !_batteryCheckedDeviceIds.Contains(device.Id));
+                    var bluetoothBatteryDevices = hasUncheckedBatteryDevices
+                        ? await BluetoothBatteryReader.GetPairedDevicesAsync()
+                        : [];
 
-        var results = await Task.WhenAll(volumeTasks);
-        foreach (var result in results)
+                    if (!IsCurrentAudioRenderWatcher(watcher))
+                        continue;
+
+                    var volumeTasks = devices.Select(async device => new
+                    {
+                        Device = device,
+                        VolumePercentage = await Task.Run(() => AudioEndpointVolumeReader.TryGetVolumePercentage(device.Id)),
+                        BatteryLevel = await TryReadBatteryLevelAsync(device, bluetoothBatteryDevices, watcher)
+                    });
+
+                    var results = await Task.WhenAll(volumeTasks);
+                    if (!IsCurrentAudioRenderWatcher(watcher))
+                        continue;
+
+                    foreach (var result in results)
+                    {
+                        if (!AudioDevices.Contains(result.Device))
+                            continue;
+
+                        var volumeChanged = result.Device.VolumePercentage != result.VolumePercentage;
+                        var batteryChanged = result.BatteryLevel.HasValue && result.Device.BatteryLevel != result.BatteryLevel;
+                        result.Device.VolumePercentage = result.VolumePercentage;
+                        if (result.BatteryLevel.HasValue)
+                            result.Device.BatteryLevel = result.BatteryLevel;
+
+                        if (volumeChanged || batteryChanged)
+                            AppLog.Information($"Audio device details. Name='{result.Device.Title}', Volume={result.VolumePercentage?.ToString() ?? "unavailable"}, Battery={result.BatteryLevel?.ToString() ?? "unavailable"}.");
+                    }
+                }
+                catch (Exception exception)
+                {
+                    AppLog.Error("Audio device details refresh failed.", exception);
+                }
+            }
+        }
+        finally
         {
-            var volumeChanged = result.Device.VolumePercentage != result.VolumePercentage;
-            var batteryChanged = result.BatteryLevel.HasValue && result.Device.BatteryLevel != result.BatteryLevel;
-            result.Device.VolumePercentage = result.VolumePercentage;
-            if (result.BatteryLevel.HasValue)
-                result.Device.BatteryLevel = result.BatteryLevel;
-
-            if (volumeChanged || batteryChanged)
-                AppLog.Information($"Audio device details. Name='{result.Device.Title}', Volume={result.VolumePercentage?.ToString() ?? "unavailable"}, Battery={result.BatteryLevel?.ToString() ?? "unavailable"}.");
+            _isAudioDeviceDetailsRefreshing = false;
         }
     }
 
     private async Task<byte?> TryReadBatteryLevelAsync(
         AudioDeviceItemViewModel device,
-        IReadOnlyList<BluetoothBatteryDevice> bluetoothBatteryDevices)
+        IReadOnlyList<BluetoothBatteryDevice> bluetoothBatteryDevices,
+        DeviceWatcher? watcher)
     {
-        if (_batteryCheckedDeviceIds.Contains(device.Id))
+        if (!IsCurrentAudioRenderWatcher(watcher) || !AudioDevices.Contains(device)
+            || _batteryCheckedDeviceIds.Contains(device.Id))
             return null;
 
         _batteryCheckedDeviceIds.Add(device.Id);
@@ -1869,7 +2046,7 @@ public class MusicPageViewModel : MainViewModel
     {
         var baseApiResponse = await MizonApi.SendRequestAsync(new MusicOperation(new()
         {
-            MusicPublicId = _musicPublicId,
+            MusicPublicId = musicPublicId,
         }), cancellationToken);
 
         if (baseApiResponse.IsSuccess && IsCurrentMusicLoad(musicPublicId, cancellationToken))
@@ -1877,6 +2054,7 @@ public class MusicPageViewModel : MainViewModel
             var musicResponse = baseApiResponse.Content!;
 
             Title = musicResponse.Title;
+            PrimaryAccentColor = musicResponse.MusicCover?.PrimaryAccentColor;
 
             if (!string.IsNullOrWhiteSpace(musicResponse.PersianTitle))
                 PersianTitle = $"({musicResponse.PersianTitle})";
@@ -1902,13 +2080,19 @@ public class MusicPageViewModel : MainViewModel
 
             // After successfully loading music info, join SignalR entity group
             // so this client will receive live viewer count updates for this music.
-            _ = MizonSocket.JoinEntityAsync("Music", _musicPublicId, cancellationToken);
+            if (NavigationService.CurrentInternalPage is MusicsPage)
+                _ = MizonSocket.JoinEntityAsync("Music", musicPublicId, cancellationToken);
 
-            _ = GetMusicCoverFileAsync(_musicPublicId, musicResponse.MusicCover.MediaPublicId, cancellationToken);
-            if (HasMusicAlbum)
-                _ = SelectAlbumDetailsAsync();
-            else
-                _ = SelectContributorDetailsAsync();
+            _ = GetMusicCoverFileAsync(musicPublicId, musicResponse.MusicCover.MediaPublicId, cancellationToken);
+            // An explicit activity/comment destination or a tab selected while metadata
+            // was loading takes precedence over the initial default tab.
+            if (!IsAlbumDetailsSelected && !IsContributorDetailsSelected && !IsCommentsDetailsSelected)
+            {
+                if (HasMusicAlbum)
+                    _ = SelectAlbumDetailsAsync();
+                else
+                    _ = SelectContributorDetailsAsync();
+            }
             await UpdateNowPlayingMetadataAsync();
         }
     }
@@ -1917,10 +2101,10 @@ public class MusicPageViewModel : MainViewModel
     {
         var baseApiResponse = await MizonApi.SendRequestAsync(new MusicFileOperation(new()
         {
-            MusicPublicId = _musicPublicId,
+            MusicPublicId = musicPublicId,
         }), cancellationToken);
 
-        if (baseApiResponse.IsSuccess)
+        if (baseApiResponse.IsSuccess && IsCurrentMusicLoad(musicPublicId, cancellationToken))
         {
             var musicFileResponse = baseApiResponse.Content!;
 
@@ -2119,7 +2303,7 @@ public class MusicPageViewModel : MainViewModel
         return _musicMediaResponse;
     }
 
-    private async Task DownloadMusicAsync(MediaResponse mediaResponse)
+    private async Task DownloadMusicAsync(MediaResponse mediaResponse, Guid musicPublicId)
     {
         IsMusicDownloading = true;
         MusicDownloadProgress = 0;
@@ -2130,16 +2314,16 @@ public class MusicPageViewModel : MainViewModel
                 mediaResponse,
                 new Uri(mediaResponse.StoragePath)))
             {
-                MusicDownloadProgress = chunk.FileSize > 0
-                    ? Math.Min(100, (double)chunk.TotalDownloaded / chunk.FileSize * 100)
-                    : 0;
+                if (_musicPublicId == musicPublicId)
+                    MusicDownloadProgress = chunk.FileSize > 0
+                        ? Math.Min(100, (double)chunk.TotalDownloaded / chunk.FileSize * 100)
+                        : 0;
             }
+            if (_musicPublicId == musicPublicId) MusicDownloadProgress = 100;
         }
         finally
         {
-            IsMusicDownloading = false;
-            MusicDownloadProgress = 100;
-            _musicDownloadTask = null;
+            if (_musicPublicId == musicPublicId) IsMusicDownloading = false;
         }
     }
 
@@ -2148,11 +2332,12 @@ public class MusicPageViewModel : MainViewModel
         var baseApiResponse = await MizonApi.SendRequestAsync(new MediaOperation(new MediaRequest { MediaPublicId = mediaPublicId }), cancellationToken);
 
 
-        if (baseApiResponse.IsSuccess)
+        if (baseApiResponse.IsSuccess && IsCurrentMusicLoad(musicPublicId, cancellationToken))
         {
             var mediaResponse = baseApiResponse.Content;
             var progress = new Progress<MediaDownloader.MediaDownloadProgress>(downloadProgress =>
             {
+                if (!IsCurrentMusicLoad(musicPublicId, cancellationToken)) return;
                 CoverDownloadProgress = downloadProgress.FileSize > 0
                     ? Math.Min(1d, (double)downloadProgress.TotalDownloaded / downloadProgress.FileSize)
                     : 0d;
@@ -2166,6 +2351,7 @@ public class MusicPageViewModel : MainViewModel
                 progress: progress,
                 cancellationToken: cancellationToken);
 
+            if (!IsCurrentMusicLoad(musicPublicId, cancellationToken)) return;
             CoverDownloadProgress = 1;
             CoverImagePath = coverImagePath;
             await UpdateNowPlayingMetadataAsync();

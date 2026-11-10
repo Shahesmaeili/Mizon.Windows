@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NuGetAudit>false</NuGetAudit>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Use Mizon's existing SDK. Only the explicit image-reselection mode
+         creates its own non-activating offscreen diagnostic window. -->
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.4.1-experimental" />
+    <Compile Include="..\Mizon.Windows.PaletteProvider\NativeMethods.cs;..\Mizon.Windows.PaletteProvider\NativeObject.cs;..\Mizon.Windows.PaletteProvider\CompletedOperation.cs;..\Mizon.Windows.PaletteProvider\Log.cs;..\Mizon.Windows.PaletteProvider\PaletteResultModels.cs;..\Mizon.Windows.PaletteProvider\PaletteCardTemplate.cs;..\Mizon.Windows.PaletteProvider\PalettePreviewData.cs" Link="Production\%(Filename)%(Extension)" />
+    <Compile Include="..\Mizon.Windows.PaletteProvider\PaletteCapabilityDemoState.cs;..\Mizon.Windows.PaletteProvider\ComApartment.cs" Link="Production\%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

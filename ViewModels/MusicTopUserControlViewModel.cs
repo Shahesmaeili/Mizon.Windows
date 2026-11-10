@@ -1,4 +1,5 @@
-﻿using Microsoft.UI;
+using System;
+using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
 using Mizon.API;
 using Mizon.Windows.Services;
@@ -9,7 +10,7 @@ namespace Mizon.Windows.ViewModels;
 public class MusicTopUserControlViewModel : MainViewModel
 {
     public MusicTopUserControlViewModel(MizonApi mizonApi,
-        MizonSocket mizonSocket,
+        Lazy<MizonSocket> mizonSocket,
         NavigationService navigationService,
         IAudioPlayerService audioPlayerService) : base(mizonApi, mizonSocket ,navigationService, audioPlayerService)
     {

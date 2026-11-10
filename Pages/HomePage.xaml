@@ -6,11 +6,45 @@
     xmlns:local="using:Mizon.Windows.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:common="using:Mizon.Windows.Common"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:usercontrols="using:Mizon.Windows.UserControls"
+    xmlns:themes="using:Mizon.Windows.Themes"
     NavigationCacheMode="Enabled"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:icon="using:FluentIcons.WinUI" xmlns:labs="using:CommunityToolkit.Labs.WinUI" xmlns:dev="using:DevWinUI" xmlns:media="using:CommunityToolkit.WinUI.Media" xmlns:datatemplateselectors="using:Mizon.Windows.Pages.DataTemplateSelectors" xmlns:lottie="using:CommunityToolkit.WinUI.Lottie" xmlns:viewmodels="using:Mizon.Windows.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:HomePageViewModel}"
     mc:Ignorable="d">
 
     <Page.Resources>
+      <ResourceDictionary>
+        <ResourceDictionary.MergedDictionaries>
+            <themes:MainSearchResources/>
+            <ResourceDictionary Source="/Themes/NavigationBackButtonStyles.xaml"/>
+        </ResourceDictionary.MergedDictionaries>
+        <Style x:Key="ProfileAvatarButtonStyle" TargetType="controls:AuthActionButton">
+            <Setter Property="UseSystemFocusVisuals" Value="True"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="controls:AuthActionButton">
+                        <!-- The hit target stays still; only the photo and highlight animate. -->
+                        <Grid x:Name="ActionSurface" Background="Transparent" CornerRadius="{TemplateBinding CornerRadius}">
+                            <ContentPresenter x:Name="ActionContent" Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+                            <Border x:Name="ActionLight" Opacity="0" IsHitTestVisible="False" CornerRadius="{TemplateBinding CornerRadius}"
+                                    BorderBrush="{ThemeResource TextFillColorPrimaryBrush}" BorderThickness="1">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#FF9CDDED" Offset="0"/>
+                                        <GradientStop Color="#00C7A0F6" Offset="0.7"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" 
      Color="Transparent" />
 
@@ -18,6 +52,7 @@
         <SolidColorBrush x:Key="NavigationViewContentBackground" 
 Color="Transparent" />
 
+          </ResourceDictionary>
     </Page.Resources>
 
     <Grid>
@@ -27,7 +62,7 @@ Color="Transparent" />
       Background="Transparent"
       IsHitTestVisible="False"/>
         
-        <NavigationView Background="Transparent" ElementSoundMode="Default" SelectionChanged="NavigationViewMain_SelectionChanged" IsSettingsVisible="False" CanDrag="False" IsBackEnabled="True" IsBackButtonVisible="Auto" BackRequested="NavigationViewMain_BackRequested" x:Name="NavigationViewMain" PaneDisplayMode="Top">
+        <NavigationView Loaded="NavigationViewMain_Loaded" Background="Transparent" ElementSoundMode="Default" SelectionChanged="NavigationViewMain_SelectionChanged" IsSettingsVisible="False" CanDrag="False" IsBackEnabled="True" IsBackButtonVisible="Auto" BackRequested="NavigationViewMain_BackRequested" x:Name="NavigationViewMain" PaneDisplayMode="Top">
             <NavigationView.PaneCustomContent>
                 <Grid x:Name="DragAreaOverlayGrid" Background="Transparent">
                     <Grid.ColumnDefinitions>
@@ -40,82 +75,17 @@ Color="Transparent" />
       
 
 
-                    <Grid Grid.Column="1" MaxWidth="600">
-
-
-                        <AutoSuggestBox x:Name="SearchBox"
-                                        ItemsSource="{Binding MainSearch}"
-                                        common:MizonMaterialAttach.UseAcrylicBackground="True"
-                                        CornerRadius="8"
-                                        BorderBrush="Transparent"
-                                        PlaceholderText="Search music, movies and more"
-                                        QueryIcon="Zoom"
-                                        VerticalAlignment="Center"
-                                        TextChanged="SearchBox_TextChanged"
-                                        SuggestionChosen="SearchBox_SuggestionChosen">
-
-
-                            <AutoSuggestBox.Resources>
-   
-
-                                <Style TargetType="ListView">
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="CornerRadius" Value="8" />
-                                    <Setter Property="BorderThickness" Value="1" />
-                                    <Setter Property="BorderBrush" Value="Transparent" />
-                                    <Setter Property="Padding" Value="5" />
-                                    <Setter Property="Margin" Value="0" />
-                                    <Setter Property="ScrollViewer.HorizontalScrollMode" Value="Disabled" />
-                                    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
-
-                                </Style>
-
-
-                                <DataTemplate x:Key="ClientItemTemplate">
-                                    <Grid Padding="8,6" ColumnSpacing="8" MinWidth="310">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="48"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Border Width="40" Height="40" CornerRadius="20" VerticalAlignment="Center" Background="{ThemeResource CardBackgroundFillColorSecondary}">
-                                            <Image Source="{Binding ProfileImagePath}" Stretch="UniformToFill"/>
-                                        </Border>
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock Text="{Binding Username}" FontSize="12" Opacity="0.65" TextTrimming="CharacterEllipsis"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </DataTemplate>
-
-                                <DataTemplate x:Key="MusicItemTemplate">
-                                    <Grid Padding="8,6" ColumnSpacing="8" MinWidth="310">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="48"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Border Width="40" Height="40" CornerRadius="8" VerticalAlignment="Center" Background="{ThemeResource CardBackgroundFillColorSecondary}">
-                                            <Image Source="{Binding CoverImagePath}" Stretch="UniformToFill"/>
-                                        </Border>
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock Text="{Binding PersianTitle}" FontSize="12" Opacity="0.65" TextTrimming="CharacterEllipsis"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </DataTemplate>
-                            </AutoSuggestBox.Resources>
-                            <AutoSuggestBox.ItemTemplateSelector>
-                                <datatemplateselectors:MainSearchDataTemplateSelector 
-                                ClientDataTemplate="{StaticResource ClientItemTemplate}"
-                                MusicDataTemplate="{StaticResource MusicItemTemplate}"/>
-                            </AutoSuggestBox.ItemTemplateSelector>
-         
-                        </AutoSuggestBox>
-
-                        <Button HorizontalAlignment="Right" VerticalAlignment="Center" BorderThickness="0" CornerRadius="8" Background="Transparent" Margin="0,0,38,0">
-                            <icon:SymbolIcon FontSize="12" Opacity="0.8" Symbol="Mic"/>
-
-                        </Button>
-                    </Grid>
+                    <controls:MainSearchBox x:Name="SearchBox" Grid.Column="1" MaxWidth="640"
+                                            Style="{StaticResource MainSearchStyle}"
+                                            ResultsSource="{x:Bind ViewModel.MainSearch, Mode=OneWay}"
+                                            VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                                            AutomationProperties.Name="جستجو در میزون"
+                                            AutomationProperties.HelpText="نام آهنگ یا نام کاربر را بنویس. با کلیدهای بالا و پایین نتیجه را انتخاب کن و برای باز کردن آهنگ Enter بزن."
+                                            SearchTextChanged="SearchBox_TextChanged" ResultInvoked="SearchBox_ResultInvoked">
+                        <controls:MainSearchBox.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="K" Modifiers="Control" Invoked="SearchShortcut_Invoked"/>
+                        </controls:MainSearchBox.KeyboardAccelerators>
+                    </controls:MainSearchBox>
                     <!--<AnimatedVisualPlayer Grid.Column="2" Height="32" Width="32" >
                         <lottie:LottieVisualSource UriSource="ms-appx:///Assets/Lotties/oz.json" />
 </AnimatedVisualPlayer>-->
@@ -124,126 +94,68 @@ Color="Transparent" />
                     <Grid CornerRadius="8,16,16,8" Grid.Column="3" HorizontalAlignment="Right" Margin="8,0,148,0"  VerticalAlignment="Center" Background="#0FFFFFFF">
                         <StackPanel Orientation="Horizontal">
 
-                            <dev:ParallaxTilt Margin="8,0,8,0">
-
-                                <TextBlock VerticalAlignment="Center" FontSize="16" Text="🤢" />
-                            </dev:ParallaxTilt>
-                            <Button 
-                                Command="{Binding ProfileCommand}"
-                        x:Name="ProfilePersonButtton"
-BorderThickness="0"
-                               
-common:CursorExtensions.Cursor="Hand"
-VerticalAlignment="Center" 
-Width="32" 
-                        Height="32"
-                        Padding="0"
-                        CornerRadius="16">
-                                <Button.Flyout>
-                                    <MenuFlyout Placement="BottomEdgeAlignedRight" >
+                            <usercontrols:MoodButton ViewModel="{x:Bind ViewModel}" VerticalAlignment="Center"/>
+                            <controls:AuthActionButton x:Name="ProfilePersonButtton" Width="32" Height="32" Padding="0" CornerRadius="16"
+                                    Style="{StaticResource ProfileAvatarButtonStyle}" HoverScale="1.06" PressedScale="0.91"
+                                    BorderThickness="0" VerticalAlignment="Center"
+                                    AutomationProperties.Name="{x:Bind ViewModel.ProfileButtonLabel, Mode=OneWay}"
+                                    AutomationProperties.HelpText="نمایش اطلاعات حساب، دانلودها و خروج" ToolTipService.ToolTip="حساب من">
+                                <controls:AuthActionButton.Flyout>
+                                    <MenuFlyout x:Name="AccountFlyout" Placement="BottomEdgeAlignedRight" Opening="AccountFlyout_Opening" Opened="AccountFlyout_Opened">
                                         <MenuFlyout.SystemBackdrop>
                                             <DesktopAcrylicBackdrop/>
                                         </MenuFlyout.SystemBackdrop>
                                         <MenuFlyout.MenuFlyoutPresenterStyle>
-                                            <Style TargetType="FlyoutPresenter">
-                                                <!--<Setter Property="Background" Value="{ThemeResource SystemControlAcrylicWindowBrush}"/>-->
-                                                <!-- یا برای کنترل بیشتر: -->
-                                                <!--<Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorSecondary}">
-                                            
-                                        </Setter>-->
-                                                <Setter Property="Width" Value="400"/>
-                                                <Setter Property="CornerRadius" Value="8"/>
+                                            <Style TargetType="MenuFlyoutPresenter">
+                                                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden"/>
+                                                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden"/>
+                                                <Setter Property="SystemBackdrop" Value="{x:Null}"/>
+                                                <Setter Property="Padding" Value="0"/>
+                                                <Setter Property="MinWidth" Value="0"/>
+                                                <Setter Property="MaxWidth" Value="360"/>
+                                                <Setter Property="CornerRadius" Value="20"/>
+                                                <Setter Property="IsTabStop" Value="False"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="MenuFlyoutPresenter">
+                                                            <Grid x:Name="MenuMotionSurface">
+                                                                <Grid x:Name="MenuBackdropHost" IsHitTestVisible="False"/>
+                                                                <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                                                        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"
+                                                                        BackgroundSizing="InnerBorderEdge">
+                                                                    <ScrollViewer x:Name="MenuFlyoutPresenterScrollViewer" Margin="{TemplateBinding Padding}"
+                                                                                  MinWidth="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.FlyoutContentMinWidth}"
+                                                                                  HorizontalScrollMode="{TemplateBinding ScrollViewer.HorizontalScrollMode}"
+                                                                                  HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                                                                  VerticalScrollMode="{TemplateBinding ScrollViewer.VerticalScrollMode}"
+                                                                                  VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"
+                                                                                  IsHorizontalRailEnabled="{TemplateBinding ScrollViewer.IsHorizontalRailEnabled}"
+                                                                                  IsVerticalRailEnabled="{TemplateBinding ScrollViewer.IsVerticalRailEnabled}"
+                                                                                  ZoomMode="{TemplateBinding ScrollViewer.ZoomMode}" AutomationProperties.AccessibilityView="Raw">
+                                                                        <ItemsPresenter/>
+                                                                    </ScrollViewer>
+                                                                </Border>
+                                                            </Grid>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
                                             </Style>
                                         </MenuFlyout.MenuFlyoutPresenterStyle>
-                                        <MenuFlyoutItem>
-                                            <MenuFlyoutItem.Template>
-                                                <ControlTemplate TargetType="MenuFlyoutItem">
-                                                    <Grid Padding="16,8">
-
-                                                        <Grid.RowDefinitions>
-                                                            <RowDefinition Height="auto"/>
-                                                            <RowDefinition Height="*"/>
-                                                        </Grid.RowDefinitions>
-
-                                                        <Grid Grid.Row="0">
-                                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                                                <icon:SymbolIcon FontSize="20" IconVariant="Color" Symbol="DesignIdeas"/>
-                                                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Opacity="0.8" Text="Mizon"/>
-                                                            </StackPanel>
-
-                                                            <HyperlinkButton Margin="0,0,-8,0" Command="{Binding LogoutCommand}" HorizontalAlignment="Right" common:CursorExtensions.Cursor="Hand" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" Content="خروج از حساب"/>
-                                                        </Grid>
-
-                                                        <Grid Grid.Row="1" Margin="0,10,0,0">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                                <ColumnDefinition Width="*"/>
-                                                            </Grid.ColumnDefinitions>
-
-                                                            <!-- Profile image -->
-                                                            <Ellipse Width="54" Height="54">
-                                                                <Ellipse.Fill>
-                                                                    <ImageBrush ImageSource="{Binding ProfileImagePath}"/>
-                                                                </Ellipse.Fill>
-                                                            </Ellipse>
-
-                                                            <!-- User name -->
-                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
-                                                                <StackPanel Orientation="Horizontal">
-                                                                    <TextBlock Text="{Binding FirstName}" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="{Binding LastName}" Margin="4,0" FontWeight="SemiBold"/>
-                                                                    <TextBlock Text="{Binding NickName}" FontWeight="Light"/>
-                                                                </StackPanel>
-                                                                <TextBlock Text="{Binding EmailAddress}" IsTextSelectionEnabled="True" FontSize="12" Opacity="0.6"/>
-                                                            </StackPanel>
-                                                        </Grid>
-                                                    </Grid>
+                                        <controls:MenuContentHost x:Name="AccountMenuHost" IsTabStop="False" AllowFocusOnInteraction="False"
+                                                        Padding="0" MinWidth="0" AutomationProperties.AccessibilityView="Raw">
+                                            <controls:MenuContentHost.Template>
+                                                <ControlTemplate TargetType="controls:MenuContentHost">
+                                                    <ContentPresenter Content="{TemplateBinding Tag}" Background="Transparent" HorizontalContentAlignment="Stretch"/>
                                                 </ControlTemplate>
-                                            </MenuFlyoutItem.Template>
-                                        </MenuFlyoutItem>
-
-                                        <MenuFlyoutSeparator/>
-
-                                        <!-- Normal items -->
-                                        <MenuFlyoutItem Width="320" FontSize="12" FlowDirection="RightToLeft" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="بورد">
-                                            <MenuFlyoutItem.Icon>
-                                                <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="Board"/>
-                                            </MenuFlyoutItem.Icon>
-                                        </MenuFlyoutItem>
-                                        <MenuFlyoutItem FontSize="12" FlowDirection="RightToLeft" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="دانلود ها">
-                                            <MenuFlyoutItem.Icon>
-                                                <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="DocumentFolder"/>
-                                            </MenuFlyoutItem.Icon>
-                                        </MenuFlyoutItem>
-                                        <MenuFlyoutItem FontSize="12" FlowDirection="RightToLeft" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="تنظیمات">
-                                            <MenuFlyoutItem.Icon>
-                                                <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="Settings"/>
-                                            </MenuFlyoutItem.Icon>
-                                        </MenuFlyoutItem>
-                                        <MenuFlyoutItem FontSize="12" FlowDirection="RightToLeft" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" Text="خروج از حساب">
-                                            <MenuFlyoutItem.Icon>
-                                                <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="DismissCircle"/>
-                                            </MenuFlyoutItem.Icon>
-                                        </MenuFlyoutItem>
-                                        <!--<Grid MinWidth="260">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="auto"/>
-                                    </Grid.RowDefinitions>
-
-                                    <StackPanel Orientation="Horizontal">
-                                        <PersonPicture Width="60" Height="60" ProfilePicture="/Assets/photo.jpg"/>
-                                        <StackPanel VerticalAlignment="Center" Margin="8,0,0,0">
-                                            <TextBlock Text="Ali Shahesmaeili" FontSize="14" FontWeight="Bold"/>
-                                            <TextBlock Text="Gold Account" FontSize="12"/>
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Grid>-->
-
+                                            </controls:MenuContentHost.Template>
+                                        </controls:MenuContentHost>
                                     </MenuFlyout>
-                                </Button.Flyout>
-
-                                <Image Stretch="Fill" Source="{Binding ProfileImagePath}"/>
-                            </Button>
+                                </controls:AuthActionButton.Flyout>
+                                <Grid CornerRadius="16" Width="32" Height="32">
+                                    <icon:SymbolIcon Symbol="Headphones" IconVariant="Color" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
+                                    <Image Source="{x:Bind ViewModel.ProfileImage, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw"/>
+                                </Grid>
+                            </controls:AuthActionButton>
                         </StackPanel>
                     </Grid>
 
@@ -258,7 +170,7 @@ Width="32"
             </NavigationView.PaneCustomContent>
 
             <NavigationView.MenuItems>
-                <NavigationViewItem Tag="MusicsPage" common:CursorExtensions.Cursor="Hand">
+                <NavigationViewItem Tag="MusicPage" common:CursorExtensions.Cursor="Hand">
                     <NavigationViewItem.Content>
                         <StackPanel common:CursorExtensions.Cursor="Hand" Orientation="Horizontal">
                             <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="Headphones"/>
@@ -266,7 +178,7 @@ Width="32"
                         </StackPanel>
                     </NavigationViewItem.Content>
                 </NavigationViewItem>
-                <NavigationViewItem Tag="SamplePage2" common:CursorExtensions.Cursor="Hand">
+                <NavigationViewItem Tag="MoviesPage" common:CursorExtensions.Cursor="Hand">
                     <NavigationViewItem.Content>
                         <StackPanel Orientation="Horizontal">
                             <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="Video"/>
@@ -274,7 +186,7 @@ Width="32"
                         </StackPanel>
                     </NavigationViewItem.Content>
                 </NavigationViewItem>
-                <NavigationViewItem Tag="SamplePage2" common:CursorExtensions.Cursor="Hand">
+                <NavigationViewItem Tag="AppsPage" common:CursorExtensions.Cursor="Hand">
                     <NavigationViewItem.Content>
                         <StackPanel Orientation="Horizontal">
                             <icon:SymbolIcon FontSize="18" IconVariant="Color" Symbol="Apps"/>

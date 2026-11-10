@@ -1,80 +1,156 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Page
-    x:Class="Mizon.Windows.Pages.WelcomePage"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Mizon.Windows.Pages"
-        xmlns:dev="using:DevWinUI"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:animations="using:CommunityToolkit.WinUI.Animations" xmlns:winui="using:CommunityToolkit.Labs.WinUI"
-    mc:Ignorable="d" FontFamily="{StaticResource IranSansFont}">
-
-    <Grid>
-        <dev:ShaderBackground Opacity="1">
-            <dev:FogRenderer BassEnergy="5" IsBreathingEffectEnabled="False" IsEnabled="True" />
-
-        </dev:ShaderBackground>
-        <Grid  Width="400" Height="400">
-            <Canvas Name="AnimationCanvas" Width="400" Height="400">
-                <Border 
-                    x:Name="ProfileBorder"
-                    Canvas.Left="150" 
-                    Canvas.Top="150" 
-                    Width="100" 
-                    Height="100" 
-                    CornerRadius="50">
-                    <Border.Background>
-                        <ImageBrush ImageSource="{Binding ProfileImageURL}" Stretch="UniformToFill"/>
-                    </Border.Background>
+<Page x:Class="Mizon.Windows.Pages.WelcomePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:icon="using:FluentIcons.WinUI"
+      xmlns:common="using:Mizon.Windows.Common"
+      xmlns:controls="using:Mizon.Windows.Controls"
+      xmlns:userControls="using:Mizon.Windows.UserControls"
+      Background="Transparent" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+      Language="{x:Bind Localization.LanguageTag, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
+    <Page.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="TextAlignment" Value="Start" />
+            <Setter Property="TextReadingOrder" Value="UseFlowDirection" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style x:Key="WelcomeCaption" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextAlignment" Value="Start" />
+            <Setter Property="TextReadingOrder" Value="UseFlowDirection" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style x:Key="WelcomeAction" TargetType="Button">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="UseSystemFocusVisuals" Value="True" />
+        </Style>
+    </Page.Resources>
+    <Grid Background="Transparent">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="WelcomeHeightStates">
+                <VisualState x:Name="ComfortableWelcome">
+                    <VisualState.StateTriggers><AdaptiveTrigger MinWindowHeight="780" /></VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="OrbitViewbox.Height" Value="300" />
+                        <Setter Target="WelcomeContent.Spacing" Value="18" />
+                        <Setter Target="WelcomeHeading.FontSize" Value="26" />
+                        <Setter Target="BrandName.FontSize" Value="34" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="RegularWelcome">
+                    <VisualState.StateTriggers><AdaptiveTrigger MinWindowHeight="620" /></VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="OrbitViewbox.Height" Value="230" />
+                        <Setter Target="WelcomeContent.Spacing" Value="14" />
+                        <Setter Target="WelcomeHeading.FontSize" Value="24" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="CompactWelcome">
+                    <VisualState.StateTriggers><AdaptiveTrigger MinWindowHeight="0" /></VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <ScrollViewer x:Name="WelcomeScroller" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" HorizontalContentAlignment="Stretch"
+                      VerticalScrollBarVisibility="Hidden" VerticalContentAlignment="Stretch" ZoomMode="Disabled">
+            <Grid MinHeight="{x:Bind WelcomeScroller.ViewportHeight, Mode=OneWay}" Padding="24,18">
+            <StackPanel x:Name="WelcomeContent" MaxWidth="480" Spacing="10"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                <userControls:LanguagePicker HorizontalAlignment="Center" Margin="0,0,0,4" />
+                <Grid ColumnSpacing="10" HorizontalAlignment="Center" AutomationProperties.AccessibilityView="Raw">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="28" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" /></Grid.ColumnDefinitions>
+                    <Border Height="1" VerticalAlignment="Center" Background="{ThemeResource AuthAccentTintBrush}" />
+                    <TextBlock x:Name="BrandName" Grid.Column="1" Text="MIZON" FontFamily="Segoe UI Variable Display"
+                               FontSize="28" FontWeight="SemiBold" CharacterSpacing="160" FlowDirection="LeftToRight" Foreground="{ThemeResource AuthBrandForegroundBrush}">
+                    </TextBlock>
+                    <Border Grid.Column="2" Height="1" VerticalAlignment="Center" Background="{ThemeResource AuthPurpleTintBrush}" />
+                </Grid>
+                <Viewbox x:Name="OrbitViewbox" Height="170" MaxWidth="400" Stretch="Uniform"
+                         HorizontalAlignment="Center" FlowDirection="LeftToRight" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+                    <Canvas x:Name="AnimationCanvas" Width="400" Height="400">
+                        <Ellipse Canvas.Left="70" Canvas.Top="70" Width="260" Height="260" Fill="{ThemeResource AuthAccentAmbientBrush}" />
+                        <Ellipse Canvas.Left="98" Canvas.Top="98" Width="204" Height="204" Fill="{ThemeResource AuthAccentAmbientBrush}" />
+                        <Ellipse Canvas.Left="128" Canvas.Top="128" Width="144" Height="144" Fill="{ThemeResource AuthAccentAmbientBrush}" />
+                        <Grid x:Name="OrbitOne" Width="400" Height="400">
+                            <Ellipse Width="330" Height="330" Stroke="{ThemeResource AuthAccentWashBrush}" StrokeThickness="1" />
+                            <Canvas Width="400" Height="400">
+                                <Ellipse Canvas.Left="196" Canvas.Top="31" Width="8" Height="8" Fill="{ThemeResource AuthAccentBrush}" />
+                                <Ellipse Canvas.Left="47" Canvas.Top="273" Width="5" Height="5" Fill="{ThemeResource AuthAccentBorderBrush}" />
+                                <Ellipse Canvas.Left="339" Canvas.Top="277" Width="4" Height="4" Fill="{ThemeResource AuthPurpleBorderBrush}" />
+                            </Canvas>
+                        </Grid>
+                        <Grid x:Name="OrbitTwo" Width="400" Height="400">
+                            <Ellipse Width="264" Height="264" Stroke="{ThemeResource AuthPurpleTintBrush}" StrokeThickness="1" StrokeDashArray="1,7" />
+                            <Canvas Width="400" Height="400">
+                                <Ellipse Canvas.Left="325" Canvas.Top="191" Width="12" Height="12" Fill="{ThemeResource AuthPurpleWashBrush}" />
+                                <Ellipse Canvas.Left="328" Canvas.Top="194" Width="6" Height="6" Fill="{ThemeResource AuthPurpleBrush}" />
+                                <Ellipse Canvas.Left="86" Canvas.Top="270" Width="5" Height="5" Fill="{ThemeResource AuthAccentEmphasisBrush}" />
+                            </Canvas>
+                        </Grid>
+                        <Grid x:Name="OrbitThree" Width="400" Height="400">
+                            <Ellipse Width="194" Height="194" Stroke="{ThemeResource AuthAccentTintBrush}" StrokeThickness="1.5" />
+                            <Canvas Width="400" Height="400">
+                                <Border Canvas.Left="119" Canvas.Top="119" Width="22" Height="22" CornerRadius="7"
+                                        Background="{ThemeResource AuthAccentWashBrush}" BorderBrush="{ThemeResource AuthAccentBorderBrush}" BorderThickness="1">
+                                    <icon:SymbolIcon Symbol="MusicNote1" Foreground="{ThemeResource AuthAccentBrush}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <Ellipse Canvas.Left="280" Canvas.Top="239" Width="5" Height="5" Fill="{ThemeResource AuthAccentEmphasisBrush}" />
+                            </Canvas>
+                        </Grid>
+                        <Border Canvas.Left="143" Canvas.Top="143" Width="114" Height="114" CornerRadius="57" BorderThickness="1" BorderBrush="{ThemeResource AuthAccentTintBrush}" />
+                        <Border x:Name="ProfileBorder" Canvas.Left="150" Canvas.Top="150" Width="100" Height="100"
+                                CornerRadius="50" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                            <Grid CornerRadius="50" BorderBrush="{ThemeResource AuthAccentTintBrush}" BorderThickness="1" Background="{ThemeResource AuthProfileBackgroundBrush}">
+                                <icon:SymbolIcon Symbol="Headphones" IconVariant="Color" FontSize="45" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Image x:Name="WelcomeProfileImage" Source="{x:Bind ViewModel.ProfileImage, Mode=OneWay}" Visibility="{x:Bind ViewModel.ProfileVisibility, Mode=OneWay}" Stretch="UniformToFill" />
+                            </Grid>
+                        </Border>
+                    </Canvas>
+                </Viewbox>
+                <StackPanel Spacing="5" Margin="12,0" HorizontalAlignment="Stretch">
+                    <TextBlock x:Name="WelcomeHeading" Text="{x:Bind ViewModel.WelcomeTitle, Mode=OneWay}" FontSize="21"
+                               FontWeight="SemiBold" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" TextReadingOrder="UseFlowDirection" HorizontalAlignment="Stretch" TextWrapping="Wrap" AutomationProperties.HeadingLevel="Level1" />
+                    <TextBlock Text="{x:Bind Localization.GetString('WelcomeTagline', Localization.Revision), Mode=OneWay}" Style="{StaticResource WelcomeCaption}" FontSize="12" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" />
+                </StackPanel>
+                <Border Padding="16,14" CornerRadius="16" BorderBrush="{ThemeResource AuthStrokeBrush}" BorderThickness="1" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                    <StackPanel x:Name="StatusStackPanel" Spacing="12">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <StackPanel Spacing="5" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+                                <TextBlock x:Name="StatusTextBlock" Text="{x:Bind ViewModel.StatusTitle, Mode=OneWay}" FontSize="13"
+                                           FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" TextReadingOrder="UseFlowDirection" HorizontalAlignment="Stretch" AutomationProperties.LiveSetting="Polite" />
+                                <TextBlock x:Name="StatusDetailTextBlock" Text="{x:Bind ViewModel.StatusDetail, Mode=OneWay}" Style="{StaticResource WelcomeCaption}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" />
+                            </StackPanel>
+                            <!-- Keep the text width stable when the busy indicator disappears. -->
+                            <Grid Grid.Column="1" Width="38" Height="38" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <Border x:Name="WelcomeStatusIndicator" CornerRadius="12" Background="{ThemeResource AuthAccentWashBrush}" BorderBrush="{ThemeResource AuthAccentWashBrush}"
+                                        BorderThickness="1" Visibility="{x:Bind ViewModel.BusyVisibility, Mode=OneWay}">
+                                    <ProgressRing Width="20" Height="20" IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Foreground="{ThemeResource AuthAccentBrush}"
+                                                  AutomationProperties.Name="{x:Bind Localization.GetString('WelcomeAccountProgress', Localization.Revision), Mode=OneWay}" />
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <!-- Reserve only the existing two-pixel track and its spacing, not a loading panel. -->
+                        <Grid Height="2" IsHitTestVisible="False">
+                            <ProgressBar x:Name="WelcomeProgress" Height="2" IsIndeterminate="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Visibility="{x:Bind ViewModel.BusyVisibility, Mode=OneWay}"
+                                         Foreground="{ThemeResource AuthAccentBrush}" Background="{ThemeResource AuthAccentWashBrush}" AutomationProperties.Name="{x:Bind Localization.GetString('WelcomeAppProgress', Localization.Revision), Mode=OneWay}" />
+                        </Grid>
+                        <Grid ColumnSpacing="8" Visibility="{x:Bind ViewModel.ErrorVisibility, Mode=OneWay}">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <controls:AuthActionButton Grid.Column="0" Style="{StaticResource WelcomeAction}" Click="Login_Click" Content="{x:Bind Localization.GetString('WelcomeLogin', Localization.Revision), Mode=OneWay}" />
+                            <controls:AuthActionButton Grid.Column="1" Style="{StaticResource WelcomeAction}" Click="Retry_Click" Content="{x:Bind Localization.GetString('WelcomeRetry', Localization.Revision), Mode=OneWay}"
+                                    Background="{ThemeResource AuthAccentWashBrush}" BorderBrush="{ThemeResource AuthAccentBorderBrush}" />
+                        </Grid>
+                    </StackPanel>
                 </Border>
-
-                <winui:Shimmer
-                    Canvas.Left="150"
-                    Canvas.Top="150"
-                    Width="100"
-                    Height="100"
-                    CornerRadius="50"
-                    Visibility="{Binding ProfileShimmerVisibility}"/>
-            </Canvas>
-        </Grid>
-
-       
-        
-        
-        <StackPanel x:Name="StatusStackPanel"
-                    Margin="32"
-                    Orientation="Horizontal"
-                    FlowDirection="RightToLeft"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Bottom">
-
-            <animations:Implicit.ShowAnimations>
-                <animations:TranslationAnimation From="0, 200, 0"
-                                     To="0"
-                                     Duration="0:0:1" />
-                <animations:OpacityAnimation From="0"
-                                 To="1.0"
-                                 Duration="0:0:1" />
-            </animations:Implicit.ShowAnimations>
-            <animations:Implicit.HideAnimations>
-                <animations:OpacityAnimation To="0.0"
-                                 Duration="0:0:1" />
-                <animations:TranslationAnimation To="0, 200, 0"
-                                     Duration="0:0:1" />
-            </animations:Implicit.HideAnimations>
-
-            <ProgressRing 
-                Width="20" 
-                Height="20" 
-                IsIndeterminate="True"/>
-
-            <TextBlock 
-                x:Name="StatusTextBlock" 
-                Margin="8" 
-                Text="در حال ورود به حساب" 
-                FontWeight="Bold"/>
-        </StackPanel>
-
-
+            </StackPanel>
+            </Grid>
+        </ScrollViewer>
     </Grid>
 </Page>

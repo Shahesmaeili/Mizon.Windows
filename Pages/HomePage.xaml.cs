@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Navigation;
 using Mizon.Windows.Services;
 using Mizon.Windows.ViewModels;
 using Mizon.Windows.ViewModels.Items;
@@ -26,31 +27,100 @@ namespace Mizon.Windows.Pages
     /// </summary>
     public sealed partial class HomePage : Page
     {
-        private static readonly TimeSpan SearchResultPreviewDelay = TimeSpan.FromMilliseconds(250);
-        private HomePageViewModel ViewModel => (HomePageViewModel)DataContext;
+        public HomePageViewModel ViewModel { get; }
+        private UserControls.ProfileMenu? _profileMenu;
+        private Common.MenuFlyoutMotion? _profileMenuMotion;
         private CancellationTokenSource? _searchCancellationTokenSource;
         private InputNonClientPointerSource? _titleBarPointerSource;
+        private XamlRoot? _titleBarRoot;
+        private RectInt32[] _titleBarInteractiveRects = [];
+        private bool _titleBarRegionUpdateQueued;
+        private ConnectedAnimation? _profileConnectedAnimation;
+        private bool _internalFrameInitialized;
+        private bool _synchronizingNavigationSelection;
+        private bool _resetMusicLanding = true;
+        private CancellationTokenSource? _musicActivationCancellation;
+        private Task _musicActivationTask = Task.CompletedTask;
+        private FollowingActivityStoryPresenter? _activationStoryPresenter;
+        private bool _navigatingActivation;
+        internal bool CanOpenDestination => IsLoaded && _internalFrameInitialized && !ViewModel.IsSigningOut;
+        internal Guid? ActiveStoryPublicId => _activationStoryPresenter?.CurrentStoryPublicId;
+        internal string? ActiveSearchQuery => SearchBox.ActiveQuery;
 
         public HomePage()
         {
+            ViewModel = ((App)App.Current).Services.GetRequiredService<HomePageViewModel>();
             this.InitializeComponent();
-            DataContext = ((App)App.Current).Services.GetRequiredService<HomePageViewModel>();
-
-            ViewModel.NavigationService.MainNavigationChanged += (s, args) =>
-            {
-                if (args.IsEnteringPage && args.ToPageType == typeof(HomePage))
-                {
-                    var connectedAnimationService = ConnectedAnimationService.GetForCurrentView();
-                    var connectedAnimation = connectedAnimationService.GetAnimation("ProfilePictureAnimation");
-                    connectedAnimation?.TryStart(ProfilePersonButtton);
-                }
-            };
+            DataContext = ViewModel;
 
             Loaded += HomePage_Loaded;
             Unloaded += HomePage_Unloaded;
-            SizeChanged += (_, _) => UpdateTitleBarPointerRegions();
-            DragAreaOverlayGrid.SizeChanged += (_, _) => UpdateTitleBarPointerRegions();
+            NavigationViewMain.ItemInvoked += NavigationViewMain_ItemInvoked;
 
+        }
+
+        private void AccountFlyout_Opening(object sender, object args)
+        {
+            // Build the popup only on first use; the welcome/login path pays no UI cost.
+            if (_profileMenu is null)
+            {
+                _profileMenu = new UserControls.ProfileMenu { ViewModel = ViewModel };
+                _profileMenu.DismissRequested += ProfileMenu_DismissRequested;
+                _profileMenu.DismissAsync = DismissProfileMenuAsync;
+                _profileMenuMotion = new Common.MenuFlyoutMotion(AccountFlyout, AccountMenuHost);
+                AccountMenuHost.Tag = _profileMenu;
+            }
+            var size = XamlRoot?.Size ?? new Size(ActualWidth, ActualHeight);
+            _profileMenu.Width = Math.Clamp(size.Width - 40, 1, 344);
+            _profileMenu.MaxHeight = Math.Max(80, size.Height - 80);
+            _profileMenuMotion?.PrepareOpen();
+        }
+
+        private void ProfileMenu_DismissRequested(object? sender, EventArgs args) => AccountFlyout.Hide();
+
+        private async Task DismissProfileMenuAsync()
+        {
+            var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            void OnClosed(object? sender, object args) => closed.TrySetResult();
+            AccountFlyout.Closed += OnClosed;
+            try
+            {
+                AccountFlyout.Hide();
+                // MenuFlyoutMotion finishes its exit animation before closing.
+                // Only then give the foreground to the native pin confirmation.
+                await closed.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            }
+            finally { AccountFlyout.Closed -= OnClosed; }
+        }
+
+        private void AccountFlyout_Opened(object sender, object args) => _profileMenu?.FocusFirstAction();
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            // A new sign-in starts at discovery; reloading the cached shell keeps its current page.
+            _resetMusicLanding = e.NavigationMode == NavigationMode.New;
+        }
+
+        private void NavigationViewMain_Loaded(object sender, RoutedEventArgs e)
+        {
+            NavigationViewMain.ApplyTemplate();
+            ApplyNavigationBackButtonTemplate(NavigationViewMain);
+        }
+
+        private bool ApplyNavigationBackButtonTemplate(DependencyObject root)
+        {
+            if (root is Button { Name: "NavigationViewBackButton" } button)
+            {
+                // Assign the actual button template, not a resource shadowed by
+                // WinUI's already-resolved default NavigationView style.
+                button.Template = (ControlTemplate)Resources["MizonNavigationBackButtonTemplate"];
+                return true;
+            }
+
+            for (var index = 0; index < VisualTreeHelper.GetChildrenCount(root); index++)
+                if (ApplyNavigationBackButtonTemplate(VisualTreeHelper.GetChild(root, index))) return true;
+            return false;
         }
 
         private async void HomePage_Loaded(object sender, RoutedEventArgs e)
@@ -58,49 +128,24 @@ namespace Mizon.Windows.Pages
             InitializeTitleBarPointerRegions();
             DispatcherQueue.TryEnqueue(UpdateTitleBarPointerRegions);
 
+            StartProfileConnectedAnimation();
+
             var navigationService = ((App)App.Current).Services.GetRequiredService<NavigationService>();
-            navigationService.InternalInitialize(InternalFrame);
-
-            if (App.PendingMusicPublicId is Guid musicPublicId)
+            if (!_internalFrameInitialized)
             {
-                App.PendingMusicPublicId = null;
-                navigationService.InternalNavigate(typeof(MusicsPage), new()
-                {
-                    [PageConstants.MUSIC_ID] = musicPublicId
-                });
+                navigationService.InternalInitialize(InternalFrame);
+                _internalFrameInitialized = true;
             }
+            navigationService.InternalNavigationChanged -= ActivationNavigationChanged;
+            navigationService.InternalNavigationChanged += ActivationNavigationChanged;
 
-            //MulticastDiscoveryService discovery = new();
-
-            //discovery.DeviceDiscovered += d =>
-            //{
-            //    // DispatcherQueue برای UI
-            //    DispatcherQueue.TryEnqueue(() =>
-            //    {
-
-            //    });
-            //};
-
-            //discovery.DeviceLost += id =>
-            //{
-            //    DispatcherQueue.TryEnqueue(() =>
-            //    {
-
-            //    });
-            //};
-
-            //discovery.Start();
-
-
-            var discoveryV2 = new MulticastDiscoveryServiceV2();
-
-            discoveryV2.DeviceDiscovered += d =>
+            if (!OpenPendingDestination() && (_resetMusicLanding || InternalFrame.Content is null))
             {
-
-            };
-
-            await discoveryV2.StartAsync();
-
+                SelectMusicNavigationItem();
+                if (InternalFrame.Content is not MusicPage)
+                    navigationService.InternalNavigate(typeof(MusicPage));
+            }
+            _resetMusicLanding = false;
 
             var access = await RequestLocationAccessAsync();
 
@@ -154,74 +199,140 @@ namespace Mizon.Windows.Pages
             await _ble.ConnectAsync();
         }
 
+        private void SelectMusicNavigationItem()
+        {
+            _synchronizingNavigationSelection = true;
+            try
+            {
+                NavigationViewMain.SelectedItem = NavigationViewMain.MenuItems
+                    .OfType<NavigationViewItem>()
+                    .FirstOrDefault(item => item.Tag as string == nameof(MusicPage));
+            }
+            finally
+            {
+                _synchronizingNavigationSelection = false;
+            }
+        }
+
+        private void StartProfileConnectedAnimation()
+        {
+            _profileConnectedAnimation = ConnectedAnimationService.GetForCurrentView()
+                .GetAnimation("ProfilePictureAnimation");
+            if (_profileConnectedAnimation is null) return;
+
+            // Frame.Navigated fires before the destination's visual tree has completed layout.
+            if (!TryStartProfileConnectedAnimation())
+                ProfilePersonButtton.LayoutUpdated += ProfileTarget_LayoutUpdated;
+        }
+
+        private void ProfileTarget_LayoutUpdated(object? sender, object e) => TryStartProfileConnectedAnimation();
+
+        private bool TryStartProfileConnectedAnimation()
+        {
+            if (ProfilePersonButtton.XamlRoot is null ||
+                ProfilePersonButtton.ActualWidth <= 0 || ProfilePersonButtton.ActualHeight <= 0)
+                return false;
+
+            ProfilePersonButtton.LayoutUpdated -= ProfileTarget_LayoutUpdated;
+            var animation = _profileConnectedAnimation;
+            _profileConnectedAnimation = null;
+            try
+            {
+                animation?.TryStart(ProfilePersonButtton);
+            }
+            catch (System.Runtime.InteropServices.COMException exception)
+            {
+                animation?.Cancel();
+                AppLog.Error("Welcome profile transition could not be started.", exception);
+            }
+            return true;
+        }
+
         private void InitializeTitleBarPointerRegions()
         {
-            if (App.MainMizonWindow is null)
+            if (!IsLoaded || App.MainMizonWindow is null || _titleBarPointerSource is not null)
                 return;
 
             _titleBarPointerSource = InputNonClientPointerSource.GetForWindowId(App.MainMizonWindow.AppWindow.Id);
+            _titleBarRoot = XamlRoot;
+            if (_titleBarRoot is not null) _titleBarRoot.Changed += TitleBarRoot_Changed;
+            DragAreaOverlayGrid.LayoutUpdated += TitleBar_LayoutUpdated;
             UpdateTitleBarPointerRegions();
+        }
+
+        private void TitleBarRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args) => QueueTitleBarRegionUpdate();
+        private void TitleBar_LayoutUpdated(object? sender, object args) => QueueTitleBarRegionUpdate();
+
+        private void QueueTitleBarRegionUpdate()
+        {
+            if (_titleBarRegionUpdateQueued || _titleBarPointerSource is null || !IsLoaded) return;
+            _titleBarRegionUpdateQueued = DispatcherQueue.TryEnqueue(() =>
+            {
+                _titleBarRegionUpdateQueued = false;
+                UpdateTitleBarPointerRegions();
+            });
         }
 
         private void UpdateTitleBarPointerRegions()
         {
-            if (_titleBarPointerSource is null)
+            if (_titleBarPointerSource is null || !IsLoaded || App.MainMizonWindow is null)
                 return;
 
-            RectInt32? captionRect = GetWindowPixelBounds(DragAreaOverlayGrid);
-            if (captionRect is null)
+            // WinUI owns the native full-width Tall caption. Only register the
+            // interactive holes: writing Caption here competes with its layout updates.
+            var header = Common.TitleBarRegions.GetPixelBounds(DragAreaOverlay);
+            if (header is not RectInt32 headerRect)
                 return;
+            var titleBar = App.MainMizonWindow.AppWindow.TitleBar;
+            var left = Math.Max(headerRect.X, titleBar.LeftInset);
+            var right = Math.Max(left, headerRect.X + headerRect.Width - titleBar.RightInset);
+            var captionRect = new RectInt32(left, headerRect.Y, right - left, headerRect.Height);
+            var interactiveRects = Common.TitleBarRegions.GetInteractiveRects(NavigationViewMain, captionRect);
 
-            _titleBarPointerSource.SetRegionRects(NonClientRegionKind.Caption, [captionRect.Value]);
-
-            RectInt32[] interactiveRects = FindInteractiveTitleBarElements(DragAreaOverlayGrid)
-                .Select(GetWindowPixelBounds)
-                .Where(rect => rect is not null)
-                .Select(rect => rect!.Value)
-                .ToArray();
-
-            _titleBarPointerSource.SetRegionRects(NonClientRegionKind.Passthrough, interactiveRects);
-        }
-
-        private static IEnumerable<FrameworkElement> FindInteractiveTitleBarElements(DependencyObject root)
-        {
-            int childrenCount = VisualTreeHelper.GetChildrenCount(root);
-
-            for (int index = 0; index < childrenCount; index++)
+            if (!_titleBarInteractiveRects.SequenceEqual(interactiveRects))
             {
-                DependencyObject child = VisualTreeHelper.GetChild(root, index);
-
-                if (child is FrameworkElement element && child is ButtonBase or AutoSuggestBox or ComboBox or Microsoft.UI.Xaml.Controls.TextBox or ToggleSwitch)
-                    yield return element;
-
-                foreach (FrameworkElement nestedElement in FindInteractiveTitleBarElements(child))
-                    yield return nestedElement;
+                _titleBarPointerSource.SetRegionRects(NonClientRegionKind.Passthrough, interactiveRects);
+                _titleBarInteractiveRects = interactiveRects;
             }
-        }
-
-        private static RectInt32? GetWindowPixelBounds(FrameworkElement element)
-        {
-            if (element.XamlRoot is null || element.ActualWidth <= 0 || element.ActualHeight <= 0)
-                return null;
-
-            Point position = element.TransformToVisual(null).TransformPoint(new Point());
-            double scale = element.XamlRoot.RasterizationScale;
-
-            return new RectInt32(
-                Math.Max(0, (int)Math.Round(position.X * scale)),
-                Math.Max(0, (int)Math.Round(position.Y * scale)),
-                Math.Max(1, (int)Math.Ceiling(element.ActualWidth * scale)),
-                Math.Max(1, (int)Math.Ceiling(element.ActualHeight * scale)));
         }
 
         private void HomePage_Unloaded(object sender, RoutedEventArgs e)
         {
-            if (_titleBarPointerSource is null)
-                return;
+            if (IsLoaded) return;
+            _musicActivationCancellation?.Cancel();
+            _musicActivationCancellation = null;
+            ViewModel.NavigationService.InternalNavigationChanged -= ActivationNavigationChanged;
+            _activationStoryPresenter?.Dispose();
+            _activationStoryPresenter = null;
+            _profileMenuMotion?.Dispose();
+            _profileMenuMotion = null;
+            AccountFlyout.Hide();
+            if (_profileMenu is not null)
+            {
+                _profileMenu.DismissRequested -= ProfileMenu_DismissRequested;
+                _profileMenu.Dispose();
+                AccountMenuHost.Tag = null;
+                _profileMenu = null;
+            }
+            _searchCancellationTokenSource?.Cancel();
+            _searchCancellationTokenSource?.Dispose();
+            _searchCancellationTokenSource = null;
+            SearchBox.ClearSearch();
+            ViewModel.MainSearch.Clear();
+            ProfilePersonButtton.LayoutUpdated -= ProfileTarget_LayoutUpdated;
+            _profileConnectedAnimation?.Cancel();
+            _profileConnectedAnimation = null;
 
-            _titleBarPointerSource.SetRegionRects(NonClientRegionKind.Caption, []);
-            _titleBarPointerSource.SetRegionRects(NonClientRegionKind.Passthrough, []);
+            DragAreaOverlayGrid.LayoutUpdated -= TitleBar_LayoutUpdated;
+            if (_titleBarRoot is not null) _titleBarRoot.Changed -= TitleBarRoot_Changed;
+            _titleBarRoot = null;
+            _titleBarRegionUpdateQueued = false;
+            // Window teardown can close the native pointer source before Page.Unloaded.
+            // Clearing the live window's hit-test regions is useful on navigation only.
+            try { _titleBarPointerSource?.SetRegionRects(NonClientRegionKind.Passthrough, []); }
+            catch (ObjectDisposedException) { }
             _titleBarPointerSource = null;
+            _titleBarInteractiveRects = [];
         }
 
         private void Geolocator_PositionChanged(Geolocator sender, PositionChangedEventArgs args)
@@ -229,79 +340,59 @@ namespace Mizon.Windows.Pages
            
         }
 
-        private async void SearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        private void SearchShortcut_Invoked(Microsoft.UI.Xaml.Input.KeyboardAccelerator sender,
+            Microsoft.UI.Xaml.Input.KeyboardAcceleratorInvokedEventArgs args)
         {
-            if (args.Reason == AutoSuggestionBoxTextChangeReason.ProgrammaticChange)
-                return;
+            args.Handled = SearchBox.FocusInput();
+        }
 
+        private async void SearchBox_TextChanged(object? sender, string text)
+        {
             _searchCancellationTokenSource?.Cancel();
             _searchCancellationTokenSource?.Dispose();
-            _searchCancellationTokenSource = new CancellationTokenSource();
-            var cancellationToken = _searchCancellationTokenSource.Token;
-            var query = sender.Text;
+            var request = new CancellationTokenSource();
+            _searchCancellationTokenSource = request;
+            var cancellationToken = request.Token;
+            var query = text.Trim();
+            ViewModel.MainSearch.Clear();
+            SearchBox.BeginSearch(query);
+            if (query.Length < 2)
+                return;
 
             try
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(350), cancellationToken);
-
-                ViewModel.MainSearch.Clear();
                 AppLog.Information($"Search started. Query='{query}'.");
-                if (query.Trim().Length < 2)
-                {
-                    sender.IsSuggestionListOpen = false;
-                    return;
-                }
-
-                var suggestionListOpened = false;
                 await foreach (var item in ViewModel.SearchAsync(query, cancellationToken))
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        return;
-
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (!ReferenceEquals(request, _searchCancellationTokenSource)) return;
                     ViewModel.MainSearch.Add(item);
-                    if (!suggestionListOpened)
-                    {
-                        sender.IsSuggestionListOpen = true;
-                        suggestionListOpened = true;
-                    }
-
-                    // زمان‌بندی آزمایشی برای مشاهدهٔ ورود تدریجی نتایج در UI.
-                  //  await Task.Delay(SearchResultPreviewDelay, cancellationToken);
                 }
-
+                if (ReferenceEquals(request, _searchCancellationTokenSource)) SearchBox.CompleteSearch();
                 AppLog.Information($"Search completed. Query='{query}', ResultCount={ViewModel.MainSearch.Count}.");
             }
-            catch (OperationCanceledException)
-            {
-            }
+            catch (OperationCanceledException) { }
             catch (Exception exception)
             {
-                Debug.WriteLine($"Search request failed: {exception}");
+                if (ReferenceEquals(request, _searchCancellationTokenSource)) SearchBox.CompleteSearch(failed: true);
                 AppLog.Error($"Search request failed. Query='{query}'.", exception);
             }
         }
 
-        private void SearchBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+        private void SearchBox_ResultInvoked(object? sender, object item)
         {
-            if (args.SelectedItem is not MainSearchMusicItemViewModel music)
+            if (item is not MainSearchMusicItemViewModel && item is not MainSearchClientItemViewModel)
                 return;
 
             _searchCancellationTokenSource?.Cancel();
-            sender.IsSuggestionListOpen = false;
-
-            // AutoSuggestBox replaces Text with SelectedItem.ToString() after
-            // this event. Queue the reset so it runs after that built-in step.
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                sender.Text = string.Empty;
-                sender.IsSuggestionListOpen = false;
-                ViewModel.MainSearch.Clear();
-            });
-
-            ViewModel.NavigationService.InternalNavigate(typeof(MusicsPage), new()
-            {
-                [PageConstants.MUSIC_ID] = music.PublicId
-            });
+            // Navigation only happens on activation, never on arrow-key selection.
+            SearchBox.ClearSearch();
+            ViewModel.MainSearch.Clear();
+            if (item is MainSearchMusicItemViewModel music)
+                ViewModel.NavigationService.InternalNavigate(typeof(MusicsPage), new() { [PageConstants.MUSIC_ID] = music.PublicId });
+            else if (item is MainSearchClientItemViewModel client)
+                ViewModel.NavigationService.OpenClientProfile(client.PublicId);
         }
 
         private async Task<bool> RequestLocationAccessAsync()
@@ -311,27 +402,211 @@ namespace Mizon.Windows.Pages
             return accessStatus == GeolocationAccessStatus.Allowed;
         }
 
+        private void NavigationViewMain_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+        {
+            // Settings and detail pages keep the previous shell tab selected.
+            // Invoking that same tab must still return to its section landing page.
+            if (!_internalFrameInitialized || _synchronizingNavigationSelection) return;
+            if (args.InvokedItemContainer?.Tag is string tag) NavigateSection(tag);
+        }
+
+        internal bool OpenPendingDestination()
+        {
+            if (!CanOpenDestination || !App.PendingActivation.HasDestination) return false;
+            _ = OpenDestinationAsync(App.TakePendingActivation());
+            return true;
+        }
+
+        // Used by protocol activation and the permission-gated MCP adapter alike.
+        // No second page/view model is created to service an automation request.
+        internal Task<bool> OpenDestinationAsync(AppActivationRequest request, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!CanOpenDestination || !request.HasDestination) return Task.FromResult(false);
+            _musicActivationCancellation?.Cancel();
+            _activationStoryPresenter?.Dispose();
+            _activationStoryPresenter = null;
+            var previous = _musicActivationTask;
+            var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _musicActivationCancellation = cancellation;
+            var task = OpenDestinationCoreAsync(request, previous, cancellation);
+            _musicActivationTask = task;
+            return task;
+        }
+
+        internal void CancelDestination()
+        {
+            _musicActivationCancellation?.Cancel();
+            _activationStoryPresenter?.Dispose();
+            _activationStoryPresenter = null;
+        }
+
+        private void ActivationNavigationChanged(object? sender, NavigationChangedEventArgs args)
+        {
+            if (!args.IsEnteringPage && !_navigatingActivation)
+            {
+                _musicActivationCancellation?.Cancel();
+                _activationStoryPresenter?.Dispose();
+                _activationStoryPresenter = null;
+            }
+        }
+
+        private void NavigateActivation(Action navigate)
+        {
+            _navigatingActivation = true;
+            try { navigate(); }
+            finally { _navigatingActivation = false; }
+        }
+
+        private async Task<bool> OpenDestinationCoreAsync(AppActivationRequest request, Task previous, CancellationTokenSource cancellation)
+        {
+            var token = cancellation.Token;
+            try
+            {
+                await previous.WaitAsync(token);
+                token.ThrowIfCancellationRequested();
+                if (!CanOpenDestination) return false;
+                var navigation = ViewModel.NavigationService;
+                if (request.SearchQuery is { } searchQuery)
+                {
+                    EnsureActivationLanding();
+                    SearchBox.OpenSearch(searchQuery);
+                    return true;
+                }
+                SearchBox.ClearSearch();
+                if (request.PlaylistPublicId is Guid playlistId)
+                {
+                    SelectMusicNavigationItem();
+                    NavigateActivation(() => navigation.OpenMusicPlaylist(playlistId));
+                    return true;
+                }
+                if (request.ClientPublicId is Guid clientId)
+                {
+                    NavigateActivation(() => navigation.OpenClientProfile(clientId));
+                    return true;
+                }
+                if (request.StoryPublicId is Guid storyId)
+                {
+                    EnsureActivationLanding();
+                    var presenter = _activationStoryPresenter = new FollowingActivityStoryPresenter();
+                    await presenter.OpenAsync(storyId, cancellationToken: token);
+                    token.ThrowIfCancellationRequested();
+                    return presenter.CurrentStoryPublicId == storyId;
+                }
+                if (request.MusicPublicId is Guid musicId)
+                {
+                    SelectMusicNavigationItem();
+                    if (request.MusicCommentPublicId is Guid commentId)
+                    {
+                        NavigateActivation(() => navigation.InternalNavigate(typeof(MusicsPage), new()
+                        {
+                            [PageConstants.MUSIC_ID] = musicId
+                        }));
+                        if (navigation.CurrentInternalPage is not MusicsPage comments) return false;
+                        await comments.OpenCommentAsync(commentId, token);
+                        token.ThrowIfCancellationRequested();
+                        return true;
+                    }
+                    return await OpenMusicActivationAsync(musicId, request.MusicAction, token);
+                }
+                switch (request.Destination)
+                {
+                    case "playlists":
+                        SelectMusicNavigationItem();
+                        NavigateActivation(navigation.OpenMusicPlaylists);
+                        return true;
+                    case "activities":
+                        NavigateActivation(navigation.OpenFollowingActivities);
+                        return true;
+                    case "settings":
+                        Task settings = Task.CompletedTask;
+                        NavigateActivation(() => settings = navigation.OpenSettingsAsync(request.SettingsSection, token));
+                        await settings;
+                        token.ThrowIfCancellationRequested();
+                        return navigation.CurrentInternalPage is SettingsPage;
+                }
+                var tag = request.Destination switch
+                {
+                    "home" or "music" => nameof(MusicPage), "movies" => "MoviesPage",
+                    "apps" => "AppsPage", "vpn" => nameof(VPNPage), _ => null
+                };
+                if (tag is null) return false;
+                _synchronizingNavigationSelection = true;
+                try
+                {
+                    NavigationViewMain.SelectedItem = NavigationViewMain.MenuItems.OfType<NavigationViewItem>()
+                        .FirstOrDefault(item => item.Tag as string == tag);
+                }
+                finally { _synchronizingNavigationSelection = false; }
+                NavigateActivation(() => NavigateSection(tag));
+                return true;
+            }
+            catch (OperationCanceledException) { return false; }
+            catch (Exception error)
+            {
+                // Do not log complete URIs or search text supplied by another app.
+                AppLog.Error("Deep-link destination could not be opened.", error);
+                return false;
+            }
+            finally
+            {
+                if (ReferenceEquals(_musicActivationCancellation, cancellation)) _musicActivationCancellation = null;
+                cancellation.Dispose();
+            }
+        }
+
+        private void EnsureActivationLanding()
+        {
+            if (InternalFrame.Content is not null) return;
+            SelectMusicNavigationItem();
+            NavigateActivation(() => ViewModel.NavigationService.InternalNavigate(typeof(MusicPage)));
+        }
+
+        private async Task<bool> OpenMusicActivationAsync(Guid musicPublicId, MusicActivationAction action, CancellationToken token)
+        {
+            var services = ((App)App.Current).Services;
+            var music = services.GetRequiredService<MusicPageViewModel>();
+            if (action == MusicActivationAction.Play) services.GetRequiredService<MusicPlaylistPlaybackService>().Cancel();
+            NavigateActivation(() => ViewModel.NavigationService.InternalNavigate(typeof(MusicsPage), new() { [PageConstants.MUSIC_ID] = musicPublicId }));
+            if (action == MusicActivationAction.Details) return true;
+            var completed = await music.ActivateMusicAsync(musicPublicId, action, token);
+            token.ThrowIfCancellationRequested();
+            if (completed && action == MusicActivationAction.Download)
+                services.GetRequiredService<TeachingTipService>().ShowMessage("دانلود کامل شد", "آهنگ در کش برنامه ذخیره شد و برای پخش دوباره دانلود نمی‌شود.");
+            else if (!completed)
+                services.GetRequiredService<TeachingTipService>().ShowMessage("آهنگ در دسترس نیست", "فایل این آهنگ دریافت نشد؛ دوباره امتحان کن.");
+            return completed;
+        }
+
+        private void NavigateSection(string tag)
+        {
+            if (tag == nameof(MusicPage))
+            {
+                if (InternalFrame.Content is not MusicPage) ViewModel.NavigationService.InternalNavigate(typeof(MusicPage));
+            }
+            else if (tag == nameof(VPNPage))
+            {
+                if (InternalFrame.Content is not VPNPage) ViewModel.NavigationService.InternalNavigate(typeof(VPNPage));
+            }
+            else if (tag is "MoviesPage" or "AppsPage")
+            {
+                var destination = tag == "MoviesPage" ? "movies" : "apps";
+                if (InternalFrame.Content is not SectionLandingPage page || page.Destination != destination)
+                    ViewModel.NavigationService.InternalNavigate(typeof(SectionLandingPage), new() { ["Section"] = destination });
+            }
+        }
+
         private void NavigationViewMain_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
+            if (_synchronizingNavigationSelection || !_internalFrameInitialized)
+                return;
+
             var navigationViewItem = args.SelectedItem as NavigationViewItem;
 
 
-            Dictionary<string, object>? parameter = new();
-
             if (navigationViewItem is not null)
             {
-                if (navigationViewItem.Tag.ToString() == "MusicsPage")
-                {
-                    parameter.Add(PageConstants.MUSIC_ID, Guid.Parse("0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"));
-                    ViewModel.NavigationService.InternalNavigate(typeof(MusicsPage), parameter);
-                }
-
-                else if (navigationViewItem.Tag.ToString() == "VPNPage")
-                    InternalFrame.Navigate(typeof(VPNPage));
-                else
-                {
-                    ViewModel.NavigationService.InternalNavigate(typeof(MusicPage), parameter);
-                }
+                if (navigationViewItem.Tag is string tag) NavigateSection(tag);
                 ElementSoundPlayer.Play(ElementSoundKind.MoveNext);
 
             }
@@ -339,8 +614,7 @@ namespace Mizon.Windows.Pages
 
         private void NavigationViewMain_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
         {
-            if (InternalFrame.CanGoBack)
-                InternalFrame.GoBack();
+            ViewModel.NavigationService.InternalGoBack();
         }
     }
 }

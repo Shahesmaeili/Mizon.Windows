@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Mizon.Windows.UserControls.AuthFormsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:icon="using:FluentIcons.WinUI"
+             xmlns:controls="using:Mizon.Windows.Controls" xmlns:common="using:Mizon.Windows.Common" xmlns:local="using:Mizon.Windows.UserControls"
+             FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Language="{x:Bind Localization.LanguageTag, Mode=OneWay}"
+             HorizontalContentAlignment="Stretch" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
+    <UserControl.Resources>
+        <Style x:Key="AuthCaption" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style x:Key="AuthLabel" TargetType="TextBlock" BasedOn="{StaticResource AuthCaption}">
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+        </Style>
+        <Style x:Key="AuthTextInput" TargetType="TextBox">
+            <Setter Property="common:AuthInputMotion.IsEnabled" Value="True" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FlowDirection" Value="LeftToRight" />
+            <Setter Property="TextAlignment" Value="Left" />
+            <Setter Property="TextReadingOrder" Value="UseFlowDirection" />
+            <Setter Property="Background" Value="{ThemeResource AuthInputBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource AuthInputBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="IsSpellCheckEnabled" Value="False" />
+            <Setter Property="IsTextPredictionEnabled" Value="False" />
+        </Style>
+        <Style x:Key="AuthPasswordInput" TargetType="PasswordBox">
+            <Setter Property="FlowDirection" Value="LeftToRight" />
+            <Setter Property="TextReadingOrder" Value="UseFlowDirection" />
+            <Setter Property="common:AuthInputMotion.IsEnabled" Value="True" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Background" Value="{ThemeResource AuthInputBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource AuthInputBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="PasswordRevealMode" Value="Peek" />
+        </Style>
+        <Style x:Key="AuthPrimaryAction" TargetType="controls:AuthActionButton">
+            <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="48"/>
+            <Setter Property="Padding" Value="14,10"/><Setter Property="CornerRadius" Value="13"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Foreground" Value="{ThemeResource AuthPrimaryActionForegroundBrush}"/><Setter Property="BorderBrush" Value="{ThemeResource AuthPrimaryActionBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/><Setter Property="UseSystemFocusVisuals" Value="True"/>
+            <Setter Property="Background" Value="{ThemeResource AuthPrimaryActionBackgroundBrush}" />
+            <Setter Property="Template"><Setter.Value>
+                <ControlTemplate TargetType="controls:AuthActionButton">
+                    <Grid Background="Transparent">
+                        <Grid x:Name="ActionSurface" IsHitTestVisible="False" CornerRadius="{TemplateBinding CornerRadius}"
+                              Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <Border x:Name="ActionLight" CornerRadius="{TemplateBinding CornerRadius}" Background="{ThemeResource AuthShineBrush}" Opacity="0"/>
+                            <Border Height="1" VerticalAlignment="Top" Margin="14,0" Background="{ThemeResource AuthShineBrush}"/>
+                            <Grid x:Name="ActionContent">
+                                <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                  Padding="{TemplateBinding Padding}" Foreground="{TemplateBinding Foreground}"
+                                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="Center"/>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value></Setter>
+        </Style>
+        <Style x:Key="AuthModeAction" TargetType="controls:AuthActionButton" BasedOn="{StaticResource AuthPrimaryAction}">
+            <Setter Property="MinHeight" Value="46"/><Setter Property="Padding" Value="22,11"/>
+            <Setter Property="CornerRadius" Value="23"/>
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}"/><Setter Property="BorderBrush" Value="{ThemeResource AuthAccentBorderBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/><Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="{ThemeResource AuthModeActionBackgroundBrush}" />
+        </Style>
+    </UserControl.Resources>
+    <ContentControl x:Name="FormInteractionHost" Padding="0" IsTabStop="False"
+                    HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+                    KeyDown="Form_KeyDown" GotFocus="Form_GotFocus" LostFocus="Form_LostFocus">
+        <controls:FlipSide x:Name="FormFlip">
+        <controls:FlipSide.Side1>
+            <Grid x:Name="LoginFace" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
+                <Border CornerRadius="20" Padding="{x:Bind CardPadding, Mode=OneWay}"
+                        Background="{ThemeResource CardBackgroundFillColorSecondary}"
+                        BorderBrush="{ThemeResource AuthAccentTintBrush}" BorderThickness="1">
+                    <StackPanel Spacing="20" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
+                        <StackPanel Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="7" HorizontalAlignment="Left">
+                                <icon:SymbolIcon Symbol="Person" FontSize="13" Foreground="{ThemeResource AuthAccentBrush}" VerticalAlignment="Center" />
+                                <TextBlock TextReadingOrder="UseFlowDirection" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Localization.GetString('AuthAccountLabel', Localization.Revision), Mode=OneWay}" FontSize="11" Foreground="{ThemeResource AuthAccentBrush}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" />
+                            </StackPanel>
+                            <TextBlock TextReadingOrder="UseFlowDirection" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" AutomationProperties.HeadingLevel="Level1" x:Name="LoginHeading" Text="{x:Bind Localization.GetString('AuthLoginHeading', Localization.Revision), Mode=OneWay}"
+                                       FontSize="27" FontWeight="SemiBold" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" TextWrapping="Wrap" />
+                            <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Localization.GetString('AuthLoginDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthCaption}" />
+                        </StackPanel>
+                        <StackPanel Spacing="16">
+                    <StackPanel Spacing="7">
+                        <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="LoginIdentifierLabel" Text="{x:Bind Localization.GetString('AuthLoginIdentifierLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthLabel}" />
+                        <TextBox FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="LoginIdentifierInput" Style="{StaticResource AuthTextInput}"
+                                 Text="{x:Bind ViewModel.EmailAddressOrUsername, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}" MaxLength="256"
+                                 AutomationProperties.LabeledBy="{x:Bind LoginIdentifierLabel}" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthLoginIdentifierHelp', Localization.Revision), Mode=OneWay}" />
+                    </StackPanel>
+                    <StackPanel Spacing="7">
+                        <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="LoginPasswordLabel" Text="{x:Bind Localization.GetString('AuthPasswordLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthLabel}" />
+                        <Grid FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="44"/></Grid.ColumnDefinitions>
+                            <PasswordBox FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="LoginPasswordInput" Grid.ColumnSpan="2" Style="{StaticResource AuthPasswordInput}" Padding="{x:Bind PasswordInputPadding(Localization.IsPersian), Mode=OneWay}" PasswordRevealMode="Hidden"
+                                         Password="{x:Bind ViewModel.Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}"
+                                         AutomationProperties.LabeledBy="{x:Bind LoginPasswordLabel}"
+                                         AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthLoginPasswordHelp', Localization.Revision), Mode=OneWay}" AutomationProperties.IsRequiredForForm="True"/>
+                            <controls:AuthActionButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="LoginPasswordRevealButton" Grid.Column="1" Width="32" Height="32" MinHeight="0" MinWidth="0" Padding="0" CornerRadius="9"
+                                                      Style="{StaticResource AuthPrimaryAction}" Background="{ThemeResource AuthAccentWashBrush}" Foreground="{ThemeResource AuthAccentBrush}" BorderBrush="{ThemeResource AuthAccentTintBrush}"
+                                                      VerticalAlignment="Center" HorizontalContentAlignment="Center" Click="RevealLoginPassword_Click"
+                                                      IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}"
+                                                      AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthPasswordRevealHelp', Localization.Revision), Mode=OneWay}">
+                                <icon:SymbolIcon x:Name="LoginPasswordRevealIcon" Symbol="Eye" FontSize="17" AutomationProperties.AccessibilityView="Raw"/>
+                            </controls:AuthActionButton>
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+                        <local:AuthErrorCard IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Title="{x:Bind Localization.GetString('AuthLoginErrorTitle', Localization.Revision), Mode=OneWay}" />
+                        <controls:AuthActionButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Click="SubmitButton_Click" Style="{StaticResource AuthPrimaryAction}" IsEnabled="{x:Bind ViewModel.LoginButtonIsEnabled, Mode=OneWay}" AutomationProperties.Name="{x:Bind Localization.GetString('AuthLoginSubmit', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthLoginSubmitHelp', Localization.Revision), Mode=OneWay}">
+                            <Grid ColumnSpacing="10" FlowDirection="LeftToRight">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="20" /><ColumnDefinition Width="*" /><ColumnDefinition Width="20" /></Grid.ColumnDefinitions>
+                                <icon:SymbolIcon Symbol="ArrowLeft" FontSize="17" VerticalAlignment="Center" />
+                                <TextBlock TextReadingOrder="UseFlowDirection" Grid.Column="1" Text="{x:Bind ViewModel.SubmitText, Mode=OneWay}" FontSize="13" FontWeight="SemiBold"
+                                           FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+                                           TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" />
+                                <ProgressRing Grid.Column="2" Width="18" Height="18" MinWidth="0" MinHeight="0" Foreground="{ThemeResource AuthPrimaryActionForegroundBrush}"
+                                              IsActive="{x:Bind ViewModel.ShowProgressBar, Mode=OneWay}"
+                                              Visibility="{x:Bind VisibilityFor(ViewModel.ShowProgressBar), Mode=OneWay}" />
+                            </Grid>
+                        </controls:AuthActionButton>
+                        <StackPanel Spacing="12">
+                            <Grid Height="1" Background="{ThemeResource AuthDividerBrush}" />
+                            <StackPanel Spacing="2" HorizontalAlignment="Stretch">
+                                <controls:AuthActionButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Click="ModeButton_Click" Style="{StaticResource AuthModeAction}" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthModeSwitchHelp', Localization.Revision), Mode=OneWay}" IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
+                                    <StackPanel Orientation="Horizontal" Spacing="9"><icon:SymbolIcon Symbol="PersonAdd" FontSize="16" VerticalAlignment="Center"/><TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Localization.GetString('AuthCreateAccount', Localization.Revision), Mode=OneWay}" FontSize="13" FontWeight="SemiBold" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" VerticalAlignment="Center"/></StackPanel>
+                                </controls:AuthActionButton>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border x:Name="LoginFocusRing" CornerRadius="20" BorderBrush="{ThemeResource AuthAccentBorderBrush}" BorderThickness="1" IsHitTestVisible="False" Opacity="0">
+                    <Border.OpacityTransition><ScalarTransition Duration="0:0:0.16" /></Border.OpacityTransition>
+                </Border>
+            </Grid>
+        </controls:FlipSide.Side1>
+        <controls:FlipSide.Side2>
+            <Grid>
+            <Grid x:Name="RegisterFace" x:Load="False" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
+                <Border CornerRadius="20" Padding="{x:Bind CardPadding, Mode=OneWay}"
+                        Background="{ThemeResource CardBackgroundFillColorSecondary}"
+                        BorderBrush="{ThemeResource AuthAccentTintBrush}" BorderThickness="1">
+                    <StackPanel Spacing="20" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
+                        <StackPanel Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="7" HorizontalAlignment="Left">
+                                <icon:SymbolIcon Symbol="Person" FontSize="13" Foreground="{ThemeResource AuthAccentBrush}" VerticalAlignment="Center" />
+                                <TextBlock TextReadingOrder="UseFlowDirection" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Localization.GetString('AuthAccountLabel', Localization.Revision), Mode=OneWay}" FontSize="11" Foreground="{ThemeResource AuthAccentBrush}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" />
+                            </StackPanel>
+                            <TextBlock TextReadingOrder="UseFlowDirection" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" AutomationProperties.HeadingLevel="Level1" x:Name="RegisterHeading" Text="{x:Bind Localization.GetString('AuthRegisterHeading', Localization.Revision), Mode=OneWay}"
+                                       FontSize="27" FontWeight="SemiBold" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" TextWrapping="Wrap" />
+                            <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Localization.GetString('AuthRegisterDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthCaption}" />
+                        </StackPanel>
+                        <StackPanel Spacing="12">
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Spacing="6">
+                            <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="FirstNameLabel" Text="{x:Bind Localization.GetString('AuthFirstNameLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthLabel}" />
+                            <TextBox x:Name="FirstNameInput" Style="{StaticResource AuthTextInput}" MaxLength="60"
+                                     FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}"
+                                     Text="{x:Bind ViewModel.RegistrationFirstName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}"
+                                     AutomationProperties.LabeledBy="{x:Bind FirstNameLabel}" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthFirstNameHelp', Localization.Revision), Mode=OneWay}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="LastNameLabel" Text="{x:Bind Localization.GetString('AuthLastNameLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthLabel}" />
+                            <TextBox x:Name="LastNameInput" Style="{StaticResource AuthTextInput}" MaxLength="60"
+                                     FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}"
+                                     Text="{x:Bind ViewModel.RegistrationLastName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}"
+                                     AutomationProperties.LabeledBy="{x:Bind LastNameLabel}" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthLastNameHelp', Localization.Revision), Mode=OneWay}" />
+                        </StackPanel>
+                    </Grid>
+                    <StackPanel Spacing="6">
+                        <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="UsernameLabel" Text="{x:Bind Localization.GetString('AuthUsernameLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthLabel}" />
+                        <TextBox FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="UsernameInput" Style="{StaticResource AuthTextInput}" MaxLength="32"
+                                 Text="{x:Bind ViewModel.RegistrationUsername, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}"
+                                 AutomationProperties.LabeledBy="{x:Bind UsernameLabel}" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthUsernameHelp', Localization.Revision), Mode=OneWay}" />
+                        <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Localization.GetString('AuthUsernameHint', Localization.Revision), Mode=OneWay}" FontSize="10"
+                                   Style="{StaticResource AuthCaption}" />
+                    </StackPanel>
+                    <StackPanel Spacing="6">
+                        <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="EmailLabel" Text="{x:Bind Localization.GetString('AuthEmailLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthLabel}" />
+                        <TextBox FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="EmailInput" Style="{StaticResource AuthTextInput}" MaxLength="128"
+                                 InputScope="EmailSmtpAddress"
+                                 Text="{x:Bind ViewModel.RegistrationEmailAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}"
+                                 AutomationProperties.LabeledBy="{x:Bind EmailLabel}" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthEmailHelp', Localization.Revision), Mode=OneWay}" />
+                    </StackPanel>
+                    <StackPanel Spacing="6">
+                        <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="RegisterPasswordLabel" Text="{x:Bind Localization.GetString('AuthPasswordLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthLabel}" />
+                        <PasswordBox FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="RegisterPasswordInput" Loaded="NativePassword_Loaded" Unloaded="NativePassword_Unloaded" Style="{StaticResource AuthPasswordInput}" MaxLength="128"
+                                     Password="{x:Bind ViewModel.RegistrationPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}"
+                                     AutomationProperties.LabeledBy="{x:Bind RegisterPasswordLabel}" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthRegisterPasswordHelp', Localization.Revision), Mode=OneWay}" />
+                        <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Localization.GetString('AuthRegisterPasswordHelp', Localization.Revision), Mode=OneWay}" FontSize="10"
+                                   Style="{StaticResource AuthCaption}" />
+                    </StackPanel>
+                    <StackPanel Spacing="6">
+                        <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="ConfirmPasswordLabel" Text="{x:Bind Localization.GetString('AuthConfirmPasswordLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthLabel}" />
+                        <PasswordBox FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="ConfirmPasswordInput" Loaded="NativePassword_Loaded" Unloaded="NativePassword_Unloaded" Style="{StaticResource AuthPasswordInput}" MaxLength="128"
+                                     Password="{x:Bind ViewModel.RegistrationConfirmPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}"
+                                     AutomationProperties.LabeledBy="{x:Bind ConfirmPasswordLabel}" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthConfirmPasswordHelp', Localization.Revision), Mode=OneWay}" />
+                    </StackPanel>
+                </StackPanel>
+                        <local:AuthErrorCard IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Title="{x:Bind Localization.GetString('AuthRegisterErrorTitle', Localization.Revision), Mode=OneWay}" />
+                        <controls:AuthActionButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Click="SubmitButton_Click" Style="{StaticResource AuthPrimaryAction}" IsEnabled="{x:Bind ViewModel.LoginButtonIsEnabled, Mode=OneWay}" AutomationProperties.Name="{x:Bind Localization.GetString('AuthRegisterSubmit', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthRegisterSubmitHelp', Localization.Revision), Mode=OneWay}">
+                            <Grid ColumnSpacing="10" FlowDirection="LeftToRight">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="20" /><ColumnDefinition Width="*" /><ColumnDefinition Width="20" /></Grid.ColumnDefinitions>
+                                <icon:SymbolIcon Symbol="ArrowLeft" FontSize="17" VerticalAlignment="Center" />
+                                <TextBlock TextReadingOrder="UseFlowDirection" Grid.Column="1" Text="{x:Bind ViewModel.SubmitText, Mode=OneWay}" FontSize="13" FontWeight="SemiBold"
+                                           FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+                                           TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" />
+                                <ProgressRing Grid.Column="2" Width="18" Height="18" MinWidth="0" MinHeight="0" Foreground="{ThemeResource AuthPrimaryActionForegroundBrush}"
+                                              IsActive="{x:Bind ViewModel.ShowProgressBar, Mode=OneWay}"
+                                              Visibility="{x:Bind VisibilityFor(ViewModel.ShowProgressBar), Mode=OneWay}" />
+                            </Grid>
+                        </controls:AuthActionButton>
+                        <StackPanel Spacing="12">
+                            <Grid Height="1" Background="{ThemeResource AuthDividerBrush}" />
+                            <StackPanel Spacing="2" HorizontalAlignment="Stretch">
+                                <controls:AuthActionButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Click="ModeButton_Click" Style="{StaticResource AuthModeAction}" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthModeSwitchHelp', Localization.Revision), Mode=OneWay}" IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
+                                    <StackPanel Orientation="Horizontal" Spacing="9"><icon:SymbolIcon Symbol="PersonAdd" FontSize="16" VerticalAlignment="Center"/><TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Localization.GetString('AuthSignInAccount', Localization.Revision), Mode=OneWay}" FontSize="13" FontWeight="SemiBold" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" VerticalAlignment="Center"/></StackPanel>
+                                </controls:AuthActionButton>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border x:Name="RegisterFocusRing" CornerRadius="20" BorderBrush="{ThemeResource AuthAccentBorderBrush}" BorderThickness="1" IsHitTestVisible="False" Opacity="0">
+                    <Border.OpacityTransition><ScalarTransition Duration="0:0:0.16" /></Border.OpacityTransition>
+                </Border>
+            </Grid>
+            </Grid>
+        </controls:FlipSide.Side2>
+        </controls:FlipSide>
+    </ContentControl>
+</UserControl>

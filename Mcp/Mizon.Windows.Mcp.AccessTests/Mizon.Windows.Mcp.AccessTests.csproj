@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mizon.Windows.Mcp.Contracts\Mizon.Windows.Mcp.Contracts.csproj" />
+    <Compile Include="..\..\Services\McpAccessService.cs" Link="Production\McpAccessService.cs" />
+    <Compile Include="..\..\Services\IMcpAppearanceService.cs" Link="Production\IMcpAppearanceService.cs" />
+    <Compile Include="..\..\Services\IMcpNavigationService.cs" Link="Production\IMcpNavigationService.cs" />
+    <Compile Include="..\..\Services\IMcpTaskbarPinService.cs" Link="Production\IMcpTaskbarPinService.cs" />
+    <Compile Include="..\..\Services\McpTaskbarPinService.cs" Link="Production\McpTaskbarPinService.cs" />
+    <Compile Include="..\..\Services\TaskbarPinContracts.cs" Link="Production\TaskbarPinContracts.cs" />
+    <Compile Include="..\..\Services\McpNavigationService.cs" Link="Production\McpNavigationService.cs" />
+    <Compile Include="..\..\Services\AppDeepLinkNavigationContracts.cs" Link="Production\AppDeepLinkNavigationContracts.cs" />
+    <Compile Include="..\..\Services\AppActivationRoute.cs" Link="Production\AppActivationRoute.cs" />
+    <Compile Include="..\..\Services\AppDeepLinkCatalog.cs" Link="Production\AppDeepLinkCatalog.cs" />
+    <Compile Include="..\..\Services\McpAppearanceService.cs" Link="Production\McpAppearanceService.cs" />
+    <Compile Include="..\..\ViewModels\Items\McpConnectionItemViewModel.cs" Link="Production\McpConnectionItemViewModel.cs" />
+    <Compile Include="..\..\ViewModels\ViewModelBase.cs" Link="Production\ViewModelBase.cs" />
+  </ItemGroup>
+</Project>

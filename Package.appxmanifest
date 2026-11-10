@@ -4,24 +4,27 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+  xmlns:com2="http://schemas.microsoft.com/appx/manifest/com/windows10/2"
+  xmlns:com3="http://schemas.microsoft.com/appx/manifest/com/windows10/3"
   xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
   xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
-  IgnorableNamespaces="uap rescap com desktop4 desktop5">
+  IgnorableNamespaces="uap uap3 rescap com com2 com3 desktop4 desktop5">
 
   <Identity
     Name="83999a60-c1ad-4cca-af16-4c69bf4a0067"
     Publisher="CN=alish"
-    Version="1.0.0.0"
+    Version="1.0.0.3"
     ProcessorArchitecture="x64" />
 
   <mp:PhoneIdentity PhoneProductId="83999a60-c1ad-4cca-af16-4c69bf4a0067" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>Mizon.Windows</DisplayName>
+    <DisplayName>Mizon</DisplayName>
     <PublisherDisplayName>alish</PublisherDisplayName>
-    <Logo>Assets\StoreLogo.png</Logo>
+    <Logo>Assets\AppIcon\StoreLogo.png</Logo>
   </Properties>
 
   <Dependencies>
@@ -38,12 +41,12 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="Mizon.Windows"
+        DisplayName="Mizon"
         Description="Mizon.Windows"
         BackgroundColor="transparent"
-        Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        Square150x150Logo="Assets\AppIcon\Square150x150Logo.png"
+        Square44x44Logo="Assets\AppIcon\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\AppIcon\Wide310x150Logo.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
 
@@ -54,6 +57,14 @@
 					<uap:DisplayName>Mizon App</uap:DisplayName>
 				</uap:Protocol>
 			</uap:Extension>
+
+			<uap3:Extension Category="windows.appExtension">
+				<uap3:AppExtension Name="com.microsoft.windows.ai.actions" DisplayName="Mizon" Id="Mizon.AccountActions" PublicFolder="Assets">
+					<uap3:Properties>
+						<Registration xmlns="">AppActions\registration.json</Registration>
+					</uap3:Properties>
+				</uap3:AppExtension>
+			</uap3:Extension>
 
 			<com:Extension Category="windows.comServer">
 				<com:ComServer>
@@ -69,6 +80,14 @@
 					</com:SurrogateServer>
 				</com:ComServer>
 			</com:Extension>
+
+			<com2:Extension Category="windows.comServer">
+				<com2:ComServer>
+					<com3:ExeServer Executable="Mizon.Windows.exe" Arguments="--app-actions" DisplayName="Mizon App Actions">
+						<com:Class Id="25F10A63-B41E-4B39-97AD-7B781CA81D89" DisplayName="Mizon App Actions" />
+					</com3:ExeServer>
+				</com2:ComServer>
+			</com2:Extension>
 
 			<desktop4:Extension Category="windows.fileExplorerContextMenus">
 				<desktop4:FileExplorerContextMenus>

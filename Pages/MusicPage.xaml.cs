@@ -1,223 +1,425 @@
-﻿using DevWinUI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Hosting;
-using Microsoft.UI.Xaml.Media.Animation;
+using Microsoft.UI.Xaml.Input;
 using Mizon.Windows.Services;
 using Mizon.Windows.ViewModels;
 using Mizon.Windows.ViewModels.Items;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+namespace Mizon.Windows.Pages;
 
-namespace Mizon.Windows.Pages
+public sealed partial class MusicPage : Page
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class MusicPage : Page
+    public MusicPageViewModel ViewModel { get; }
+    public MusicDiscoveryViewModel Discovery { get; } = new();
+    public MusicLibraryViewModel Library { get; }
+    public MusicFeaturesViewModel? Features { get; private set; }
+    public FollowingActivitiesViewModel? FollowingActivities { get; private set; }
+    private UserControls.StoryViewer? _storyViewer;
+    private MainWindow? _storyWindow;
+    private Button? _storySource;
+    private FollowingActivityStoryPresenter? _followingStoryPresenter;
+    private string? _layoutState;
+    private bool _dialogOpen;
+    private bool _homeWidgetsActive;
+    private readonly Microsoft.UI.Xaml.Media.RectangleGeometry _pageViewportClip = new();
+    private readonly global::Windows.UI.ViewManagement.UISettings _uiSettings = new();
+    private sealed class RailState { public long LastWheelTime; public double Target; }
+    private readonly ConditionalWeakTable<ScrollViewer, RailState> _rails = new();
+    private readonly HashSet<UserControls.TopArtistCard> _artistCards = [];
+    private double _artistCardWidth = 224;
+
+    public MusicPage()
     {
+        ViewModel = ((App)Application.Current).Services.GetRequiredService<MusicPageViewModel>();
+        var services = ((App)Application.Current).Services;
+        // The cached page owns its bounded library state; the root DI scope must not retain it.
+        Library = new(services.GetRequiredService<Mizon.API.MizonApi>(),
+            services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>());
+        FollowingActivities = new(services.GetRequiredService<Mizon.API.MizonApi>(),
+            services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>(), "music", 4);
+        Features = new(services.GetRequiredService<Mizon.API.MizonApi>(),
+            services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>());
+        InitializeComponent();
+        // Let the hero shadow cross column boundaries, while keeping scrolled content inside the page.
+        LayoutRoot.Clip = _pageViewportClip;
+        DataContext = ViewModel;
+        FeaturedArtist.ItemsSource = Discovery.ArtistSpotlights;
+    }
 
-        IList<string> colors = new List<string>()
+    private async void MusicPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        UpdateViewportClip(ActualWidth, ActualHeight);
+        UpdateLayout(ActualWidth);
+        if (_homeWidgetsActive) return;
+        _homeWidgetsActive = true;
+        if (Features is null)
         {
-            "Daily Mix — انتخاب‌شده برای تو",
-            "آرامش شبانه — ۴۲ دقیقه",
-            "ترک‌های ترند امروز",
-            "تمرکز عمیق — بدون کلام",
-            "کشف‌های این هفته",
-            "سفر جاده‌ای — ۲۸ آهنگ"
-        };
-
-        private double AnimatedBtnHeight;
-        private Microsoft.UI.Xaml.Thickness AnimatedBtnMargin;
-        private MusicPageViewModel ViewModel => (MusicPageViewModel)DataContext;
-
-        public MusicPage()
+            var services = ((App)Application.Current).Services;
+            Features = new(services.GetRequiredService<Mizon.API.MizonApi>(),
+                services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>());
+            Bindings.Update();
+            FeaturedMediaHost.ResetPresentation();
+        }
+        if (FollowingActivities is null)
         {
-            this.InitializeComponent();
-            animatedScrollRepeater.ItemsSource = colors;
-            animatedScrollRepeater.ElementPrepared += OnElementPrepared;
-            DataContext = ((App)App.Current).Services.GetRequiredService<MusicPageViewModel>();
+            var services = ((App)Application.Current).Services;
+            FollowingActivities = new(services.GetRequiredService<Mizon.API.MizonApi>(),
+                services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>(), "music", 4);
+            Bindings.Update();
+            FollowingActivitiesHost.ResetPresentation();
+        }
+        await Task.WhenAll(ViewModel.RefreshHomeWidgetsAsync(), Library.RefreshAsync(), FollowingActivities.RefreshAsync(), Features.RefreshAsync());
+    }
 
-            ViewModel.NavigationService.InternalNavigationChanged += (s, args) =>
+    private void MusicPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        if (IsLoaded) return;
+        _homeWidgetsActive = false;
+        CloseStory();
+        _followingStoryPresenter?.Dispose();
+        _followingStoryPresenter = null;
+        ViewModel.CancelHomeWidgetLoading();
+        Discovery.CancelLoading();
+        Library.CancelLoading();
+        FollowingActivities?.Dispose();
+        FollowingActivities = null;
+        Features?.Dispose();
+        Features = null;
+        // This page is cached. Release account data and compiled-binding subscriptions
+        // on departure; reconstruct the small feed only when this page returns.
+        Bindings.Update();
+    }
+
+    private async void Library_RefreshRequested(object? sender, EventArgs e) => await Library.RefreshAsync();
+
+    private void Library_RecentRequested(object? sender, EventArgs e) => ScrollTo(RecentSection);
+
+    private void MusicPage_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdateViewportClip(e.NewSize.Width, e.NewSize.Height);
+        if (e.NewSize.Width != e.PreviousSize.Width) UpdateLayout(e.NewSize.Width);
+    }
+
+    private void UpdateViewportClip(double width, double height)
+    {
+        if (!double.IsFinite(width) || !double.IsFinite(height)) return;
+        var bounds = new global::Windows.Foundation.Rect(0, 0, Math.Max(0, width), Math.Max(0, height));
+        if (_pageViewportClip.Rect != bounds) _pageViewportClip.Rect = bounds;
+    }
+
+    private void UpdateLayout(double width)
+    {
+        if (LayoutRoot is null || !double.IsFinite(width) || width <= 0) return;
+        // Use the page's actual width, including when hosted in a narrower navigation frame.
+        var state = width >= 1440 ? "WideLayout" : width >= 1040 ? "MediumLayout" : "NarrowLayout";
+        if (_layoutState == state) return;
+        if (!VisualStateManager.GoToState(this, state, false)) return;
+
+        // Only visible columns own a viewport; collapsed columns join the main feed.
+        MoveRail(EditorialRail, EditorialScroll, InlineEditorialHost, state == "WideLayout");
+        MoveRail(CommunityRail, CommunityScroll, InlineCommunityHost, state != "NarrowLayout");
+        _layoutState = state;
+    }
+
+    private static void MoveRail(StackPanel rail, ScrollViewer column, Border inlineHost, bool separateColumn)
+    {
+        inlineHost.Visibility = separateColumn ? Visibility.Collapsed : Visibility.Visible;
+        if (separateColumn)
+        {
+            if (ReferenceEquals(column.Content, rail)) return;
+            inlineHost.Child = null;
+            column.Content = rail;
+        }
+        else
+        {
+            if (ReferenceEquals(inlineHost.Child, rail)) return;
+            column.Content = null;
+            inlineHost.Child = rail;
+        }
+    }
+
+    private void MainFeed_ViewChanging(object sender, ScrollViewerViewChangingEventArgs args)
+    {
+        RecommendedRail?.ResetInteraction(animate: true);
+        RecentRail?.ResetInteraction(animate: true);
+    }
+
+    private void HorizontalRail_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not ScrollViewer rail || _rails.TryGetValue(rail, out _)) return;
+        _rails.Add(rail, new RailState());
+        rail.AddHandler(UIElement.PointerWheelChangedEvent, new PointerEventHandler(HorizontalRail_Wheel), true);
+    }
+
+    private void HorizontalRail_Unloaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not ScrollViewer rail || rail.IsLoaded || !_rails.TryGetValue(rail, out _)) return;
+        rail.RemoveHandler(UIElement.PointerWheelChangedEvent, new PointerEventHandler(HorizontalRail_Wheel));
+        _rails.Remove(rail);
+    }
+
+    private void HorizontalRail_Wheel(object sender, PointerRoutedEventArgs e)
+    {
+        if (sender is not ScrollViewer rail || !_rails.TryGetValue(rail, out var state)) return;
+        var properties = e.GetCurrentPoint(rail).Properties;
+        if (properties.IsHorizontalMouseWheel || properties.MouseWheelDelta == 0 ||
+            e.KeyModifiers.HasFlag(global::Windows.System.VirtualKeyModifiers.Control) || rail.ScrollableWidth <= 0) return;
+        var now = Environment.TickCount64;
+        var offset = now - state.LastWheelTime > 350 ? rail.HorizontalOffset : state.Target;
+        state.Target = Math.Clamp(offset - properties.MouseWheelDelta / 120d * 160, 0, rail.ScrollableWidth);
+        state.LastWheelTime = now;
+        if (Math.Abs(rail.HorizontalOffset - state.Target) < 0.5) return;
+        var animations = _uiSettings.AnimationsEnabled;
+        rail.ChangeView(state.Target, null, null, !animations);
+        e.Handled = true;
+    }
+
+    private async void Stories_RefreshRequested(object? sender, EventArgs args) => await ViewModel.RefreshHomeWidgetsAsync();
+
+    private async void Stories_AddRequested(object? sender, EventArgs args) => await ShowPreviewDialogAsync("استوری جدید",
+        new TextBlock { Text = "یک لحظه، یک آهنگ، یک داستان.\nساخت و انتشار استوری در مرحلهٔ اتصال این طرح تکمیل می‌شود.", TextWrapping = TextWrapping.Wrap, FlowDirection = FlowDirection.RightToLeft });
+
+    private async void Stories_StoryRequested(object? sender, UserControls.StoryRequestedEventArgs args)
+    {
+        if (!_homeWidgetsActive || App.MainMizonWindow is not MainWindow window) return;
+        var stories = new List<StoryItemViewModel>(ViewModel.HomeStories);
+        var index = stories.IndexOf(args.Story);
+        if (index < 0) return;
+        CloseStory();
+        var preview = (args.Source.Content as FrameworkElement)?.FindName("CardArtwork") as Image;
+        var transition = MusicCoverTransition.Prepare(preview);
+        var transitionHandedOff = false;
+        var viewer = new UserControls.StoryViewer();
+        _storyViewer = viewer;
+        _storyWindow = window;
+        _storySource = args.Source;
+        viewer.CloseRequested += Story_Closed;
+        try
+        {
+            // Capture the live thumbnail before the full-window overlay disables
+            // the page. The viewer owns decoding and the destination animation.
+            window.ShowWindowOverlay(viewer);
+            transitionHandedOff = true;
+            await viewer.OpenWithTransitionAsync(ViewModel, stories, index, transition, System.Threading.CancellationToken.None);
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception exception)
+        {
+            AppLog.Error("Home story could not be opened.", exception);
+            if (ReferenceEquals(_storyViewer, viewer)) CloseStory(restoreFocus: true);
+        }
+        finally
+        {
+            if (!transitionHandedOff) transition?.Dispose();
+        }
+    }
+
+    private void Story_Closed(object? sender, EventArgs args)
+    {
+        if (ReferenceEquals(sender, _storyViewer)) CloseStory(restoreFocus: true);
+    }
+
+    private void CloseStory(bool restoreFocus = false)
+    {
+        var viewer = _storyViewer;
+        var window = _storyWindow;
+        var source = _storySource;
+        _storyViewer = null;
+        _storyWindow = null;
+        _storySource = null;
+        if (viewer is null) return;
+        viewer.CloseRequested -= Story_Closed;
+        try { viewer.Close(); }
+        finally { window?.HideWindowOverlay(viewer); }
+        if (restoreFocus && _homeWidgetsActive && source is { IsLoaded: true }) source.Focus(FocusState.Programmatic);
+    }
+
+    private async void Discovery_MusicRequested(object? sender, DiscoveryMusicItemViewModel item) =>
+        await OpenMusicAsync(item);
+
+    private async void FeatureHero_OpenMusicRequested(object? sender, DiscoveryMusicItemViewModel item) =>
+        await OpenMusicAsync(item);
+
+    private void MainFeature_OpenMusicRequested(object? sender, MusicFeatureItemViewModel item) =>
+        ViewModel.NavigationService.InternalNavigate(typeof(MusicsPage), new()
+        {
+            [PageConstants.MUSIC_ID] = item.MusicPublicId
+        });
+
+    private async void MainFeature_PlayMusicRequested(object? sender, MusicFeatureItemViewModel item)
+    {
+        MainFeature_OpenMusicRequested(sender, item);
+        try
+        {
+            // Explicit play survives leaving this home page. The existing music player
+            // owns cancellation when a newer music activation supersedes this request.
+            await ViewModel.ActivateMusicAsync(item.MusicPublicId, MusicActivationAction.Play, System.Threading.CancellationToken.None);
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception exception) { AppLog.Error("Featured music playback could not be started.", exception); }
+    }
+
+    private async void TrendingMusic_OpenMusicRequested(object? sender, DiscoveryMusicItemViewModel item) =>
+        await OpenMusicAsync(item);
+
+    private async void FriendActivity_OpenRequested(object? sender, FollowingActivityRequestedEventArgs args) =>
+        await FollowingActivityNavigation.OpenAsync(args.Activity, ViewModel.NavigationService,
+            () => _followingStoryPresenter ??= new(), args.CoverSource);
+
+    private void FriendActivity_MoreRequested(object? sender, EventArgs args) =>
+        ViewModel.NavigationService.OpenFollowingActivities();
+
+    private async void FriendActivity_RefreshRequested(object? sender, EventArgs args)
+    {
+        if (FollowingActivities is { IsLoading: false } activities) await activities.RefreshAsync();
+    }
+    private async Task OpenMusicAsync(DiscoveryMusicItemViewModel item)
+    {
+        if (item.PublicId != Guid.Empty)
+        {
+            ViewModel.NavigationService.InternalNavigate(typeof(MusicsPage), new()
             {
-                if (!args.IsEnteringPage && args.ToPageType == typeof(MusicsPage) && args.FromPageType == typeof(MusicPage))
-                {
-                    try
-                    {
-                        var connectedAnimationService = ConnectedAnimationService.GetForCurrentView();
-                       // connectedAnimationService.DefaultDuration = TimeSpan.FromMilliseconds(500);
-                        connectedAnimationService.PrepareToAnimate("MusicCover", ShadowRect);
-                    }
-                    finally
-                    {
-
-                    }
-                  
-                }
-            };
-
+                [PageConstants.MUSIC_ID] = item.PublicId
+            });
+            return;
         }
-
-        /* This function occurs each time an element is made ready for use.
-* This is necessary for virtualization. */
-        private void OnElementPrepared(Microsoft.UI.Xaml.Controls.ItemsRepeater sender,
-                                       Microsoft.UI.Xaml.Controls.ItemsRepeaterElementPreparedEventArgs args)
+        var panel = new StackPanel { Spacing = 12, MaxWidth = 360 };
+        panel.Children.Add(new Border
         {
-            var item = ElementCompositionPreview.GetElementVisual(args.Element);
-            var svVisual = ElementCompositionPreview.GetElementVisual(Animated_ScrollViewer);
-            var scrollProperties = ElementCompositionPreview.GetScrollViewerManipulationPropertySet(Animated_ScrollViewer);
+            CornerRadius = new CornerRadius(12),
+            Child = new Image { Source = item.CoverImage, Height = 240, Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill }
+        });
+        panel.Children.Add(new TextBlock { Text = item.PersianTitle, FontSize = 20, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+        panel.Children.Add(new TextBlock { Text = item.Artist, Opacity = 0.65 });
+        panel.Children.Add(new TextBlock { Text = $"{item.DurationText}  ·  {item.LikesCountText} لایک", Opacity = 0.6 });
+        panel.Children.Add(new TextBlock { Text = "نمونهٔ طراحی؛ پخش این کارت بعد از اتصال به داده‌های واقعی فعال می‌شود.", TextWrapping = TextWrapping.Wrap, FontSize = 11, Opacity = 0.55, FlowDirection = FlowDirection.RightToLeft });
+        await ShowPreviewDialogAsync(item.Title, panel);
+    }
 
-            var scaleExpresion = scrollProperties.Compositor.CreateExpressionAnimation();
-            scaleExpresion.SetReferenceParameter("svVisual", svVisual);
-            scaleExpresion.SetReferenceParameter("scrollProperties", scrollProperties);
-            scaleExpresion.SetReferenceParameter("item", item);
-
-            // Scale the item based on the distance of the item relative to the center of the viewport.
-            scaleExpresion.Expression = "1 - abs((svVisual.Size.Y/2 - scrollProperties.Translation.Y) - (item.Offset.Y + item.Size.Y / 2))*(.25 / (svVisual.Size.Y / 2))";
-        
-    // Animate the item based on its distance to the center of the viewport.
-    item.StartAnimation("Scale.X", scaleExpresion);
-            item.StartAnimation("Scale.Y", scaleExpresion);
-            var centerPointExpression = scrollProperties.Compositor.CreateExpressionAnimation();
-            centerPointExpression.SetReferenceParameter("item", item);
-            centerPointExpression.Expression = "Vector3(item.Size.X/2, item.Size.Y/2, 0)";
-            item.StartAnimation("CenterPoint", centerPointExpression);
-        }
-
-        /* This function identifies the item that's currently in the middle of the viewport,
-        and sets the rectangle to match its color. */
-        private void Animated_ScrollViewer_ViewChanging(object sender, ScrollViewerViewChangingEventArgs e)
+    private async Task ShowPreviewDialogAsync(string title, UIElement content)
+    {
+        if (_dialogOpen || XamlRoot is null) return;
+        _dialogOpen = true;
+        try
         {
-            Button SelectedItem = GetSelectedItemFromViewport() as Button;
-            // Update corresponding rectangle with selected color
-           // colorRectangle.Fill = SelectedItem.Background;
-        }
-
-        // The remainder of these functions are helper functions for the ViewChanging function:
-
-        // Find centerpoint of ScrollViewer
-        private double CenterPointOfViewportInExtent()
-        {
-            return Animated_ScrollViewer.VerticalOffset + Animated_ScrollViewer.ViewportHeight / 2;
-        }
-
-        // Find index of the item that's at the center of the viewport
-        private int GetSelectedIndexFromViewport()
-        {
-            int selectedItemIndex = (int)Math.Floor(CenterPointOfViewportInExtent()
-                                      / ((double)AnimatedBtnMargin.Top + AnimatedBtnHeight));
-            selectedItemIndex %= animatedScrollRepeater.ItemsSourceView.Count;
-            return selectedItemIndex;
-        }
-
-        // Return item that's at the center of the viewport.
-        private object GetSelectedItemFromViewport()
-        {
-            var selectedIndex = GetSelectedIndexFromViewport();
-            var selectedElement = animatedScrollRepeater.TryGetElement(selectedIndex) as Button;
-            return selectedElement;
-        }
-
-
-        private void ShadowRect_Loaded(object sender, RoutedEventArgs e)
-        {
-            shadow.Receivers.Add(ShadowCastGrid);
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private async void StoryCard_Click(object sender, RoutedEventArgs e)
-        {
-            if ((sender as FrameworkElement)?.Tag is not StoryItemViewModel story)
-                return;
-
-            var detail = await ViewModel.GetStoryDetailsAsync(story);
-            if (detail is null)
-                return;
-
-            await ViewModel.MarkStoryAsViewedAsync(story);
-            var contentSource = await ViewModel.PrepareStoryPlaybackAsync(detail.ContentMediaPublicId);
-            if (string.IsNullOrWhiteSpace(contentSource) || !Uri.TryCreate(contentSource, UriKind.Absolute, out var contentUri))
-                return;
-
-            FrameworkElement content = string.Equals(detail.StoryContentTypeTitle, "Video", StringComparison.OrdinalIgnoreCase)
-                ? new MediaPlayerElement { Source = global::Windows.Media.Core.MediaSource.CreateFromUri(contentUri), AutoPlay = true, AreTransportControlsEnabled = true, Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill }
-                : new Image { Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(contentUri), Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill };
-
-            var dialog = new ContentDialog
+            await new ContentDialog
             {
-                XamlRoot = Content.XamlRoot,
-                Title = story.CreatorDisplayName,
-                CloseButtonText = "بستن",
-                Content = new Grid
-                {
-                    Width = 360,
-                    Height = 640,
-                    Children = { content },
-                },
-            };
-            await dialog.ShowAsync();
+                XamlRoot = XamlRoot, RequestedTheme = ActualTheme,
+                Title = title, Content = content, CloseButtonText = "بستن"
+            }.ShowAsync();
         }
+        finally { _dialogOpen = false; }
+    }
 
-        private void StoryCard_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    private async void TopArtist_ProfileRequested(object? sender, TopArtistItemViewModel artist)
+    {
+        var panel = new StackPanel { Spacing = 12, MaxWidth = 360 };
+        panel.Children.Add(new PersonPicture
         {
-            if (sender is UIElement element)
-                element.Opacity = 1;
-        }
-
-        private void StoryCard_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+            DisplayName = artist.DisplayName, ProfilePicture = artist.AvatarImage,
+            Width = 88, Height = 88, HorizontalAlignment = HorizontalAlignment.Center
+        });
+        panel.Children.Add(new TextBlock { Text = artist.GenreTitle, TextAlignment = TextAlignment.Center, Opacity = 0.6 });
+        panel.Children.Add(new TextBlock
         {
-            if (sender is UIElement element)
-                element.Opacity = 0.8;
-        }
-
-
-
-        private void ToggleButton_Click(object sender, RoutedEventArgs e)
+            Text = artist.FollowersFullText + "  ·  " + artist.MonthlyListenersFullText,
+            FlowDirection = FlowDirection.RightToLeft, TextWrapping = TextWrapping.Wrap, FontSize = 12
+        });
+        panel.Children.Add(new TextBlock { Text = "آهنگ‌های این خواننده", FlowDirection = FlowDirection.RightToLeft, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+        foreach (var music in Discovery.GetArtistMusics(artist))
         {
-            if (sender is not ToggleButton selectedMood)
-                return;
-
-            if (selectedMood.IsChecked != true)
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
+            row.Children.Add(new Grid
             {
-                selectedMood.IsChecked = true;
-                return;
-            }
-
-            foreach (UIElement child in QuickMoodGrid.Children)
-            {
-                if (child is ToggleButton mood && mood != selectedMood)
-                    mood.IsChecked = false;
-            }
+                Width = 40, Height = 40, CornerRadius = new CornerRadius(6),
+                Children = { new Image { Source = music.CoverImage, Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill } }
+            });
+            row.Children.Add(new TextBlock { Text = music.Title, VerticalAlignment = VerticalAlignment.Center, FontSize = 13 });
+            panel.Children.Add(row);
         }
-
-        private void ShadowRect_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        panel.Children.Add(new TextBlock
         {
-            ViewModel.NavigationService.InternalNavigate(typeof(MusicsPage));
+            Text = "پروفایل و آمار نمونهٔ طراحی؛ دنبال‌کردن فعلاً فقط در همین پیش‌نمایش ذخیره می‌شود.",
+            TextWrapping = TextWrapping.Wrap, FlowDirection = FlowDirection.RightToLeft, FontSize = 10, Opacity = 0.55
+        });
+        await ShowPreviewDialogAsync(artist.DisplayName, panel);
+    }
+
+    private void TopArtistsScroll_Loaded(object sender, RoutedEventArgs e)
+    {
+        HorizontalRail_Loaded(sender, e);
+        UpdateArtistCardWidth(TopArtistsScroll.ActualWidth);
+        UpdateArtistNavigation();
+    }
+
+    private void TopArtistsScroll_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (e.NewSize.Width != e.PreviousSize.Width) UpdateArtistCardWidth(e.NewSize.Width);
+        UpdateArtistNavigation();
+    }
+
+    private void UpdateArtistCardWidth(double width)
+    {
+        if (!double.IsFinite(width) || width <= 0) return;
+        var next = Math.Min(224, width);
+        if (Math.Abs(next - _artistCardWidth) < .5) return;
+        _artistCardWidth = next;
+        foreach (var card in _artistCards) card.Width = next;
+    }
+
+    private void Artist_Prepared(ItemsRepeater sender, ItemsRepeaterElementPreparedEventArgs args)
+    {
+        if (args.Element is not UserControls.TopArtistCard card) return;
+        _artistCards.Add(card);
+        card.Width = _artistCardWidth;
+    }
+
+    private void Artist_Clearing(ItemsRepeater sender, ItemsRepeaterElementClearingEventArgs args)
+    {
+        if (args.Element is UserControls.TopArtistCard card) _artistCards.Remove(card);
+    }
+    private void TopArtistsScroll_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e) => UpdateArtistNavigation();
+    private void PreviousArtists_Click(object sender, RoutedEventArgs e) => ScrollArtists(-1);
+    private void NextArtists_Click(object sender, RoutedEventArgs e) => ScrollArtists(1);
+
+    private void ScrollArtists(int direction)
+    {
+        var cardStep = _artistCardWidth + 12;
+        var step = cardStep * Math.Max(1, Math.Floor(TopArtistsScroll.ViewportWidth / cardStep));
+        var now = Environment.TickCount64;
+        var current = TopArtistsScroll.HorizontalOffset;
+        if (_rails.TryGetValue(TopArtistsScroll, out var state))
+        {
+            if (now - state.LastWheelTime <= 350) current = state.Target;
+            state.Target = Math.Clamp(current + direction * step, 0, TopArtistsScroll.ScrollableWidth);
+            state.LastWheelTime = now;
         }
+        var offset = Math.Clamp(current + direction * step, 0, TopArtistsScroll.ScrollableWidth);
+        TopArtistsScroll.ChangeView(offset, null, null, !_uiSettings.AnimationsEnabled);
+    }
 
-        //private async void MainRefreshContainer_RefreshRequested(RefreshContainer sender, RefreshRequestedEventArgs args)
-        //{
-        //    var deferral = args.GetDeferral();
-        //    await Task.Delay(3000);
-        //    deferral.Complete();
-        //}
+    private void UpdateArtistNavigation()
+    {
+        if (TopArtistsScroll is null || PreviousArtistsButton is null || NextArtistsButton is null) return;
+        PreviousArtistsButton.IsEnabled = TopArtistsScroll.HorizontalOffset > 0.5;
+        NextArtistsButton.IsEnabled = TopArtistsScroll.HorizontalOffset < TopArtistsScroll.ScrollableWidth - 0.5;
+    }
 
-        //private void RefreshVisualizer_RefreshStateChanged(RefreshVisualizer sender, RefreshStateChangedEventArgs args)
-        //{
-        //    var visualizerContentVisual = ElementCompositionPreview.GetElementVisual((UIElement)MainRefreshContainer.Content);
-        //    visualizerContentVisual.StopAnimation("RotationAngle");
+    private async void Genres_RefreshRequested(object? sender, EventArgs args) => await ViewModel.RefreshHomeWidgetsAsync();
 
-        //}
+    private void GoRecent_Click(object sender, RoutedEventArgs e) => ScrollTo(RecentSection);
+    private void ScrollTo(FrameworkElement section)
+    {
+        section.StartBringIntoView(new BringIntoViewOptions
+        {
+            AnimationDesired = _uiSettings.AnimationsEnabled,
+            VerticalAlignmentRatio = 0, VerticalOffset = -12
+        });
     }
 }
 

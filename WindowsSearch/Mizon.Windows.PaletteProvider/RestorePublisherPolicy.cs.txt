@@ -1,0 +1,191 @@
+// Compiled only by the explicit installer action, never by the Palette provider.
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+using System.Security.Principal;
+using Microsoft.Win32.SafeHandles;
+
+public static class MizonRestorePublisherPolicy
+{
+    public const string KeyPath = @"SOFTWARE\Microsoft\Windows\System Composer\AllowedPublishers";
+    public const string PublisherId = "yvtn54431hrs8";
+    private const uint ReadControl = 0x20000, View64 = 0x100, SecurityInfo = 7;
+    private static readonly IntPtr LocalMachine = new IntPtr(unchecked((int)0x80000002));
+
+    public static byte[] ReadSecurity()
+    {
+        using (SafeRegistryHandle key = OpenRead()) { return ReadSecurity(key); }
+    }
+    public static string Sddl(byte[] descriptor)
+    {
+        return new RawSecurityDescriptor(descriptor, 0).GetSddlForm(AccessControlSections.Owner | AccessControlSections.Group | AccessControlSections.Access);
+    }
+    public static bool ReadOwnValue()
+    {
+        using (SafeRegistryHandle key = OpenRead()) { return ReadOwnValue(key); }
+    }
+    public static string CurrentSid()
+    {
+        using (WindowsIdentity identity = WindowsIdentity.GetCurrent()) { return identity.User.Value; }
+    }
+
+    // Never takes ownership, changes a DACL, or creates a registry key.
+    // The caller durably records the previous value state before this method runs.
+    public static void Apply(byte[] expectedSecurity, bool desiredValuePresent)
+    {
+        using (SafeRegistryHandle existing = OpenRead())
+        {
+            if (!SameSecurity(ReadSecurity(existing), expectedSecurity))
+                throw new InvalidOperationException("Policy owner/DACL changed since the backup. Refusing this operation.");
+            using (PrivilegeScope privileges = new PrivilegeScope())
+            {
+                Exception operationError = null;
+                try
+                {
+                    SafeRegistryHandle writable;
+                    uint disposition;
+                    // Microsoft documents REG_OPTION_BACKUP_RESTORE as ignoring
+                    // samDesired and granting read/write using enabled privileges.
+                    // An empty child of an already-open exact key cannot select a
+                    // different key through a changed parent path.
+                    Check(RegCreateKeyEx(existing, String.Empty, 0, null, 4, 0, IntPtr.Zero, out writable, out disposition), "Open existing policy with backup/restore privileges");
+                    using (writable)
+                    {
+                        if (disposition != 2) throw new InvalidOperationException("Expected REG_OPENED_EXISTING_KEY; refusing to write.");
+                        bool present = ReadOwnValue(writable);
+                        if (desiredValuePresent && !present)
+                            Check(RegSetValueEx(writable, PublisherId, 0, 0, null, 0), "Set Mizon publisher value");
+                        else if (!desiredValuePresent && present)
+                            Check(RegDeleteValue(writable, PublisherId), "Remove Mizon publisher value");
+                        Check(RegFlushKey(writable), "Flush Mizon publisher value");
+                        if (ReadOwnValue(writable) != desiredValuePresent)
+                            throw new InvalidOperationException("Mizon publisher value verification failed.");
+                    }
+                }
+                catch (Exception error) { operationError = error; }
+                finally
+                {
+                    try
+                    {
+                        if (!SameSecurity(ReadSecurity(existing), expectedSecurity))
+                            throw new InvalidOperationException("Policy owner/DACL changed during the operation. This helper never modifies security and will not overwrite an external change.");
+                    }
+                    catch (Exception verificationError)
+                    {
+                        operationError = operationError == null ? verificationError : new AggregateException(operationError, verificationError);
+                    }
+                }
+                if (operationError != null) throw operationError;
+            }
+        }
+    }
+
+    public static bool SameSecurity(byte[] left, byte[] right)
+    {
+        // Self-relative storage offsets may differ. Owner/group, control flags and
+        // exact ACE bytes must remain unchanged, not just equivalent account names.
+        RawSecurityDescriptor a = new RawSecurityDescriptor(left, 0), b = new RawSecurityDescriptor(right, 0);
+        if (!Equals(a.Owner, b.Owner) || !Equals(a.Group, b.Group)) return false;
+        const ControlFlags mask = ControlFlags.OwnerDefaulted | ControlFlags.GroupDefaulted |
+            ControlFlags.DiscretionaryAclPresent | ControlFlags.DiscretionaryAclDefaulted |
+            ControlFlags.DiscretionaryAclAutoInherited | ControlFlags.DiscretionaryAclAutoInheritRequired |
+            ControlFlags.DiscretionaryAclProtected;
+        if ((a.ControlFlags & mask) != (b.ControlFlags & mask)) return false;
+        if (a.DiscretionaryAcl == null || b.DiscretionaryAcl == null) return a.DiscretionaryAcl == b.DiscretionaryAcl;
+        byte[] aa = new byte[a.DiscretionaryAcl.BinaryLength], bb = new byte[b.DiscretionaryAcl.BinaryLength];
+        a.DiscretionaryAcl.GetBinaryForm(aa, 0); b.DiscretionaryAcl.GetBinaryForm(bb, 0);
+        if (aa.Length != bb.Length) return false;
+        for (int i = 0; i < aa.Length; i++) if (aa[i] != bb[i]) return false;
+        return true;
+    }
+    private static SafeRegistryHandle OpenRead()
+    {
+        SafeRegistryHandle handle;
+        Check(RegOpenKeyEx(LocalMachine, KeyPath, 0, ReadControl | 1 | View64, out handle), "Open exact existing publisher-policy key");
+        return handle;
+    }
+    private static byte[] ReadSecurity(SafeRegistryHandle key)
+    {
+        uint length = 0;
+        int result = RegGetKeySecurity(key, SecurityInfo, null, ref length);
+        if (result != 122) Check(result, "Read security size");
+        if (length == 0 || length > 65536) throw new InvalidOperationException("Unexpected policy descriptor length.");
+        byte[] bytes = new byte[length];
+        Check(RegGetKeySecurity(key, SecurityInfo, bytes, ref length), "Read owner and DACL");
+        return bytes;
+    }
+    private static bool ReadOwnValue(SafeRegistryHandle key)
+    {
+        uint type, length = 0;
+        int result = RegQueryValueEx(key, PublisherId, IntPtr.Zero, out type, null, ref length);
+        if (result == 2) return false;
+        Check(result, "Read Mizon publisher value");
+        if (type != 0 || length != 0) throw new InvalidOperationException("Existing Mizon publisher value is not empty REG_NONE. It will not be overwritten.");
+        return true;
+    }
+    private static void Check(int error, string action)
+    {
+        if (error != 0) throw new Win32Exception(error, action + ": " + new Win32Exception(error).Message);
+    }
+
+    private sealed class PrivilegeScope : IDisposable
+    {
+        private SafeAccessTokenHandle token;
+        private TokenPrivileges previousRestore, previousBackup;
+        private bool restoreEnabled, backupEnabled;
+        public PrivilegeScope()
+        {
+            try
+            {
+                if (!OpenProcessToken(GetCurrentProcess(), 0x28, out token)) throw new Win32Exception(Marshal.GetLastWin32Error());
+                previousRestore = Enable("SeRestorePrivilege"); restoreEnabled = true;
+                previousBackup = Enable("SeBackupPrivilege"); backupEnabled = true;
+            }
+            catch { Dispose(); throw; }
+        }
+        private TokenPrivileges Enable(string name)
+        {
+            Luid id;
+            if (!LookupPrivilegeValue(null, name, out id)) throw new Win32Exception(Marshal.GetLastWin32Error());
+            TokenPrivileges desired = new TokenPrivileges { Count = 1, Id = id, Attributes = 2 }, previous;
+            uint length;
+            bool success = AdjustTokenPrivileges(token, false, ref desired, (uint)Marshal.SizeOf(typeof(TokenPrivileges)), out previous, out length);
+            int error = Marshal.GetLastWin32Error();
+            if (!success || error != 0) throw new Win32Exception(error, "Cannot enable required privilege " + name);
+            return previous;
+        }
+        public void Dispose()
+        {
+            if (token == null) return;
+            int firstError = 0;
+            try
+            {
+                if (backupEnabled) firstError = Restore(ref previousBackup);
+                if (restoreEnabled) { int error = Restore(ref previousRestore); if (firstError == 0) firstError = error; }
+            }
+            finally { token.Dispose(); token = null; }
+            if (firstError != 0) throw new Win32Exception(firstError, "Could not restore the process privilege attributes.");
+        }
+        private int Restore(ref TokenPrivileges previous)
+        {
+            TokenPrivileges unused; uint length;
+            bool success = AdjustTokenPrivileges(token, false, ref previous, (uint)Marshal.SizeOf(typeof(TokenPrivileges)), out unused, out length);
+            int error = Marshal.GetLastWin32Error();
+            return success ? error : (error == 0 ? 1 : error);
+        }
+    }
+    [StructLayout(LayoutKind.Sequential)] private struct Luid { public uint Low; public int High; }
+    [StructLayout(LayoutKind.Sequential)] private struct TokenPrivileges { public uint Count; public Luid Id; public uint Attributes; }
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)] private static extern int RegOpenKeyEx(IntPtr key, string subKey, uint options, uint access, out SafeRegistryHandle result);
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)] private static extern int RegCreateKeyEx(SafeRegistryHandle key, string subKey, uint reserved, string keyClass, uint options, uint access, IntPtr securityAttributes, out SafeRegistryHandle result, out uint disposition);
+    [DllImport("advapi32.dll")] private static extern int RegGetKeySecurity(SafeRegistryHandle key, uint information, [Out] byte[] descriptor, ref uint length);
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)] private static extern int RegQueryValueEx(SafeRegistryHandle key, string name, IntPtr reserved, out uint type, [Out] byte[] data, ref uint size);
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)] private static extern int RegSetValueEx(SafeRegistryHandle key, string name, uint reserved, uint type, byte[] data, uint length);
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)] private static extern int RegDeleteValue(SafeRegistryHandle key, string name);
+    [DllImport("advapi32.dll")] private static extern int RegFlushKey(SafeRegistryHandle key);
+    [DllImport("kernel32.dll")] private static extern IntPtr GetCurrentProcess();
+    [DllImport("advapi32.dll", SetLastError = true)] private static extern bool OpenProcessToken(IntPtr process, uint access, out SafeAccessTokenHandle token);
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)] private static extern bool LookupPrivilegeValue(string system, string name, out Luid id);
+    [DllImport("advapi32.dll", SetLastError = true)] private static extern bool AdjustTokenPrivileges(SafeAccessTokenHandle token, bool disableAll, ref TokenPrivileges desired, uint length, out TokenPrivileges previous, out uint returnedLength);
+}

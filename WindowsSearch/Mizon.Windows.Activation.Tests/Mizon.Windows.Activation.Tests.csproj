@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\Services\AppActivationRoute.cs" Link="AppActivationRoute.cs" />
+    <Compile Include="..\..\Services\AppDeepLinkCatalog.cs" Link="AppDeepLinkCatalog.cs" />
+    <Compile Include="..\..\Services\AppActionCatalog.cs" Link="AppActionCatalog.cs" />
+    <None Include="..\..\Package.appxmanifest" Link="Fixtures\Package.appxmanifest" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\AppActions\registration.json" Link="Fixtures\Assets\AppActions\registration.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\JumpList\FullSize\Person.png" Link="Fixtures\Assets\JumpList\FullSize\Person.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\JumpList\FullSize\PersonAdd.png" Link="Fixtures\Assets\JumpList\FullSize\PersonAdd.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\JumpList\FullSize\Headphones.png" Link="Fixtures\Assets\JumpList\FullSize\Headphones.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\JumpList\FullSize\Video.png" Link="Fixtures\Assets\JumpList\FullSize\Video.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\JumpList\FullSize\Apps.png" Link="Fixtures\Assets\JumpList\FullSize\Apps.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\JumpList\FullSize\Shield.png" Link="Fixtures\Assets\JumpList\FullSize\Shield.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -22,6 +22,16 @@ internal static class AppLog
 
     public static void Error(string message, Exception exception) => Write("ERR", message, exception);
 
+    [Conditional("DEBUG")]
+    public static void MemorySnapshot(string stage)
+    {
+        using var process = Process.GetCurrentProcess();
+        var heap = GC.GetGCMemoryInfo();
+        Information($"Memory: {stage}; WorkingSetMiB={process.WorkingSet64 / 1048576d:F1}; "
+            + $"PrivateMiB={process.PrivateMemorySize64 / 1048576d:F1}; ManagedMiB={GC.GetTotalMemory(false) / 1048576d:F1}; "
+            + $"LastGcHeapMiB={heap.HeapSizeBytes / 1048576d:F1}; Handles={process.HandleCount}; Debugger={Debugger.IsAttached}.");
+    }
+
     private static void Write(string level, string message, Exception? exception)
     {
         var entry = $"{DateTimeOffset.Now:O} [{level}] [T{Environment.CurrentManagedThreadId}] {message}";

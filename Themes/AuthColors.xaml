@@ -1,0 +1,248 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Auth artwork shares semantic hues; readable content and controls adapt to the active theme. -->
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+            <x:Double x:Key="AuthClearGlyphOpacity">0.7</x:Double>
+            <x:Double x:Key="AuthClearPressedOpacity">0.65</x:Double>
+            <x:Double x:Key="AuthClearDisabledOpacity">0.3</x:Double>
+            <SolidColorBrush x:Key="AuthAccentBrush" Color="#9CDDED" />
+            <SolidColorBrush x:Key="AuthAccentAmbientBrush" Color="#079CDDED" />
+            <SolidColorBrush x:Key="AuthAccentWashBrush" Color="#169CDDED" />
+            <SolidColorBrush x:Key="AuthAccentTintBrush" Color="#329CDDED" />
+            <SolidColorBrush x:Key="AuthAccentBorderBrush" Color="#5A9CDDED" />
+            <SolidColorBrush x:Key="AuthAccentEmphasisBrush" Color="#B49CDDED" />
+            <SolidColorBrush x:Key="AuthPurpleBrush" Color="#C7A0F6" />
+            <SolidColorBrush x:Key="AuthPurpleAmbientBrush" Color="#07C7A0F6" />
+            <SolidColorBrush x:Key="AuthPurpleWashBrush" Color="#16C7A0F6" />
+            <SolidColorBrush x:Key="AuthPurpleTintBrush" Color="#32C7A0F6" />
+            <SolidColorBrush x:Key="AuthPurpleBorderBrush" Color="#5AC7A0F6" />
+            <SolidColorBrush x:Key="AuthPurpleEmphasisBrush" Color="#B4C7A0F6" />
+            <SolidColorBrush x:Key="AuthGreenBrush" Color="#93D9C0" />
+            <SolidColorBrush x:Key="AuthGreenAmbientBrush" Color="#0793D9C0" />
+            <SolidColorBrush x:Key="AuthGreenWashBrush" Color="#1693D9C0" />
+            <SolidColorBrush x:Key="AuthGreenTintBrush" Color="#3293D9C0" />
+            <SolidColorBrush x:Key="AuthGreenBorderBrush" Color="#5A93D9C0" />
+            <SolidColorBrush x:Key="AuthGreenEmphasisBrush" Color="#B493D9C0" />
+            <SolidColorBrush x:Key="AuthWarmBrush" Color="#E4BC94" />
+            <SolidColorBrush x:Key="AuthWarmAmbientBrush" Color="#07E4BC94" />
+            <SolidColorBrush x:Key="AuthWarmWashBrush" Color="#16E4BC94" />
+            <SolidColorBrush x:Key="AuthWarmTintBrush" Color="#32E4BC94" />
+            <SolidColorBrush x:Key="AuthWarmBorderBrush" Color="#5AE4BC94" />
+            <SolidColorBrush x:Key="AuthWarmEmphasisBrush" Color="#B4E4BC94" />
+            <SolidColorBrush x:Key="AuthBrandBrush" Color="#B9CFF0" />
+            <SolidColorBrush x:Key="AuthSurfaceBrush" Color="#05FFFFFF" />
+            <SolidColorBrush x:Key="AuthStrokeBrush" Color="#24FFFFFF" />
+            <SolidColorBrush x:Key="AuthDividerBrush" Color="#16FFFFFF" />
+            <SolidColorBrush x:Key="AuthShineBrush" Color="#40FFFFFF" />
+            <SolidColorBrush x:Key="AuthInputBackgroundBrush" Color="#0CFFFFFF" />
+            <SolidColorBrush x:Key="AuthInputBackgroundPointerOverBrush" Color="#16FFFFFF" />
+            <SolidColorBrush x:Key="AuthInputBackgroundFocusedBrush" Color="#1E9CDDED" />
+            <SolidColorBrush x:Key="AuthInputBackgroundDisabledBrush" Color="#08FFFFFF" />
+            <SolidColorBrush x:Key="AuthInputBorderBrush" Color="#28FFFFFF" />
+            <SolidColorBrush x:Key="AuthInputBorderPointerOverBrush" Color="#4BFFFFFF" />
+            <SolidColorBrush x:Key="AuthInputBorderFocusedBrush" Color="#B99CDDED" />
+            <SolidColorBrush x:Key="AuthInputBorderDisabledBrush" Color="#16FFFFFF" />
+            <SolidColorBrush x:Key="AuthPrimaryActionForegroundBrush" Color="#142331" />
+            <SolidColorBrush x:Key="AuthPrimaryActionBorderBrush" Color="#65FFFFFF" />
+            <SolidColorBrush x:Key="AuthErrorAccentBrush" Color="#F0A1B5" />
+            <SolidColorBrush x:Key="AuthErrorForegroundBrush" Color="#F5C6D2" />
+            <SolidColorBrush x:Key="AuthErrorWashBrush" Color="#16F0A1B5" />
+            <SolidColorBrush x:Key="AuthErrorBorderBrush" Color="#40F0A1B5" />
+            <LinearGradientBrush x:Key="AuthPrimaryActionBackgroundBrush" StartPoint="1,0" EndPoint="0,1">
+                <GradientStop Color="#B6E8EE" Offset="0" />
+                <GradientStop Color="#A9D2ED" Offset="0.55" />
+                <GradientStop Color="#BBBDF1" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthModeActionBackgroundBrush" StartPoint="1,0" EndPoint="0,1">
+                <GradientStop Color="#259CDDED" Offset="0" />
+                <GradientStop Color="#15B6A6ED" Offset="0.6" />
+                <GradientStop Color="#079CDDED" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthBrandForegroundBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#9CDDED" Offset="0" />
+                <GradientStop Color="#C7A0F6" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthProfileBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#229CDDED" Offset="0" />
+                <GradientStop Color="#08C7A0F6" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthShowcaseRuleBrush" StartPoint="1,0" EndPoint="0,0">
+                <GradientStop Color="#389CDDED" Offset="0" />
+                <GradientStop Color="Transparent" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthMusicCoreBackgroundBrush" StartPoint="1,0" EndPoint="0,1">
+                <GradientStop Color="#369CDDED" Offset="0" />
+                <GradientStop Color="#0BC7A0F6" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthCinemaBackgroundBrush" StartPoint="1,0" EndPoint="0,1">
+                <GradientStop Color="#29C7A0F6" Offset="0" />
+                <GradientStop Color="#0D171B35" Offset="0.65" />
+                <GradientStop Color="#22E4BC94" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthShineBackgroundBrush" StartPoint="0,0" EndPoint="1,0">
+                <GradientStop Color="Transparent" Offset="0" />
+                <GradientStop Color="#18FFFFFF" Offset="0.5" />
+                <GradientStop Color="Transparent" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthShieldBackgroundBrush" StartPoint="1,0" EndPoint="0,1">
+                <GradientStop Color="#3293D9C0" Offset="0" />
+                <GradientStop Color="#099CDDED" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthErrorBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#21C96787" Offset="0" />
+                <GradientStop Color="#08C96787" Offset="1" />
+            </LinearGradientBrush>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+            <x:Double x:Key="AuthClearGlyphOpacity">1</x:Double>
+            <x:Double x:Key="AuthClearPressedOpacity">0.8</x:Double>
+            <x:Double x:Key="AuthClearDisabledOpacity">0.3</x:Double>
+            <SolidColorBrush x:Key="AuthAccentBrush" Color="#15667C" />
+            <SolidColorBrush x:Key="AuthAccentAmbientBrush" Color="#0E15667C" />
+            <SolidColorBrush x:Key="AuthAccentWashBrush" Color="#1B15667C" />
+            <SolidColorBrush x:Key="AuthAccentTintBrush" Color="#3215667C" />
+            <SolidColorBrush x:Key="AuthAccentBorderBrush" Color="#7215667C" />
+            <SolidColorBrush x:Key="AuthAccentEmphasisBrush" Color="#D015667C" />
+            <SolidColorBrush x:Key="AuthPurpleBrush" Color="#73509F" />
+            <SolidColorBrush x:Key="AuthPurpleAmbientBrush" Color="#0E73509F" />
+            <SolidColorBrush x:Key="AuthPurpleWashBrush" Color="#1B73509F" />
+            <SolidColorBrush x:Key="AuthPurpleTintBrush" Color="#3273509F" />
+            <SolidColorBrush x:Key="AuthPurpleBorderBrush" Color="#7273509F" />
+            <SolidColorBrush x:Key="AuthPurpleEmphasisBrush" Color="#D073509F" />
+            <SolidColorBrush x:Key="AuthGreenBrush" Color="#176B50" />
+            <SolidColorBrush x:Key="AuthGreenAmbientBrush" Color="#0E176B50" />
+            <SolidColorBrush x:Key="AuthGreenWashBrush" Color="#1B176B50" />
+            <SolidColorBrush x:Key="AuthGreenTintBrush" Color="#32176B50" />
+            <SolidColorBrush x:Key="AuthGreenBorderBrush" Color="#72176B50" />
+            <SolidColorBrush x:Key="AuthGreenEmphasisBrush" Color="#D0176B50" />
+            <SolidColorBrush x:Key="AuthWarmBrush" Color="#865321" />
+            <SolidColorBrush x:Key="AuthWarmAmbientBrush" Color="#0E865321" />
+            <SolidColorBrush x:Key="AuthWarmWashBrush" Color="#1B865321" />
+            <SolidColorBrush x:Key="AuthWarmTintBrush" Color="#32865321" />
+            <SolidColorBrush x:Key="AuthWarmBorderBrush" Color="#72865321" />
+            <SolidColorBrush x:Key="AuthWarmEmphasisBrush" Color="#D0865321" />
+            <SolidColorBrush x:Key="AuthBrandBrush" Color="#15667C" />
+            <SolidColorBrush x:Key="AuthSurfaceBrush" Color="#08000000" />
+            <SolidColorBrush x:Key="AuthStrokeBrush" Color="#40000000" />
+            <SolidColorBrush x:Key="AuthDividerBrush" Color="#24000000" />
+            <SolidColorBrush x:Key="AuthShineBrush" Color="#40FFFFFF" />
+            <SolidColorBrush x:Key="AuthInputBackgroundBrush" Color="#EFFFFFFF" />
+            <SolidColorBrush x:Key="AuthInputBackgroundPointerOverBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AuthInputBackgroundFocusedBrush" Color="#FFF0F8FA" />
+            <SolidColorBrush x:Key="AuthInputBackgroundDisabledBrush" Color="#08000000" />
+            <SolidColorBrush x:Key="AuthInputBorderBrush" Color="#66102030" />
+            <SolidColorBrush x:Key="AuthInputBorderPointerOverBrush" Color="#99102030" />
+            <SolidColorBrush x:Key="AuthInputBorderFocusedBrush" Color="#FF15667C" />
+            <SolidColorBrush x:Key="AuthInputBorderDisabledBrush" Color="#22102030" />
+            <SolidColorBrush x:Key="AuthPrimaryActionForegroundBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="AuthPrimaryActionBorderBrush" Color="#35102030" />
+            <SolidColorBrush x:Key="AuthErrorAccentBrush" Color="#A5294D" />
+            <SolidColorBrush x:Key="AuthErrorForegroundBrush" Color="#9F2246" />
+            <SolidColorBrush x:Key="AuthErrorWashBrush" Color="#16A5294D" />
+            <SolidColorBrush x:Key="AuthErrorBorderBrush" Color="#66A5294D" />
+            <LinearGradientBrush x:Key="AuthPrimaryActionBackgroundBrush" StartPoint="1,0" EndPoint="0,1">
+                <GradientStop Color="#235F77" Offset="0" />
+                <GradientStop Color="#3F6496" Offset="0.55" />
+                <GradientStop Color="#6C508D" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthModeActionBackgroundBrush" StartPoint="1,0" EndPoint="0,1">
+                <GradientStop Color="#0D15667C" Offset="0" />
+                <GradientStop Color="#0C73509F" Offset="0.6" />
+                <GradientStop Color="#0615667C" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthBrandForegroundBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#15667C" Offset="0" />
+                <GradientStop Color="#73509F" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthProfileBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#1815667C" Offset="0" />
+                <GradientStop Color="#0C73509F" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthShowcaseRuleBrush" StartPoint="1,0" EndPoint="0,0">
+                <GradientStop Color="#6615667C" Offset="0" />
+                <GradientStop Color="Transparent" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthMusicCoreBackgroundBrush" StartPoint="1,0" EndPoint="0,1">
+                <GradientStop Color="#2415667C" Offset="0" />
+                <GradientStop Color="#1673509F" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthCinemaBackgroundBrush" StartPoint="1,0" EndPoint="0,1">
+                <GradientStop Color="#2273509F" Offset="0" />
+                <GradientStop Color="#05FFFFFF" Offset="0.65" />
+                <GradientStop Color="#20865321" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthShineBackgroundBrush" StartPoint="0,0" EndPoint="1,0">
+                <GradientStop Color="Transparent" Offset="0" />
+                <GradientStop Color="#18FFFFFF" Offset="0.5" />
+                <GradientStop Color="Transparent" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthShieldBackgroundBrush" StartPoint="1,0" EndPoint="0,1">
+                <GradientStop Color="#22176B50" Offset="0" />
+                <GradientStop Color="#1215667C" Offset="1" />
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="AuthErrorBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#12A5294D" Offset="0" />
+                <GradientStop Color="#08A5294D" Offset="1" />
+            </LinearGradientBrush>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="HighContrast">
+            <x:Double x:Key="AuthClearGlyphOpacity">1</x:Double>
+            <x:Double x:Key="AuthClearPressedOpacity">1</x:Double>
+            <x:Double x:Key="AuthClearDisabledOpacity">1</x:Double>
+            <SolidColorBrush x:Key="AuthAccentBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthAccentAmbientBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthAccentWashBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthAccentTintBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthAccentBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthAccentEmphasisBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthPurpleBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthPurpleAmbientBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthPurpleWashBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthPurpleTintBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthPurpleBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthPurpleEmphasisBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthGreenBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthGreenAmbientBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthGreenWashBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthGreenTintBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthGreenBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthGreenEmphasisBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthWarmBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthWarmAmbientBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthWarmWashBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthWarmTintBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthWarmBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthWarmEmphasisBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthBrandBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthSurfaceBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthStrokeBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthDividerBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthShineBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthInputBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthInputBackgroundPointerOverBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthInputBackgroundFocusedBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthInputBackgroundDisabledBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthInputBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthInputBorderPointerOverBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthInputBorderFocusedBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="AuthInputBorderDisabledBrush" Color="{ThemeResource SystemColorGrayTextColor}" />
+            <SolidColorBrush x:Key="AuthPrimaryActionForegroundBrush" Color="{ThemeResource SystemColorHighlightTextColor}" />
+            <SolidColorBrush x:Key="AuthPrimaryActionBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthErrorAccentBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthErrorForegroundBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthErrorWashBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthErrorBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthPrimaryActionBackgroundBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="AuthModeActionBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthBrandForegroundBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthProfileBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthShowcaseRuleBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="AuthMusicCoreBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthCinemaBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthShineBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthShieldBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="AuthErrorBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

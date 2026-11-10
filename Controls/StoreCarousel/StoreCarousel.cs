@@ -80,6 +80,8 @@ public partial class StoreCarousel : Control
     private bool isUpdatingPager;
     private int _previousIndex = -1;
     private bool isCallFromPipsPager = false;
+    private string? layoutState;
+    private string? typographyState;
 
     public event EventHandler<int> SelectedIndexChanged;
     public event EventHandler<StoreCarouselEventArgs> ItemClick;
@@ -90,9 +92,14 @@ public partial class StoreCarousel : Control
 
     protected override void OnApplyTemplate()
     {
+        if (image != null)
+            image.SizeChanged -= OnImageSizeChanged;
+
         base.OnApplyTemplate();
 
         rootGrid = GetTemplateChild(PART_RootGrid) as Grid;
+        layoutState = null;
+        typographyState = null;
         image = GetTemplateChild(PART_Image) as ImageFrame;
         sliderGrid = GetTemplateChild(PART_SliderGrid) as Grid;
         pipsPager = GetTemplateChild(PART_PipsPager) as PipsPager;
@@ -118,9 +125,6 @@ public partial class StoreCarousel : Control
 
         sliderGrid.PointerReleased -= OnSliderPointerReleased;
         sliderGrid.PointerReleased += OnSliderPointerReleased;
-
-        sliderGrid.PointerWheelChanged -= OnSliderPointerWheelChanged;
-        sliderGrid.PointerWheelChanged += OnSliderPointerWheelChanged;
 
         rootGrid.PointerEntered -= OnSliderPointerEntered;
         rootGrid.PointerEntered += OnSliderPointerEntered;
@@ -151,6 +155,9 @@ public partial class StoreCarousel : Control
 
         SizeChanged -= OnSizeChanged;
         SizeChanged += OnSizeChanged;
+        image.SizeChanged -= OnImageSizeChanged;
+        image.SizeChanged += OnImageSizeChanged;
+        UpdateLayoutState(ActualWidth);
 
         if (imageList.Count > 0)
         {
@@ -183,7 +190,6 @@ public partial class StoreCarousel : Control
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         KeyDown -= OnKeyDown;
-        SizeChanged -= OnSizeChanged;
         timer?.Tick -= OnTimerTick;
         timer?.Stop();
         timer = null;
@@ -213,17 +219,6 @@ public partial class StoreCarousel : Control
     private void OnPrimaryBoxPointerReleased(object sender, PointerRoutedEventArgs e)
         => RaiseItemClick(e, null, null, PrimaryImageSource, true);
 
-    private void OnSliderPointerWheelChanged(object sender, PointerRoutedEventArgs e)
-    {
-        int delta = e.GetCurrentPoint(this).Properties.MouseWheelDelta;
-
-        if (delta > 0)
-            GoToNextPrev(false);
-        else if (delta < 0)
-            GoToNextPrev(true);
-
-        e.Handled = true;
-    }
     private void OnSliderPointerExited(object sender, PointerRoutedEventArgs e)
     {
         if (IsPointerWithinRoot(e))
@@ -281,10 +276,46 @@ public partial class StoreCarousel : Control
     }
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        if (image == null || fadeRectangle == null)
-            return;
+        UpdateLayoutState(e.NewSize.Width);
+    }
 
-        fadeRectangle.Width = image.ActualWidth * 0.4;
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        // Give the artwork a stable 16:9 viewport rather than dividing an arbitrary
+        // fixed height between it and the previews. A vertical ScrollViewer offers
+        // infinite height here, so the carousel must derive its height from width.
+        var width = double.IsFinite(availableSize.Width) ? availableSize.Width : ActualWidth;
+        if (rootGrid != null && width > 0)
+        {
+            UpdateLayoutState(width);
+            const double gap = 12;
+            var isWide = width >= 760;
+            var artworkWidth = isWide ? Math.Max(0, width - gap) * 1.6 / 2.6 : width;
+            rootGrid.RowDefinitions[0].Height = new GridLength(artworkWidth * 9 / 16);
+            rootGrid.RowDefinitions[2].Height = new GridLength(isWide
+                ? 0
+                : Math.Max(0, width - gap * 2) / 3 * 9 / 16 + gap);
+        }
+        return base.MeasureOverride(availableSize);
+    }
+
+    private void UpdateLayoutState(double width)
+    {
+        // This control also lives in narrow columns of a wide window.
+        var nextLayout = width >= 760 ? "LargeState" : "SmallState";
+        if (layoutState != nextLayout && VisualStateManager.GoToState(this, nextLayout, false))
+            layoutState = nextLayout;
+        var nextTypography = width < 420 ? "CompactTextState" : "DefaultTextState";
+        if (typographyState != nextTypography && VisualStateManager.GoToState(this, nextTypography, false))
+            typographyState = nextTypography;
+    }
+
+    private void OnImageSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (fadeRectangle != null)
+            fadeRectangle.Width = e.NewSize.Width * 0.4;
+        if (actionPanel != null)
+            actionPanel.MaxWidth = Math.Max(0, e.NewSize.Width - actionPanel.Margin.Left - 24);
     }
 
     private void OnKeyDown(object sender, KeyRoutedEventArgs e)

@@ -1,0 +1,68 @@
+{
+  "subject": "Nasrollah Moein Najafabadi (Moein / معین)",
+  "purpose": "Experimental head-and-torso 3D reconstruction for the Mizon artist spotlight",
+  "createdDate": "2026-10-30",
+  "reconstructionNotice": "AI-assisted approximation from photographs, not a physical scan or an official artist asset. Unseen geometry is inferred.",
+  "referenceImage": "Moein-reference.png",
+  "referenceImageTool": "Built-in image_gen",
+  "referencePrompt": "Create a photorealistic identity-preserving 3D reconstruction INPUT reference image of Iranian singer Nasrollah Moein, using the supplied licensed concert photographs as identity references, primarily the first Toronto2023 image. This is a realistic photographic bust cutout, not a cartoon or statue. Preserve his distinctive face, head shape, mature age, gray swept-back hair, salt-and-pepper short beard/moustache and amber aviator sunglasses from image1. Straight frontal view with head level, neutral relaxed slight smile, closed mouth, symmetric shoulders; chest-up torso cropped just below the chest, the whole crown of hair and both shoulders fully visible with 10% empty margin. Same elegant dark blue suit jacket and crisp white shirt as image1. No microphone, hands, earpiece, cables, people, text, pedestal or props. Arms outside the frame; jacket naturally meets flat lower bust cut edge. Soft even diffuse studio lighting, natural skin and fabric texture, no harsh cast shadows or artistic lighting. Accurate human proportions and recognizable likeness matter above all else. Transparent RGBA background; clean silhouette, isolated single person occupying about75% of square image. Do not generate a multi-view sheet or separate views. Output one clear frontal head-and-chest reference suitable for image-to-3D reconstruction.",
+  "sourcePhotos": [
+    {
+      "file": "Moein-Toronto-2023.jpg",
+      "title": "Moein Live in Toronto 2023",
+      "author": "Mehrshad Adkins 01",
+      "source": "https://commons.wikimedia.org/wiki/File:Moein_Live_in_Toronto_2023.jpg",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/4/48/Moein_Live_in_Toronto_2023.jpg",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "usedForGeneration": true
+    },
+    {
+      "file": "Moein-2019.jpg",
+      "title": "IMG20190617214541687moein",
+      "author": "Mehrshad.Adkins",
+      "source": "https://commons.wikimedia.org/wiki/File:IMG20190617214541687moein.jpg",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/1/12/IMG20190617214541687moein.jpg",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "usedForGeneration": true
+    }
+  ],
+  "adaptationLicense": "CC-BY-SA-4.0",
+  "changes": "A new frontal reference portrait was generated from the first two photos, removing the background, microphones and hands, neutralizing lighting and reconstructing a head-and-torso pose.",
+  "endorsement": "No endorsement by Moein or the photographers is implied.",
+  "referenceImageSha256": "ff467be7b408c39a2b10034ad9767fd871b3dc13f37fb4523c4cc40f3ed50023",
+  "modelGeneration": {
+    "tool": "TRELLIS image-to-3D public demo",
+    "source": "https://huggingface.co/spaces/trellis-community/TRELLIS",
+    "parameters": {
+      "seed": 1234,
+      "ss_guidance_strength": 7.5,
+      "ss_sampling_steps": 12,
+      "slat_guidance_strength": 3.0,
+      "slat_sampling_steps": 12,
+      "multiimage_algo": "stochastic",
+      "mesh_simplify": 0.9,
+      "texture_size": 2048
+    },
+    "postProcessing": [
+      "Area-weighted vertex normals, shared across equal positions at UV seams",
+      "metallicFactor=0.0; roughnessFactor=0.9",
+      "Embedded source credits and reconstruction notice"
+    ]
+  },
+  "model": {
+    "file": "MoeinBust.glb",
+    "sha256": "c14f3341b7a7545e05cfbfae670fdb17ab3efc6d1326131ef1367543d24c13e9",
+    "bytes": 5612952,
+    "vertices": 23767,
+    "triangles": 36986,
+    "textureDimensions": [
+      2048,
+      2048
+    ],
+    "viewYawDegrees": 180,
+    "viewScale": 1,
+    "verticalFocus": 0
+  }
+}

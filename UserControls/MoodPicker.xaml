@@ -1,0 +1,77 @@
+<UserControl
+    x:Class="Mizon.Windows.UserControls.MoodPicker"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:icon="using:FluentIcons.WinUI"
+    xmlns:common="using:Mizon.Windows.Common"
+    xmlns:responses="using:Mizon.API.Client.Responses.Clients"
+    FontFamily="{StaticResource IranSansFont}" FlowDirection="RightToLeft"
+    TabFocusNavigation="Cycle" Background="Transparent">
+    <Grid x:Name="PickerSurface" Padding="14" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid ColumnSpacing="10">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Border Width="36" Height="36" CornerRadius="12" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                <icon:SymbolIcon Symbol="Emoji" FontSize="21" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                <TextBlock Text="حال‌وهوای تو" FontSize="16" FontWeight="SemiBold" FlowDirection="LeftToRight" TextAlignment="Right" AutomationProperties.HeadingLevel="Level2"/>
+                <TextBlock Text="با یک ایموجی بگو چه حسی داری" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FlowDirection="LeftToRight" TextAlignment="Right"/>
+            </StackPanel>
+        </Grid>
+        <TextBox x:Name="SearchInput" Grid.Row="1" PlaceholderText="جستجوی ایموجی…" TextChanged="Search_TextChanged"
+                 CornerRadius="10" FontSize="12" TextAlignment="Right" FlowDirection="LeftToRight"
+                 AutomationProperties.Name="جستجوی حال‌وهوا" AutomationProperties.HelpText="نام فارسی یا انگلیسی یا خود ایموجی را وارد کن."/>
+        <Grid Grid.Row="2" MinHeight="48">
+            <controls:MoodEmojiGrid x:Name="EmojiGrid" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Emoji_ItemClick"
+                      ContainerContentChanging="Emoji_ContainerContentChanging" Padding="0,2" IsTabStop="True"
+                      ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                      ScrollViewer.HorizontalScrollMode="Disabled" AutomationProperties.Name="انتخاب ایموجی حال‌وهوا">
+                <controls:MoodEmojiGrid.ItemsPanel>
+                    <ItemsPanelTemplate><ItemsWrapGrid Orientation="Horizontal" ItemWidth="48" ItemHeight="48" CacheLength="0.5"/></ItemsPanelTemplate>
+                </controls:MoodEmojiGrid.ItemsPanel>
+                <controls:MoodEmojiGrid.ItemContainerTransitions>
+                    <TransitionCollection/>
+                </controls:MoodEmojiGrid.ItemContainerTransitions>
+                <controls:MoodEmojiGrid.ItemContainerStyle>
+                    <Style TargetType="GridViewItem">
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="2"/>
+                        <Setter Property="MinWidth" Value="0"/>
+                        <Setter Property="MinHeight" Value="0"/>
+                        <Setter Property="CornerRadius" Value="12"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                    </Style>
+                </controls:MoodEmojiGrid.ItemContainerStyle>
+                <controls:MoodEmojiGrid.ItemTemplate>
+                    <DataTemplate x:DataType="responses:ClientMoodItemResponse">
+                        <controls:MoodEmojiPreview AutomationProperties.AccessibilityView="Raw"/>
+                    </DataTemplate>
+                </controls:MoodEmojiGrid.ItemTemplate>
+            </controls:MoodEmojiGrid>
+            <StackPanel x:Name="LoadingSurface" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressRing x:Name="LoadingRing" Width="28" Height="28" IsActive="False" AutomationProperties.Name="دریافت ایموجی‌ها"/>
+                <TextBlock Text="حال‌وهواها در راه‌اند…" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            </StackPanel>
+            <StackPanel x:Name="EmptySurface" Visibility="Collapsed" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <icon:SymbolIcon Symbol="Search" FontSize="26" Opacity="0.6" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="EmptyText" Text="ایموجی‌ای پیدا نشد" FontSize="12" TextWrapping="Wrap" TextAlignment="Center"/>
+                <controls:AuthActionButton x:Name="RetryButton" Content="تلاش دوباره" Click="Retry_Click" Visibility="Collapsed" HorizontalAlignment="Center" CornerRadius="8"/>
+            </StackPanel>
+            <ProgressBar x:Name="SavingBar" Height="2" VerticalAlignment="Bottom" IsIndeterminate="True" Visibility="Collapsed" AutomationProperties.Name="ذخیرهٔ حال‌وهوا"/>
+        </Grid>
+        <StackPanel Grid.Row="3" Spacing="6">
+            <TextBlock x:Name="StatusText" FontSize="11" TextWrapping="Wrap" FlowDirection="LeftToRight" TextAlignment="Right" Visibility="Collapsed"
+                       Foreground="{ThemeResource SystemFillColorCriticalBrush}" AutomationProperties.LiveSetting="Polite"/>
+            <Grid Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+            <TextBlock x:Name="FooterText" Text="برای پخش افکت، روی ایموجی کنار پروفایل کلیک کن" FontSize="10" TextWrapping="Wrap" FlowDirection="LeftToRight" TextAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -66,9 +66,6 @@ public partial class App : Application
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         AppLog.Information("Application launch started.");
-
-        PendingMusicPublicId = TryGetMusicPublicId(args.Arguments);
-
         MainMizonWindow = new MainWindow();
         var taskbarService = Services.GetRequiredService<ITaskbarService>();
         var hwnd = WindowNative.GetWindowHandle(MainMizonWindow);
@@ -77,14 +74,14 @@ public partial class App : Application
         MainMizonWindow.Activate();
         taskbarService.NotifyWindowActivated();
 
+        Program.ConnectActivationHandler(MainMizonWindow.DispatcherQueue, ReceiveActivation);
         AppInitialize();
 
         WindowNativeInterop.RemoveNativeWindowMenu(MainMizonWindow);
         RainbowFrameInitialize();
 
 
-        var infoWindow = new InfoWindow();
-        infoWindow.Activate();
+
     }
 
     private void RainbowFrameInitialize()
@@ -94,26 +91,94 @@ public partial class App : Application
     }
 
     public static Window? MainMizonWindow;
-    internal static Guid? PendingMusicPublicId { get; set; }
-
-    private static Guid? TryGetMusicPublicId(string arguments)
+    // A single immutable request prevents IDs/actions from different activations
+    // being combined while Welcome validates the account. The latest link wins.
+    internal static AppActivationRequest PendingActivation { get; private set; } = new();
+    internal static string? PendingDestination
     {
-        const string musicArgument = "--music";
-        var argumentIndex = arguments.IndexOf(musicArgument, StringComparison.OrdinalIgnoreCase);
-        if (argumentIndex < 0)
-            return null;
+        get => PendingActivation.Destination;
+        set => PendingActivation = value is null ? new() : new(Destination: value);
+    }
+    internal static AppActivationRequest TakePendingActivation()
+    {
+        var request = PendingActivation;
+        PendingActivation = new();
+        return request;
+    }
+    internal static void ClearPendingActivation() => PendingActivation = new();
+    internal static void CancelPendingNavigation()
+    {
+        ClearPendingActivation();
+        if (((App)Current).Services.GetRequiredService<NavigationService>().CurrentMainPage is HomePage home)
+            home.CancelDestination();
+    }
+    internal static void ResumePendingActivation() => ((App)Current).OpenPendingActivation();
+    private bool _initialized;
+    private AppActionsService? _appActions;
+    private MulticastDiscoveryServiceV2? _discoveryService;
 
-        var remainingArguments = arguments[(argumentIndex + musicArgument.Length)..].Trim();
-        var musicPublicIdText = remainingArguments.Trim().Trim('\"').Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
-        return Guid.TryParse(musicPublicIdText, out var musicPublicId) ? musicPublicId : null;
+    private void ReceiveActivation(AppActivationRequest request)
+    {
+        if (request.HasDestination)
+        {
+            PendingActivation = request;
+            if (_initialized) OpenPendingActivation();
+        }
+        if (MainMizonWindow is MainWindow window) window.ActivateExistingWindow();
     }
 
+    private void OpenPendingActivation()
+    {
+        if (!PendingActivation.HasDestination) return;
+        var navigation = Services.GetRequiredService<NavigationService>();
+        // Never tear down a form while it is submitting. Its existing completion
+        // path resumes the latest request, including content destinations.
+        if (navigation.CurrentMainPage is LoginPage { ViewModel.ControlsIsEnabled: false }) return;
+        // The outstanding logout owns the session until its cleanup completes;
+        // opening an account page here would let that cleanup overwrite a new login.
+        if (navigation.CurrentMainPage is HomePage { ViewModel.IsSigningOut: true })
+        {
+            ClearPendingActivation();
+            return;
+        }
+        if (OpenPendingAccountDestination(navigation)) return;
+        if (navigation.CurrentMainPage is HomePage home)
+        {
+            home.OpenPendingDestination();
+            return;
+        }
+        var hasSession = !string.IsNullOrWhiteSpace(Services.GetRequiredService<LocalStorageService>().GetJwtToken());
+        if (hasSession)
+        {
+            // A form may be open while an existing session is still present.
+            // Validate it through Welcome before exposing authenticated pages.
+            if (navigation.CurrentMainPage is not WelcomePage) navigation.MainNavigate(typeof(WelcomePage));
+        }
+        else if (navigation.CurrentMainPage is not LoginPage)
+            navigation.MainNavigate(typeof(LoginPage));
+    }
 
-    private async void AppInitialize()
+    internal static bool OpenPendingAccountDestination(NavigationService navigation)
+    {
+        // Page-only actions never submit credentials or sign the current account out.
+        // Login consumes the requested form after its controls have loaded.
+        if (PendingDestination is "login" or "register")
+        {
+            AppLog.Information($"Opening account destination: {PendingDestination}.");
+            if (navigation.CurrentMainPage is LoginPage login) login.OpenPendingAccountAction();
+            else navigation.MainNavigate(typeof(LoginPage));
+            return true;
+        }
+        return false;
+    }
+
+    private void AppInitialize()
     {
         AppLog.Information("Application initialization started.");
         var localStorageService = Services.GetRequiredService<LocalStorageService>();
         var navigationService = Services.GetRequiredService<NavigationService>();
+        // Subscribe before the first navigation; login/logout replace the shell tasks as one list.
+        _ = Services.GetRequiredService<JumpListService>();
         var mizonApi = Services.GetRequiredService<MizonApi>();
 
         mizonApi.SetDeviceInformation(DeviceInformations.GetOsVersion(),
@@ -124,40 +189,45 @@ public partial class App : Application
             MizonVersions.CurrentVersion);
 
         var userToken = localStorageService.GetJwtToken();
-        //navigationService.MainNavigate(typeof(WelcomePage));
-        if (string.IsNullOrWhiteSpace(userToken))
-        {
-            navigationService.MainNavigate(typeof(LoginPage));
-        }
-        else
-        {
+        if (!string.IsNullOrWhiteSpace(userToken))
             mizonApi.SetToken(userToken);
 
-            navigationService.MainNavigate(typeof(WelcomePage));
-        }
-        // start socket connection in background (best-effort)
-        try
+        // The first activation is queued before initialization. Restore the session
+        // before honoring its page, and do not briefly load a different page first.
+        _initialized = true;
+        if (!OpenPendingAccountDestination(navigationService))
+            navigationService.MainNavigate(string.IsNullOrWhiteSpace(userToken) ? typeof(LoginPage) : typeof(WelcomePage));
+        if (AppActionsService.IsSupported)
         {
-            var socket = Services.GetRequiredService<MizonSocket>();
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await socket.StartAsync(CancellationToken.None).ConfigureAwait(false);
-                    if (!string.IsNullOrWhiteSpace(userToken))
-                        await socket.RegisterDeviceAsync(CancellationToken.None).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    AppLog.Error("Socket start failed.", ex);
-                }
-            });
+            _appActions = new AppActionsService(localStorageService, !string.IsNullOrWhiteSpace(userToken), ReceiveAppAction);
+            Program.ConnectAppActionHandler(_appActions.Invoke);
         }
-        catch (Exception exception)
-        {
-            AppLog.Error("Socket initialization could not be scheduled.", exception);
-        }
+        var authentication = new McpAuthenticationService(navigationService, localStorageService);
+        McpAccessService.Current.Start(MainMizonWindow!.DispatcherQueue,
+            authentication, new McpAppearanceService(AppearanceSettingsService.Current),
+            new McpNavigationService(new AppDeepLinkNavigation(navigationService, localStorageService, authentication)),
+            new McpTaskbarPinService(TaskbarPinService.Current));
+        MainMizonWindow.Closed += MainWindow_Closed;
+        // The authenticated shell starts the socket after account validation. Login and
+        // Welcome do not need SignalR's connection, transport buffers or reconnect loop.
 
+    }
+
+    private void MainWindow_Closed(object sender, WindowEventArgs args)
+    {
+        MainMizonWindow!.Closed -= MainWindow_Closed;
+        _appActions?.Dispose();
+        _appActions = null;
+        _discoveryService?.Dispose();
+        _discoveryService = null;
+        ClearPendingActivation();
+        McpAccessService.Current.Dispose();
+        TaskbarPinService.DisposeCurrent();
+    }
+
+    private void ReceiveAppAction(AppActivationRequest request)
+    {
+        ReceiveActivation(request);
     }
 
 
@@ -180,7 +250,7 @@ public partial class App : Application
     /// <summary>
     /// Configures the services for the application.
     /// </summary>
-    private static IServiceProvider ConfigureServices()
+    private IServiceProvider ConfigureServices()
     {
         var services = new ServiceCollection();
         // services.AddTransient<IMizonApiResponseMiddleware, MizonMiddleware>();
@@ -188,6 +258,8 @@ public partial class App : Application
     DispatcherQueue.GetForCurrentThread()
 );
         services.AddMizonApi();
+        services.AddSingleton(sp => new Lazy<MizonSocket>(sp.GetRequiredService<MizonSocket>));
+        services.AddSingleton<MulticastDiscoveryServiceV2>(_ => _discoveryService = new());
 
         // Register a shared MediaDownloader
         services.AddSingleton(sp =>
@@ -198,12 +270,15 @@ public partial class App : Application
         });
 
         // Register ViewModels:
-        services.AddSingleton<LoginPageViewModel>();
+        services.AddTransient<LoginPageViewModel>();
         services.AddSingleton<MainViewModel>();
-        services.AddSingleton<WelcomePageViewModel>();
+        services.AddTransient<WelcomePageViewModel>();
         services.AddSingleton<HomePageViewModel>();
         services.AddSingleton<MusicTopUserControlViewModel>();
         services.AddSingleton<MusicPageViewModel>();
+        services.AddSingleton<MusicPlaylistPlaybackService>();
+        services.AddSingleton<MusicPlaybackActivityService>();
+        services.AddSingleton<PictureInPictureService>();
         services.AddSingleton<MusicsPageViewModel>();
 
         services.AddSingleton<IShortcutService, ShortcutService>();

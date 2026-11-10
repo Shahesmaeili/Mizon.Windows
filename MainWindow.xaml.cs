@@ -1,11 +1,16 @@
-﻿using DevWinUI;
+using DevWinUI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Windowing;
 using Mizon.Windows.Services;
+using Mizon.Windows.Pages;
+using System.IO;
+using System.Runtime.InteropServices;
+using WinRT.Interop;
 using Mizon.Windows.ViewModels;
 using System.Diagnostics;
 using System.Linq;
+using System.ComponentModel;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
 using Windows.Storage.Streams;
@@ -15,14 +20,31 @@ namespace Mizon.Windows;
 
 public sealed partial class MainWindow : Window
 {
+    private readonly IDisposable _appearanceAttachment;
+
+    internal void ShowWindowOverlay(UIElement overlay)
+    {
+        WindowOverlayHost.Children.Clear();
+        WindowOverlayHost.Children.Add(overlay);
+        WindowOverlayHost.Visibility = Visibility.Visible;
+        MainFrame.IsEnabled = false;
+    }
+
+    internal void HideWindowOverlay(UIElement overlay)
+    {
+        if (!WindowOverlayHost.Children.Contains(overlay))
+            return;
+
+        WindowOverlayHost.Children.Clear();
+        WindowOverlayHost.Visibility = Visibility.Collapsed;
+        MainFrame.IsEnabled = true;
+    }
+
     public MainWindow()
     {
         InitializeComponent();
-        SystemBackdrop = new AcrylicSystemBackdrop(DesktopAcrylicKind.Default)
-        {
-            //Kind = MicaKind.Base
-
-        };
+        InitializeMcpAccess();
+        AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon", "Mizon.ico"));
 
         switch (AppWindow.Presenter)
         {
@@ -42,14 +64,17 @@ public sealed partial class MainWindow : Window
 
         AppWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
         AppWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-        AppWindow.TitleBar.ExtendsContentIntoTitleBar = true;
+        // Let WinUI own and refresh the native caption across resize/maximize/DPI changes.
+        ExtendsContentIntoTitleBar = true;
         AppWindow.TitleBar.IconShowOptions = Microsoft.UI.Windowing.IconShowOptions.ShowIconAndSystemMenu;
         AppWindow.TitleBar.PreferredHeightOption = Microsoft.UI.Windowing.TitleBarHeightOption.Tall;
-
-
-
+        _appearanceAttachment = AppearanceSettingsService.Current.Attach(this);
         var navigationService = ((App)App.Current).Services.GetRequiredService<NavigationService>();
         navigationService.MainInitialize(MainFrame);
+        navigationService.MainNavigationChanged += NavigationChanged;
+        navigationService.InternalNavigationChanged += NavigationChanged;
+        LocalizationService.Current.PropertyChanged += LocalizationChanged;
+        Closed += MainWindow_Closed;
 
         var mainViewModel = ((App)App.Current).Services.GetRequiredService<MainViewModel>();
         //DataContext = mainViewModel;
@@ -68,10 +93,82 @@ public sealed partial class MainWindow : Window
         CenterWindow();
     }
 
+    internal void RefreshTitle()
+    {
+        var navigation = ((App)Application.Current).Services.GetRequiredService<NavigationService>();
+        var section = navigation.CurrentMainPage switch
+        {
+            LoginPage login => LocalizationService.Current.GetString(login.ViewModel.IsRegistrationMode ? "WindowTitleRegister" : "WindowTitleLogin"),
+            WelcomePage => LocalizationService.Current.GetString("WindowTitleWelcome"),
+            HomePage => navigation.CurrentInternalPage switch
+            {
+                MusicsPage => "جزئیات آهنگ",
+                MusicPlaylistsPage => "پلی‌لیست‌های تو",
+                FollowingActivitiesPage => "فعالیت دنبال‌شده‌ها",
+                MusicPlaylistPage => "جزئیات پلی‌لیست",
+                ClientProfilePage => "پروفایل کاربر",
+                VPNPage => "VPN",
+                SettingsPage => LocalizationService.Current.IsPersian ? "تنظیمات" : "Settings",
+                SectionLandingPage page => page.Destination == "apps" ? "برنامه‌ها" : "فیلم و سریال",
+                _ => "موسیقی"
+            },
+            _ => null
+        };
+        Title = section is null ? "Mizon" : $"Mizon - {section}";
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            var accountPage = navigation.CurrentMainPage is LoginPage or WelcomePage;
+            presenter.PreferredMinimumWidth = accountPage ? 360 : 900;
+            presenter.PreferredMinimumHeight = accountPage ? 400 : 600;
+        }
+    }
+
+    private void NavigationChanged(object? sender, NavigationChangedEventArgs args)
+    {
+        if (args.IsEnteringPage) RefreshTitle();
+    }
+
+    private void LocalizationChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName == nameof(LocalizationService.Revision)) RefreshTitle();
+    }
+
+    private void MainWindow_Closed(object sender, WindowEventArgs args)
+    {
+        DisposeMcpAccess();
+        _appearanceAttachment.Dispose();
+        LocalizationService.Current.PropertyChanged -= LocalizationChanged;
+        var services = ((App)Application.Current).Services;
+        var navigation = services.GetRequiredService<NavigationService>();
+        navigation.MainNavigationChanged -= NavigationChanged;
+        navigation.InternalNavigationChanged -= NavigationChanged;
+        var taskbar = services.GetRequiredService<ITaskbarService>();
+        taskbar.PlaybackToggleRequested -= TaskbarService_PlaybackToggleRequested;
+        taskbar.FullScreenRequested -= TaskbarService_FullScreenRequested;
+        Closed -= MainWindow_Closed;
+    }
+
+    internal void ActivateExistingWindow()
+    {
+        if (AppWindow.Presenter is OverlappedPresenter presenter && presenter.State == OverlappedPresenterState.Minimized)
+            presenter.Restore();
+        AppWindow.Show();
+        Activate();
+        SetForegroundWindow(WindowNative.GetWindowHandle(this));
+    }
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool SetForegroundWindow(nint window);
+
     private async void TaskbarService_PlaybackToggleRequested(object? sender, EventArgs eventArgs)
     {
         var audioPlayerService = ((App)App.Current).Services.GetRequiredService<IAudioPlayerService>();
-        await audioPlayerService.TogglePlayPauseAsync();
+        if (audioPlayerService.AudioPlayerState == AudioPlayerState.Idle &&
+            ((App)App.Current).Services.GetRequiredService<NavigationService>().CurrentInternalPage is MusicsPage)
+            ((App)App.Current).Services.GetRequiredService<MusicPageViewModel>().PlayCommand.Execute(null);
+        else
+            await audioPlayerService.TogglePlayPauseAsync();
     }
 
     private void TaskbarService_FullScreenRequested(object? sender, EventArgs eventArgs)

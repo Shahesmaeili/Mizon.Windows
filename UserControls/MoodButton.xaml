@@ -1,0 +1,71 @@
+<UserControl
+    x:Class="Mizon.Windows.UserControls.MoodButton"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:icon="using:FluentIcons.WinUI">
+    <Grid>
+        <controls:AuthActionButton x:Name="EmojiButton" Width="36" Height="32" Padding="3" Margin="3,0"
+                                   CornerRadius="10" BorderThickness="0" Background="Transparent"
+                                   HoverScale="1.09" PressedScale="0.90" ClickMode="Press" Click="Emoji_Click"
+                                   PointerEntered="Emoji_PointerEntered" PointerExited="Emoji_PointerExited"
+                                   KeyDown="Emoji_KeyDown" RightTapped="Emoji_RightTapped"
+                                   AutomationProperties.Name="انتخاب حال‌وهوا"
+                                   AutomationProperties.HelpText="برای پخش افکت کلیک کن. برای انتخاب ایموجی، موس را نگه دار یا کلید پایین را بزن.">
+            <controls:AuthActionButton.Template>
+                <ControlTemplate TargetType="controls:AuthActionButton">
+                    <Grid x:Name="ActionSurface" Background="Transparent" CornerRadius="10">
+                        <Border x:Name="ActionLight" Opacity="0" CornerRadius="10" Background="{ThemeResource TextFillColorPrimaryBrush}" IsHitTestVisible="False"/>
+                        <ContentPresenter x:Name="ActionContent" Content="{TemplateBinding Content}" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+                    </Grid>
+                </ControlTemplate>
+            </controls:AuthActionButton.Template>
+            <Grid>
+                <TextBlock x:Name="FallbackEmoji" Text="🤢" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
+                <controls:AnimatedMoodEmoji x:Name="LoopPlayer" IsLooping="True" Ready="Loop_Ready" Failed="Loop_Failed"/>
+            </Grid>
+        </controls:AuthActionButton>
+        <FlyoutBase.AttachedFlyout>
+            <MenuFlyout x:Name="PickerFlyout" Placement="BottomEdgeAlignedRight" Opening="Picker_Opening" Opened="Picker_Opened" Closed="Picker_Closed">
+                <MenuFlyout.SystemBackdrop><DesktopAcrylicBackdrop/></MenuFlyout.SystemBackdrop>
+                <MenuFlyout.MenuFlyoutPresenterStyle>
+                    <Style TargetType="MenuFlyoutPresenter">
+                        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden"/>
+                        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden"/>
+                        <Setter Property="SystemBackdrop" Value="{x:Null}"/>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="MinWidth" Value="0"/>
+                        <Setter Property="MaxWidth" Value="360"/>
+                        <Setter Property="CornerRadius" Value="20"/>
+                        <Setter Property="IsTabStop" Value="False"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="MenuFlyoutPresenter">
+                                    <Grid x:Name="MenuMotionSurface">
+                                        <Grid x:Name="MenuBackdropHost" IsHitTestVisible="False"/>
+                                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" BackgroundSizing="InnerBorderEdge">
+                                            <ScrollViewer x:Name="MenuFlyoutPresenterScrollViewer" Margin="{TemplateBinding Padding}"
+                                                          MinWidth="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.FlyoutContentMinWidth}"
+                                                          HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
+                                                          VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Hidden" IsTabStop="False" AutomationProperties.AccessibilityView="Raw">
+                                                <ItemsPresenter/>
+                                            </ScrollViewer>
+                                        </Border>
+                                    </Grid>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </MenuFlyout.MenuFlyoutPresenterStyle>
+                <controls:MenuContentHost x:Name="PickerHost" IsTabStop="False" AllowFocusOnInteraction="False" Padding="0" MinWidth="0" AutomationProperties.AccessibilityView="Raw">
+                    <controls:MenuContentHost.Template>
+                        <ControlTemplate TargetType="controls:MenuContentHost">
+                            <ContentPresenter Content="{TemplateBinding Tag}" Background="Transparent" HorizontalContentAlignment="Stretch"/>
+                        </ControlTemplate>
+                    </controls:MenuContentHost.Template>
+                </controls:MenuContentHost>
+            </MenuFlyout>
+        </FlyoutBase.AttachedFlyout>
+    </Grid>
+</UserControl>

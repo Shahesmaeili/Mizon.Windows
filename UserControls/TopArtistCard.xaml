@@ -1,0 +1,111 @@
+<UserControl x:Class="Mizon.Windows.UserControls.TopArtistCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:icon="using:FluentIcons.WinUI"
+    Loaded="Card_Loaded" Unloaded="Card_Unloaded">
+    <UserControl.Resources>
+        <Style x:Key="ArtistCaption" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="/Assets/Fonts/IRANSANS.TTF#IRANSans"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Opacity" Value="0.65"/>
+            <Setter Property="FlowDirection" Value="RightToLeft"/>
+            <Setter Property="TextReadingOrder" Value="DetectFromContent"/>
+            <Setter Property="TextAlignment" Value="Start"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+        <Style x:Key="ArtistProfileAction" TargetType="controls:FeatureButton" BasedOn="{StaticResource DiscoverySectionActionButton}">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}"/>
+            <Setter Property="CornerRadius" Value="11"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+        </Style>
+    </UserControl.Resources>
+    <Border CornerRadius="16" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+        Background="{ThemeResource CardBackgroundFillColorSecondary}">
+        <Grid RowSpacing="10">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <controls:FeatureButton x:Name="ProfileButton" Style="{StaticResource ArtistProfileAction}" Margin="8,8,8,0"
+                Click="Profile_Click" HorizontalAlignment="Stretch"
+                AutomationProperties.Name="{x:Bind Item.ProfileAutomationName, Mode=OneWay}"
+                AutomationProperties.HelpText="نمایش پروفایل و آهنگ‌های این خواننده؛ آمار این بخش نمونه است">
+                <Grid RowSpacing="0" AutomationProperties.AccessibilityView="Raw">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="92"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="32"/>
+                    </Grid.RowDefinitions>
+                    <Grid CornerRadius="10" Background="{ThemeResource LayerFillColorDefaultBrush}">
+                        <Image Source="{x:Bind Item.CoverImage, Mode=OneWay}" Stretch="UniformToFill"/>
+                        <Border IsHitTestVisible="False">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#18141B24" Offset="0"/>
+                                    <GradientStop Color="#08141B24" Offset="0.4"/>
+                                    <GradientStop Color="#80101720" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Width="24" Height="24" Margin="8"
+                            CornerRadius="7" Background="#900D1420">
+                            <icon:SymbolIcon Symbol="ArrowUpRight" Foreground="White" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                AutomationProperties.AccessibilityView="Raw"/>
+                        </Border>
+                    </Grid>
+                    <Grid Grid.Row="1" ColumnSpacing="8" Margin="6,8,6,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Spacing="3" VerticalAlignment="Center" MinHeight="46">
+                            <TextBlock Text="{x:Bind Item.DisplayName, Mode=OneWay}" Style="{StaticResource ArtistCaption}"
+                                FontSize="15" FontWeight="SemiBold" Opacity="1"/>
+                            <TextBlock Text="{x:Bind Item.GenreTitle, Mode=OneWay}" Style="{StaticResource ArtistCaption}" FontSize="9"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Width="56" Height="56" CornerRadius="28" Padding="3" Margin="0,-28,0,0" VerticalAlignment="Top"
+                            Background="{ThemeResource LayerFillColorDefaultBrush}" BorderThickness="1.5">
+                            <Border.BorderBrush><SolidColorBrush Color="{x:Bind Item.AccentColor, Mode=OneWay}"/></Border.BorderBrush>
+                            <PersonPicture Width="47" Height="47" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                DisplayName="{x:Bind Item.DisplayName, Mode=OneWay}" ProfilePicture="{x:Bind Item.AvatarImage, Mode=OneWay}"
+                                AutomationProperties.AccessibilityView="Raw"/>
+                        </Border>
+                    </Grid>
+                    <Grid Grid.Row="2" Margin="6,12,6,0" ColumnSpacing="9">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="1"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <StackPanel Spacing="5">
+                            <Grid ColumnSpacing="5">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{x:Bind Item.MonthlyListenersText, Mode=OneWay}" FontSize="14" FontWeight="SemiBold" FlowDirection="LeftToRight" TextAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                                <icon:SymbolIcon Grid.Column="1" Symbol="Headphones" FontSize="12" Opacity="0.55" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
+                            </Grid>
+                            <TextBlock Text="شنوندهٔ ماهانه" Style="{StaticResource ArtistCaption}" FontSize="9"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" Margin="0,2"/>
+                        <StackPanel Grid.Column="2" Spacing="5">
+                            <Grid ColumnSpacing="5">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{x:Bind Item.FollowersText, Mode=OneWay}" FontSize="14" FontWeight="SemiBold" FlowDirection="LeftToRight" TextAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                                <icon:SymbolIcon Grid.Column="1" Symbol="People" FontSize="12" Opacity="0.55" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
+                            </Grid>
+                            <TextBlock Text="دنبال‌کننده" Style="{StaticResource ArtistCaption}" FontSize="9"/>
+                        </StackPanel>
+                    </Grid>
+                    <Path x:Name="ActivityPath" Grid.Row="3" Margin="6,9,6,0" Stretch="Fill" StrokeThickness="1.2" Opacity="0.24"
+                        IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+                        <Path.Stroke><SolidColorBrush Color="{x:Bind Item.AccentColor, Mode=OneWay}"/></Path.Stroke>
+                    </Path>
+                </Grid>
+            </controls:FeatureButton>
+            <controls:FeatureButton x:Name="FollowButton" Grid.Row="1" Margin="12,0,12,12" MinHeight="36"
+                Style="{StaticResource DiscoverySectionActionButton}" Click="Follow_Click"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                AutomationProperties.Name="{x:Bind Item.FollowAutomationName, Mode=OneWay}"
+                AutomationProperties.HelpText="دنبال‌کردن آزمایشی؛ فقط در پیش‌نمایش این صفحه نگه داشته می‌شود">
+                <StackPanel Orientation="Horizontal" Spacing="7">
+                    <TextBlock Text="{x:Bind Item.FollowButtonText, Mode=OneWay}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+                        FontSize="11" FlowDirection="RightToLeft" TextReadingOrder="UseFlowDirection" VerticalAlignment="Center"/>
+                    <icon:SymbolIcon Symbol="{x:Bind Item.FollowSymbol, Mode=OneWay}" FontSize="13" VerticalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw"/>
+                </StackPanel>
+            </controls:FeatureButton>
+        </Grid>
+    </Border>
+</UserControl>

@@ -50,7 +50,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:StoreCarousel">
-                    <Grid x:Name="PART_RootGrid" Background="Transparent" ColumnSpacing="15" RowSpacing="15">
+                    <Grid x:Name="PART_RootGrid" Background="Transparent" ColumnSpacing="12" RowSpacing="0">
                         <Grid.RowDefinitions>
                             <RowDefinition />
                             <RowDefinition Height="Auto" />
@@ -61,43 +61,57 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroup>
-                                <VisualState x:Name="LargeState">
-                                    <VisualState.StateTriggers>
-                                        <AdaptiveTrigger MinWindowWidth="1300" />
-                                    </VisualState.StateTriggers>
-                                </VisualState>
+                            <VisualStateGroup x:Name="LayoutStates">
+                                <VisualState x:Name="LargeState"/>
                                 <VisualState x:Name="SmallState">
-                                    <VisualState.StateTriggers>
-                                        <AdaptiveTrigger MinWindowWidth="0" />
-                                    </VisualState.StateTriggers>
                                     <VisualState.Setters>
                                         <Setter Target="PART_RootGrid.ColumnDefinitions[0].Width" Value="*" />
-                                        <Setter Target="PART_RootGrid.ColumnDefinitions[1].Width" Value="Auto" />
-                                        <Setter Target="PART_RootGrid.RowDefinitions[2].Height" Value="*" />
-                                        <Setter Target="PART_RootGrid.MinHeight" Value="600" />
+                                        <Setter Target="PART_RootGrid.ColumnDefinitions[1].Width" Value="0" />
+                                        <Setter Target="PART_RootGrid.ColumnSpacing" Value="0" />
+                                        <Setter Target="PART_SliderGrid.(Grid.ColumnSpan)" Value="2" />
+                                        <Setter Target="PART_ActionPanel.(Grid.ColumnSpan)" Value="2" />
+                                        <Setter Target="PART_Arc.(Grid.ColumnSpan)" Value="2" />
+                                        <Setter Target="PART_PipsPager.(Grid.ColumnSpan)" Value="2" />
 
-                                        <Setter Target="PART_ThumbnailGrid.ColumnDefinitions[0].Width" Value="1.7*" />
+                                        <Setter Target="PART_ThumbnailGrid.ColumnDefinitions[2].Width" Value="*" />
+                                        <Setter Target="PART_ThumbnailGrid.RowDefinitions[1].Height" Value="0" />
+                                        <Setter Target="PART_ThumbnailGrid.RowSpacing" Value="0" />
+                                        <Setter Target="PART_ThumbnailGrid.Margin" Value="0,12,0,0" />
                                         <Setter Target="PART_ThumbnailGrid.(Grid.Row)" Value="2" />
                                         <Setter Target="PART_ThumbnailGrid.(Grid.Column)" Value="0" />
                                         <Setter Target="PART_ThumbnailGrid.(Grid.ColumnSpan)" Value="2" />
 
                                         <Setter Target="PART_PrimaryCompositionShadow.(Grid.Column)" Value="0" />
                                         <Setter Target="PART_PrimaryCompositionShadow.(Grid.ColumnSpan)" Value="1" />
-                                        <Setter Target="PART_PrimaryCompositionShadow.(Grid.RowSpan)" Value="2" />
+                                        <Setter Target="PART_PrimaryCompositionShadow.Margin" Value="0,0,8,0" />
 
                                         <Setter Target="PART_SecondaryCompositionShadow.(Grid.Row)" Value="0" />
                                         <Setter Target="PART_SecondaryCompositionShadow.(Grid.Column)" Value="1" />
+                                        <Setter Target="PART_SecondaryCompositionShadow.Margin" Value="4,0,4,0" />
 
-                                        <Setter Target="PART_TertiaryCompositionShadow.(Grid.Row)" Value="1" />
-                                        <Setter Target="PART_TertiaryCompositionShadow.(Grid.Column)" Value="1" />
+                                        <Setter Target="PART_TertiaryCompositionShadow.(Grid.Row)" Value="0" />
+                                        <Setter Target="PART_TertiaryCompositionShadow.(Grid.Column)" Value="2" />
+                                        <Setter Target="PART_TertiaryCompositionShadow.Margin" Value="8,0,0,0" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
-
+                            <VisualStateGroup x:Name="TypographyStates">
+                                <VisualState x:Name="DefaultTextState" />
+                                <VisualState x:Name="CompactTextState">
+                                    <VisualState.Setters>
+                                        <Setter Target="PART_ActionPanel.Margin" Value="20,0,0,0" />
+                                        <Setter Target="PART_TitleBlock.FontSize" Value="20" />
+                                        <Setter Target="PART_TitleBlock.MaxLines" Value="1" />
+                                        <Setter Target="PART_DescriptionBlock.FontSize" Value="11" />
+                                        <Setter Target="PART_ActionButton.MinWidth" Value="96" />
+                                        <Setter Target="PART_ActionButton.MinHeight" Value="28" />
+                                        <Setter Target="PART_ActionButton.Padding" Value="12,4" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
                         </VisualStateManager.VisualStateGroups>
                         <Grid x:Name="PART_SliderGrid" Background="Transparent">
-                            <dev:ImageFrame x:Name="PART_Image" CornerRadius="{ThemeResource OverlayCornerRadius}" DisplayShadow="True" ShadowBlurRadius="80" ShowPlaceholder="False" Stretch="Fill" TransitionMode="SlideLeft" UseAutoShadowColor="True" />
+                            <dev:ImageFrame x:Name="PART_Image" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" CornerRadius="{ThemeResource OverlayCornerRadius}" DisplayShadow="True" ShadowBlurRadius="80" ShowPlaceholder="False" Stretch="UniformToFill" TransitionMode="SlideLeft" UseAutoShadowColor="True" />
                             <dev:OpacityMaskView VerticalAlignment="Stretch" VerticalContentAlignment="Stretch">
                                 <dev:OpacityMaskView.OpacityMask>
                                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
@@ -124,18 +138,18 @@
                             </Button>
                         </Grid>
 
-                        <StackPanel x:Name="PART_ActionPanel" Margin="40,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Spacing="5">
-                            <TextBlock x:Name="PART_TitleBlock" MaxWidth="300" Foreground="{ThemeResource StoreCarouselTitleForegroundBrush}" Style="{ThemeResource TitleTextBlockStyle}" TextWrapping="Wrap" />
-                            <TextBlock x:Name="PART_DescriptionBlock" MaxWidth="240" Foreground="{ThemeResource StoreCarouselDescriptionForegroundColor}" Opacity="0.75" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <StackPanel x:Name="PART_ActionPanel" Margin="32,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Spacing="5">
+                            <TextBlock x:Name="PART_TitleBlock" MaxWidth="300" MaxLines="2" Foreground="{ThemeResource StoreCarouselTitleForegroundBrush}" Style="{ThemeResource TitleTextBlockStyle}" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" />
+                            <TextBlock x:Name="PART_DescriptionBlock" MaxWidth="240" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource StoreCarouselDescriptionForegroundColor}" Opacity="0.75" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <Button x:Name="PART_ActionButton" MinWidth="120" BorderThickness="0,0,0,2" CornerRadius="8" Foreground="White">
                                 <TextBlock x:Name="PART_ActionButtonTextBlock" Style="{StaticResource BaseTextBlockStyle}" />
                             </Button>
                         </StackPanel>
 
                         <dev:ArcProgress x:Name="PART_Arc" Width="20" Height="20" Margin="10" HorizontalAlignment="Left" VerticalAlignment="Bottom" Foreground="DarkGray" Percentage="100" Visibility="{Binding AutoShuffle, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        <PipsPager x:Name="PART_PipsPager" Grid.Row="1" Margin="0,-10,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Visibility="{TemplateBinding PipsPagerVisibility}" />
+                        <PipsPager x:Name="PART_PipsPager" Grid.Row="1" Margin="0,8,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Visibility="{TemplateBinding PipsPagerVisibility}" />
 
-                        <Grid x:Name="PART_ThumbnailGrid" Grid.Column="1" ColumnSpacing="15" RowSpacing="15">
+                        <Grid x:Name="PART_ThumbnailGrid" Grid.Column="1" ColumnSpacing="0" RowSpacing="12">
                             <Grid.RowDefinitions>
                                 <RowDefinition />
                                 <RowDefinition />
@@ -143,16 +157,17 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition />
                                 <ColumnDefinition />
+                                <ColumnDefinition Width="0" />
                             </Grid.ColumnDefinitions>
 
                             <dev:CompositionShadow x:Name="PART_PrimaryCompositionShadow" Grid.ColumnSpan="2" BlurRadius="35" CornerRadius="8" ImageSourceForEdgeColor="{Binding PrimaryImageSource, RelativeSource={RelativeSource Mode=TemplatedParent}}" UseCornerRadius="True" UseEdgeColorFromImage="True">
-                                <Image Source="{Binding PrimaryImageSource, RelativeSource={RelativeSource Mode=TemplatedParent}}" Stretch="Fill" />
+                                <Image Source="{Binding PrimaryImageSource, RelativeSource={RelativeSource Mode=TemplatedParent}}" Stretch="UniformToFill" />
                             </dev:CompositionShadow>
-                            <dev:CompositionShadow x:Name="PART_SecondaryCompositionShadow" Grid.Row="1" BlurRadius="35" CornerRadius="8" ImageSourceForEdgeColor="{Binding SecondaryImageSource, RelativeSource={RelativeSource Mode=TemplatedParent}}" UseCornerRadius="True" UseEdgeColorFromImage="True">
-                                <Image Source="{Binding SecondaryImageSource, RelativeSource={RelativeSource Mode=TemplatedParent}}" Stretch="Fill" />
+                            <dev:CompositionShadow x:Name="PART_SecondaryCompositionShadow" Grid.Row="1" Margin="0,0,6,0" BlurRadius="35" CornerRadius="8" ImageSourceForEdgeColor="{Binding SecondaryImageSource, RelativeSource={RelativeSource Mode=TemplatedParent}}" UseCornerRadius="True" UseEdgeColorFromImage="True">
+                                <Image Source="{Binding SecondaryImageSource, RelativeSource={RelativeSource Mode=TemplatedParent}}" Stretch="UniformToFill" />
                             </dev:CompositionShadow>
-                            <dev:CompositionShadow x:Name="PART_TertiaryCompositionShadow" Grid.Row="1" Grid.Column="1" BlurRadius="35" CornerRadius="8" ImageSourceForEdgeColor="{Binding TertiaryImageSource, RelativeSource={RelativeSource Mode=TemplatedParent}}" UseCornerRadius="True" UseEdgeColorFromImage="True">
-                                <Image Source="{Binding TertiaryImageSource, RelativeSource={RelativeSource Mode=TemplatedParent}}" Stretch="Fill" />
+                            <dev:CompositionShadow x:Name="PART_TertiaryCompositionShadow" Grid.Row="1" Grid.Column="1" Margin="6,0,0,0" BlurRadius="35" CornerRadius="8" ImageSourceForEdgeColor="{Binding TertiaryImageSource, RelativeSource={RelativeSource Mode=TemplatedParent}}" UseCornerRadius="True" UseEdgeColorFromImage="True">
+                                <Image Source="{Binding TertiaryImageSource, RelativeSource={RelativeSource Mode=TemplatedParent}}" Stretch="UniformToFill" />
                             </dev:CompositionShadow>
                         </Grid>
                     </Grid>

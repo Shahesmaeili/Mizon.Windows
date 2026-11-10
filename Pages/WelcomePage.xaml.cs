@@ -1,196 +1,277 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media.Animation;
-using Microsoft.UI.Xaml.Shapes;
+using Microsoft.UI.Windowing;
+using Microsoft.Windows.BadgeNotifications;
 using Mizon.Windows.Services;
 using Mizon.Windows.ViewModels;
 using System;
-using System.Collections.Generic;
-using Windows.Foundation;
-using Windows.UI;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Numerics;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.UI.ViewManagement;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+namespace Mizon.Windows.Pages;
 
-namespace Mizon.Windows.Pages
+public sealed partial class WelcomePage : Page
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class WelcomePage : Page
+    public WelcomePageViewModel ViewModel { get; }
+    public LocalizationService Localization => LocalizationService.Current;
+    private readonly UISettings _uiSettings = new();
+    private CancellationTokenSource? _pageCancellation;
+    private bool _initializing;
+    private bool _navigationSubscribed;
+    private Window? _hostWindow;
+    private AppWindow? _hostAppWindow;
+    private bool _windowActive = true;
+    private bool _orbitsStarted;
+    private readonly FrameworkElement[] _orbits;
+    private readonly AnimationController?[] _orbitControllers = new AnimationController?[3];
+
+    public WelcomePage()
     {
-        private WelcomePageViewModel ViewModel => (WelcomePageViewModel)DataContext;
+        ViewModel = ((App)Application.Current).Services.GetRequiredService<WelcomePageViewModel>();
+        InitializeComponent();
+        _orbits = [OrbitOne, OrbitTwo, OrbitThree];
+        DataContext = ViewModel;
+        Loaded += Page_Loaded;
+        Unloaded += Page_Unloaded;
+    }
 
-        private List<DotInfo> _dots = new List<DotInfo>();
-        private DispatcherTimer _animationTimer;
-        private readonly Random _random = new Random();
-        private readonly Point _center = new Point(200, 200);
-
-        public WelcomePage()
+    private async void Page_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (_pageCancellation is not null) return;
+        _pageCancellation = new CancellationTokenSource();
+        Localization.PropertyChanged += Localization_PropertyChanged;
+        ViewModel.RefreshLocalization();
+        Bindings.Update();
+        if (!_navigationSubscribed)
         {
-            this.InitializeComponent();
-            DataContext = ((App)App.Current).Services.GetRequiredService<WelcomePageViewModel>();
-            ViewModel.SetStatusTextBlock(StatusTextBlock);
-            ViewModel.SetStackPanel(StatusStackPanel);
-            ViewModel.NavigationService.MainNavigationChanged += (s, args) =>
+            ViewModel.NavigationService.MainNavigationChanged += NavigationChanged;
+            _navigationSubscribed = true;
+        }
+
+        _hostWindow = App.MainMizonWindow;
+        _windowActive = true;
+        if (_hostWindow is not null)
+        {
+            _hostWindow.Activated += HostWindow_Activated;
+            _hostWindow.Closed += HostWindow_Closed;
+            // Window.AppWindow becomes null during close; retain the event source
+            // we actually subscribed to so unload can detach from that instance.
+            _hostAppWindow = _hostWindow.AppWindow;
+            if (_hostAppWindow is not null) _hostAppWindow.Changed += HostWindow_Changed;
+        }
+        _uiSettings.AnimationsEnabledChanged += MotionPreferenceChanged;
+        UpdateMotionActivity();
+        PlayEntrance();
+        AppLog.MemorySnapshot("Welcome loaded");
+        await EnterAsync();
+    }
+
+    private async Task EnterAsync(CancellationToken cancellationToken = default)
+    {
+        if (_initializing || _pageCancellation is null) return;
+        _initializing = true;
+        using var request = CancellationTokenSource.CreateLinkedTokenSource(_pageCancellation.Token, cancellationToken);
+        var token = request.Token;
+        var started = Stopwatch.GetTimestamp();
+        SetActivityBadge(true);
+        try
+        {
+            if (!await ViewModel.InitializeAsync(token) || token.IsCancellationRequested) return;
+
+            // A quick cached login still gets a short reveal, without the old fake version-check delay.
+            var remaining = TimeSpan.FromMilliseconds(_uiSettings.AnimationsEnabled ? 900 : 0)
+                - Stopwatch.GetElapsedTime(started);
+            // Give a late-loading avatar a frame and a short reveal before the
+            // connected animation captures the welcome profile.
+            if (ViewModel.ProfileImage is not null && _uiSettings.AnimationsEnabled)
+                remaining = remaining < TimeSpan.FromMilliseconds(220) ? TimeSpan.FromMilliseconds(220) : remaining;
+            if (remaining > TimeSpan.Zero) await Task.Delay(remaining, token);
+            token.ThrowIfCancellationRequested();
+
+            if (ViewModel.Account is { } account)
             {
-                if (!args.IsEnteringPage
-                    && args.FromPageType == typeof(WelcomePage)
-                    && args.ToPageType == typeof(HomePage))
-                {
-                    var connectedAnimationService = ConnectedAnimationService.GetForCurrentView();
-                    connectedAnimationService.PrepareToAnimate("ProfilePictureAnimation", ProfileBorder);
-                }
-            };
-            this.Loaded += OnLoaded;
-        }
-
-
-        // کلاس برای نگهداری اطلاعات هر نقطه
-        private class DotInfo
-        {
-            public Ellipse Dot { get; set; }
-            public double Radius { get; set; }
-            public double CurrentAngle { get; set; }
-            public double Speed { get; set; }
-            public double InitialAngle { get; set; }
-        }
-
-        private void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            CreateAnimatedDots();
-            StartAnimation();
-
-            _ = new JumpListService().ConfigureLoginRegisterJumpListAsync();
-
-
-
-        }
-
-        private void CreateAnimatedDots()
-        {
-            // ایجاد 8 لایه با شعاع های مختلف
-            for (int layer = 0; layer < 8; layer++)
-            {
-                double radius = 80 + (layer * 25); // شعاع هر لایه
-                double opacity = Math.Max(0.2, 1.0 - (layer * 0.1)); // کاهش شفافیت
-                double dotSize = Math.Max(3, 12 - (layer * 1.2)); // کاهش اندازه نقاط
-
-                // تعداد نقاط رندوم برای هر لایه (1 تا 5)
-                int dotCount = _random.Next(2, 8);
-
-                for (int i = 0; i < dotCount; i++)
-                {
-                    CreateDot(radius, opacity, dotSize, layer);
-                }
-            }
-        }
-
-        private void CreateDot(double radius, double opacity, double dotSize, int layer)
-        {
-            // ایجاد نقطه با رنگ SystemAccentColor
-            Ellipse dot = new Ellipse
-            {
-                Width = dotSize,
-                Height = dotSize,
-                Fill = GetAccentColorBrush(layer),
-                Opacity = opacity
-            };
-
-            AnimationCanvas.Children.Add(dot);
-
-            // اطلاعات نقطه برای انیمیشن
-            DotInfo dotInfo = new DotInfo
-            {
-                Dot = dot,
-                Radius = radius,
-                CurrentAngle = _random.NextDouble() * 2 * Math.PI, // زاویه اولیه رندوم
-                Speed = (0.02 + _random.NextDouble() * 0.01) * (1.0 / (1 + layer * 0.2)), // سرعت متفاوت
-                InitialAngle = _random.NextDouble() * 2 * Math.PI
-            };
-
-            _dots.Add(dotInfo);
-        }
-
-        private void StartAnimation()
-        {
-            _animationTimer = new DispatcherTimer();
-            _animationTimer.Interval = TimeSpan.FromMilliseconds(16); // ~60 FPS
-            _animationTimer.Tick += AnimationTimer_Tick;
-            _animationTimer.Start();
-        }
-
-        private void AnimationTimer_Tick(object sender, object e)
-        {
-            foreach (var dotInfo in _dots)
-            {
-                // به‌روزرسانی زاویه
-                dotInfo.CurrentAngle += dotInfo.Speed;
-
-                // محاسبه موقعیت جدید
-                double x = _center.X + dotInfo.Radius * Math.Cos(dotInfo.CurrentAngle) - dotInfo.Dot.Width / 2;
-                double y = _center.Y + dotInfo.Radius * Math.Sin(dotInfo.CurrentAngle) - dotInfo.Dot.Height / 2;
-
-                // تنظیم موقعیت
-                Canvas.SetLeft(dotInfo.Dot, x);
-                Canvas.SetTop(dotInfo.Dot, y);
-
-                // بازگردانی زاویه به محدوده 0-2π
-                if (dotInfo.CurrentAngle > 2 * Math.PI)
-                    dotInfo.CurrentAngle -= 2 * Math.PI;
-            }
-        }
-
-        private SolidColorBrush GetAccentColorBrush(int layer)
-        {
-            // دریافت رنگ SystemAccentColor از منابع تم
-            if (Application.Current.Resources.TryGetValue("SystemAccentColor", out object accentColorObj) &&
-                accentColorObj is Color accentColor)
-            {
-                // کم‌رنگ کردن بر اساس لایه
-                double factor = 1.0 - (layer * 0.12); // هرچی لایه بالاتر، کم‌رنگ‌تر
-                factor = Math.Max(0.2, factor); // حداقل 20% روشنایی
-
-                byte r = (byte)(accentColor.R * factor);
-                byte g = (byte)(accentColor.G * factor);
-                byte b = (byte)(accentColor.B * factor);
-
-                return new SolidColorBrush(Color.FromArgb(accentColor.A, r, g, b));
+                var home = ((App)Application.Current).Services.GetRequiredService<HomePageViewModel>();
+                home.ApplyProfile(account, ViewModel.ProfileImagePath, ViewModel.ProfileImage, ViewModel.TaskbarProfileSession);
             }
 
-            // در صورت عدم دسترسی به SystemAccentColor، رنگ پیش‌فرض آبی
-            double defaultFactor = 1.0 - (layer * 0.12);
-            defaultFactor = Math.Max(0.2, defaultFactor);
-
-            byte defaultR = (byte)(0 * defaultFactor);
-            byte defaultG = (byte)(120 * defaultFactor);
-            byte defaultB = (byte)(215 * defaultFactor);
-
-            return new SolidColorBrush(Color.FromArgb(255, defaultR, defaultG, defaultB));
+            ViewModel.NavigationService.MainNavigate(typeof(HomePage));
         }
-
-        // متد برای توقف انیمیشن ها
-        public void StopAnimations()
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        finally
         {
-            _animationTimer?.Stop();
+            _initializing = false;
+            SetActivityBadge(false);
         }
+    }
 
-        // متد برای شروع مجدد انیمیشن ها
-        public void StartAnimations()
-        {
-            if (_animationTimer != null && !_animationTimer.IsEnabled)
-            {
-                _animationTimer.Start();
-            }
-        }
+    private async void Retry_Click(object sender, RoutedEventArgs e) => await EnterAsync();
 
-        // تمیز کردن منابع
-        private void OnUnloaded(object sender, RoutedEventArgs e)
+    private void Localization_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(LocalizationService.Revision)) ViewModel.RefreshLocalization();
+    }
+
+    private void Login_Click(object sender, RoutedEventArgs e) => ViewModel.GoToLogin();
+
+    private void NavigationChanged(object? sender, NavigationChangedEventArgs e)
+    {
+        if (e.IsEnteringPage || e.FromPageType != typeof(WelcomePage) || e.ToPageType != typeof(HomePage)) return;
+        if (!_uiSettings.AnimationsEnabled || !ProfileBorder.IsLoaded || ProfileBorder.ActualWidth <= 0) return;
+
+        try
         {
-            _animationTimer?.Stop();
-            _animationTimer = null;
+            // Preserve the original logo/profile connection to the app's title-bar profile button.
+            var animation = ConnectedAnimationService.GetForCurrentView()
+                .PrepareToAnimate("ProfilePictureAnimation", ProfileBorder);
+            animation.Configuration = new DirectConnectedAnimationConfiguration();
         }
+        catch (Exception exception)
+        {
+            AppLog.Error("Welcome profile connected animation could not be prepared.", exception);
+        }
+    }
+
+    public void StartAnimations()
+    {
+        if (_orbitsStarted || !_uiSettings.AnimationsEnabled) return;
+        _orbitsStarted = true;
+        RotateOrbit(OrbitOne, 42, false);
+        RotateOrbit(OrbitTwo, 62, true);
+        RotateOrbit(OrbitThree, 88, false);
+        for (var i = 0; i < _orbits.Length; i++)
+            _orbitControllers[i] = ElementCompositionPreview.GetElementVisual(_orbits[i]).TryGetAnimationController("RotationAngleInDegrees");
+    }
+
+    private void HostWindow_Activated(object sender, WindowActivatedEventArgs args)
+    {
+        _windowActive = args.WindowActivationState != WindowActivationState.Deactivated;
+        UpdateMotionActivity();
+    }
+
+    private void HostWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)
+    {
+        if (args.DidPresenterChange || args.DidVisibilityChange) UpdateMotionActivity();
+    }
+
+    private void HostWindow_Closed(object sender, WindowEventArgs args)
+    {
+        _windowActive = false;
+        Localization.PropertyChanged -= Localization_PropertyChanged;
+        Bindings.StopTracking();
+        DetachHostWindow();
+        UpdateMotionActivity();
+    }
+
+    private void DetachHostWindow()
+    {
+        var window = _hostWindow;
+        var appWindow = _hostAppWindow;
+        _hostWindow = null;
+        _hostAppWindow = null;
+        if (window is not null)
+        {
+            window.Activated -= HostWindow_Activated;
+            window.Closed -= HostWindow_Closed;
+        }
+        if (appWindow is not null) appWindow.Changed -= HostWindow_Changed;
+    }
+
+    private void MotionPreferenceChanged(UISettings sender, object args) => DispatcherQueue.TryEnqueue(() =>
+    {
+        if (_pageCancellation is not null) UpdateMotionActivity();
+    });
+
+    private void UpdateMotionActivity()
+    {
+        if (!_uiSettings.AnimationsEnabled) { StopAnimations(); return; }
+        var active = _pageCancellation is not null && _windowActive && _hostAppWindow is { } appWindow
+            && appWindow.Presenter is not OverlappedPresenter { State: OverlappedPresenterState.Minimized };
+        if (active) StartAnimations();
+        foreach (var controller in _orbitControllers)
+        {
+            if (active) controller?.Resume(); else controller?.Pause();
+        }
+    }
+
+    private static void RotateOrbit(FrameworkElement element, double seconds, bool reverse)
+    {
+        var visual = ElementCompositionPreview.GetElementVisual(element);
+        visual.CenterPoint = new Vector3(200, 200, 0);
+        using var rotation = visual.Compositor.CreateScalarKeyFrameAnimation();
+        using var linear = visual.Compositor.CreateLinearEasingFunction();
+        rotation.InsertKeyFrame(0, 0);
+        rotation.InsertKeyFrame(1, reverse ? -360 : 360, linear);
+        rotation.Duration = TimeSpan.FromSeconds(seconds);
+        rotation.IterationBehavior = AnimationIterationBehavior.Forever;
+        visual.StartAnimation("RotationAngleInDegrees", rotation);
+    }
+
+    private void PlayEntrance()
+    {
+        if (!_uiSettings.AnimationsEnabled) return;
+        var visual = ElementCompositionPreview.GetElementVisual(WelcomeContent);
+        using var fade = visual.Compositor.CreateScalarKeyFrameAnimation();
+        fade.InsertKeyFrame(0, 0);
+        fade.InsertKeyFrame(1, 1);
+        fade.Duration = TimeSpan.FromMilliseconds(420);
+        visual.StartAnimation("Opacity", fade);
+    }
+
+    public void StopAnimations()
+    {
+        _orbitsStarted = false;
+        foreach (var element in _orbits)
+        {
+            var visual = ElementCompositionPreview.GetElementVisual(element);
+            visual.StopAnimation("RotationAngleInDegrees");
+            visual.RotationAngleInDegrees = 0;
+        }
+        for (var i = 0; i < _orbitControllers.Length; i++)
+        {
+            // TryGetAnimationController returns the compositor's active controller.
+            // StopAnimation releases its animation; closing that controller while
+            // a commit still references it can corrupt the native rebuild list.
+            _orbitControllers[i] = null;
+        }
+        var contentVisual = ElementCompositionPreview.GetElementVisual(WelcomeContent);
+        contentVisual.StopAnimation("Opacity");
+        contentVisual.Opacity = 1;
+    }
+
+    private void Page_Unloaded(object sender, RoutedEventArgs e)
+    {
+        Localization.PropertyChanged -= Localization_PropertyChanged;
+        Bindings.StopTracking();
+        // Home now owns the decoded source; the cached welcome page need not retain it.
+        ViewModel.ReleaseProfileImage();
+        _pageCancellation?.Cancel();
+        _pageCancellation?.Dispose();
+        _pageCancellation = null;
+        _uiSettings.AnimationsEnabledChanged -= MotionPreferenceChanged;
+        DetachHostWindow();
+        StopAnimations();
+        if (_navigationSubscribed)
+        {
+            ViewModel.NavigationService.MainNavigationChanged -= NavigationChanged;
+            _navigationSubscribed = false;
+        }
+    }
+
+    private static void SetActivityBadge(bool active)
+    {
+        try
+        {
+            if (active) BadgeNotificationManager.Current.SetBadgeAsGlyph(BadgeNotificationGlyph.Activity);
+            else BadgeNotificationManager.Current.ClearBadge();
+        }
+        catch (Exception exception) { AppLog.Error("Welcome activity badge could not be updated.", exception); }
     }
 }

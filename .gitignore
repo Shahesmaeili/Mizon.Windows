@@ -20,3 +20,15 @@ secrets.json
 *.log
 *.cache
 
+# Generated install packages and diagnostics (source assets stay tracked)
+AppPackages/
+TestResults/
+BenchmarkDotNet.Artifacts/
+*.msix
+*.msixbundle
+*.appx
+*.appxbundle
+*.appxsym
+*.binlog
+*.dmp
+

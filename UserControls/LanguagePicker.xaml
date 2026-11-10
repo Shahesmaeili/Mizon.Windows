@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Mizon.Windows.UserControls.LanguagePicker"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:common="using:Mizon.Windows.Common"
+    Language="{x:Bind Localization.LanguageTag, Mode=OneWay}">
+    <ComboBox x:Name="LanguageSelector" MinWidth="144" CornerRadius="10"
+              HorizontalContentAlignment="Stretch" FlowDirection="LeftToRight"
+              common:CursorExtensions.Cursor="Hand"
+              SelectionChanged="LanguageSelector_SelectionChanged"
+              AutomationProperties.Name="{x:Bind Localization.GetString('LanguagePickerName', Localization.Revision), Mode=OneWay}"
+              AutomationProperties.HelpText="{x:Bind Localization.GetString('LanguagePickerHelp', Localization.Revision), Mode=OneWay}">
+        <ComboBoxItem Tag="fa-IR" AutomationProperties.Name="فارسی" Language="fa-IR">
+            <TextBlock Text="فارسی" FontFamily="{StaticResource IranSansFont}" FlowDirection="RightToLeft" />
+        </ComboBoxItem>
+        <ComboBoxItem Tag="en-US" AutomationProperties.Name="English" Language="en-US">
+            <TextBlock Text="English" FontFamily="Segoe UI Variable" FlowDirection="LeftToRight" />
+        </ComboBoxItem>
+    </ComboBox>
+</UserControl>

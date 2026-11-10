@@ -1,0 +1,20 @@
+# Mizon development requirements
+
+- Follow the existing project's naming, layering, localization, disposal and UI conventions.
+- Standing user requirement: every new or changed user-facing feature/page must include appropriately scoped MCP read-state/actions and meaningful MCP integration checks as part of completion. Update existing contracts when behavior changes; do not duplicate the feature's business logic.
+- Visual-only styling changes reuse existing MCP contracts/checks. Do not invent tools or tests that merely mirror colors/layout; new behavior or observable state needs meaningful MCP coverage.
+- Follow [MCP development and verification](Mcp/DEVELOPMENT.md). Current implemented MCP coverage is **Welcome/Login/Registration, appearance, declared page navigation, and Mizon taskbar pinning**. Navigation does not grant access to the business data/actions of every destination; other features require their own explicit contracts and permission scopes.
+- Keep MCP self-describing and .NET 10/NativeAOT-friendly: typed input/output schemas, source-generated JSON, explicit dispatch, cancellation and resource cleanup. Never expose arbitrary invocation, reflection, SQL, shell or unrestricted navigation as tools.
+- The user grants access inside Mizon. No tool/test may approve itself or bypass the current permission policy. A configured Codex connection is not permission to operate the app.
+- New music, settings or other feature tools need a new permission group shown to the user; never inherit an earlier authentication read/control approval. Discovery may list tools before approval, but protected data/actions stay gated.
+- Test authorized behavior plus denied/revoked access, cancellation/errors and cleanup. Use synthetic data/test doubles for writes unless the task already authorizes the real change; never create real accounts or submit real forms merely to test.
+- MCP checks verify behavior/state; they do not replace visual, animation or UI performance checks. Do not run Windows UI automation unless the user asks for it. Report unverified visual or consent-dependent cases accurately.
+
+## Collaboration and delivery
+
+- Read [the shared collaboration workflow](docs/ai/COLLABORATION.md), [this repository's project map](docs/ai/PROJECT.md), and [the current handoff](docs/ai/HANDOFF.md) before changing code. Use the task-note template supplied alongside the collaboration workflow for work that spans agents or repositories.
+- Standing user instruction, effective 2026-11-10: after completing each task, make precise, scoped commits and push them to the intended GitHub branch. This is already authorized; do not repeatedly ask for commit/push confirmation. A later explicit user instruction overrides this default. Report the commit and push result; never claim an unpushed commit was delivered.
+- Concurrent Codex, Claude, Copilot and other agents must use separate Git worktrees/branches and agree on file ownership. Do not share a staging index or edit the same file concurrently. Fetch/read incoming handoffs before starting; Markdown is durable context, not an automatic live synchronization or locking service.
+- Commit only the task's changes by default. Preserve another agent's unfinished edits and the user's unrelated local work. The user's explicit instruction to publish all current code applies to that publication task; it is not permanent permission to sweep other agents' future work into every commit.
+- Use descriptive commit titles and bodies explaining the actual behavior, related repository changes, validation and remaining limits. Update the handoff when contracts, constraints or known gaps change. Do not commit tokens, permission stores, caches, logs, local test accounts, generated build output or private user data.
+- Never force-push, discard another agent's changes, or declare a conflict resolved without inspecting it. If remote work advances, integrate it without rewriting others' history and rerun the checks affected by the integration.

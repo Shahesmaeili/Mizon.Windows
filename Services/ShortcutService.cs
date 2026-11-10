@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -17,88 +18,87 @@ public interface IShortcutService
     Task<string> CreateMusicDesktopShortcutAsync(Guid musicPublicId, string? musicTitleEnglish, string? musicTitlePersian, string? musicIconPath);
 }
 
-public class ShortcutService : IShortcutService
+public sealed class ShortcutService : IShortcutService, IDisposable
 {
-    // GUID های ضروری برای COM
-    [ComImport]
-    [Guid("00021401-0000-0000-C000-000000000046")]
-    private class ShellLink
-    {
-    }
-
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("000214F9-0000-0000-C000-000000000046")]
-    private interface IShellLink
-    {
-        void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszFile, int cchMaxPath, out IntPtr pfd, int fFlags);
-        void GetIDList(out IntPtr ppidl);
-        void SetIDList(IntPtr pidl);
-        void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszName, int cchMaxName);
-        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string pszName);
-        void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszDir, int cchMaxPath);
-        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string pszDir);
-        void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszArgs, int cchMaxPath);
-        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string pszArgs);
-        void GetHotkey(out short pwHotkey);
-        void SetHotkey(short wHotkey);
-        void GetShowCmd(out int piShowCmd);
-        void SetShowCmd(int iShowCmd);
-        void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszIconPath, int cchIconPath, out int piIcon);
-        void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
-        void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, int dwReserved);
-        void Resolve(IntPtr hwnd, int fFlags);
-        void SetPath([MarshalAs(UnmanagedType.LPWStr)] string pszFile);
-    }
-
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("0000010B-0000-0000-C000-000000000046")]
-    private interface IPersistFile
-    {
-        void GetClassID(out Guid pClassID);
-        [PreserveSig]
-        int IsDirty();
-        void Load([MarshalAs(UnmanagedType.LPWStr)] string pszFileName, uint dwMode);
-        void Save([MarshalAs(UnmanagedType.LPWStr)] string pszFileName, bool fRemember);
-        void SaveCompleted([MarshalAs(UnmanagedType.LPWStr)] string pszFileName);
-        void GetCurFile([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder ppszFileName);
-    }
+    private readonly System.Threading.SemaphoreSlim _createGate = new(1, 1);
 
     public async Task<string> CreateMusicDesktopShortcutAsync(Guid musicPublicId, string? musicTitleEnglish, string? musicTitlePersian, string? musicIconPath)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(musicPublicId, Guid.Empty);
-
         var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-        var shortcutTitle = GetShortcutTitle(musicTitleEnglish, musicTitlePersian, musicPublicId);
-        var shortcutPath = Path.Combine(desktopPath, $"{shortcutTitle}.lnk");
-        var targetPath = GetCurrentExecutablePath();
-
-        if (!File.Exists(targetPath))
-            throw new FileNotFoundException("Executable file for the desktop shortcut was not found.", targetPath);
-
-        var shellLink = new ShellLink();
-        try
-        {
-            var link = (IShellLink)shellLink;
-            link.SetPath(targetPath);
-            link.SetWorkingDirectory(Path.GetDirectoryName(targetPath)!);
-            link.SetArguments($"--music \"{musicPublicId:D}\"");
-            link.SetDescription($"باز کردن آهنگ {shortcutTitle} در Mizon");
-
-            var iconPath = await GetShortcutIconPathAsync(musicIconPath, musicPublicId, targetPath);
-            link.SetIconLocation(iconPath, 0);
-
-            var persistFile = (IPersistFile)link;
-            persistFile.Save(shortcutPath, true);
-            return shortcutPath;
-        }
-        finally
-        {
-            Marshal.FinalReleaseComObject(shellLink);
-        }
+        var iconDirectory = Path.Combine(ApplicationData.Current.LocalFolder.Path, "ShortcutIcons");
+        return await CreateMusicShortcutAsync(musicPublicId, musicTitleEnglish, musicTitlePersian,
+            musicIconPath, desktopPath, iconDirectory);
     }
 
+    // Explicit directories allow integration tests without touching the user's desktop.
+    internal async Task<string> CreateMusicShortcutAsync(Guid musicPublicId, string? englishTitle, string? persianTitle,
+        string? coverPath, string desktopPath, string iconDirectory)
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual(musicPublicId, Guid.Empty);
+        ArgumentException.ThrowIfNullOrWhiteSpace(desktopPath);
+        await _createGate.WaitAsync();
+        try
+        {
+            return await Task.Run(async () =>
+            {
+                Directory.CreateDirectory(desktopPath);
+                var title = GetShortcutTitle(englishTitle, persianTitle, musicPublicId);
+                var target = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
+                var arguments = $"\"mizon://music/{musicPublicId:D}\"";
+                var icon = await GetShortcutIconPathAsync(coverPath, musicPublicId, iconDirectory);
+                // A registered URI survives MSIX upgrades and moving the build output.
+                // AppInstance redirects it to the existing Mizon window.
+                return SaveShortcut(desktopPath, title, musicPublicId, target, arguments, icon);
+            });
+        }
+        finally { _createGate.Release(); }
+    }
+
+    private static string SaveShortcut(string desktopPath, string title, Guid musicId, string target, string arguments, string icon)
+    {
+        var shortcutPath = Path.Combine(desktopPath, title + ".lnk");
+        var suffix = 0;
+        while (File.Exists(shortcutPath) && !IsMusicShortcut(shortcutPath, musicId, arguments))
+        {
+            var disambiguator = suffix++ == 0 ? musicId.ToString("N") : $"{musicId:N}-{suffix}";
+            shortcutPath = Path.Combine(desktopPath, $"{title} [{disambiguator}].lnk");
+        }
+        var temporaryPath = Path.Combine(desktopPath, $".mizon-{Guid.NewGuid():N}.lnk");
+        try
+        {
+            using (var link = new ShellLinkNative())
+            {
+                link.SetTarget(target);
+                link.SetWorkingDirectory(Path.GetDirectoryName(target)!);
+                link.SetArguments(arguments);
+                link.SetDescription($"باز کردن آهنگ {title} در Mizon");
+                link.SetIcon(icon);
+                link.Save(temporaryPath);
+            }
+            // Publish only a complete file, preserving the old link if saving fails.
+            File.Move(temporaryPath, shortcutPath, overwrite: true);
+            AppLog.Information($"Music desktop shortcut saved. MusicPublicId='{musicId}', ShortcutPath='{shortcutPath}', IconPath='{icon}'.");
+            return shortcutPath;
+        }
+        finally { if (File.Exists(temporaryPath)) File.Delete(temporaryPath); }
+    }
+
+    private static bool IsMusicShortcut(string path, Guid musicId, string arguments)
+    {
+        try
+        {
+            using var link = new ShellLinkNative();
+            link.Load(path);
+            var existing = link.GetArguments();
+            return string.Equals(existing, arguments, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(existing, $"--music \"{musicId:D}\"", StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception error) when (error is COMException or IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
     private static string GetShortcutTitle(string? musicTitleEnglish, string? musicTitlePersian, Guid musicPublicId)
     {
         var englishTitle = musicTitleEnglish?.Trim();
@@ -114,35 +114,50 @@ public class ShortcutService : IShortcutService
 
         var invalidCharacters = Path.GetInvalidFileNameChars();
         var safeTitle = string.Concat(title.Select(character => invalidCharacters.Contains(character) ? '_' : character)).Trim();
-        return string.IsNullOrWhiteSpace(safeTitle) ? "Music" : safeTitle;
+        safeTitle = safeTitle[..Math.Min(safeTitle.Length, 96)].TrimEnd(' ', '.');
+        if (safeTitle.Length > 0 && char.IsHighSurrogate(safeTitle[^1])) safeTitle = safeTitle[..^1];
+        if (string.IsNullOrWhiteSpace(safeTitle)) safeTitle = "Music";
+        var stem = safeTitle.Split('.')[0].ToUpperInvariant();
+        if (stem is "CON" or "PRN" or "AUX" or "NUL" or "CONIN$" or "CONOUT$"
+            || (stem.Length == 4 && (stem.StartsWith("COM") || stem.StartsWith("LPT"))
+                && "123456789¹²³".Contains(stem[3]))) safeTitle = "Music - " + safeTitle;
+        return safeTitle;
     }
 
-    private static async Task<string> GetShortcutIconPathAsync(string? requestedIconPath, Guid musicPublicId, string executablePath)
+    private static async Task<string> GetShortcutIconPathAsync(string? requestedIconPath, Guid musicPublicId, string iconDirectory)
     {
         try
         {
-            var iconDirectory = Path.Combine(
-                ApplicationData.Current.LocalCacheFolder.Path,
-                "Mizon",
-                "ShortcutIcons");
             Directory.CreateDirectory(iconDirectory);
 
             var sourceImagePath = !string.IsNullOrWhiteSpace(requestedIconPath) && File.Exists(requestedIconPath)
                 ? requestedIconPath
-                : GetApplicationIconSourcePath(executablePath);
+                : Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon", "Mizon.ico");
 
             AppLog.Information($"Music shortcut icon requested. CoverPath='{requestedIconPath ?? "null"}', SourcePath='{sourceImagePath ?? "null"}', IconDirectory='{iconDirectory}'.");
 
             if (string.IsNullOrWhiteSpace(sourceImagePath) || !File.Exists(sourceImagePath))
-                return executablePath;
+                return Environment.ProcessPath ?? string.Empty;
 
-            if (Path.GetExtension(sourceImagePath) is ".ico" or ".exe" or ".dll")
-                return sourceImagePath;
-
-            var iconPath = Path.Combine(iconDirectory, $"music-{musicPublicId:N}.ico");
-            var sourceLastWriteTime = File.GetLastWriteTimeUtc(sourceImagePath);
-            if (!File.Exists(iconPath) || File.GetLastWriteTimeUtc(iconPath) < sourceLastWriteTime)
-                await CreateIconFileAsync(sourceImagePath, iconPath);
+            // Content-addressing also refreshes Explorer's icon cache when the cover
+            // changes, even if the new download has an older file timestamp.
+            byte[] hash;
+            await using (var source = File.OpenRead(sourceImagePath))
+                hash = await SHA256.HashDataAsync(source);
+            var iconPath = Path.Combine(iconDirectory, $"music-{musicPublicId:N}-v2-{Convert.ToHexString(hash.AsSpan(0, 12))}.ico");
+            if (!File.Exists(iconPath) || new FileInfo(iconPath).Length < 22)
+            {
+                var temporaryPath = iconPath + $".{Guid.NewGuid():N}.tmp";
+                try
+                {
+                    if (Path.GetExtension(sourceImagePath).Equals(".ico", StringComparison.OrdinalIgnoreCase))
+                        File.Copy(sourceImagePath, temporaryPath);
+                    else
+                        await CreateIconFileAsync(sourceImagePath, temporaryPath);
+                    File.Move(temporaryPath, iconPath, overwrite: true);
+                }
+                finally { if (File.Exists(temporaryPath)) File.Delete(temporaryPath); }
+            }
 
             AppLog.Information($"Music shortcut ICO created. IconPath='{iconPath}', Size={new FileInfo(iconPath).Length}.");
             return iconPath;
@@ -150,14 +165,10 @@ public class ShortcutService : IShortcutService
         catch (Exception exception)
         {
             AppLog.Error($"Music cover could not be converted to an ICO shortcut icon. Source='{requestedIconPath}'.", exception);
-            return executablePath;
+            return requestedIconPath is not null
+                ? await GetShortcutIconPathAsync(null, musicPublicId, iconDirectory)
+                : Environment.ProcessPath ?? string.Empty;
         }
-    }
-
-    private static string? GetApplicationIconSourcePath(string executablePath)
-    {
-        var appIconPath = Path.Combine(Path.GetDirectoryName(executablePath)!, "Assets", "Square150x150Logo.scale-200.png");
-        return File.Exists(appIconPath) ? appIconPath : null;
     }
 
     private static async Task CreateIconFileAsync(string sourceImagePath, string iconPath)
@@ -170,25 +181,30 @@ public class ShortcutService : IShortcutService
             throw new InvalidDataException("The music cover does not contain image pixels.");
 
         var scale = Math.Min(1d, 256d / Math.Max(decoder.PixelWidth, decoder.PixelHeight));
-        var width = (uint)Math.Max(1, Math.Round(decoder.PixelWidth * scale));
-        var height = (uint)Math.Max(1, Math.Round(decoder.PixelHeight * scale));
-        var transform = new BitmapTransform { ScaledWidth = width, ScaledHeight = height };
+        var width = (uint)Math.Max(1, Math.Round(decoder.OrientedPixelWidth * scale));
+        var height = (uint)Math.Max(1, Math.Round(decoder.OrientedPixelHeight * scale));
+        var transform = new BitmapTransform
+        {
+            ScaledWidth = (uint)Math.Max(1, Math.Round(decoder.PixelWidth * scale)),
+            ScaledHeight = (uint)Math.Max(1, Math.Round(decoder.PixelHeight * scale)),
+            InterpolationMode = BitmapInterpolationMode.Fant
+        };
         var pixels = await decoder.GetPixelDataAsync(
             BitmapPixelFormat.Rgba8,
-            BitmapAlphaMode.Premultiplied,
+            BitmapAlphaMode.Straight,
             transform,
-            ExifOrientationMode.IgnoreExifOrientation,
-            ColorManagementMode.DoNotColorManage);
+            ExifOrientationMode.RespectExifOrientation,
+            ColorManagementMode.ColorManageToSRgb);
 
         using var pngStream = new InMemoryRandomAccessStream();
         var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, pngStream);
         encoder.SetPixelData(
             BitmapPixelFormat.Rgba8,
-            BitmapAlphaMode.Premultiplied,
+            BitmapAlphaMode.Straight,
             width,
             height,
-            decoder.DpiX,
-            decoder.DpiY,
+            96,
+            96,
             pixels.DetachPixelData());
         await encoder.FlushAsync();
 
@@ -214,11 +230,5 @@ public class ShortcutService : IShortcutService
         writer.Write(pngBytes);
     }
 
-    private string GetCurrentExecutablePath()
-    {
-        using (var process = System.Diagnostics.Process.GetCurrentProcess())
-        {
-            return process.MainModule?.FileName ?? string.Empty;
-        }
-    }
+    public void Dispose() => _createGate.Dispose();
 }

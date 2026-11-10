@@ -1,0 +1,27 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:Mizon.Windows.Controls" xmlns:icon="using:FluentIcons.WinUI">
+    <Style x:Key="AuthClearInputAction" TargetType="Button">
+        <Setter Property="Padding" Value="0"/><Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="UseSystemFocusVisuals" Value="True"/>
+        <Setter Property="Template"><Setter.Value>
+            <ControlTemplate TargetType="Button">
+                <controls:AuthInputActionSurface Background="Transparent">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualStateGroup.Transitions><VisualTransition GeneratedDuration="0:0:0.16"/></VisualStateGroup.Transitions>
+                            <VisualState x:Name="Normal"/>
+                            <VisualState x:Name="PointerOver"><VisualState.Setters><Setter Target="ClearSurface.Background" Value="{ThemeResource AuthAccentWashBrush}"/><Setter Target="ClearGlyph.Opacity" Value="1"/></VisualState.Setters></VisualState>
+                            <VisualState x:Name="Pressed"><VisualState.Setters><Setter Target="ClearSurface.Background" Value="{ThemeResource AuthAccentTintBrush}"/><Setter Target="ClearGlyph.Opacity" Value="{ThemeResource AuthClearPressedOpacity}"/></VisualState.Setters></VisualState>
+                            <VisualState x:Name="Disabled"><VisualState.Setters><Setter Target="ClearGlyph.Opacity" Value="{ThemeResource AuthClearDisabledOpacity}"/></VisualState.Setters></VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                    <Border x:Name="ClearSurface" CornerRadius="9" Background="{ThemeResource AuthSurfaceBrush}" BorderBrush="{ThemeResource AuthStrokeBrush}" BorderThickness="1" IsHitTestVisible="False">
+                        <Border.BackgroundTransition><BrushTransition Duration="0:0:0.16"/></Border.BackgroundTransition>
+                        <icon:SymbolIcon x:Name="ClearGlyph" Symbol="Dismiss" FontSize="12" Opacity="{ThemeResource AuthClearGlyphOpacity}" Foreground="{ThemeResource AuthAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
+                    </Border>
+                </controls:AuthInputActionSurface>
+            </ControlTemplate>
+        </Setter.Value></Setter>
+    </Style>
+</ResourceDictionary>

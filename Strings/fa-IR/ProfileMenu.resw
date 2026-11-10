@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="PinToTaskbar" xml:space="preserve"><value>افزودن برنامه به تسک‌بار</value></data>
+  <data name="PinToTaskbarCaption" xml:space="preserve"><value>میزون همیشه در دسترس تو</value></data>
+  <data name="PinToTaskbarHelp" xml:space="preserve"><value>درخواست افزودن آیکون میزون به تسک‌بار را باز می‌کند؛ تأیید نهایی با خودت در پنجرهٔ ویندوز است.</value></data>
+  <data name="PinNotCompleted" xml:space="preserve"><value>میزون به تسک‌بار اضافه نشد؛ هر زمان خواستی دوباره درخواست بده.</value></data>
+  <data name="PinForegroundRequired" xml:space="preserve"><value>پنجرهٔ میزون را فعال کن و دوباره درخواست بده.</value></data>
+  <data name="PinNotAllowed" xml:space="preserve"><value>ویندوز در حال حاضر اجازهٔ افزودن برنامه به تسک‌بار را نمی‌دهد.</value></data>
+  <data name="PinUnavailable" xml:space="preserve"><value>افزودن برنامه به تسک‌بار از داخل اپ، روی این نسخهٔ ویندوز در دسترس نیست.</value></data>
+  <data name="PinFailed" xml:space="preserve"><value>درخواست افزودن برنامه به تسک‌بار انجام نشد؛ دوباره امتحان کن.</value></data>
+</root>

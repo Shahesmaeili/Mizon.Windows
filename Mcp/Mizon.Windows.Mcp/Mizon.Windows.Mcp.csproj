@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsAotCompatible>true</IsAotCompatible>
+    <AssemblyName>Mizon.Windows.Mcp</AssemblyName>
+    <RootNamespace>Mizon.Windows.Mcp</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol.Core" Version="2.4.0" />
+    <ProjectReference Include="..\Mizon.Windows.Mcp.Contracts\Mizon.Windows.Mcp.Contracts.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,314 @@
+<UserControl
+    x:Class="Mizon.Windows.UserControls.ArtistSpotlight"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icon="using:FluentIcons.WinUI"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:common="using:Mizon.Windows.Common"
+    xmlns:items="using:Mizon.Windows.ViewModels.Items"
+    Loaded="Spotlight_Loaded"
+    Unloaded="Spotlight_Unloaded"
+    SizeChanged="Spotlight_SizeChanged">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="SpotlightAccent" Color="#A6C8FF" />
+        <Style x:Key="Caption" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="/Assets/Fonts/IRANSANS.TTF#IRANSans" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Opacity" Value="0.6" />
+            <Setter Property="FlowDirection" Value="RightToLeft" />
+            <Setter Property="TextAlignment" Value="Right" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style x:Key="TrackButton" TargetType="Button">
+            <Setter Property="MinWidth" Value="156" />
+            <Setter Property="MaxWidth" Value="280" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Padding" Value="7,5" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="#08FFFFFF" />
+            <Setter Property="BorderBrush" Value="#14FFFFFF" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style x:Key="NavButton" TargetType="Button">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="#0CFFFFFF" />
+            <Setter Property="BorderBrush" Value="#1AFFFFFF" />
+        </Style>
+        <Style x:Key="MetricTile" TargetType="Border">
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="Background" Value="#08FFFFFF" />
+            <Setter Property="BorderBrush" Value="#12FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,6" />
+        </Style>
+        <Style x:Key="MetricValue" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="TextAlignment" Value="Right" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="FlowDirection" Value="LeftToRight" />
+        </Style>
+        <Style x:Key="DockNavigationButton" TargetType="Button" BasedOn="{StaticResource NavButton}">
+            <Setter Property="Width" Value="27" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+    </UserControl.Resources>
+    <!-- Each section has its own space; compact layouts move only the track strip below. -->
+    <Grid x:Name="Surface" Height="220" Background="Transparent" FlowDirection="LeftToRight">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="Layouts">
+                <VisualState x:Name="Wide" />
+                <VisualState x:Name="Compact">
+                    <VisualState.Setters>
+                        <Setter Target="Surface.Height" Value="244" />
+                        <Setter Target="BottomTracksRow.Height" Value="76" />
+                        <Setter Target="PortraitColumn.Width" Value="0.65*" />
+                        <Setter Target="TracksColumn.Width" Value="0" />
+                        <Setter Target="InformationColumn.Width" Value="1.35*" />
+                        <Setter Target="InformationColumnPanel.Margin" Value="4,8,10,8" />
+                        <Setter Target="InformationColumnPanel.RowSpacing" Value="8" />
+                        <Setter Target="ArtistName.FontSize" Value="19" />
+                        <Setter Target="ListeningInsight.Visibility" Value="Collapsed" />
+                        <Setter Target="Information.RowSpacing" Value="3" />
+                        <Setter Target="InformationStatsRow.Height" Value="49" />
+                        <Setter Target="Stats.Height" Value="49" />
+                        <Setter Target="RatingText.FontSize" Value="16" />
+                        <Setter Target="FollowersText.FontSize" Value="16" />
+                        <Setter Target="SongsText.FontSize" Value="16" />
+                        <Setter Target="PortraitOrbit.Width" Value="118" />
+                        <Setter Target="PortraitOrbit.Height" Value="118" />
+                        <Setter Target="StageLabel.Margin" Value="10,10,0,0" />
+                        <Setter Target="StageCaption.Visibility" Value="Collapsed" />
+                        <Setter Target="RotationHint.Visibility" Value="Collapsed" />
+                        <Setter Target="ProfileText.Visibility" Value="Collapsed" />
+                        <Setter Target="ProfileButton.Padding" Value="4,0" />
+                        <Setter Target="TrackArea.(Grid.Column)" Value="0" />
+                        <Setter Target="TrackArea.(Grid.ColumnSpan)" Value="3" />
+                        <Setter Target="TrackArea.(Grid.Row)" Value="1" />
+                        <Setter Target="TrackArea.Margin" Value="12,0,12,6" />
+                        <Setter Target="TrackArea.RowSpacing" Value="2" />
+                        <Setter Target="TracksScroll.HorizontalScrollMode" Value="Enabled" />
+                        <Setter Target="TracksScroll.VerticalScrollMode" Value="Disabled" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Border CornerRadius="18" Background="{ThemeResource CardBackgroundFillColorSecondary}" BorderThickness="0" />
+        <Grid x:Name="CardClip" CornerRadius="18">
+            <Grid x:Name="ContentLayout">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition x:Name="BottomTracksRow" Height="0" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="PortraitColumn" Width="0.75*" />
+                    <ColumnDefinition x:Name="TracksColumn" Width="1*" />
+                    <ColumnDefinition x:Name="InformationColumn" Width="1.25*" />
+                </Grid.ColumnDefinitions>
+                <Grid x:Name="PortraitStage">
+                    <Grid x:Name="ModelGlow" Height="100" Margin="0,0,0,8" VerticalAlignment="Bottom" IsHitTestVisible="False" />
+                    <Grid x:Name="PortraitOrbit" Width="174" Height="174" VerticalAlignment="Center" IsHitTestVisible="False">
+                        <Ellipse Fill="{StaticResource SpotlightAccent}" Opacity="0.055" />
+                        <Ellipse Stroke="{StaticResource SpotlightAccent}" StrokeThickness="1" Opacity="0.22" />
+                        <Ellipse Margin="17" Stroke="{StaticResource SpotlightAccent}" StrokeThickness="1" Opacity="0.1" StrokeDashArray="1,8" />
+                        <Ellipse Margin="38" Stroke="{StaticResource SpotlightAccent}" StrokeThickness="0.5" Opacity="0.12" />
+                        <Ellipse Width="5" Height="5" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="-2" Fill="{StaticResource SpotlightAccent}" />
+                    </Grid>
+                    <controls:ArtistModelView x:Name="ArtistModel" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                    <Border VerticalAlignment="Bottom" Height="34" IsHitTestVisible="False">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="Transparent" Offset="0" />
+                                <GradientStop Color="#28121B28" Offset="1" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    <StackPanel x:Name="StageLabel" IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="14,14,0,0" Spacing="4">
+                        <TextBlock x:Name="StageCaption" Text="ARTIST" FontSize="8" CharacterSpacing="230" Opacity="0.45" />
+                        <TextBlock x:Name="PageNumber" Text="01 / 03" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource SpotlightAccent}" Opacity="0.8" />
+                    </StackPanel>
+                    <Grid VerticalAlignment="Bottom" Margin="10,0,8,9" ColumnSpacing="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Style="{StaticResource NavButton}" Click="ResetModel_Click" AutomationProperties.Name="بازنشانی زاویهٔ مدل" ToolTipService.ToolTip="بازنشانی زاویهٔ مدل" common:CursorExtensions.Cursor="Hand">
+                            <icon:SymbolIcon Symbol="ArrowCounterclockwise" FontSize="12" />
+                        </Button>
+                        <TextBlock x:Name="RotationHint" Grid.Column="1" Text="بگیر و بچرخان" Style="{StaticResource Caption}" FontSize="8" VerticalAlignment="Center" IsHitTestVisible="False" />
+                    </Grid>
+                </Grid>
+                <Grid x:Name="TrackArea" Grid.Column="1" Margin="10,16,10,16" RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid x:Name="TracksHeading">
+                        <TextBlock Text="آخرین آهنگ‌ها" Style="{StaticResource Caption}" FontSize="11" Opacity="0.85" />
+                        <icon:SymbolIcon Symbol="MusicNote1" FontSize="10" HorizontalAlignment="Left" Foreground="{StaticResource SpotlightAccent}" />
+                    </Grid>
+                    <ScrollViewer x:Name="TracksScroll" Grid.Row="1" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Hidden" ZoomMode="Disabled" PointerWheelChanged="TracksScroll_PointerWheelChanged">
+                        <ItemsRepeater x:Name="Tracks">
+                            <ItemsRepeater.Layout>
+                                <StackLayout x:Name="TracksLayout" Orientation="Vertical" Spacing="6" />
+                            </ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="items:DiscoveryMusicItemViewModel">
+                                    <Button Style="{StaticResource TrackButton}" Tag="{x:Bind}" Click="Track_Click" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Title}" ToolTipService.ToolTip="{x:Bind Title}">
+                                        <Grid ColumnSpacing="6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="32" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Spacing="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind PersianTitle}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" TextAlignment="Right" TextTrimming="CharacterEllipsis" />
+                                                <Grid ColumnSpacing="5">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{x:Bind DurationText}" FontSize="8" Opacity="0.45" />
+                                                    <TextBlock Grid.Column="1" Text="{x:Bind Title}" FontSize="8" Opacity="0.45" TextAlignment="Right" TextTrimming="CharacterEllipsis" />
+                                                </Grid>
+                                            </StackPanel>
+                                            <Grid Grid.Column="1" Width="32" Height="32" CornerRadius="7" Background="#12FFFFFF">
+                                                <Image Source="{x:Bind CoverImage}" Stretch="UniformToFill" />
+                                            </Grid>
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </ScrollViewer>
+                </Grid>
+                <Grid x:Name="InformationColumnPanel" Grid.Column="2" Margin="12,14,16,14" RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="32" />
+                    </Grid.RowDefinitions>
+                    <!-- Only this content changes artist; the action dock is a persistent sibling. -->
+                    <Grid x:Name="Information" RowSpacing="4" VerticalAlignment="Center">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition x:Name="InformationStatsRow" Height="54" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid ColumnSpacing="9">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="3" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel x:Name="ArtistIdentity" Spacing="3" FlowDirection="LeftToRight">
+                                <TextBlock x:Name="ArtistName" FontSize="24" FontWeight="Bold" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" HorizontalAlignment="Right" TextAlignment="Right" FlowDirection="RightToLeft" TextTrimming="CharacterEllipsis" AutomationProperties.HeadingLevel="Level2" />
+                                <Border HorizontalAlignment="Right" CornerRadius="5" Padding="6,1" Background="#09FFFFFF">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <icon:SymbolIcon Symbol="MusicNote1" FontSize="9" VerticalAlignment="Center" Foreground="{StaticResource SpotlightAccent}" Opacity="0.75" />
+                                        <TextBlock x:Name="GenreText" Style="{StaticResource Caption}" FontSize="9" Foreground="{StaticResource SpotlightAccent}" Opacity="0.95" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                            <Border Grid.Column="1" CornerRadius="2" VerticalAlignment="Stretch" Margin="0,3,0,2" Background="{StaticResource SpotlightAccent}" Opacity="0.75" IsHitTestVisible="False" />
+                        </Grid>
+                        <Grid x:Name="Stats" Grid.Row="1" Height="54" ColumnSpacing="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="0.9*" />
+                                <ColumnDefinition Width="1.15*" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource MetricTile}">
+                                <Grid RowSpacing="1">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="12" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <Grid ColumnSpacing="3">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <icon:SymbolIcon Symbol="Star" Foreground="#F3CF8D" FontSize="9" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="امتیاز" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
+                                    </Grid>
+                                    <TextBlock x:Name="RatingText" Grid.Row="1" Style="{StaticResource MetricValue}" Foreground="#F3CF8D" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource MetricTile}">
+                                <Grid RowSpacing="1">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="12" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <Grid ColumnSpacing="3">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <icon:SymbolIcon Symbol="People" Foreground="{StaticResource SpotlightAccent}" FontSize="9" VerticalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Grid.Column="1" Text="دنبال‌کننده" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
+                                    </Grid>
+                                    <TextBlock x:Name="FollowersText" Grid.Row="1" Style="{StaticResource MetricValue}" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                            <Border Grid.Column="2" Style="{StaticResource MetricTile}">
+                                <Grid RowSpacing="1">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="12" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <Grid ColumnSpacing="3">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <icon:SymbolIcon Symbol="MusicNote1" Foreground="{StaticResource SpotlightAccent}" FontSize="9" VerticalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Grid.Column="1" Text="آهنگ" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
+                                    </Grid>
+                                    <TextBlock x:Name="SongsText" Grid.Row="1" Style="{StaticResource MetricValue}" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+                        <Border x:Name="ListeningInsight" Grid.Row="2" Height="25" CornerRadius="7" Background="#04FFFFFF" Padding="6,0">
+                            <Grid ColumnSpacing="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="48" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                </Grid.ColumnDefinitions>
+                                <Viewbox x:Name="ListeningChart" Width="48" Height="16" Stretch="Fill" VerticalAlignment="Center" IsHitTestVisible="False">
+                                    <Path x:Name="ListeningTrend" Width="250" Height="56" Stretch="Fill" Stroke="{StaticResource SpotlightAccent}" StrokeThickness="5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.6" AutomationProperties.AccessibilityView="Raw" />
+                                </Viewbox>
+                                <TextBlock x:Name="ListenerText" Grid.Column="1" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
+                                <icon:SymbolIcon Grid.Column="2" Symbol="Headphones" FontSize="11" Foreground="{StaticResource SpotlightAccent}" VerticalAlignment="Center" Opacity="0.85" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <Grid x:Name="ActionBar" Grid.Row="1" ColumnSpacing="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="58" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="84" />
+                        </Grid.ColumnDefinitions>
+                        <Border Background="#0BFFFFFF" CornerRadius="10" BorderThickness="1" BorderBrush="#18FFFFFF" Padding="1,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <Button x:Name="PreviousButton" Style="{StaticResource DockNavigationButton}" Click="Previous_Click" ToolTipService.ToolTip="خوانندهٔ قبلی" AutomationProperties.Name="خوانندهٔ قبلی" common:CursorExtensions.Cursor="Hand">
+                                    <icon:SymbolIcon Symbol="ChevronLeft" FontSize="11" />
+                                </Button>
+                                <Border Grid.Column="1" HorizontalAlignment="Left" Width="1" Margin="0,8" Background="#18FFFFFF" IsHitTestVisible="False" />
+                                <Button x:Name="NextButton" Grid.Column="1" Style="{StaticResource DockNavigationButton}" Click="Next_Click" ToolTipService.ToolTip="خوانندهٔ بعدی" AutomationProperties.Name="خوانندهٔ بعدی" common:CursorExtensions.Cursor="Hand">
+                                    <icon:SymbolIcon Symbol="ChevronRight" FontSize="11" />
+                                </Button>
+                            </Grid>
+                        </Border>
+                        <Button x:Name="ProfileButton" Grid.Column="1" Click="Profile_Click" Height="32" MinWidth="0" MinHeight="0" Padding="6,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10" Background="#08FFFFFF" BorderBrush="#18FFFFFF" ToolTipService.ToolTip="دیدن پروفایل" AutomationProperties.Name="پروفایل خواننده" common:CursorExtensions.Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <icon:SymbolIcon Symbol="Person" FontSize="12" VerticalAlignment="Center" />
+                                <TextBlock x:Name="ProfileText" Text="پروفایل" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" />
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="FollowButton" Grid.Column="2" Click="Follow_Click" Content="دنبال کردن" Width="84" Height="32" MinWidth="0" MinHeight="0" Padding="6,0" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" FontWeight="SemiBold" CornerRadius="10" Background="{StaticResource SpotlightAccent}" Foreground="#FF111924" BorderThickness="0" common:CursorExtensions.Cursor="Hand" />
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,1123 @@
+<Page xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icon="using:FluentIcons.WinUI" xmlns:controls="using:Mizon.Windows.Controls" xmlns:controls2="using:Mizon.Windows.UserControls" xmlns:common="using:Mizon.Windows.Common" x:Class="Mizon.Windows.Pages.SettingsPage" Background="Transparent" NavigationCacheMode="Disabled" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Language="{x:Bind Localization.LanguageTag, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Loaded="Page_Loaded" Unloaded="Page_Unloaded" SizeChanged="Page_SizeChanged">
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="SettingSurfaceBrush" Color="#0DFFFFFF"/>
+                    <SolidColorBrush x:Key="SettingInsetBrush" Color="#08FFFFFF"/>
+                    <SolidColorBrush x:Key="SettingStrokeBrush" Color="#18FFFFFF"/>
+                    <SolidColorBrush x:Key="SettingAccent" Color="#8BDEF0"/>
+                    <SolidColorBrush x:Key="SettingMint" Color="#8AD4BE"/>
+                    <SolidColorBrush x:Key="SettingLavender" Color="#C7A0F6"/>
+                    <SolidColorBrush x:Key="SettingRose" Color="#EAA9C9"/>
+                    <SolidColorBrush x:Key="SettingAmber" Color="#E8C38D"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="SettingSurfaceBrush" Color="#55FFFFFF"/>
+                    <SolidColorBrush x:Key="SettingInsetBrush" Color="#24000000" Opacity="0.16"/>
+                    <SolidColorBrush x:Key="SettingStrokeBrush" Color="#18000000"/>
+                    <SolidColorBrush x:Key="SettingAccent" Color="#006879"/>
+                    <SolidColorBrush x:Key="SettingMint" Color="#176C58"/>
+                    <SolidColorBrush x:Key="SettingLavender" Color="#7041A3"/>
+                    <SolidColorBrush x:Key="SettingRose" Color="#954466"/>
+                    <SolidColorBrush x:Key="SettingAmber" Color="#7D580F"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <SolidColorBrush x:Key="SettingSurfaceBrush" Color="{ThemeResource SystemColorWindowColor}"/>
+                    <SolidColorBrush x:Key="SettingInsetBrush" Color="{ThemeResource SystemColorWindowColor}"/>
+                    <SolidColorBrush x:Key="SettingStrokeBrush" Color="{ThemeResource SystemColorWindowTextColor}"/>
+                    <SolidColorBrush x:Key="SettingAccent" Color="{ThemeResource SystemColorHighlightColor}"/>
+                    <SolidColorBrush x:Key="SettingMint" Color="{ThemeResource SystemColorHighlightColor}"/>
+                    <SolidColorBrush x:Key="SettingLavender" Color="{ThemeResource SystemColorHighlightColor}"/>
+                    <SolidColorBrush x:Key="SettingRose" Color="{ThemeResource SystemColorHighlightColor}"/>
+                    <SolidColorBrush x:Key="SettingAmber" Color="{ThemeResource SystemColorHighlightColor}"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+            <Style x:Key="SettingCard" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource SettingSurfaceBrush}"/>
+                <Setter Property="BorderBrush" Value="{ThemeResource SettingStrokeBrush}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="18"/>
+                <Setter Property="Padding" Value="20"/>
+            </Style>
+            <Style x:Key="SettingInset" TargetType="Border" BasedOn="{StaticResource SettingCard}">
+                <Setter Property="Background" Value="{ThemeResource SettingInsetBrush}"/>
+                <Setter Property="Padding" Value="14,12"/>
+                <Setter Property="CornerRadius" Value="12"/>
+            </Style>
+            <Style x:Key="SettingBody" TargetType="TextBlock">
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="TextReadingOrder" Value="UseFlowDirection"/>
+                <Setter Property="TextAlignment" Value="Start"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            </Style>
+            <Style x:Key="SettingHeading" TargetType="TextBlock" BasedOn="{StaticResource SettingBody}">
+                <Setter Property="FontSize" Value="15"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </Style>
+            <Style x:Key="SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource SettingHeading}">
+                <Setter Property="FontSize" Value="23"/>
+            </Style>
+            <Style x:Key="SettingCaption" TargetType="TextBlock" BasedOn="{StaticResource SettingBody}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <Setter Property="LineHeight" Value="23"/>
+            </Style>
+            <Style x:Key="SmallCaption" TargetType="TextBlock" BasedOn="{StaticResource SettingCaption}">
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="LineHeight" Value="21"/>
+            </Style>
+            <Style x:Key="TinyCaption" TargetType="TextBlock" BasedOn="{StaticResource SmallCaption}">
+                <Setter Property="FontSize" Value="10"/>
+            </Style>
+            <Style x:Key="PathLabel" TargetType="TextBlock" BasedOn="{StaticResource SmallCaption}">
+                <Setter Property="FontFamily" Value="Cascadia Code"/>
+                <Setter Property="FlowDirection" Value="LeftToRight"/>
+                <Setter Property="TextAlignment" Value="Left"/>
+                <Setter Property="IsTextSelectionEnabled" Value="True"/>
+            </Style>
+            <Style x:Key="PendingBadge" TargetType="Border">
+                <Setter Property="Padding" Value="8,3"/>
+                <Setter Property="CornerRadius" Value="6"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Background" Value="{ThemeResource SettingInsetBrush}"/>
+            </Style>
+            <Style x:Key="SettingButton" TargetType="controls:AuthActionButton">
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Padding" Value="14,10"/>
+                <Setter Property="MinHeight" Value="42"/>
+                <Setter Property="MinWidth" Value="0"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="Background" Value="{ThemeResource SettingInsetBrush}"/>
+                <Setter Property="BorderBrush" Value="{ThemeResource SettingStrokeBrush}"/>
+                <Setter Property="HoverScale" Value="1.008"/>
+                <Setter Property="PressedScale" Value="0.985"/>
+                <Setter Property="common:CursorExtensions.Cursor" Value="Hand"/>
+                <Setter Property="UseSystemFocusVisuals" Value="True"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="controls:AuthActionButton">
+                            <controls:AuthInputActionSurface x:Name="ActionSurface" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Control.IsTemplateFocusTarget="True">
+                                <Border x:Name="ActionLight" Opacity="0" Background="{ThemeResource SettingAccent}" CornerRadius="{TemplateBinding CornerRadius}" IsHitTestVisible="False"/>
+                                <ContentPresenter x:Name="ActionContent" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Padding="{TemplateBinding Padding}" Foreground="{TemplateBinding Foreground}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="Center" IsHitTestVisible="False"/>
+                            </controls:AuthInputActionSurface>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="SettingButtonText" TargetType="TextBlock" BasedOn="{StaticResource SettingBody}">
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+        </ResourceDictionary>
+    </Page.Resources>
+    <Grid x:Name="PageLayout" MaxWidth="1420" HorizontalAlignment="Stretch" Padding="24,18,24,16" RowSpacing="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid Width="42" Height="42" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                <icon:SymbolIcon Symbol="Settings" FontSize="22" Foreground="{ThemeResource SettingAccent}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
+            <StackPanel Grid.Column="1" Spacing="2">
+                <TextBlock Text="{x:Bind Text('Title', Localization.Revision), Mode=OneWay}" Style="{StaticResource SectionTitle}" AutomationProperties.HeadingLevel="Level1"/>
+                <TextBlock Text="{x:Bind Text('Subtitle', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+            </StackPanel>
+            <Border x:Name="HeaderStatus" Grid.Column="2" Style="{StaticResource SettingInset}" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <icon:SymbolIcon Symbol="Checkmark" FontSize="14" Foreground="{ThemeResource SettingMint}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Bind Text('SavedLocally', Localization.Revision), Mode=OneWay}" Style="{StaticResource TinyCaption}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+        <NavigationView x:Name="SettingsNavigation" Grid.Row="1" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsPaneToggleButtonVisible="False" IsPaneOpen="True" OpenPaneLength="252" PaneDisplayMode="Left" SelectionChanged="SettingsNavigation_SelectionChanged" AlwaysShowHeader="False" Background="Transparent" IsTitleBarAutoPaddingEnabled="False" AutomationProperties.Name="{x:Bind Text('SettingsNavigation', Localization.Revision), Mode=OneWay}">
+            <NavigationView.Resources>
+                <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="Transparent"/>
+                <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent"/>
+                <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="Transparent"/>
+                <CornerRadius x:Key="NavigationViewItemCornerRadius">10</CornerRadius>
+                <Style TargetType="NavigationViewItem">
+                    <Setter Property="MinHeight" Value="46"/>
+                    <Setter Property="FontSize" Value="13"/>
+                </Style>
+            </NavigationView.Resources>
+            <NavigationView.PaneHeader>
+                <Border x:Name="SidebarProfile" Margin="8,0,8,18" Style="{StaticResource SettingInset}">
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <PersonPicture Width="38" Height="38" DisplayName="{x:Bind ViewModel.Account.DisplayName, Mode=OneWay}" ProfilePicture="{x:Bind ViewModel.Account.ProfileImage, Mode=OneWay}" AutomationProperties.AccessibilityView="Raw"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
+                            <TextBlock Text="{x:Bind ViewModel.Account.DisplayName, Mode=OneWay}" Style="{StaticResource SettingHeading}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{x:Bind Text('NoProfile', Localization.Revision), Mode=OneWay}" Style="{StaticResource TinyCaption}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </NavigationView.PaneHeader>
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="AccountNavigation" Content="{x:Bind Text('Account', Localization.Revision), Mode=OneWay}" Tag="0" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('Account', Localization.Revision), Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <icon:SymbolIcon Symbol="Person" FontSize="20" Foreground="{ThemeResource SettingAccent}" AutomationProperties.AccessibilityView="Raw"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="{x:Bind Text('Security', Localization.Revision), Mode=OneWay}" Tag="1" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('Security', Localization.Revision), Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <icon:SymbolIcon Symbol="Shield" FontSize="20" Foreground="{ThemeResource SettingMint}" AutomationProperties.AccessibilityView="Raw"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="{x:Bind Text('Language', Localization.Revision), Mode=OneWay}" Tag="2" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('Language', Localization.Revision), Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <icon:SymbolIcon Symbol="Translate" FontSize="20" Foreground="{ThemeResource SettingLavender}" AutomationProperties.AccessibilityView="Raw"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="{x:Bind Text('Appearance', Localization.Revision), Mode=OneWay}" Tag="3" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('Appearance', Localization.Revision), Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <icon:SymbolIcon Symbol="PaintBrush" FontSize="20" Foreground="{ThemeResource SettingRose}" AutomationProperties.AccessibilityView="Raw"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="{x:Bind Text('Notifications', Localization.Revision), Mode=OneWay}" Tag="4" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('Notifications', Localization.Revision), Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <icon:SymbolIcon Symbol="Alert" FontSize="20" Foreground="{ThemeResource SettingAmber}" AutomationProperties.AccessibilityView="Raw"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="{x:Bind Text('Storage', Localization.Revision), Mode=OneWay}" Tag="5" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('Storage', Localization.Revision), Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <icon:SymbolIcon Symbol="DocumentFolder" FontSize="20" Foreground="{ThemeResource SettingAccent}" AutomationProperties.AccessibilityView="Raw"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="{x:Bind Text('Updates', Localization.Revision), Mode=OneWay}" Tag="6" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('Updates', Localization.Revision), Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <icon:SymbolIcon Symbol="ArrowClockwise" FontSize="20" Foreground="{ThemeResource SettingMint}" AutomationProperties.AccessibilityView="Raw"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="{x:Bind Text('Platforms', Localization.Revision), Mode=OneWay}" Tag="7" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('Platforms', Localization.Revision), Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <icon:SymbolIcon Symbol="Apps" FontSize="20" Foreground="{ThemeResource SettingLavender}" AutomationProperties.AccessibilityView="Raw"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="{x:Bind Text('AiConnections', Localization.Revision), Mode=OneWay}" Tag="8" AutomationProperties.Name="{x:Bind Text('AiConnections', Localization.Revision), Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <icon:SymbolIcon Symbol="Bot" FontSize="20" Foreground="{ThemeResource SettingAccent}" AutomationProperties.AccessibilityView="Raw"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <NavigationView.PaneFooter>
+                <StackPanel x:Name="SidebarFooter" Margin="18,20,18,12" Spacing="10">
+                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="MIZON" FontFamily="Segoe UI Variable" FontSize="10" CharacterSpacing="180" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Text="{x:Bind ViewModel.VersionLabel, Mode=OneWay}" Style="{StaticResource TinyCaption}" Grid.Column="1"/>
+                    </Grid>
+                </StackPanel>
+            </NavigationView.PaneFooter>
+            <ScrollViewer x:Name="DetailsScroll" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" IsTabStop="False">
+                <Grid x:Name="SectionHost" MaxWidth="1080" Margin="20,0,4,24" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+                    <StackPanel x:Name="AccountSection" x:Load="{x:Bind ViewModel.IsAccount, Mode=OneWay}" Spacing="16">
+                        <Grid Padding="20,18" CornerRadius="18" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1" ColumnSpacing="16">
+                            <Grid.Background>
+                                <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                                    <GradientStop Color="#188BDEF0" Offset="0"/>
+                                    <GradientStop Color="Transparent" Offset="0.85"/>
+                                </LinearGradientBrush>
+                            </Grid.Background>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Width="52" Height="52" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                <icon:SymbolIcon Symbol="Person" FontSize="22" Foreground="{ThemeResource SettingAccent}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                            <StackPanel Grid.Column="1" Spacing="5">
+                                <TextBlock Text="{x:Bind Text('Account', Localization.Revision), Mode=OneWay}" Style="{StaticResource SectionTitle}" AutomationProperties.HeadingLevel="Level2"/>
+                                <TextBlock Text="{x:Bind Text('AccountDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                            </StackPanel>
+                        </Grid>
+                        <Border Style="{StaticResource SettingCard}">
+                            <StackPanel Spacing="18">
+                                <Grid ColumnSpacing="18">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Padding="5" CornerRadius="48" BorderThickness="1" BorderBrush="{ThemeResource SettingAccent}" VerticalAlignment="Center">
+                                        <PersonPicture Width="72" Height="72" DisplayName="{x:Bind ViewModel.Account.DisplayName, Mode=OneWay}" ProfilePicture="{x:Bind ViewModel.Account.ProfileImage, Mode=OneWay}" AutomationProperties.Name="{x:Bind ViewModel.Account.DisplayName, Mode=OneWay}"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind ViewModel.Account.DisplayName, Mode=OneWay}" Style="{StaticResource SectionTitle}"/>
+                                        <TextBlock Text="{x:Bind ViewModel.Account.UsernameLabel, Mode=OneWay}" Style="{StaticResource SmallCaption}" FlowDirection="LeftToRight" HorizontalAlignment="Left" IsTextSelectionEnabled="True"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                <controls:SettingsCardPanel MinColumnWidth="300" Spacing="14">
+                                    <Border Style="{StaticResource SettingInset}">
+                                        <StackPanel Spacing="5">
+                                            <TextBlock Text="{x:Bind Text('DisplayName', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                            <TextBlock Text="{x:Bind ViewModel.Account.NickName, Mode=OneWay}" Style="{StaticResource SettingBody}" IsTextSelectionEnabled="True"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource SettingInset}">
+                                        <StackPanel Spacing="5">
+                                            <TextBlock Text="{x:Bind Text('Username', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                            <TextBlock Text="{x:Bind ViewModel.Account.Username, Mode=OneWay}" Style="{StaticResource SettingBody}" IsTextSelectionEnabled="True"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource SettingInset}">
+                                        <StackPanel Spacing="5">
+                                            <TextBlock Text="{x:Bind Text('FullName', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                            <TextBlock Style="{StaticResource SettingBody}" IsTextSelectionEnabled="True">
+                                                <Run Text="{x:Bind ViewModel.Account.FirstName, Mode=OneWay}"/>
+                                                <Run Text=" "/>
+                                                <Run Text="{x:Bind ViewModel.Account.LastName, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource SettingInset}">
+                                        <StackPanel Spacing="5">
+                                            <TextBlock Text="{x:Bind Text('Email', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                            <TextBlock Text="{x:Bind ViewModel.Account.EmailAddress, Mode=OneWay}" Style="{StaticResource SettingBody}" IsTextSelectionEnabled="True"/>
+                                        </StackPanel>
+                                    </Border>
+                                </controls:SettingsCardPanel>
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="28"/>
+                                    </Grid.ColumnDefinitions>
+                                    <controls:AuthActionButton Style="{StaticResource SettingButton}" Click="RefreshAccount_Click" IsEnabled="{x:Bind ViewModel.Account.CanRefreshProfile, Mode=OneWay}" AutomationProperties.Name="{x:Bind Text('RefreshAccount', Localization.Revision), Mode=OneWay}">
+                                        <Grid ColumnSpacing="9">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <icon:SymbolIcon Symbol="ArrowClockwise" FontSize="17" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{x:Bind Text('RefreshAccount', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingButtonText}" Grid.Column="1"/>
+                                        </Grid>
+                                    </controls:AuthActionButton>
+                                    <ProgressRing Grid.Column="1" Width="20" Height="20" IsActive="{x:Bind ViewModel.Account.IsProfileBusy, Mode=OneWay}" AutomationProperties.Name="{x:Bind Text('RefreshAccount', Localization.Revision), Mode=OneWay}"/>
+                                </Grid>
+                                <TextBlock Text="{x:Bind ViewModel.Account.ProfileStatus, Mode=OneWay}" Style="{StaticResource SmallCaption}" MinHeight="21" AutomationProperties.LiveSetting="Polite"/>
+                            </StackPanel>
+                        </Border>
+                        <Grid ColumnSpacing="10" Margin="4,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <icon:SymbolIcon Symbol="Info" FontSize="15" Foreground="{ThemeResource TextFillColorTertiaryBrush}" AutomationProperties.AccessibilityView="Raw" Margin="0,3,0,0"/>
+                            <TextBlock Text="{x:Bind Text('ReadOnlyAccount', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}" Grid.Column="1"/>
+                        </Grid>
+                    </StackPanel>
+                    <StackPanel x:Name="SecuritySection" x:Load="{x:Bind ViewModel.IsSecurity, Mode=OneWay}" Spacing="16">
+                        <Grid Padding="20,18" CornerRadius="18" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1" ColumnSpacing="16">
+                            <Grid.Background>
+                                <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                                    <GradientStop Color="#168AD4BE" Offset="0"/>
+                                    <GradientStop Color="Transparent" Offset="0.85"/>
+                                </LinearGradientBrush>
+                            </Grid.Background>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Width="52" Height="52" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                <icon:SymbolIcon Symbol="Shield" FontSize="22" Foreground="{ThemeResource SettingMint}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                            <StackPanel Grid.Column="1" Spacing="5">
+                                <TextBlock Text="{x:Bind Text('Security', Localization.Revision), Mode=OneWay}" Style="{StaticResource SectionTitle}" AutomationProperties.HeadingLevel="Level2"/>
+                                <TextBlock Text="{x:Bind Text('SecurityDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                            </StackPanel>
+                        </Grid>
+                        <controls:SettingsCardPanel MinColumnWidth="300" Spacing="14">
+                            <Border Style="{StaticResource SettingCard}" controls:SettingsCardPanel.ColumnSpan="2">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Shield" FontSize="22" Foreground="{ThemeResource SettingMint}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('Security', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <Grid ColumnSpacing="12" Padding="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <icon:SymbolIcon Symbol="Key" FontSize="19" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{x:Bind Text('Password', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingBody}" Grid.Column="1" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="2" Style="{StaticResource PendingBadge}">
+                                            <TextBlock Text="{x:Bind Text('ComingSoon', Localization.Revision), Mode=OneWay}" Style="{StaticResource TinyCaption}"/>
+                                        </Border>
+                                    </Grid>
+                                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                    <Grid ColumnSpacing="12" Padding="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <icon:SymbolIcon Symbol="ShieldCheckmark" FontSize="19" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{x:Bind Text('TwoFactor', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingBody}" Grid.Column="1" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="2" Style="{StaticResource PendingBadge}">
+                                            <TextBlock Text="{x:Bind Text('ComingSoon', Localization.Revision), Mode=OneWay}" Style="{StaticResource TinyCaption}"/>
+                                        </Border>
+                                    </Grid>
+                                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                    <Grid ColumnSpacing="12" Padding="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                    <icon:SymbolIcon Symbol="Desktop" FontSize="19" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{x:Bind Text('Sessions', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingBody}" Grid.Column="1" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="2" Style="{StaticResource PendingBadge}">
+                                            <TextBlock Text="{x:Bind Text('ComingSoon', Localization.Revision), Mode=OneWay}" Style="{StaticResource TinyCaption}"/>
+                                        </Border>
+                                    </Grid>
+                                    <Grid ColumnSpacing="10" Margin="4,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <icon:SymbolIcon Symbol="Info" FontSize="15" Foreground="{ThemeResource TextFillColorTertiaryBrush}" AutomationProperties.AccessibilityView="Raw" Margin="0,3,0,0"/>
+                                        <TextBlock Text="{x:Bind Text('ServicePending', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}" Grid.Column="1"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Shield" FontSize="22" Foreground="{ThemeResource SettingMint}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('WindowsSecurity', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <controls:AuthActionButton Style="{StaticResource SettingButton}" Click="WindowsSettings_Click" Tag="ms-settings:signinoptions" AutomationProperties.Name="{x:Bind Text('WindowsSecurity', Localization.Revision), Mode=OneWay}">
+                                        <Grid ColumnSpacing="9">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <icon:SymbolIcon Symbol="Key" FontSize="17" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{x:Bind Text('WindowsSecurity', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingButtonText}" Grid.Column="1"/>
+                                        </Grid>
+                                    </controls:AuthActionButton>
+                                    <controls:AuthActionButton Style="{StaticResource SettingButton}" Click="WindowsSettings_Click" Tag="ms-settings:privacy" AutomationProperties.Name="{x:Bind Text('WindowsPrivacy', Localization.Revision), Mode=OneWay}">
+                                        <Grid ColumnSpacing="9">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <icon:SymbolIcon Symbol="Shield" FontSize="17" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{x:Bind Text('WindowsPrivacy', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingButtonText}" Grid.Column="1"/>
+                                        </Grid>
+                                    </controls:AuthActionButton>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="SignOut" FontSize="22" Foreground="{ThemeResource SettingRose}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('SignOut', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Text('SignOutDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                    <controls:AuthActionButton Style="{StaticResource SettingButton}" Command="{x:Bind ViewModel.Account.LogoutCommand, Mode=OneWay}" Foreground="{ThemeResource SystemFillColorCriticalBrush}" AutomationProperties.Name="{x:Bind Text('SignOut', Localization.Revision), Mode=OneWay}">
+                                        <Grid ColumnSpacing="9">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <icon:SymbolIcon Symbol="SignOut" FontSize="17" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{x:Bind Text('SignOut', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingButtonText}" Grid.Column="1"/>
+                                        </Grid>
+                                    </controls:AuthActionButton>
+                                </StackPanel>
+                            </Border>
+                        </controls:SettingsCardPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="LanguageSection" x:Load="{x:Bind ViewModel.IsLanguage, Mode=OneWay}" Spacing="16">
+                        <Grid Padding="20,18" CornerRadius="18" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1" ColumnSpacing="16">
+                            <Grid.Background>
+                                <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                                    <GradientStop Color="#18C7A0F6" Offset="0"/>
+                                    <GradientStop Color="Transparent" Offset="0.85"/>
+                                </LinearGradientBrush>
+                            </Grid.Background>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Width="52" Height="52" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                <icon:SymbolIcon Symbol="Translate" FontSize="22" Foreground="{ThemeResource SettingLavender}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                            <StackPanel Grid.Column="1" Spacing="5">
+                                <TextBlock Text="{x:Bind Text('Language', Localization.Revision), Mode=OneWay}" Style="{StaticResource SectionTitle}" AutomationProperties.HeadingLevel="Level2"/>
+                                <TextBlock Text="{x:Bind Text('LanguageDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                            </StackPanel>
+                        </Grid>
+                        <controls:SettingsCardPanel MinColumnWidth="300" Spacing="14">
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Translate" FontSize="22" Foreground="{ThemeResource SettingLavender}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('LanguageChoice', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <Grid MinHeight="132" CornerRadius="14" Padding="20" Background="{ThemeResource SettingInsetBrush}" ColumnSpacing="16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock Text="آ" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="48" Foreground="{ThemeResource SettingLavender}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="فارسی" FontFamily="{StaticResource IranSansFont}" FontSize="12" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock Text="Aa" FontFamily="Segoe UI Variable" FontSize="46" Foreground="{ThemeResource SettingAccent}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="English" FontSize="12" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <controls2:LanguagePicker HorizontalAlignment="Stretch"/>
+                                    <TextBlock Text="{x:Bind Text('LanguageHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Globe" FontSize="22" Foreground="{ThemeResource SettingLavender}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('Language', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Text('ActionsLanguageHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingCaption}"/>
+                                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                    <TextBlock Text="{x:Bind Text('SavedLocally', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                </StackPanel>
+                            </Border>
+                        </controls:SettingsCardPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="AppearanceSection" x:Load="{x:Bind ViewModel.IsAppearance, Mode=OneWay}" Spacing="16">
+                        <Grid Padding="20,18" CornerRadius="18" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1" ColumnSpacing="16">
+                            <Grid.Background>
+                                <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                                    <GradientStop Color="#16EAA9C9" Offset="0"/>
+                                    <GradientStop Color="Transparent" Offset="0.85"/>
+                                </LinearGradientBrush>
+                            </Grid.Background>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Width="52" Height="52" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                <icon:SymbolIcon Symbol="PaintBrush" FontSize="22" Foreground="{ThemeResource SettingRose}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                            <StackPanel Grid.Column="1" Spacing="5">
+                                <TextBlock Text="{x:Bind Text('Appearance', Localization.Revision), Mode=OneWay}" Style="{StaticResource SectionTitle}" AutomationProperties.HeadingLevel="Level2"/>
+                                <TextBlock Text="{x:Bind Text('AppearanceDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                            </StackPanel>
+                        </Grid>
+                        <controls:SettingsCardPanel MinColumnWidth="300" Spacing="14">
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="PaintBrush" FontSize="22" Foreground="{ThemeResource SettingRose}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('ThemeChoice', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <Grid Height="132" Padding="12" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" ColumnSpacing="10" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="52"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Spacing="8">
+                                            <Border Height="24" CornerRadius="6" Background="{ThemeResource SettingSurfaceBrush}"/>
+                                            <Border Height="9" CornerRadius="4" Background="{ThemeResource SettingLavender}" Opacity="0.55"/>
+                                            <Border Height="9" CornerRadius="4" Background="{ThemeResource SettingStrokeBrush}"/>
+                                            <Border Height="9" CornerRadius="4" Background="{ThemeResource SettingStrokeBrush}"/>
+                                        </StackPanel>
+                                        <Grid Grid.Column="1" RowSpacing="9">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="44"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            <Border CornerRadius="9" BorderThickness="1" BorderBrush="{ThemeResource SettingStrokeBrush}">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                                                        <GradientStop Color="#2FC7A0F6" Offset="0"/>
+                                                        <GradientStop Color="#128BDEF0" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                            </Border>
+                                            <Grid Grid.Row="1" ColumnSpacing="9">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border CornerRadius="8" Background="{ThemeResource SettingSurfaceBrush}"/>
+                                                <Border Grid.Column="1" CornerRadius="8" Background="{ThemeResource SettingSurfaceBrush}"/>
+                                            </Grid>
+                                        </Grid>
+                                    </Grid>
+                                    <ComboBox x:Name="ThemeSelector" SelectedIndex="{x:Bind Appearance.ThemeModeIndex, Mode=OneWay}" SelectionChanged="ThemeSelector_SelectionChanged" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" CornerRadius="10" MinHeight="42" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('ThemeChoice', Localization.Revision), Mode=OneWay}">
+                                        <ComboBoxItem Content="{x:Bind Text('ThemeSystem', Localization.Revision), Mode=OneWay}"/>
+                                        <ComboBoxItem Content="{x:Bind Text('ThemeLight', Localization.Revision), Mode=OneWay}"/>
+                                        <ComboBoxItem Content="{x:Bind Text('ThemeDark', Localization.Revision), Mode=OneWay}"/>
+                                    </ComboBox>
+                                    <TextBlock Text="{x:Bind Text('ThemeHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Window" FontSize="22" Foreground="{ThemeResource SettingAccent}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('BackdropChoice', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Text('BackdropDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingCaption}"/>
+                                    <ComboBox x:Name="BackdropSelector" SelectedIndex="{x:Bind Appearance.BackdropModeIndex, Mode=OneWay}" SelectionChanged="BackdropSelector_SelectionChanged" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" CornerRadius="10" MinHeight="42" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('BackdropChoice', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('BackdropHint', Localization.Revision), Mode=OneWay}">
+                                        <ComboBoxItem Content="{x:Bind Text('BackdropAcrylic', Localization.Revision), Mode=OneWay}" IsEnabled="{x:Bind Appearance.State.IsAcrylicSupported, Mode=OneWay}"/>
+                                        <ComboBoxItem Content="{x:Bind Text('BackdropAcrylicBase', Localization.Revision), Mode=OneWay}" IsEnabled="{x:Bind Appearance.State.IsAcrylicSupported, Mode=OneWay}"/>
+                                        <ComboBoxItem Content="{x:Bind Text('BackdropAcrylicThin', Localization.Revision), Mode=OneWay}" IsEnabled="{x:Bind Appearance.State.IsAcrylicSupported, Mode=OneWay}"/>
+                                        <ComboBoxItem Content="{x:Bind Text('BackdropMica', Localization.Revision), Mode=OneWay}" IsEnabled="{x:Bind Appearance.State.IsMicaSupported, Mode=OneWay}"/>
+                                        <ComboBoxItem Content="{x:Bind Text('BackdropMicaAlt', Localization.Revision), Mode=OneWay}" IsEnabled="{x:Bind Appearance.State.IsMicaSupported, Mode=OneWay}"/>
+                                    </ComboBox>
+                                    <TextBlock Text="{x:Bind Text('BackdropHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                    <TextBlock Text="{x:Bind AppearanceStatus(Appearance.State, Localization.Revision), Mode=OneWay}" Visibility="{x:Bind AppearanceStatusVisibility(Appearance.State), Mode=OneWay}" Style="{StaticResource SettingCaption}" AutomationProperties.LiveSetting="Polite"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Sparkle" FontSize="22" Foreground="{ThemeResource SettingRose}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('VisualEffects', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Text('VisualEffectsHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingCaption}"/>
+                                    <controls:AuthActionButton Style="{StaticResource SettingButton}" Click="WindowsSettings_Click" Tag="ms-settings:easeofaccess-visualeffects" AutomationProperties.Name="{x:Bind Text('OpenSettings', Localization.Revision), Mode=OneWay}">
+                                        <Grid ColumnSpacing="9">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <icon:SymbolIcon Symbol="Open" FontSize="17" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{x:Bind Text('OpenSettings', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingButtonText}" Grid.Column="1"/>
+                                        </Grid>
+                                    </controls:AuthActionButton>
+                                </StackPanel>
+                            </Border>
+                        </controls:SettingsCardPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="NotificationsSection" x:Load="{x:Bind ViewModel.IsNotifications, Mode=OneWay}" Spacing="16">
+                        <Grid Padding="20,18" CornerRadius="18" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1" ColumnSpacing="16">
+                            <Grid.Background>
+                                <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                                    <GradientStop Color="#16E8C38D" Offset="0"/>
+                                    <GradientStop Color="Transparent" Offset="0.85"/>
+                                </LinearGradientBrush>
+                            </Grid.Background>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Width="52" Height="52" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                <icon:SymbolIcon Symbol="Alert" FontSize="22" Foreground="{ThemeResource SettingAmber}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                            <StackPanel Grid.Column="1" Spacing="5">
+                                <TextBlock Text="{x:Bind Text('Notifications', Localization.Revision), Mode=OneWay}" Style="{StaticResource SectionTitle}" AutomationProperties.HeadingLevel="Level2"/>
+                                <TextBlock Text="{x:Bind Text('NotificationsDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                            </StackPanel>
+                        </Grid>
+                        <controls:SettingsCardPanel MinColumnWidth="300" Spacing="14">
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Alert" FontSize="22" Foreground="{ThemeResource SettingAmber}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('NotificationWindows', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Text('NotificationWindowsHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingCaption}"/>
+                                    <controls:AuthActionButton Style="{StaticResource SettingButton}" Click="WindowsSettings_Click" Tag="ms-settings:notifications" AutomationProperties.Name="{x:Bind Text('OpenSettings', Localization.Revision), Mode=OneWay}">
+                                        <Grid ColumnSpacing="9">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <icon:SymbolIcon Symbol="Open" FontSize="17" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{x:Bind Text('OpenSettings', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingButtonText}" Grid.Column="1"/>
+                                        </Grid>
+                                    </controls:AuthActionButton>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12" Padding="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <icon:SymbolIcon Symbol="People" FontSize="19" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{x:Bind Text('NotificationActivity', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingBody}" Grid.Column="1" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="2" Style="{StaticResource PendingBadge}">
+                                            <TextBlock Text="{x:Bind Text('ComingSoon', Localization.Revision), Mode=OneWay}" Style="{StaticResource TinyCaption}"/>
+                                        </Border>
+                                    </Grid>
+                                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                    <Grid ColumnSpacing="12" Padding="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <icon:SymbolIcon Symbol="MusicNote1" FontSize="19" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{x:Bind Text('NotificationRelease', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingBody}" Grid.Column="1" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="2" Style="{StaticResource PendingBadge}">
+                                            <TextBlock Text="{x:Bind Text('ComingSoon', Localization.Revision), Mode=OneWay}" Style="{StaticResource TinyCaption}"/>
+                                        </Border>
+                                    </Grid>
+                                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                    <Grid ColumnSpacing="12" Padding="0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <icon:SymbolIcon Symbol="ArrowDownload" FontSize="19" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{x:Bind Text('NotificationDownload', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingBody}" Grid.Column="1" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="2" Style="{StaticResource PendingBadge}">
+                                            <TextBlock Text="{x:Bind Text('ComingSoon', Localization.Revision), Mode=OneWay}" Style="{StaticResource TinyCaption}"/>
+                                        </Border>
+                                    </Grid>
+                                    <Grid ColumnSpacing="10" Margin="4,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <icon:SymbolIcon Symbol="Info" FontSize="15" Foreground="{ThemeResource TextFillColorTertiaryBrush}" AutomationProperties.AccessibilityView="Raw" Margin="0,3,0,0"/>
+                                        <TextBlock Text="{x:Bind Text('NotificationPending', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}" Grid.Column="1"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </controls:SettingsCardPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="StorageSection" x:Load="{x:Bind ViewModel.IsStorage, Mode=OneWay}" Spacing="16">
+                        <Grid Padding="20,18" CornerRadius="18" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1" ColumnSpacing="16">
+                            <Grid.Background>
+                                <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                                    <GradientStop Color="#188BDEF0" Offset="0"/>
+                                    <GradientStop Color="Transparent" Offset="0.85"/>
+                                </LinearGradientBrush>
+                            </Grid.Background>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Width="52" Height="52" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                <icon:SymbolIcon Symbol="DocumentFolder" FontSize="22" Foreground="{ThemeResource SettingAccent}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                            <StackPanel Grid.Column="1" Spacing="5">
+                                <TextBlock Text="{x:Bind Text('Storage', Localization.Revision), Mode=OneWay}" Style="{StaticResource SectionTitle}" AutomationProperties.HeadingLevel="Level2"/>
+                                <TextBlock Text="{x:Bind Text('StorageDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                            </StackPanel>
+                        </Grid>
+                        <controls:SettingsCardPanel MinColumnWidth="300" Spacing="14">
+                            <Border Style="{StaticResource SettingCard}" controls:SettingsCardPanel.ColumnSpan="2">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Spacing="7" MinHeight="144">
+                                            <TextBlock Text="{x:Bind Text('StoredFiles', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                            <TextBlock Text="{x:Bind ViewModel.StorageSizeLabel, Mode=OneWay}" Style="{StaticResource SectionTitle}" FontSize="32" Foreground="{ThemeResource SettingAccent}"/>
+                                            <TextBlock Text="{x:Bind ViewModel.StorageFilesLabel, Mode=OneWay}" Style="{StaticResource SettingBody}"/>
+                                            <TextBlock Text="{x:Bind ViewModel.StoragePendingLabel, Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                        </StackPanel>
+                                        <ProgressRing Grid.Column="1" Width="28" Height="28" IsActive="{x:Bind ViewModel.IsStorageBusy, Mode=OneWay}" AutomationProperties.Name="{x:Bind Text('Scanning', Localization.Revision), Mode=OneWay}"/>
+                                    </Grid>
+                                    <controls:AuthActionButton Style="{StaticResource SettingButton}" Click="RefreshStorage_Click" IsEnabled="{x:Bind Not(ViewModel.IsStorageBusy), Mode=OneWay}" AutomationProperties.Name="{x:Bind Text('RefreshStorage', Localization.Revision), Mode=OneWay}">
+                                        <Grid ColumnSpacing="9">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <icon:SymbolIcon Symbol="ArrowClockwise" FontSize="17" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{x:Bind Text('RefreshStorage', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingButtonText}" Grid.Column="1"/>
+                                        </Grid>
+                                    </controls:AuthActionButton>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}" controls:SettingsCardPanel.ColumnSpan="2">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="ArrowDownload" FontSize="22" Foreground="{ThemeResource SettingAccent}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('CacheLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Text('CacheHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                    <Border Style="{StaticResource SettingInset}">
+                                        <TextBlock Text="{x:Bind ViewModel.Storage.CacheDirectory, Mode=OneWay}" Style="{StaticResource PathLabel}"/>
+                                    </Border>
+                                    <controls:AuthActionButton Style="{StaticResource SettingButton}" Click="OpenFolder_Click" Tag="cache" AutomationProperties.Name="{x:Bind Text('OpenFolder', Localization.Revision), Mode=OneWay}">
+                                        <Grid ColumnSpacing="9">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <icon:SymbolIcon Symbol="FolderOpen" FontSize="17" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{x:Bind Text('OpenFolder', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingButtonText}" Grid.Column="1"/>
+                                        </Grid>
+                                    </controls:AuthActionButton>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Database" FontSize="22" Foreground="{ThemeResource SettingAccent}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('DataFolder', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <Border Style="{StaticResource SettingInset}">
+                                        <TextBlock Text="{x:Bind ViewModel.Storage.PackageDataDirectory, Mode=OneWay}" Style="{StaticResource PathLabel}"/>
+                                    </Border>
+                                    <controls:AuthActionButton Style="{StaticResource SettingButton}" Click="OpenFolder_Click" Tag="data" AutomationProperties.Name="{x:Bind Text('OpenFolder', Localization.Revision), Mode=OneWay}">
+                                        <Grid ColumnSpacing="9">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <icon:SymbolIcon Symbol="FolderOpen" FontSize="17" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{x:Bind Text('OpenFolder', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingButtonText}" Grid.Column="1"/>
+                                        </Grid>
+                                    </controls:AuthActionButton>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Document" FontSize="22" Foreground="{ThemeResource SettingAccent}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('LogsFolder', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <Border Style="{StaticResource SettingInset}">
+                                        <TextBlock Text="{x:Bind ViewModel.Storage.LogDirectory, Mode=OneWay}" Style="{StaticResource PathLabel}"/>
+                                    </Border>
+                                    <controls:AuthActionButton Style="{StaticResource SettingButton}" Click="OpenFolder_Click" Tag="logs" AutomationProperties.Name="{x:Bind Text('OpenFolder', Localization.Revision), Mode=OneWay}">
+                                        <Grid ColumnSpacing="9">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <icon:SymbolIcon Symbol="FolderOpen" FontSize="17" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{x:Bind Text('OpenFolder', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingButtonText}" Grid.Column="1"/>
+                                        </Grid>
+                                    </controls:AuthActionButton>
+                                </StackPanel>
+                            </Border>
+                        </controls:SettingsCardPanel>
+                        <Grid ColumnSpacing="10" Margin="4,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <icon:SymbolIcon Symbol="Info" FontSize="15" Foreground="{ThemeResource TextFillColorTertiaryBrush}" AutomationProperties.AccessibilityView="Raw" Margin="0,3,0,0"/>
+                            <TextBlock Text="{x:Bind Text('StorageSafeHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}" Grid.Column="1"/>
+                        </Grid>
+                    </StackPanel>
+                    <StackPanel x:Name="UpdatesSection" x:Load="{x:Bind ViewModel.IsUpdates, Mode=OneWay}" Spacing="16">
+                        <Grid Padding="20,18" CornerRadius="18" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1" ColumnSpacing="16">
+                            <Grid.Background>
+                                <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                                    <GradientStop Color="#168AD4BE" Offset="0"/>
+                                    <GradientStop Color="Transparent" Offset="0.85"/>
+                                </LinearGradientBrush>
+                            </Grid.Background>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Width="52" Height="52" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                <icon:SymbolIcon Symbol="ArrowClockwise" FontSize="22" Foreground="{ThemeResource SettingMint}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                            <StackPanel Grid.Column="1" Spacing="5">
+                                <TextBlock Text="{x:Bind Text('Updates', Localization.Revision), Mode=OneWay}" Style="{StaticResource SectionTitle}" AutomationProperties.HeadingLevel="Level2"/>
+                                <TextBlock Text="{x:Bind Text('UpdatesDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                            </StackPanel>
+                        </Grid>
+                        <controls:SettingsCardPanel MinColumnWidth="300" Spacing="14">
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Image Width="64" Height="64" Source="/Assets/AppIcon/Square150x150Logo.png" AutomationProperties.AccessibilityView="Raw"/>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="5">
+                                            <TextBlock Text="Mizon" FontFamily="Segoe UI Variable" FontWeight="SemiBold" FontSize="26"/>
+                                            <TextBlock Text="{x:Bind Text('InstalledVersion', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                            <TextBlock Text="{x:Bind ViewModel.VersionLabel, Mode=OneWay}" Style="{StaticResource SettingHeading}" Foreground="{ThemeResource SettingMint}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                    <Expander Header="{x:Bind Text('VersionDetails', Localization.Revision), Mode=OneWay}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="Transparent">
+                                        <StackPanel Spacing="14">
+                                            <TextBlock Text="{x:Bind Text('Framework', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                            <TextBlock Text="{x:Bind ViewModel.FrameworkLabel, Mode=OneWay}" Style="{StaticResource SettingBody}" IsTextSelectionEnabled="True"/>
+                                            <TextBlock Text="{x:Bind Text('Architecture', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                            <TextBlock Text="{x:Bind ViewModel.ArchitectureLabel, Mode=OneWay}" Style="{StaticResource SettingBody}" IsTextSelectionEnabled="True"/>
+                                            <controls:AuthActionButton Style="{StaticResource SettingButton}" Click="CopyVersion_Click" AutomationProperties.Name="{x:Bind Text('CopyVersion', Localization.Revision), Mode=OneWay}">
+                                                <Grid ColumnSpacing="9">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <icon:SymbolIcon Symbol="Copy" FontSize="17" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{x:Bind Text('CopyVersion', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingButtonText}" Grid.Column="1"/>
+                                                </Grid>
+                                            </controls:AuthActionButton>
+                                        </StackPanel>
+                                    </Expander>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="ArrowClockwise" FontSize="22" Foreground="{ThemeResource SettingMint}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('AutomaticUpdates', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <Border Style="{StaticResource PendingBadge}" HorizontalAlignment="Left">
+                                        <TextBlock Text="{x:Bind Text('ComingSoon', Localization.Revision), Mode=OneWay}" Style="{StaticResource TinyCaption}"/>
+                                    </Border>
+                                    <TextBlock Text="{x:Bind Text('UpdatePending', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingCaption}"/>
+                                </StackPanel>
+                            </Border>
+                        </controls:SettingsCardPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="PlatformsSection" x:Load="{x:Bind ViewModel.IsPlatforms, Mode=OneWay}" Spacing="16">
+                        <Grid Padding="20,18" CornerRadius="18" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1" ColumnSpacing="16">
+                            <Grid.Background>
+                                <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                                    <GradientStop Color="#18C7A0F6" Offset="0"/>
+                                    <GradientStop Color="Transparent" Offset="0.85"/>
+                                </LinearGradientBrush>
+                            </Grid.Background>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Width="52" Height="52" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                <icon:SymbolIcon Symbol="Apps" FontSize="22" Foreground="{ThemeResource SettingLavender}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                            <StackPanel Grid.Column="1" Spacing="5">
+                                <TextBlock Text="{x:Bind Text('Platforms', Localization.Revision), Mode=OneWay}" Style="{StaticResource SectionTitle}" AutomationProperties.HeadingLevel="Level2"/>
+                                <TextBlock Text="{x:Bind Text('PlatformsDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                            </StackPanel>
+                        </Grid>
+                        <controls:SettingsCardPanel MinColumnWidth="300" Spacing="14">
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Phone" FontSize="22" Foreground="{ThemeResource SettingMint}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('Android', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Text('Phone', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                    <TextBlock Text="{x:Bind Text('PlatformPending', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Smartwatch" FontSize="22" Foreground="{ThemeResource SettingMint}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('WearOS', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Text('Watch', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                    <TextBlock Text="{x:Bind Text('PlatformPending', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Phone" FontSize="22" Foreground="{ThemeResource SettingLavender}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('iPhone', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Text('Phone', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                    <TextBlock Text="{x:Bind Text('PlatformPending', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Smartwatch" FontSize="22" Foreground="{ThemeResource SettingLavender}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('AppleWatch', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Text('Watch', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                    <TextBlock Text="{x:Bind Text('PlatformPending', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Desktop" FontSize="22" Foreground="{ThemeResource SettingAccent}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('Mac', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Text('Desktop', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                    <TextBlock Text="{x:Bind Text('PlatformPending', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SettingCard}">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="44" Height="44" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                            <icon:SymbolIcon Symbol="Globe" FontSize="22" Foreground="{ThemeResource SettingAmber}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind Text('Web', Localization.Revision), Mode=OneWay}" Style="{StaticResource SettingHeading}" Grid.Column="1" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind Text('Browser', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                    <Border Height="1" Background="{ThemeResource SettingStrokeBrush}"/>
+                                    <TextBlock Text="{x:Bind Text('PlatformPending', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                                </StackPanel>
+                            </Border>
+                        </controls:SettingsCardPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="AiConnectionsSection" x:Load="{x:Bind ViewModel.IsAiConnections, Mode=OneWay}" Spacing="16">
+                        <Grid Padding="20,18" CornerRadius="18" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1" ColumnSpacing="16">
+                            <Grid.Background>
+                                <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                                    <GradientStop Color="#188BDEF0" Offset="0"/>
+                                    <GradientStop Color="Transparent" Offset="0.85"/>
+                                </LinearGradientBrush>
+                            </Grid.Background>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Grid Width="52" Height="52" CornerRadius="13" Background="{ThemeResource SettingInsetBrush}" BorderBrush="{ThemeResource SettingStrokeBrush}" BorderThickness="1">
+                                <icon:SymbolIcon Symbol="Bot" FontSize="22" Foreground="{ThemeResource SettingAccent}" AutomationProperties.AccessibilityView="Raw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                            <StackPanel Grid.Column="1" Spacing="5">
+                                <TextBlock Text="{x:Bind Text('AiConnections', Localization.Revision), Mode=OneWay}" Style="{StaticResource SectionTitle}" AutomationProperties.HeadingLevel="Level2"/>
+                                <TextBlock Text="{x:Bind Text('AiConnectionsDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
+                            </StackPanel>
+                        </Grid>
+                        <controls2:McpAccessPanel/>
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+        </NavigationView>
+        <InfoBar Grid.Row="2" IsOpen="{x:Bind ViewModel.HasStatus, Mode=OneWay}" Message="{x:Bind ViewModel.StatusText, Mode=OneWay}" Severity="{x:Bind ViewModel.StatusSeverity, Mode=OneWay}" IsClosable="False" AutomationProperties.LiveSetting="Polite"/>
+    </Grid>
+</Page>

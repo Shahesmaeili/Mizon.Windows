@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Mizon.Windows.ViewModels;
 
-public abstract class ViewModelBase : INotifyPropertyChanged
+public abstract partial class ViewModelBase : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 

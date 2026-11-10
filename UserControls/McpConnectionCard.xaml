@@ -1,0 +1,134 @@
+<UserControl
+    x:Class="Mizon.Windows.UserControls.McpConnectionCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icon="using:FluentIcons.WinUI"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+    Language="{x:Bind Localization.LanguageTag, Mode=OneWay}"
+    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+    Loaded="Card_Loaded" Unloaded="Card_Unloaded">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="ms-appx:///UserControls/McpAccessStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Border Style="{StaticResource McpCard}">
+        <StackPanel Spacing="14">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid Width="48" Height="48" CornerRadius="14" Background="{ThemeResource McpInset}" BorderBrush="{ThemeResource McpStroke}" BorderThickness="1">
+                    <icon:SymbolIcon x:Name="FallbackIcon" Symbol="Bot" FontSize="24" Foreground="{ThemeResource McpAccent}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw"/>
+                    <Image x:Name="LogoImage" Width="32" Height="32" Stretch="Uniform" Source="{x:Bind Logo(ViewModel.LogoPath), Mode=OneWay}" ImageOpened="LogoImage_Opened" ImageFailed="LogoImage_Failed" AutomationProperties.AccessibilityView="Raw"/>
+                </Grid>
+                <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Text="{x:Bind ViewModel.Name, Mode=OneWay}" Style="{StaticResource McpBody}" FontSize="16" FontWeight="SemiBold" AutomationProperties.HeadingLevel="Level4" MaxLines="2" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{x:Bind VersionText(ViewModel.Version, Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+                <ProgressRing Grid.Column="2" Width="20" Height="20" IsActive="{x:Bind ViewModel.IsWorking, Mode=OneWay}" Visibility="{x:Bind Visible(ViewModel.IsWorking), Mode=OneWay}" AutomationProperties.Name="{x:Bind Text('Busy', Localization.Revision), Mode=OneWay}"/>
+            </Grid>
+            <Border Background="{ThemeResource McpInset}" CornerRadius="9" Padding="12,8">
+                <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" Style="{StaticResource McpBody}" Foreground="{ThemeResource McpAccent}" AutomationProperties.LiveSetting="Polite"/>
+            </Border>
+            <TextBlock Text="{x:Bind ViewModel.GrantHelpText, Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+            <StackPanel Spacing="2" Visibility="{x:Bind Visible(ViewModel.IsBusy), Mode=OneWay}">
+                <TextBlock Text="{x:Bind Text('ActiveOperation', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                <TextBlock Text="{x:Bind ViewModel.CurrentOperation, Mode=OneWay}" Style="{StaticResource McpBody}"/>
+            </StackPanel>
+            <TextBlock Text="{x:Bind Text('Permissions', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold"/>
+            <TextBlock Text="{x:Bind Text('AuthenticationGroup', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}" FontWeight="SemiBold"/>
+            <StackPanel Spacing="6">
+                <CheckBox IsChecked="{x:Bind ViewModel.AllowRead, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionRead', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionReadHint', Localization.Revision), Mode=OneWay}">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{x:Bind Text('PermissionRead', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                        <TextBlock Text="{x:Bind Text('PermissionReadHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox IsChecked="{x:Bind ViewModel.AllowControl, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionControl', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionControlHint', Localization.Revision), Mode=OneWay}">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{x:Bind Text('PermissionControl', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                        <TextBlock Text="{x:Bind Text('PermissionControlHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox IsChecked="{x:Bind ViewModel.AllowSubmit, Mode=TwoWay}" IsEnabled="{x:Bind CanEditSubmit(ViewModel.CanApprove, ViewModel.AllowControl), Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionSubmit', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionSubmitHint', Localization.Revision), Mode=OneWay}">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{x:Bind Text('PermissionSubmit', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                        <TextBlock Text="{x:Bind Text('PermissionSubmitHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                    </StackPanel>
+                </CheckBox>
+            </StackPanel>
+            <TextBlock Text="{x:Bind Text('ChangeScopesHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}" Visibility="{x:Bind Visible(ViewModel.CanRevoke), Mode=OneWay}"/>
+            <TextBlock Text="{x:Bind Text('AppearanceGroup', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold"/>
+            <TextBlock Text="{x:Bind Text('AppearanceGroupHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+            <CheckBox IsChecked="{x:Bind ViewModel.AllowAppearanceRead, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionAppearanceRead', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('PermissionAppearanceRead', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                    <TextBlock Text="{x:Bind Text('PermissionAppearanceReadHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+            </CheckBox>
+            <CheckBox IsChecked="{x:Bind ViewModel.AllowAppearanceControl, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionAppearanceControl', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('PermissionAppearanceControl', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                    <TextBlock Text="{x:Bind Text('PermissionAppearanceControlHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+            </CheckBox>
+            <TextBlock Text="{x:Bind Text('NavigationGroup', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold"/>
+            <TextBlock Text="{x:Bind Text('NavigationGroupHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+            <CheckBox IsChecked="{x:Bind ViewModel.AllowNavigationRead, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionNavigationRead', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionNavigationReadHint', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('PermissionNavigationRead', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                    <TextBlock Text="{x:Bind Text('PermissionNavigationReadHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+            </CheckBox>
+            <CheckBox IsChecked="{x:Bind ViewModel.AllowNavigationControl, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionNavigationControl', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionNavigationControlHint', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('PermissionNavigationControl', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                    <TextBlock Text="{x:Bind Text('PermissionNavigationControlHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+            </CheckBox>
+            <TextBlock Text="{x:Bind Text('TaskbarGroup', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold"/>
+            <TextBlock Text="{x:Bind Text('TaskbarGroupHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+            <CheckBox IsChecked="{x:Bind ViewModel.AllowTaskbarRead, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionTaskbarRead', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionTaskbarReadHint', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('PermissionTaskbarRead', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                    <TextBlock Text="{x:Bind Text('PermissionTaskbarReadHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+            </CheckBox>
+            <CheckBox IsChecked="{x:Bind ViewModel.AllowTaskbarControl, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionTaskbarControl', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionTaskbarControlHint', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('PermissionTaskbarControl', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                    <TextBlock Text="{x:Bind Text('PermissionTaskbarControlHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+            </CheckBox>
+            <Border Height="1" Background="{ThemeResource McpStroke}"/>
+            <controls:SettingsCardPanel MinColumnWidth="180" MaxColumns="2" Spacing="10">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('ConnectedLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                    <TextBlock Text="{x:Bind ViewModel.ConnectedAtText, Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                </StackPanel>
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('LastActivity', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                    <TextBlock Text="{x:Bind ViewModel.LastActivityText, Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                </StackPanel>
+            </controls:SettingsCardPanel>
+            <Grid ColumnSpacing="10" Visibility="{x:Bind Visible(ViewModel.CanApprove), Mode=OneWay}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <controls:AuthActionButton Style="{StaticResource McpAction}" Click="Approve_Click" IsEnabled="{x:Bind Access.IsEnabled, Mode=OneWay}" Background="{ThemeResource AccentFillColorDefaultBrush}" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" AutomationProperties.Name="{x:Bind ActionName('Approve', ViewModel.Name, Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('ConsentScopeHint', Localization.Revision), Mode=OneWay}">
+                    <TextBlock Text="{x:Bind Text('Approve', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" TextAlignment="Center"/>
+                </controls:AuthActionButton>
+                <controls:AuthActionButton Grid.Column="1" Style="{StaticResource McpAction}" Click="Deny_Click" AutomationProperties.Name="{x:Bind ActionName('Deny', ViewModel.Name, Localization.Revision), Mode=OneWay}">
+                    <TextBlock Text="{x:Bind Text('Deny', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" TextAlignment="Center"/>
+                </controls:AuthActionButton>
+            </Grid>
+            <controls:AuthActionButton Style="{StaticResource McpAction}" Click="Revoke_Click" Visibility="{x:Bind Visible(ViewModel.CanRevoke), Mode=OneWay}" AutomationProperties.Name="{x:Bind ActionName('Revoke', ViewModel.Name, Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('RevokeHelp', Localization.Revision), Mode=OneWay}">
+                <TextBlock Text="{x:Bind Text('Revoke', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" TextAlignment="Center"/>
+            </controls:AuthActionButton>
+        </StackPanel>
+    </Border>
+</UserControl>

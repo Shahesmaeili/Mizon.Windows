@@ -1,5 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
+using Microsoft.UI.Xaml.Media;
+using Mizon.Windows.Common;
 
 namespace Mizon.Windows.ViewModels.Items;
 
@@ -15,7 +17,17 @@ public sealed class MusicDetailsMusicItemViewModel : ViewModelBase
     public string? CoverImagePath
     {
         get => field;
-        set => SetField(ref field, value);
+        set
+        {
+            if (!SetField(ref field, value)) return;
+            CoverImage = ImageSourceFactory.Create(value, 480);
+        }
+    }
+
+    public ImageSource? CoverImage
+    {
+        get => field;
+        private set => SetField(ref field, value);
     }
 
     public string LikesCountText => $"{LikesCount:N0}";

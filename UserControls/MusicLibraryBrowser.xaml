@@ -1,0 +1,319 @@
+<UserControl x:Class="Mizon.Windows.UserControls.MusicLibraryBrowser"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icon="using:FluentIcons.WinUI"
+    xmlns:items="using:Mizon.Windows.ViewModels.Items"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:uc="using:Mizon.Windows.UserControls"
+    Loaded="Browser_Loaded" Unloaded="Browser_Unloaded" SizeChanged="Browser_SizeChanged"
+    FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans">
+    <UserControl.Resources>
+        <!-- The native item presenters use these resources rather than the container's CornerRadius. -->
+        <CornerRadius x:Key="GridViewItemCornerRadius">16</CornerRadius>
+        <CornerRadius x:Key="ListViewItemCornerRadius">13</CornerRadius>
+        <SolidColorBrush x:Key="LibraryAccent" Color="#C7A0F6"/>
+        <Style x:Key="LibraryAction" TargetType="Button">
+            <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="38"/>
+            <Setter Property="Padding" Value="12,8"/><Setter Property="CornerRadius" Value="11"/>
+            <Setter Property="Background" Value="#08FFFFFF"/><Setter Property="BorderBrush" Value="#18FFFFFF"/><Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontFamily" Value="/Assets/Fonts/IRANSANS.TTF#IRANSans"/><Setter Property="FontSize" Value="11"/>
+            <Setter Property="UseSystemFocusVisuals" Value="True"/><Setter Property="FocusVisualPrimaryBrush" Value="{StaticResource LibraryAccent}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="ActionSurface" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                            <Border CornerRadius="{TemplateBinding CornerRadius}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" IsHitTestVisible="False"/>
+                            <Border x:Name="ActionLight" CornerRadius="{TemplateBinding CornerRadius}" Background="{StaticResource LibraryAccent}" Opacity="0" IsHitTestVisible="False"/>
+                            <ContentPresenter x:Name="ActionContent" Padding="{TemplateBinding Padding}" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="LibraryCardContainer" TargetType="GridViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="6"/><Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="UseSystemFocusVisuals" Value="True"/><Setter Property="FocusVisualPrimaryBrush" Value="{StaticResource LibraryAccent}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="GridViewItem">
+                    <ListViewItemPresenter x:Name="Root"
+                            ContentTransitions="{TemplateBinding ContentTransitions}"
+                            Control.IsTemplateFocusTarget="True"
+                            FocusVisualMargin="{TemplateBinding FocusVisualMargin}"
+                            FocusVisualPrimaryBrush="{TemplateBinding FocusVisualPrimaryBrush}"
+                            FocusVisualPrimaryThickness="{TemplateBinding FocusVisualPrimaryThickness}"
+                            FocusVisualSecondaryBrush="{TemplateBinding FocusVisualSecondaryBrush}"
+                            FocusVisualSecondaryThickness="{TemplateBinding FocusVisualSecondaryThickness}"
+                            SelectionCheckMarkVisualEnabled="{ThemeResource GridViewItemSelectionCheckMarkVisualEnabled}"
+                            CheckBrush="{ThemeResource GridViewItemCheckBrush}"
+                            CheckBoxBrush="{ThemeResource GridViewItemCheckBoxBrush}"
+                            DragBackground="{ThemeResource GridViewItemDragBackground}"
+                            DragForeground="{ThemeResource GridViewItemDragForeground}"
+                            FocusBorderBrush="{ThemeResource GridViewItemFocusBorderBrush}"
+                            PlaceholderBackground="{ThemeResource GridViewItemPlaceholderBackground}"
+                            PointerOverBackground="{ThemeResource GridViewItemBackgroundPointerOver}"
+                            PointerOverForeground="{ThemeResource GridViewItemForegroundPointerOver}"
+                            SelectedBackground="{ThemeResource GridViewItemBackgroundSelected}"
+                            SelectedForeground="{ThemeResource GridViewItemForegroundSelected}"
+                            SelectedPointerOverBackground="{ThemeResource GridViewItemBackgroundSelectedPointerOver}"
+                            PressedBackground="{ThemeResource GridViewItemBackgroundPressed}"
+                            SelectedPressedBackground="{ThemeResource GridViewItemBackgroundSelectedPressed}"
+                            DisabledOpacity="{ThemeResource ListViewItemDisabledThemeOpacity}"
+                            DragOpacity="{ThemeResource ListViewItemDragThemeOpacity}"
+                            ReorderHintOffset="{ThemeResource GridViewItemReorderHintThemeOffset}"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                            ContentMargin="{TemplateBinding Padding}"
+                            CheckMode="{ThemeResource GridViewItemCheckMode}"
+                            SelectedBorderThickness="{ThemeResource GridViewItemSelectedBorderThickness}"
+                            SelectedPointerOverBorderBrush="{ThemeResource GridViewItemSelectedPointerOverBorderBrush}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            CheckBoxCornerRadius="{ThemeResource GridViewItemCheckBoxCornerRadius}"
+                            CheckPressedBrush="{ThemeResource GridViewItemCheckPressedBrush}"
+                            CheckDisabledBrush="{ThemeResource GridViewItemCheckDisabledBrush}"
+                            CheckBoxPointerOverBrush="{ThemeResource GridViewItemCheckBoxPointerOverBrush}"
+                            CheckBoxPressedBrush="{ThemeResource GridViewItemCheckBoxPressedBrush}"
+                            CheckBoxDisabledBrush="{ThemeResource GridViewItemCheckBoxDisabledBrush}"
+                            CheckBoxSelectedBrush="{ThemeResource GridViewItemCheckBoxSelectedBrush}"
+                            CheckBoxSelectedPointerOverBrush="{ThemeResource GridViewItemCheckBoxSelectedPointerOverBrush}"
+                            CheckBoxSelectedPressedBrush="{ThemeResource GridViewItemCheckBoxSelectedPressedBrush}"
+                            CheckBoxSelectedDisabledBrush="{ThemeResource GridViewItemCheckBoxSelectedDisabledBrush}"
+                            CheckBoxBorderBrush="{ThemeResource GridViewItemCheckBoxBorderBrush}"
+                            CheckBoxPointerOverBorderBrush="{ThemeResource GridViewItemCheckBoxPointerOverBorderBrush}"
+                            CheckBoxPressedBorderBrush="{ThemeResource GridViewItemCheckBoxPressedBorderBrush}"
+                            CheckBoxDisabledBorderBrush="{ThemeResource GridViewItemCheckBoxDisabledBorderBrush}"
+                            PointerOverBorderBrush="{ThemeResource GridViewItemPointerOverBorderBrush}"
+                            SelectedDisabledBackground="{ThemeResource GridViewItemBackgroundSelectedDisabled}"
+                            SelectedBorderBrush="{ThemeResource GridViewItemSelectedBorderBrush}"
+                            SelectedPressedBorderBrush="{ThemeResource GridViewItemSelectedPressedBorderBrush}"
+                            SelectedDisabledBorderBrush="{ThemeResource GridViewItemSelectedDisabledBorderBrush}"
+                            SelectedInnerBorderBrush="{ThemeResource GridViewItemSelectedInnerBorderBrush}"
+                            />
+
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        </Style>
+        <Style x:Key="LibraryTrackContainer" TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="4,3"/><Setter Property="CornerRadius" Value="13"/>
+            <Setter Property="UseSystemFocusVisuals" Value="True"/><Setter Property="FocusVisualPrimaryBrush" Value="{StaticResource LibraryAccent}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListViewItem">
+                    <ListViewItemPresenter x:Name="Root"
+                            ContentTransitions="{TemplateBinding ContentTransitions}"
+                            Control.IsTemplateFocusTarget="True"
+                            FocusVisualMargin="{TemplateBinding FocusVisualMargin}"
+                            FocusVisualPrimaryBrush="{TemplateBinding FocusVisualPrimaryBrush}"
+                            FocusVisualPrimaryThickness="{TemplateBinding FocusVisualPrimaryThickness}"
+                            FocusVisualSecondaryBrush="{TemplateBinding FocusVisualSecondaryBrush}"
+                            FocusVisualSecondaryThickness="{TemplateBinding FocusVisualSecondaryThickness}"
+                            SelectionCheckMarkVisualEnabled="{ThemeResource ListViewItemSelectionCheckMarkVisualEnabled}"
+                            CheckBrush="{ThemeResource ListViewItemCheckBrush}"
+                            CheckBoxBrush="{ThemeResource ListViewItemCheckBoxBrush}"
+                            DragBackground="{ThemeResource ListViewItemDragBackground}"
+                            DragForeground="{ThemeResource ListViewItemDragForeground}"
+                            FocusBorderBrush="{ThemeResource ListViewItemFocusBorderBrush}"
+                            FocusSecondaryBorderBrush="{ThemeResource ListViewItemFocusSecondaryBorderBrush}"
+                            PlaceholderBackground="{ThemeResource ListViewItemPlaceholderBackground}"
+                            PointerOverBackground="{ThemeResource ListViewItemBackgroundPointerOver}"
+                            PointerOverForeground="{ThemeResource ListViewItemForegroundPointerOver}"
+                            SelectedBackground="{ThemeResource ListViewItemBackgroundSelected}"
+                            SelectedForeground="{ThemeResource ListViewItemForegroundSelected}"
+                            SelectedPointerOverBackground="{ThemeResource ListViewItemBackgroundSelectedPointerOver}"
+                            PressedBackground="{ThemeResource ListViewItemBackgroundPressed}"
+                            SelectedPressedBackground="{ThemeResource ListViewItemBackgroundSelectedPressed}"
+                            DisabledOpacity="{ThemeResource ListViewItemDisabledThemeOpacity}"
+                            DragOpacity="{ThemeResource ListViewItemDragThemeOpacity}"
+                            ReorderHintOffset="{ThemeResource ListViewItemReorderHintThemeOffset}"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                            ContentMargin="{TemplateBinding Padding}"
+                            CheckMode="{ThemeResource ListViewItemCheckMode}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            CheckPressedBrush="{ThemeResource ListViewItemCheckPressedBrush}"
+                            CheckDisabledBrush="{ThemeResource ListViewItemCheckDisabledBrush}"
+                            CheckBoxPointerOverBrush="{ThemeResource ListViewItemCheckBoxPointerOverBrush}"
+                            CheckBoxPressedBrush="{ThemeResource ListViewItemCheckBoxPressedBrush}"
+                            CheckBoxDisabledBrush="{ThemeResource ListViewItemCheckBoxDisabledBrush}"
+                            CheckBoxSelectedBrush="{ThemeResource ListViewItemCheckBoxSelectedBrush}"
+                            CheckBoxSelectedPointerOverBrush="{ThemeResource ListViewItemCheckBoxSelectedPointerOverBrush}"
+                            CheckBoxSelectedPressedBrush="{ThemeResource ListViewItemCheckBoxSelectedPressedBrush}"
+                            CheckBoxSelectedDisabledBrush="{ThemeResource ListViewItemCheckBoxSelectedDisabledBrush}"
+                            CheckBoxBorderBrush="{ThemeResource ListViewItemCheckBoxBorderBrush}"
+                            CheckBoxPointerOverBorderBrush="{ThemeResource ListViewItemCheckBoxPointerOverBorderBrush}"
+                            CheckBoxPressedBorderBrush="{ThemeResource ListViewItemCheckBoxPressedBorderBrush}"
+                            CheckBoxDisabledBorderBrush="{ThemeResource ListViewItemCheckBoxDisabledBorderBrush}"
+                            CheckBoxCornerRadius="{ThemeResource ListViewItemCheckBoxCornerRadius}"
+                            SelectionIndicatorCornerRadius="{ThemeResource ListViewItemSelectionIndicatorCornerRadius}"
+                            SelectionIndicatorVisualEnabled="{ThemeResource ListViewItemSelectionIndicatorVisualEnabled}"
+                            SelectionIndicatorBrush="{ThemeResource ListViewItemSelectionIndicatorBrush}"
+                            SelectionIndicatorPointerOverBrush="{ThemeResource ListViewItemSelectionIndicatorPointerOverBrush}"
+                            SelectionIndicatorPressedBrush="{ThemeResource ListViewItemSelectionIndicatorPressedBrush}"
+                            SelectionIndicatorDisabledBrush="{ThemeResource ListViewItemSelectionIndicatorDisabledBrush}"
+                            SelectedDisabledBackground="{ThemeResource ListViewItemBackgroundSelectedDisabled}"
+                            />
+
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        </Style>
+        <DataTemplate x:Key="PlaylistCard" x:DataType="items:MusicLibraryPlaylistItemViewModel">
+            <controls:PlaylistItemSurface Tag="{x:Bind}" ContextRequested="Playlist_ContextRequested"
+                Padding="12" CornerRadius="16" RowSpacing="12" FlowDirection="LeftToRight"
+                Background="{ThemeResource CardBackgroundFillColorSecondary}" BorderBrush="#18FFFFFF" BorderThickness="1"
+                AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}"
+                AutomationProperties.HelpText="برای بازکردن پلی‌لیست انتخاب کن. راست‌کلیک برای پخش و کپی لینک."
+                ToolTipService.ToolTip="{x:Bind Title, Mode=OneWay}">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <Grid Margin="0,5,0,0">
+                    <Border Margin="12,-5,12,8" CornerRadius="12" BorderThickness="1" BorderBrush="#42C7A0F6" Background="#1BC7A0F6" IsHitTestVisible="False"/>
+                    <Viewbox Stretch="Uniform" HorizontalAlignment="Stretch">
+                        <Grid Width="240" Height="212" CornerRadius="12" Background="{ThemeResource LayerFillColorDefaultBrush}">
+                            <Border CornerRadius="12">
+                                <Border.Background><LinearGradientBrush StartPoint="1,0" EndPoint="0,1"><GradientStop Color="#30C7A0F6"/><GradientStop Color="#047EBDF5" Offset="1"/></LinearGradientBrush></Border.Background>
+                            </Border>
+                            <icon:SymbolIcon Symbol="MusicNote1" FontSize="52" Foreground="{StaticResource LibraryAccent}" Opacity="0.4" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Image Source="{x:Bind CoverImage, Mode=OneWay}" Stretch="UniformToFill"/>
+                            <Border Background="#120D1424" IsHitTestVisible="False"/>
+                            <Border VerticalAlignment="Bottom" Height="68" IsHitTestVisible="False">
+                                <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="Transparent"/><GradientStop Color="#990B101B" Offset="1"/></LinearGradientBrush></Border.Background>
+                            </Border>
+                            <Border Margin="12" Padding="9,5" CornerRadius="8" Background="#C51B2028" BorderBrush="#28FFFFFF" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                                <StackPanel Orientation="Horizontal" Spacing="6"><icon:SymbolIcon Symbol="MusicNote1" FontSize="12" Foreground="{StaticResource LibraryAccent}"/><TextBlock Text="{x:Bind MusicsCountText, Mode=OneWay}" FontSize="11" Foreground="White" FlowDirection="RightToLeft"/></StackPanel>
+                            </Border>
+                        </Grid>
+                    </Viewbox>
+                </Grid>
+                <TextBlock Grid.Row="1" Text="{x:Bind Title, Mode=OneWay}" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Right" TextAlignment="Right" FlowDirection="RightToLeft" TextTrimming="CharacterEllipsis"/>
+                <Grid Grid.Row="2" ColumnSpacing="6">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <icon:SymbolIcon Symbol="ChevronLeft" FontSize="11" Foreground="{StaticResource LibraryAccent}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{x:Bind UpdatedText, Mode=OneWay}" FontSize="10" Opacity="0.55" HorizontalAlignment="Right" TextAlignment="Right" FlowDirection="RightToLeft" TextTrimming="CharacterEllipsis"/>
+                </Grid>
+            </controls:PlaylistItemSurface>
+        </DataTemplate>
+        <DataTemplate x:Key="MusicRow" x:DataType="items:DiscoveryMusicItemViewModel">
+            <controls:PlaylistItemSurface Tag="{x:Bind}" PointerEntered="MusicRow_PointerEntered" GotFocus="MusicRow_GotFocus"
+                Padding="12,10" ColumnSpacing="10" CornerRadius="13" HoverScale="1.003" PressedScale="0.995"
+                Background="{ThemeResource CardBackgroundFillColorSecondary}" BorderBrush="#0DFFFFFF" BorderThickness="1" FlowDirection="LeftToRight"
+                AutomationProperties.Name="{x:Bind DisplayTitle}" AutomationProperties.HelpText="انتخاب برای مشاهدهٔ جزئیات آهنگ"
+                ToolTipService.ToolTip="{x:Bind DisplayTitle}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="52"/><ColumnDefinition Width="22"/></Grid.ColumnDefinitions>
+                <icon:SymbolIcon Symbol="Play" FontSize="16" Foreground="{StaticResource LibraryAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" Opacity="0.65">
+                    <icon:SymbolIcon Symbol="Heart" FontSize="12"/><TextBlock Text="{x:Bind CompactLikesText}" FontSize="11"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="5">
+                    <TextBlock Text="{x:Bind DisplayTitle}" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Right" FlowDirection="RightToLeft" TextAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{x:Bind Artist}" FontSize="11" Opacity="0.55" HorizontalAlignment="Right" FlowDirection="RightToLeft" TextAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+                <Grid Grid.Column="3" Width="52" Height="52" CornerRadius="9" Background="#18C7A0F6" BorderBrush="#18FFFFFF" BorderThickness="1">
+                    <icon:SymbolIcon Symbol="MusicNote1" FontSize="20" Opacity="0.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Image x:Name="TrackCoverImage" Source="{x:Bind CoverImage, Mode=OneWay}" Stretch="UniformToFill"/>
+                </Grid>
+                <TextBlock Grid.Column="4" Text="{x:Bind RankText}" FontSize="12" Opacity="0.4" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </controls:PlaylistItemSurface>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid x:Name="BrowserRoot" RowSpacing="16" MinWidth="0">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <Grid x:Name="HeaderRoot" CornerRadius="20" Background="{ThemeResource CardBackgroundFillColorSecondary}" BorderBrush="#18FFFFFF" BorderThickness="1">
+            <Border CornerRadius="19" IsHitTestVisible="False">
+                <Border.Background><LinearGradientBrush StartPoint="1,0" EndPoint="0,1"><GradientStop Color="#1FC7A0F6"/><GradientStop Color="#06C7A0F6" Offset="0.55"/><GradientStop Color="Transparent" Offset="1"/></LinearGradientBrush></Border.Background>
+            </Border>
+            <Grid x:Name="HeroBody" Padding="24" ColumnSpacing="24" RowSpacing="16">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel x:Name="HeroInfo" VerticalAlignment="Center" Spacing="10">
+                    <StackPanel x:Name="HeroOverline" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+                        <TextBlock x:Name="LibraryOwnerLabel" Text="کتابخانهٔ شخصی" FontSize="10" Foreground="{StaticResource LibraryAccent}" VerticalAlignment="Center"/>
+                        <icon:SymbolIcon Symbol="MusicNote1" FontSize="12" Foreground="{StaticResource LibraryAccent}"/>
+                    </StackPanel>
+                    <TextBlock x:Name="Heading" Text="پلی‌لیست‌های تو" FontSize="28" FontWeight="Bold" HorizontalAlignment="Right" FlowDirection="RightToLeft" TextAlignment="Right" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="2" AutomationProperties.HeadingLevel="Level1">
+                        <TextBlock.Foreground><LinearGradientBrush StartPoint="1,0" EndPoint="0,0"><GradientStop Color="#E7D9FC"/><GradientStop Color="{ThemeResource SystemBaseHighColor}" Offset="1"/></LinearGradientBrush></TextBlock.Foreground>
+                    </TextBlock>
+                    <TextBlock x:Name="Subtitle" Text="مجموعه‌ای با سلیقهٔ خودت" FontSize="12" Opacity="0.65" HorizontalAlignment="Right" FlowDirection="RightToLeft" TextAlignment="Right" TextWrapping="Wrap" MaxLines="2"/>
+                    <StackPanel x:Name="LibrarySummary" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="7">
+                        <Border Padding="10,5" CornerRadius="8" Background="#12C7A0F6" BorderBrush="#22C7A0F6" BorderThickness="1">
+                            <StackPanel Orientation="Horizontal" Spacing="5"><TextBlock Text="پلی‌لیست" FontSize="11" Foreground="{StaticResource LibraryAccent}"/><TextBlock Text="{x:Bind Library.PlaylistCountText, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource LibraryAccent}"/></StackPanel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+                <Grid x:Name="HeroArtwork" Grid.Column="1" Width="146" Height="146" VerticalAlignment="Center" Margin="6">
+                    <Border Margin="14,-6,14,10" CornerRadius="16" Background="#1FC7A0F6" BorderBrush="#38C7A0F6" BorderThickness="1"/>
+                    <Border Margin="7,-3,7,5" CornerRadius="16" Background="#19C7A0F6" BorderBrush="#32C7A0F6" BorderThickness="1"/>
+                    <Grid CornerRadius="16" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="#28C7A0F6" BorderThickness="1">
+                        <Border CornerRadius="15">
+                            <Border.Background><LinearGradientBrush StartPoint="1,0" EndPoint="0,1"><GradientStop Color="#38C7A0F6"/><GradientStop Color="#087EBDF5" Offset="1"/></LinearGradientBrush></Border.Background>
+                        </Border>
+                        <icon:SymbolIcon x:Name="HeroNote" Symbol="MusicNote1" FontSize="46" Foreground="{StaticResource LibraryAccent}" Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Image x:Name="HeroCover" Source="{x:Bind Details.CoverImage, Mode=OneWay}" Stretch="UniformToFill"/>
+                        <Border Background="#0C111826" IsHitTestVisible="False"/>
+                    </Grid>
+                </Grid>
+                <Grid x:Name="HeaderActions" Grid.Row="1" Grid.ColumnSpan="2" ColumnSpacing="8">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <controls:AuthActionButton x:Name="RefreshButton" Style="{StaticResource LibraryAction}" Click="Refresh_Click" Width="38" Height="38" Padding="0" AutomationProperties.Name="به‌روزرسانی پلی‌لیست‌ها" ToolTipService.ToolTip="به‌روزرسانی">
+                        <icon:SymbolIcon Symbol="ArrowClockwise" FontSize="16"/>
+                    </controls:AuthActionButton>
+                    <TextBlock x:Name="LibraryHint" Grid.Column="1" Text="مرتب‌شده بر اساس آخرین تغییرات" HorizontalAlignment="Right" TextAlignment="Right" FlowDirection="RightToLeft" FontSize="11" Opacity="0.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                    <Grid x:Name="PlaylistActions" Grid.Column="1" Visibility="Collapsed" ColumnSpacing="8" HorizontalAlignment="Right">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <controls:AuthActionButton x:Name="AllPlaylistsButton" Style="{StaticResource LibraryAction}" Click="AllPlaylists_Click" AutomationProperties.Name="همهٔ پلی‌لیست‌های من" ToolTipService.ToolTip="همهٔ پلی‌لیست‌های من">
+                            <StackPanel Orientation="Horizontal" Spacing="7"><TextBlock x:Name="AllPlaylistsLabel" Text="پلی‌لیست‌های من"/><icon:SymbolIcon Symbol="MusicNote1" FontSize="15"/></StackPanel>
+                        </controls:AuthActionButton>
+                        <controls:AuthActionButton Grid.Column="1" x:Name="CopyButton" Style="{StaticResource LibraryAction}" Click="Copy_Click" Width="38" Padding="0" AutomationProperties.Name="کپی لینک این پلی‌لیست" ToolTipService.ToolTip="کپی لینک"><icon:SymbolIcon Symbol="Link" FontSize="16"/></controls:AuthActionButton>
+                        <controls:AuthActionButton Grid.Column="2" x:Name="PlayButton" Click="Play_Click" IsEnabled="{x:Bind Details.CanPlay, Mode=OneWay}" Style="{StaticResource LibraryAction}" Background="#C7A0F6" Foreground="#20152E" BorderBrush="#E4D1FC" AutomationProperties.Name="پخش تمام آهنگ‌های این پلی‌لیست">
+                            <StackPanel Orientation="Horizontal" Spacing="7"><TextBlock x:Name="PlayLabel" Text="پخش پلی‌لیست" FontWeight="SemiBold" VerticalAlignment="Center"/><icon:SymbolIcon Symbol="Play" FontSize="16"/></StackPanel>
+                        </controls:AuthActionButton>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+        <Grid Grid.Row="2" RowSpacing="10">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <uc:DiscoverySectionHeader x:Name="SectionHeader" Title="مجموعه‌های تو" Icon="MusicNote1" AccentColor="#C7A0F6" IsCompact="True"/>
+            <controls:WidgetLoadHost x:Name="LoadingHost" Grid.Row="1" IsLoading="True" LoadingText="در حال دریافت کتابخانه" SkeletonHeight="160">
+                <Grid>
+                    <GridView x:Name="PlaylistList" FlowDirection="RightToLeft" ItemsSource="{x:Bind Library.VisiblePlaylists}" ItemTemplate="{StaticResource PlaylistCard}"
+                        ItemContainerStyle="{StaticResource LibraryCardContainer}" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Playlist_Click"
+                        Padding="0,2,0,8" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollMode="Auto"
+                        AutomationProperties.Name="پلی‌لیست‌های شخصی، مرتب‌شده بر اساس آخرین تغییر">
+                        <GridView.ItemsPanel><ItemsPanelTemplate><ItemsWrapGrid Orientation="Horizontal" ItemWidth="224" Loaded="PlaylistGridPanel_Loaded"/></ItemsPanelTemplate></GridView.ItemsPanel>
+                        <GridView.ItemContainerTransitions><TransitionCollection/></GridView.ItemContainerTransitions>
+                    </GridView>
+                    <ListView x:Name="MusicList" Visibility="Collapsed" ItemsSource="{x:Bind Details.Musics}" ItemTemplate="{StaticResource MusicRow}"
+                        ItemContainerStyle="{StaticResource LibraryTrackContainer}" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Music_Click"
+                        Padding="0,2,0,8" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollMode="Auto"
+                        AutomationProperties.Name="آهنگ‌های پلی‌لیست؛ انتخاب برای مشاهدهٔ جزئیات">
+                        <ListView.ItemContainerTransitions><TransitionCollection/></ListView.ItemContainerTransitions>
+                    </ListView>
+                    <StackPanel x:Name="EmptyState" Visibility="Collapsed" MaxWidth="340" Spacing="14" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="16">
+                        <Border Width="62" Height="62" CornerRadius="20" Background="#14C7A0F6" BorderBrush="#24C7A0F6" BorderThickness="1" HorizontalAlignment="Center">
+                            <icon:SymbolIcon Symbol="MusicNote1" Foreground="{StaticResource LibraryAccent}" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock x:Name="EmptyText" Text="هنوز پلی‌لیستی نداری؛ از صفحهٔ یک آهنگ شروع کن."
+                            FlowDirection="RightToLeft" TextAlignment="Center" TextWrapping="Wrap" FontSize="13" Opacity="0.7"/>
+                    </StackPanel>
+                </Grid>
+            </controls:WidgetLoadHost>
+        </Grid>
+        <Grid Grid.Row="3" Padding="4,8,4,0" BorderBrush="#12FFFFFF" BorderThickness="0,1,0,0" ColumnSpacing="10">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <controls:AuthActionButton x:Name="PreviousButton" Style="{StaticResource LibraryAction}" Click="Previous_Click" IsEnabled="False" AutomationProperties.Name="صفحهٔ قبلی">
+                <StackPanel Orientation="Horizontal" Spacing="7"><icon:SymbolIcon Symbol="ChevronLeft" FontSize="12"/><TextBlock Text="قبلی"/></StackPanel>
+            </controls:AuthActionButton>
+            <TextBlock x:Name="PageNumber" Grid.Column="1" Text="صفحهٔ ۱" TextAlignment="Center" FlowDirection="RightToLeft" FontSize="11" VerticalAlignment="Center" Opacity="0.6"/>
+            <controls:AuthActionButton x:Name="NextButton" Grid.Column="2" Style="{StaticResource LibraryAction}" Click="Next_Click" IsEnabled="False" AutomationProperties.Name="صفحهٔ بعدی">
+                <StackPanel Orientation="Horizontal" Spacing="7"><TextBlock Text="بعدی"/><icon:SymbolIcon Symbol="ChevronRight" FontSize="12"/></StackPanel>
+            </controls:AuthActionButton>
+        </Grid>
+        <InfoBar x:Name="Message" Grid.Row="2" Canvas.ZIndex="1" VerticalAlignment="Bottom" Margin="8"
+                 IsOpen="False" IsClosable="True" Severity="Informational" FlowDirection="RightToLeft"/>
+    </Grid>
+</UserControl>

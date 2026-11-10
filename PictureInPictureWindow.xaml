@@ -1,0 +1,146 @@
+<Window
+    x:Class="Mizon.Windows.PictureInPictureWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:icon="using:FluentIcons.WinUI">
+    <Grid x:Name="Root" Background="Transparent" RequestedTheme="Dark" Loaded="Root_Loaded" SizeChanged="Root_SizeChanged">
+        <Grid.Resources>
+            <SolidColorBrush x:Key="PipAccent" Color="#91DEC5"/>
+            <StaticResource x:Key="SliderTrackValueFill" ResourceKey="PipAccent"/>
+            <StaticResource x:Key="SliderTrackValueFillPointerOver" ResourceKey="PipAccent"/>
+            <StaticResource x:Key="SliderTrackValueFillPressed" ResourceKey="PipAccent"/>
+            <StaticResource x:Key="SliderThumbBackground" ResourceKey="PipAccent"/>
+            <StaticResource x:Key="SliderThumbBackgroundPointerOver" ResourceKey="PipAccent"/>
+            <StaticResource x:Key="SliderThumbBackgroundPressed" ResourceKey="PipAccent"/>
+            <Style x:Key="PipButton" TargetType="controls:AuthActionButton">
+                <Setter Property="Width" Value="30"/><Setter Property="Height" Value="30"/>
+                <Setter Property="Padding" Value="7"/><Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Background" Value="#08FFFFFF"/><Setter Property="BorderBrush" Value="#0FFFFFFF"/>
+                <Setter Property="BorderThickness" Value="1"/><Setter Property="Foreground" Value="#DFFFFFFF"/>
+                <Setter Property="UseSystemFocusVisuals" Value="True"/>
+                <Setter Property="FocusVisualPrimaryBrush" Value="{StaticResource PipAccent}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="controls:AuthActionButton">
+                            <Grid>
+                                <Border x:Name="ActionSurface" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"/>
+                                <Border x:Name="ActionLight" Background="White" CornerRadius="{TemplateBinding CornerRadius}" Opacity="0" IsHitTestVisible="False"/>
+                                <ContentPresenter x:Name="ActionContent" Content="{TemplateBinding Content}" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
+
+        <MediaPlayerElement x:Name="VideoSurface" AreTransportControlsEnabled="False" AutoPlay="False" Visibility="Collapsed" Stretch="Uniform"/>
+        <Grid x:Name="VideoScrim" Visibility="Collapsed" IsHitTestVisible="False">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#90141B24" Offset="0"/>
+                    <GradientStop Color="#00141B24" Offset="0.3"/>
+                    <GradientStop Color="#00141B24" Offset="0.52"/>
+                    <GradientStop Color="#D0090C0F" Offset="1"/>
+                </LinearGradientBrush>
+            </Grid.Background>
+        </Grid>
+
+        <Grid x:Name="LayoutRoot" Padding="12,0,12,10" RowSpacing="4">
+            <Grid.RowDefinitions><RowDefinition Height="32"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <!-- The reserved column belongs to the native Windows close button. -->
+            <Grid x:Name="Header">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition x:Name="CaptionInset" Width="45"/></Grid.ColumnDefinitions>
+                <Grid x:Name="DragRegion" Background="Transparent">
+                    <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+                        <icon:SymbolIcon Symbol="Headphones" IconVariant="Color" FontSize="15" IsHitTestVisible="False"/>
+                        <TextBlock Text="MIZON" FontSize="9" CharacterSpacing="190" FontWeight="SemiBold" Foreground="#DCFFFFFF"/>
+                        <Border Height="10" Width="1" Background="#25FFFFFF" Margin="3,0"/>
+                        <TextBlock x:Name="MediaKindText" Text="پلیر شناور" TextTrimming="CharacterEllipsis" MaxWidth="170" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="9" Foreground="#8FFFFFFF"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <Grid x:Name="MusicHero" Grid.Row="1" ColumnSpacing="14" VerticalAlignment="Center" Margin="1,2,1,6">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <Grid x:Name="ArtworkHost" Width="104" Height="104">
+                    <Grid x:Name="ArtworkGlowHost" IsHitTestVisible="False"/>
+                    <Border CornerRadius="15" Padding="3" BorderThickness="1" Background="#24090C0F">
+                        <Border.BorderBrush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#65FFFFFF" Offset="0"/>
+                                <GradientStop Color="#0CFFFFFF" Offset="0.6"/>
+                                <GradientStop x:Name="ArtworkEdgeTint" Color="#4091DEC5" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.BorderBrush>
+                        <Grid CornerRadius="11" Background="#FF18212A">
+                            <icon:SymbolIcon Symbol="MusicNote1" FontSize="26" Foreground="{StaticResource PipAccent}" Opacity="0.35"/>
+                            <Image x:Name="Artwork" Stretch="UniformToFill" AutomationProperties.Name="کاور آهنگ"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4" FlowDirection="RightToLeft">
+                    <TextBlock x:Name="TrackTitle" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="19" LineHeight="26" LineStackingStrategy="BlockLineHeight" FontWeight="SemiBold" TextAlignment="Right" TextTrimming="CharacterEllipsis" MaxLines="2" TextWrapping="Wrap" Foreground="#F5FFFFFF"/>
+                    <TextBlock x:Name="TrackSubtitle" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11" LineHeight="16" LineStackingStrategy="BlockLineHeight" Foreground="#AFFFFFFF" TextAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                    <Border x:Name="StateBadge" HorizontalAlignment="Left" CornerRadius="8" Padding="6,2" BorderThickness="1" Margin="0,2,0,0">
+                        <Border.Background><SolidColorBrush x:Name="StateFill" Color="#1491DEC5"/></Border.Background>
+                        <Border.BorderBrush><SolidColorBrush x:Name="StateStroke" Color="#2091DEC5"/></Border.BorderBrush>
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock x:Name="StateText" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="9" LineHeight="12" LineStackingStrategy="BlockLineHeight" Foreground="{StaticResource PipAccent}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="2" Height="12" VerticalAlignment="Center" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+                                <Border x:Name="LevelOne" Width="2" Height="7" CornerRadius="1" Background="{StaticResource PipAccent}" VerticalAlignment="Center"/>
+                                <Border x:Name="LevelTwo" Width="2" Height="12" CornerRadius="1" Background="{StaticResource PipAccent}" VerticalAlignment="Center"/>
+                                <Border x:Name="LevelThree" Width="2" Height="9" CornerRadius="1" Background="{StaticResource PipAccent}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <Border x:Name="TransportDock" Grid.Row="2" CornerRadius="16" BorderThickness="1" Padding="10,3,10,7" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                <Border.BorderBrush>
+                    <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                        <GradientStop Color="#32FFFFFF" Offset="0"/><GradientStop Color="#0AFFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.BorderBrush>
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="22"/><RowDefinition Height="14"/><RowDefinition Height="36"/></Grid.RowDefinitions>
+                    <Slider x:Name="SeekSlider" Minimum="0" Maximum="1" ValueChanged="Seek_ValueChanged" MinHeight="20" Height="22" AutomationProperties.Name="موقعیت پخش" Foreground="{StaticResource PipAccent}" Background="#19FFFFFF">
+                        <Slider.Resources><x:Double x:Key="SliderTrackThemeHeight">3</x:Double></Slider.Resources>
+                    </Slider>
+                    <TextBlock x:Name="PositionText" Grid.Row="1" FontSize="9" Foreground="#CFFFFFFF"/>
+                    <TextBlock x:Name="DurationText" Grid.Row="1" FontSize="9" Foreground="#70FFFFFF" HorizontalAlignment="Right"/>
+                    <Grid Grid.Row="2" VerticalAlignment="Bottom">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <controls:AuthActionButton Style="{StaticResource PipButton}" HorizontalAlignment="Left" AutomationProperties.Name="تنظیم صدا" ToolTipService.ToolTip="تنظیم صدا">
+                            <icon:SymbolIcon Symbol="Speaker2" FontSize="14"/>
+                            <controls:AuthActionButton.Flyout>
+                                <Flyout Opened="ControlsFlyout_Opened" Closed="ControlsFlyout_Closed">
+                                    <StackPanel Width="160" Spacing="6"><TextBlock Text="بلندی صدا" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" TextAlignment="Right"/><Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" ValueChanged="Volume_ValueChanged" AutomationProperties.Name="درصد بلندی صدا"/></StackPanel>
+                                </Flyout>
+                            </controls:AuthActionButton.Flyout>
+                        </controls:AuthActionButton>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+                            <controls:AuthActionButton x:Name="PreviousButton" Style="{StaticResource PipButton}" Background="Transparent" BorderThickness="0" Click="Previous_Click" AutomationProperties.Name="قبلی" ToolTipService.ToolTip="قبلی"><icon:SymbolIcon Symbol="Previous" FontSize="16"/></controls:AuthActionButton>
+                            <controls:AuthActionButton x:Name="PlayButton" Style="{StaticResource PipButton}" Width="48" Height="36" CornerRadius="12" Foreground="#FF101820" BorderBrush="#80FFFFFF" Click="Play_Click" AutomationProperties.Name="پخش">
+                                <controls:AuthActionButton.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#FFFFFFFF" Offset="0"/><GradientStop x:Name="PlayTint" Color="#D2E7EE" Offset="1"/></LinearGradientBrush></controls:AuthActionButton.Background>
+                                <icon:SymbolIcon x:Name="PlayIcon" Symbol="Play" FontSize="19"/>
+                            </controls:AuthActionButton>
+                            <controls:AuthActionButton x:Name="NextButton" Style="{StaticResource PipButton}" Background="Transparent" BorderThickness="0" Click="Next_Click" AutomationProperties.Name="بعدی" ToolTipService.ToolTip="بعدی"><icon:SymbolIcon Symbol="Next" FontSize="16"/></controls:AuthActionButton>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <controls:AuthActionButton Style="{StaticResource PipButton}" Click="Return_Click" AutomationProperties.Name="بازگشت به برنامه" ToolTipService.ToolTip="بازگشت به میزون"><icon:SymbolIcon Symbol="FullScreenMaximize" FontSize="13"/></controls:AuthActionButton>
+                            <controls:AuthActionButton Style="{StaticResource PipButton}" AutomationProperties.Name="اندازهٔ پنجره" ToolTipService.ToolTip="اندازهٔ پنجره">
+                                <icon:SymbolIcon Symbol="MoreHorizontal" FontSize="14"/>
+                                <controls:AuthActionButton.Flyout><MenuFlyout Opened="ControlsFlyout_Opened" Closed="ControlsFlyout_Closed"><MenuFlyoutItem Text="کوچک" Tag="Small" Click="Size_Click"/><MenuFlyoutItem Text="متوسط" Tag="Medium" Click="Size_Click"/><MenuFlyoutItem Text="بزرگ" Tag="Large" Click="Size_Click"/></MenuFlyout></controls:AuthActionButton.Flyout>
+                            </controls:AuthActionButton>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+        <Border x:Name="ErrorPanel" Visibility="Collapsed" Background="#F0442027" CornerRadius="10" Padding="10" Margin="12,38,12,0" VerticalAlignment="Top" IsHitTestVisible="False">
+            <TextBlock x:Name="ErrorText" Text="انجام عملیات ممکن نشد؛ دوباره تلاش کنید." TextWrapping="Wrap" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11" FlowDirection="RightToLeft" AutomationProperties.LiveSetting="Assertive"/>
+        </Border>
+    </Grid>
+</Window>

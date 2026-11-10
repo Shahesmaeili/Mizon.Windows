@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+         xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+         IgnorableNamespaces="uap uap3 com rescap">
+  <!-- Deploy.ps1 sets Publisher from the client manifest and increments Version. -->
+  <Identity Name="Mizon.Windows.PaletteProvider" Publisher="CN=alish"
+            Version="1.0.0.0" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>Mizon Music Search</DisplayName>
+    <PublisherDisplayName>Mizon</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.26340.0" MaxVersionTested="10.0.26340.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Applications>
+    <Application Id="App" Executable="Mizon.Windows.PaletteProvider.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="Mizon Music Search" Description="Mizon native music search provider"
+                          AppListEntry="none" BackgroundColor="transparent"
+                          Square150x150Logo="Assets\Square150x150Logo.png"
+                          Square44x44Logo="Assets\Square44x44Logo.png" />
+      <Extensions>
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:ExeServer Executable="Mizon.Windows.PaletteProvider.exe"
+                           Arguments="-RegisterProcessAsComServer" DisplayName="Mizon Music Search">
+              <com:Class Id="6A9CD8C1-B10B-41B6-944A-59CE8A09C182" DisplayName="Mizon Music Palette" />
+            </com:ExeServer>
+          </com:ComServer>
+        </com:Extension>
+        <uap3:Extension Category="windows.appExtension">
+          <uap3:AppExtension Name="com.microsoft.palettes" Id="MizonMusicPalette"
+                             DisplayName="Mizon Music" Description="Search music in Mizon" PublicFolder="Public">
+            <uap3:Properties>
+              <MinimumPaletteApiVersion>2.0</MinimumPaletteApiVersion>
+              <Kinds>
+                <KindSpec>QueryResult.SystemComposer</KindSpec>
+              </Kinds>
+              <ComObjects>
+                <Windows.UI.Palettes.IPaletteItemSourceExtension>6A9CD8C1-B10B-41B6-944A-59CE8A09C182</Windows.UI.Palettes.IPaletteItemSourceExtension>
+              </ComObjects>
+            </uap3:Properties>
+          </uap3:AppExtension>
+        </uap3:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

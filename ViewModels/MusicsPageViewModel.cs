@@ -1,4 +1,5 @@
-﻿using Mizon.API;
+using System;
+using Mizon.API;
 using Mizon.Windows.Services;
 
 namespace Mizon.Windows.ViewModels;
@@ -6,7 +7,7 @@ namespace Mizon.Windows.ViewModels;
 public class MusicsPageViewModel : MainViewModel
 {
     public MusicsPageViewModel(MizonApi mizonApi,
-        MizonSocket mizonSocket,
+        Lazy<MizonSocket> mizonSocket,
         NavigationService navigationService,
         IAudioPlayerService audioPlayerService) : base(mizonApi, mizonSocket, navigationService, audioPlayerService)
     {

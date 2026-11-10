@@ -22,12 +22,18 @@ public sealed class MusicGenreTypeItemViewModel : ViewModelBase
         init
         {
             _accentColorHex = value;
-            AccentBrush = new SolidColorBrush(ParseColor(value));
+            var color = ParseColor(value);
+            AccentBrush = new SolidColorBrush(color);
+            AccentColor = color;
+            TransparentAccentColor = Color.FromArgb(0, color.R, color.G, color.B);
         }
     }
 
     public SolidColorBrush AccentBrush { get; private set; } = new(ParseColor("#EC4899"));
+    public Color AccentColor { get; private set; } = ParseColor("#EC4899");
+    public Color TransparentAccentColor { get; private set; } = Color.FromArgb(0, 236, 72, 153);
     public string MusicsCountText => $"{MusicsCount:N0}";
+    public string AutomationName => $"سبک {(string.IsNullOrWhiteSpace(PersianTitle) ? Title : PersianTitle)}، {MusicsCount:N0} آهنگ";
 
     public FluentSymbol IconSymbol => Enum.TryParse<FluentSymbol>(IconSymbolName, true, out var symbol)
         ? symbol

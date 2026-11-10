@@ -1,44 +1,121 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+		<ApplicationIcon>Assets\AppIcon\Mizon.ico</ApplicationIcon>
+		<DefaultLanguage>fa-IR</DefaultLanguage>
+	</PropertyGroup>
 	<ItemGroup>
+		<Content Include="Assets\Mizon.ico" CopyToOutputDirectory="PreserveNewest" />
+		<Content Include="Assets\AppIcon\**\*" CopyToOutputDirectory="PreserveNewest" />
+		<Content Include="Controls\FlipSide.LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
+		<Content Include="Assets\JumpList\**\*" CopyToOutputDirectory="PreserveNewest" />
+		<None Remove="Assets\AppActions\registration.json" />
+		<Content Include="Assets\AppActions\registration.json" CopyToOutputDirectory="PreserveNewest" />
+		<AdditionalReRegisterAppIfChangedTargetPaths Include="Assets\AppActions\registration.json" />
 		<Compile Remove="ExplorerCommands\**\*.cs" />
 		<!-- WindowsSearch is a sibling project. Its generated obj files must not be
 		     compiled into the WinUI application. -->
 		<Compile Remove="WindowsSearch\**\*.cs" />
+		<Compile Remove="Mcp\**\*.cs" />
+		<Content Remove="Mcp\**\*" />
+		<None Remove="Mcp\**\*" />
+		<Content Include="Assets\Mcp\**\*" CopyToOutputDirectory="PreserveNewest" />
+		<Compile Remove="Taskbar\**\*.cs" />
+		<Page Remove="Taskbar\**\*.xaml" />
+		<ApplicationDefinition Remove="Taskbar\**\*.xaml" />
+		<Resource Remove="Taskbar\**\*" />
+		<EmbeddedResource Remove="Taskbar\**\*" />
+		<Content Remove="Taskbar\**\*" />
+		<None Remove="Taskbar\**\*" />
 	</ItemGroup>
 
-	<Target Name="BuildExplorerCommands" BeforeTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
-		<MSBuild Projects="ExplorerCommands\Mizon.Windows.ExplorerCommands.csproj" Targets="Build" Properties="Configuration=$(Configuration);Platform=x64;BuildProjectReferences=false" />
-	</Target>
-
-	<Target Name="SynchronizeExplorerCommandsAppxLayout" AfterTargets="Build;_CreateTestLayout" DependsOnTargets="BuildExplorerCommands" Condition="Exists('$(TargetDir)AppX')">
+	<!-- The stdio host is independent from WinUI; only the app can grant its access. -->
+	<Target Name="BuildMcpCompanion" BeforeTargets="AssignTargetPaths" Condition="'$(DesignTimeBuild)' != 'true'">
+		<MSBuild Projects="Mcp\Mizon.Windows.Mcp\Mizon.Windows.Mcp.csproj" Targets="Build;GetTargetPath" Properties="Configuration=$(Configuration);Platform=x64;RuntimeIdentifier=win-x64" RemoveProperties="AppxPackage;AppxPackageDir;UapAppxPackageBuildMode;GenerateAppxPackageOnBuild;AppxPackageSigningEnabled;PublishAot;PublishTrimmed;PublishReadyToRun">
+			<Output TaskParameter="TargetOutputs" ItemName="_McpBuildOutput" />
+		</MSBuild>
 		<PropertyGroup>
-			<ExplorerCommandsPackageVersion>1.0.$([System.DateTime]::UtcNow.ToString('yy'))$([System.DateTime]::UtcNow.DayOfYear.ToString('000')).$([System.DateTime]::UtcNow.ToString('HHmm'))</ExplorerCommandsPackageVersion>
+			<_McpOutputDirectory>@(_McpBuildOutput-&gt;'%(RootDir)%(Directory)'-&gt;Distinct())</_McpOutputDirectory>
 		</PropertyGroup>
 		<ItemGroup>
-			<ExplorerCommandsPayload Include="$(MSBuildProjectDirectory)\ExplorerCommands\bin\x64\$(Configuration)\net10.0-windows10.0.22621.0\win-x64\*.*" />
+			<_McpPayload Include="$(_McpOutputDirectory)**\*" Exclude="$(_McpOutputDirectory)**\*.pdb" />
+			<Content Include="@(_McpPayload)">
+				<Link>Mcp\Payload\%(_McpPayload.RecursiveDir)%(_McpPayload.Filename)%(_McpPayload.Extension)</Link>
+				<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			</Content>
 		</ItemGroup>
-
-		<MakeDir Directories="$(TargetDir)AppX\ExplorerCommands" />
-		<Copy SourceFiles="@(ExplorerCommandsPayload)" DestinationFiles="@(ExplorerCommandsPayload->'$(TargetDir)AppX\ExplorerCommands\%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
-		<Copy SourceFiles="$(MSBuildProjectDirectory)\ExplorerCommands\Assets\Silo.ico" DestinationFiles="$(TargetDir)AppX\ExplorerCommands\Silo.ico" SkipUnchangedFiles="true" Condition="Exists('$(MSBuildProjectDirectory)\ExplorerCommands\Assets\Silo.ico')" />
-		<Exec Command="powershell -NoProfile -Command &quot;[xml]$manifest = Get-Content '$(TargetDir)AppX\AppxManifest.xml'; $namespaces = New-Object System.Xml.XmlNamespaceManager($manifest.NameTable); $namespaces.AddNamespace('foundation', 'http://schemas.microsoft.com/appx/manifest/foundation/windows10'); $namespaces.AddNamespace('com', 'http://schemas.microsoft.com/appx/manifest/com/windows10'); $server = $manifest.SelectSingleNode('/foundation:Package/foundation:Applications/foundation:Application/foundation:Extensions/com:Extension/com:ComServer/com:SurrogateServer', $namespaces); $class = $server.SelectSingleNode('com:Class[@Id=''C1B40E19-79ED-4A8A-A099-9F7B4A5DD7E3'']', $namespaces); if ($null -eq $class) { $class = $manifest.CreateElement('com', 'Class', 'http://schemas.microsoft.com/appx/manifest/com/windows10'); $class.SetAttribute('Id', 'C1B40E19-79ED-4A8A-A099-9F7B4A5DD7E3'); $class.SetAttribute('Path', 'ExplorerCommands\Mizon.Windows.ExplorerCommands.comhost.dll'); $class.SetAttribute('ThreadingModel', 'STA'); [void]$server.AppendChild($class) }; $resource = $manifest.SelectSingleNode('/foundation:Package/foundation:Resources/foundation:Resource', $namespaces); $resource.SetAttribute('Language', 'en-US'); $manifest.Save('$(TargetDir)AppX\AppxManifest.xml')&quot;" />
-		<Exec Command="powershell -NoProfile -Command &quot;[xml]$manifest = Get-Content '$(TargetDir)AppX\AppxManifest.xml'; $manifest.Package.Identity.Version = '$(ExplorerCommandsPackageVersion)'; $manifest.Save('$(TargetDir)AppX\AppxManifest.xml')&quot;" />
 	</Target>
 
-	<Target Name="RestartMizonExplorerCommandHost" AfterTargets="SynchronizeExplorerCommandsAppxLayout">
-		<Exec Command="powershell -NoProfile -Command &quot;$hosts = Get-CimInstance Win32_Process -Filter 'Name = ''DllHost.exe''' | Where-Object { $_.CommandLine -match 'E72D6A3B-29A8-4B1F-B0FB-D78D3DF8B8B7' -or $_.CommandLine -match 'C1B40E19-79ED-4A8A-A099-9F7B4A5DD7E3' }; $hosts | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }&quot;" IgnoreExitCode="true" />
+	<!-- Independent taskbar host: include its complete build payload in MSIX, but
+	     run a versioned user-local copy so it can survive app shutdown/rebuilds. -->
+	<Target Name="BuildTaskbarProfileCompanion" BeforeTargets="AssignTargetPaths" Condition="'$(DesignTimeBuild)' != 'true'">
+		<MSBuild Projects="Taskbar\Mizon.Windows.Taskbar\Mizon.Windows.Taskbar.csproj" Targets="Build;GetTargetPath" Properties="Configuration=$(Configuration);Platform=x64;RuntimeIdentifier=win-x64" RemoveProperties="AppxPackage;AppxPackageDir;UapAppxPackageBuildMode;GenerateAppxPackageOnBuild;AppxPackageSigningEnabled;PublishAot;PublishTrimmed">
+			<Output TaskParameter="TargetOutputs" ItemName="_TaskbarProfileBuildOutput" />
+		</MSBuild>
+		<PropertyGroup>
+			<_TaskbarProfileOutputDirectory>@(_TaskbarProfileBuildOutput-&gt;'%(RootDir)%(Directory)'-&gt;Distinct())</_TaskbarProfileOutputDirectory>
+		</PropertyGroup>
+		<ItemGroup>
+			<_TaskbarProfilePayload Include="$(_TaskbarProfileOutputDirectory)**\*" />
+			<Content Include="@(_TaskbarProfilePayload)">
+				<Link>Taskbar\Payload\%(_TaskbarProfilePayload.RecursiveDir)%(_TaskbarProfilePayload.Filename)%(_TaskbarProfilePayload.Extension)</Link>
+				<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			</Content>
+		</ItemGroup>
+	</Target>
+
+	<!-- The taskbar EXE loads its own App.xbf/PRI after staging. MRT must not
+	     merge that independent App resource into the main application's PRI.
+	     Leave the Content payload intact for MSIX and copy-to-output. -->
+	<Target Name="KeepTaskbarProfileResourcesSeparate" AfterTargets="_ComputeInputPriFiles">
+		<ItemGroup>
+			<_PriFile Remove="@(_PriFile)" Condition="'%(_PriFile.Filename)' == 'Mizon.Windows.Taskbar'" />
+		</ItemGroup>
+	</Target>
+
+	<!-- Collect the COM server payload after it is built, before MSBuild assigns
+	     package paths. Never edit AppX/AppxManifest.xml after the SDK generates it. -->
+	<Target Name="BuildExplorerCommands" BeforeTargets="AssignTargetPaths" Condition="'$(DesignTimeBuild)' != 'true'">
+		<MSBuild Projects="ExplorerCommands\Mizon.Windows.ExplorerCommands.csproj" Targets="Build;GetTargetPath" Properties="Configuration=$(Configuration);Platform=x64">
+			<Output TaskParameter="TargetOutputs" ItemName="_ExplorerCommandsBuildOutput" />
+		</MSBuild>
+		<PropertyGroup>
+			<_ExplorerCommandsOutputDirectory>@(_ExplorerCommandsBuildOutput-&gt;'%(RootDir)%(Directory)'-&gt;Distinct())</_ExplorerCommandsOutputDirectory>
+		</PropertyGroup>
+		<ItemGroup>
+			<_ExplorerCommandsPayload Include="$(_ExplorerCommandsOutputDirectory)*.*" />
+			<Content Include="@(_ExplorerCommandsPayload)">
+				<Link>ExplorerCommands\%(_ExplorerCommandsPayload.Filename)%(_ExplorerCommandsPayload.Extension)</Link>
+				<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			</Content>
+		</ItemGroup>
+	</Target>
+
+	<Target Name="ReleaseMizonExplorerCommandHost" BeforeTargets="BuildExplorerCommands" Condition="'$(DesignTimeBuild)' != 'true'">
+		<Exec Command="powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Build\StopExplorerCommandHost.ps1&quot;" />
 	</Target>
 
 	<ItemGroup>
-		<Content Include="ExplorerCommands\bin\x64\$(Configuration)\net10.0-windows10.0.22621.0\win-x64\*.*">
-			<Link>ExplorerCommands\%(Content.Filename)%(Content.Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
+		<!-- Visual Studio must build the COM server before the packaged app. -->
+		<ProjectReference Include="Mcp\Mizon.Windows.Mcp.Contracts\Mizon.Windows.Mcp.Contracts.csproj" />
+		<ProjectReference Include="Mcp\Mizon.Windows.Mcp\Mizon.Windows.Mcp.csproj" ReferenceOutputAssembly="false" Private="false" SetPlatform="Platform=x64" AdditionalProperties="ShouldBeValidatedAsExecutableReference=false;RuntimeIdentifier=win-x64" />
+		<UpToDateCheckInput Include="Mcp\**\*.cs;Mcp\**\*.csproj" Exclude="Mcp\**\bin\**;Mcp\**\obj\**" />
+		<AdditionalReRegisterAppIfChangedTargetPaths Include="Mcp\Payload\Mizon.Windows.Mcp.exe;Mcp\Payload\Mizon.Windows.Mcp.dll" />
+		<ProjectReference Include="ExplorerCommands\Mizon.Windows.ExplorerCommands.csproj" ReferenceOutputAssembly="false" Private="false" />
+		<UpToDateCheckInput Include="ExplorerCommands\**\*.cs;ExplorerCommands\Assets\**\*;ExplorerCommands\Mizon.Windows.ExplorerCommands.csproj" Exclude="ExplorerCommands\bin\**;ExplorerCommands\obj\**" />
+		<AdditionalReRegisterAppIfChangedTargetPaths Include="ExplorerCommands\Mizon.Windows.ExplorerCommands.dll;ExplorerCommands\Mizon.Windows.ExplorerCommands.comhost.dll" />
+		<ProjectReference Include="Taskbar\Mizon.Windows.Taskbar\Mizon.Windows.Taskbar.csproj" ReferenceOutputAssembly="false" Private="false" SetPlatform="Platform=x64" AdditionalProperties="ShouldBeValidatedAsExecutableReference=false" />
+		<UpToDateCheckInput Include="Taskbar\Mizon.Windows.Taskbar\**\*.cs;Taskbar\Mizon.Windows.Taskbar\**\*.xaml;Taskbar\Mizon.Windows.Taskbar\*.csproj;Taskbar\Mizon.Windows.Taskbar\*.manifest" Exclude="Taskbar\Mizon.Windows.Taskbar\bin\**;Taskbar\Mizon.Windows.Taskbar\obj\**" />
+		<AdditionalReRegisterAppIfChangedTargetPaths Include="Taskbar\Payload\Mizon.Windows.Taskbar.exe;Taskbar\Payload\Mizon.Windows.Taskbar.dll" />
 	</ItemGroup>
-
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
+		<TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+		<WindowsSdkPackageVersion>10.0.26100.75</WindowsSdkPackageVersion>
+		<GenerateActionsWinRTComServer>true</GenerateActionsWinRTComServer>
+		<!-- Page actions have no input entities. Keep their registration explicit;
+		     Microsoft.AI.Actions generates the COM activation infrastructure. -->
+		<GenerateActionRegistrationManifest>false</GenerateActionRegistrationManifest>
 		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
 		<RootNamespace>Mizon.Windows</RootNamespace>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
@@ -67,7 +144,6 @@
 		<None Remove="Assets\photo5.jpg" />
 		<None Remove="Assets\photo6.jpg" />
 		<None Remove="Generic.xaml" />
-		<None Remove="InfoWindow.xaml" />
 		<None Remove="Pages\HomePage.xaml" />
 		<None Remove="Pages\LoginPage.xaml" />
 		<None Remove="Pages\MusicItemPage.xaml" />
@@ -91,6 +167,18 @@
 	<ItemGroup>
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
+	<ItemGroup>
+		<Content Update="Assets\Discovery\*.jpg;Assets\Discovery\*.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<None Remove="Assets\Discovery\Models\**\*" />
+		<Content Include="Assets\Discovery\Models\**\*" CopyToOutputDirectory="PreserveNewest" />
+		<None Remove="Assets\Cursors\*.cur" />
+		<Content Include="Assets\Cursors\*.cur" CopyToOutputDirectory="PreserveNewest" />
+		<Content Update="Assets\Discovery\SOURCES.md;Assets\Discovery\TOP-ARTISTS-SOURCES.md">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
 	<!--
     Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
@@ -108,21 +196,22 @@
 		<PackageReference Include="CommunityToolkit.WinUI.Media" Version="8.3.260402-preview2" />
 		<PackageReference Include="DevWinUI" Version="10.4.1" />
 		<PackageReference Include="DevWinUI.Shader" Version="10.1.0" />
-		<PackageReference Include="FluentIcons.WinUI" Version="2.2.339.1" />
+		<PackageReference Include="FluentIcons.WinUI" Version="2.2.345" />
 		<PackageReference Include="LiveChartsCore.SkiaSharpView.WinUI" Version="2.1.0-dev-798" />
-		<PackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="10.0.8" />
-		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.8" />
-		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="10.0.8" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="10.0.14" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.14" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="10.0.14" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
 		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
+		<PackageReference Include="Microsoft.AI.Actions" Version="0.1.0" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.29648.1000-preview" />
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="2.4.1-experimental" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.4-experimental" />
 		<PackageReference Include="OpenRGB.NET" Version="3.1.1" />
 		<PackageReference Include="RGB.NET.Devices.Asus" Version="3.2.0" />
 		<PackageReference Include="RGB.NET.Devices.OpenRGB" Version="3.2.0" />
 		<PackageReference Include="RGB.NET.Devices.Razer" Version="3.2.0" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.8" />
-		<PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.14" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.14" />
 	</ItemGroup>
 	<ItemGroup>
 		<Content Update="Assets\Animation.gif">
@@ -306,11 +395,6 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\..\Mizon.API\Mizon.API.Client\Mizon.API.Client.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Page Update="InfoWindow.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </Page>
 	</ItemGroup>
 	<ItemGroup>
 	  <Page Update="Pages\VPNPage.xaml">

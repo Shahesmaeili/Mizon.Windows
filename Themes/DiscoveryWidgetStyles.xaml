@@ -1,0 +1,167 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Mizon.Windows.Controls">
+    <Style x:Key="DiscoveryWidgetSurface" TargetType="Border">
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorSecondary}" />
+    </Style>
+    <Style x:Key="DiscoveryWidgetCaption" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="/Assets/Fonts/IRANSANS.TTF#IRANSans" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Opacity" Value="0.65" />
+        <Setter Property="FlowDirection" Value="RightToLeft" />
+        <Setter Property="TextReadingOrder" Value="UseFlowDirection" />
+        <Setter Property="TextAlignment" Value="Start" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style x:Key="DiscoveryWidgetFooterCaption" TargetType="TextBlock" BasedOn="{StaticResource DiscoveryWidgetCaption}">
+        <Setter Property="FontSize" Value="9" />
+        <Setter Property="Opacity" Value="0.45" />
+    </Style>
+    <Style x:Key="DiscoveryWidgetHeader" TargetType="StackPanel">
+        <Setter Property="Margin" Value="3,2,3,0" />
+        <Setter Property="Spacing" Value="7" />
+    </Style>
+    <Style x:Key="DiscoveryWidgetFooter" TargetType="StackPanel">
+        <Setter Property="Margin" Value="3,0" />
+        <Setter Property="Spacing" Value="10" />
+    </Style>
+    <!-- Each widget supplies its accent through FocusVisualPrimaryBrush. The same
+         native states tint the artwork and the row without moving either hit target. -->
+    <Style x:Key="DiscoveryWidgetButton" TargetType="Button">
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="11" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <controls:AuthInputActionSurface Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Target="HoverLayers.Opacity" Value="0" />
+                                        <Setter Target="CardContent.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="HoverLayers.Opacity" Value="1" />
+                                        <Setter Target="CardContent.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="HoverLayers.Opacity" Value="1" />
+                                        <Setter Target="CardContent.Opacity" Value="0.7" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="HoverLayers.Opacity" Value="0" />
+                                        <Setter Target="CardContent.Opacity" Value="0.4" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Border CornerRadius="{TemplateBinding CornerRadius}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" IsHitTestVisible="False" />
+                        <ContentPresenter x:Name="CardContent" Padding="{TemplateBinding Padding}" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
+                            <ContentPresenter.OpacityTransition><ScalarTransition Duration="0:0:0.14" /></ContentPresenter.OpacityTransition>
+                        </ContentPresenter>
+                        <Grid x:Name="HoverLayers" Opacity="0" IsHitTestVisible="False">
+                            <Grid.OpacityTransition><ScalarTransition Duration="0:0:0.14" /></Grid.OpacityTransition>
+                            <Border CornerRadius="{TemplateBinding CornerRadius}" Background="{TemplateBinding FocusVisualPrimaryBrush}" Opacity="0.035" />
+                            <Border CornerRadius="{TemplateBinding CornerRadius}" BorderBrush="{TemplateBinding FocusVisualPrimaryBrush}" BorderThickness="1" Opacity="0.28" />
+                        </Grid>
+                    </controls:AuthInputActionSurface>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="DiscoveryWidgetFooterButton" TargetType="Button" BasedOn="{StaticResource DiscoveryWidgetButton}">
+        <Setter Property="MinHeight" Value="38" />
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="FontFamily" Value="/Assets/Fonts/IRANSANS.TTF#IRANSans" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="DiscoverySectionActionButton" TargetType="controls:FeatureButton">
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="MinHeight" Value="32"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorSecondary}"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
+        <Setter Property="FontFamily" Value="/Assets/Fonts/IRANSANS.TTF#IRANSans"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="UseSystemFocusVisuals" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="controls:FeatureButton">
+                    <Grid Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal"/>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="ActionSurface.Background" Value="{ThemeResource ButtonBackgroundPointerOver}"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="ActionSurface.Background" Value="{ThemeResource ButtonBackgroundPressed}"/>
+                                        <Setter Target="ActionSurface.Opacity" Value="0.78"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters><Setter Target="ActionSurface.Opacity" Value="0.35"/></VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Border x:Name="ActionSurface" IsHitTestVisible="False"
+                            CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}"
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                            Background="{TemplateBinding Background}">
+                            <Border.BackgroundTransition><BrushTransition Duration="0:0:0.14"/></Border.BackgroundTransition>
+                            <Border.OpacityTransition><ScalarTransition Duration="0:0:0.1"/></Border.OpacityTransition>
+                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                Foreground="{TemplateBinding Foreground}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="DiscoverySectionIconButton" TargetType="controls:FeatureButton" BasedOn="{StaticResource DiscoverySectionActionButton}">
+        <Setter Property="Width" Value="32"/><Setter Property="Height" Value="32"/><Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style x:Key="DiscoverySectionBadge" TargetType="Border">
+        <Setter Property="MinHeight" Value="32"/><Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="Padding" Value="9,5"/><Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorSecondary}"/>
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}"/><Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style x:Key="DiscoverySectionBadgeText" TargetType="TextBlock" BasedOn="{StaticResource DiscoveryWidgetCaption}">
+        <Setter Property="FontSize" Value="9"/><Setter Property="Opacity" Value="0.65"/>
+        <Setter Property="VerticalAlignment" Value="Center"/><Setter Property="TextWrapping" Value="NoWrap"/>
+    </Style>
+</ResourceDictionary>

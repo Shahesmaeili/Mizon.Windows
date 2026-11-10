@@ -1,0 +1,52 @@
+# Windows handoff
+
+Updated: 2026-11-10. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
+
+## Latest completed behavior
+
+### Canonical deep links
+
+- [DeepLinks.md](../../DeepLinks.md) lists 18 supported route definitions and the nine settings section slugs. `AppDeepLinkCatalog` and `AppActivationRoute` are the runtime authority.
+- Public IDs are GUIDs. Normal music detail navigation does not autoplay; explicit play/download links retain separate actions.
+- Single-instance activation, pending content after sign-in, invalid-link rejection, cancellation/supersession and sign-out guards are implemented.
+- The user explicitly rejected a public Welcome link. `mizon://welcome`, its legacy aliases and typed navigation requests are rejected. Welcome remains internal session validation. MCP can report the internal location as `welcome` with `uri=null`; the dedicated authentication development tools remain available under their existing consent scope.
+- The navigation MCP tools can open declared destinations and read location state. They cannot submit forms, play/download tracks or read all destination business data under that permission.
+
+### Pin main application to the taskbar
+
+- The header profile menu contains the localized “Pin Mizon to the taskbar” action, styled with the existing profile actions and Narrator metadata.
+- `TaskbarPinService` queries actual Windows pin state when the menu opens and when the main window reactivates while the menu is present. A pinned app hides the action; an external Unpin is detected on the next refresh. There is no persisted fake “pinned” flag or constant polling loop.
+- Clicking first waits for the native MenuFlyout to finish closing, then calls the official Windows pin request. The user confirms in Windows. Duplicate requests are gated; cancellation and app shutdown respect the outstanding native operation's ownership.
+- The new MCP tools are `mizon_get_taskbar_pin_state` and `mizon_request_taskbar_pin`. Separate taskbar read/control grants default to false, are explicitly approved in the app, and can be revoked. The adapter shares the same service as the profile menu.
+- The new implementation targets pinning the **main application icon**. It does not replace or change the existing independent profile/mood taskbar companion.
+
+## Verification evidence for this checkpoint
+
+The checks below were executed during the latest implementation work on the developer machine. They are historical evidence for that source state; rerun relevant checks after changes.
+
+| Check | Observed result | Scope |
+| --- | --- | --- |
+| Main WinUI build | `Debug x64` passed | Compiles app, generated XAML/projections and dependent payloads; existing warnings remain |
+| Activation/App Actions suite | 600 assertions passed, managed and NativeAOT win-x64 | Production parser/catalog/action registration fixtures; no app launch or real navigation |
+| Taskbar pin service suite | 25 assertions passed, managed and NativeAOT win-x64 | Production service logic with synthetic OS state, unpin refresh, foreground/policy refusal, duplicates, cancellation and disposal |
+| MCP protocol suite | 31/31 groups passed | Actual SDK/stdio/isolated pipe boundary, schemas, allowed navigation destinations, independent taskbar tools and connection lifecycle |
+| MCP access integration suite | 110 assertions passed | Production permission service/view model/adapters with synthetic backend and isolated consent store; persisted/revoked scopes, redaction, errors and cleanup |
+
+Local evidence files were written under `D:/MizonTaskDiagnostics`: `taskbar-pin-build.log`, `taskbar-mcp-protocol.log`, `taskbar-mcp-access.log`, `taskbar-pin-aot-build.log` and the Welcome-removal AOT logs. These files are local diagnostics, not required repository inputs and not intended for Git publication.
+
+**Not verified by these checks:** actual Windows pin confirmation/acceptance, final menu rendering or animation, real API-backed page navigation, end-to-end music playback, or a full NativeAOT publication of the entire WinUI app. No Windows UI automation or self-approval of a live MCP connection was performed for this work.
+
+## Existing feature areas to preserve
+
+The source contains music discovery widgets/hero/stories, music details with waveform/lyrics/comments/live presence and stem mixing, playlists, following activities, profiles, PiP, mood emojis, theme/material and language preferences, Windows Search, ExplorerCommands, JumpList, App Actions, taskbar preview buttons and independent taskbar companions. This inventory identifies code ownership; it is not a claim that every area is complete or covered by current MCP tools.
+
+The movies/apps destinations use their existing landing implementation. Do not claim film/series detail infrastructure or unrestricted profile/music MCP control that the source does not provide. Follow the separate server/SDK/database handoffs for cross-layer changes.
+
+## Important limits and next-task checks
+
+- Full feature-by-feature MCP business coverage remains future work. Current domains are authentication, appearance, declared navigation and Mizon taskbar pinning only. See [the development guide](../../Mcp/DEVELOPMENT.md).
+- Live consent remains user-owned even though paired grants persist. A tool catalog or configured Codex/Claude server does not imply an active grant for a new domain.
+- Windows App SDK and some Windows integration surfaces are experimental or OS-dependent. Record installed runtime/build information for integration-specific failures rather than assuming every machine supports the same host.
+- Source paths and the backend solution currently reflect this developer's checkout layout. Verify project references when using an independent worktree or a new machine.
+- The repository had accumulated many feature changes before this publication task. The publication coordinator owns the initial all-code snapshot. Future tasks should commit only their scoped changes, with their own handoff and push result, rather than sweeping another agent's unfinished files.
+- Markdown entry points help agents read the same durable context; they cannot synchronize an already-running AI conversation or prevent concurrent writes. Use [COLLABORATION.md](COLLABORATION.md), separate worktrees and explicit ownership.

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="PinToTaskbar" xml:space="preserve"><value>Pin Mizon to the taskbar</value></data>
+  <data name="PinToTaskbarCaption" xml:space="preserve"><value>Keep Mizon within reach</value></data>
+  <data name="PinToTaskbarHelp" xml:space="preserve"><value>Ask Windows to pin Mizon to your taskbar. You confirm the request in the Windows dialog.</value></data>
+  <data name="PinNotCompleted" xml:space="preserve"><value>Mizon was not pinned. You can request it again whenever you like.</value></data>
+  <data name="PinForegroundRequired" xml:space="preserve"><value>Activate the Mizon window and try again.</value></data>
+  <data name="PinNotAllowed" xml:space="preserve"><value>Windows does not currently allow this app to be pinned.</value></data>
+  <data name="PinUnavailable" xml:space="preserve"><value>In-app taskbar pinning is unavailable on this version of Windows.</value></data>
+  <data name="PinFailed" xml:space="preserve"><value>The pin request could not be completed. Please try again.</value></data>
+</root>

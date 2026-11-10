@@ -1,0 +1,8 @@
+<Page
+    x:Class="Mizon.Windows.Pages.ClientProfilePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent"
+    NavigationCacheMode="Disabled"
+    FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+    FlowDirection="RightToLeft" />

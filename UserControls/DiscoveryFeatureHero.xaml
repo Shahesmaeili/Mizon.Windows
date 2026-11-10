@@ -1,0 +1,611 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+  x:Class="Mizon.Windows.UserControls.DiscoveryFeatureHero"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:icon="using:FluentIcons.WinUI"
+  xmlns:controls="using:Mizon.Windows.Controls"
+  Loaded="Hero_Loaded"
+  Unloaded="Hero_Unloaded"
+  SizeChanged="Hero_SizeChanged"
+  EffectiveViewportChanged="Hero_EffectiveViewportChanged"
+  PointerEntered="Hero_PointerEntered" PointerExited="Hero_PointerExited"
+  GotFocus="Hero_FocusChanged" LostFocus="Hero_FocusChanged">
+  <UserControl.Resources>
+    <Style
+      x:Key="HeroIconButton"
+      TargetType="Button">
+      <Setter
+        Property="Width"
+        Value="22" />
+      <Setter
+        Property="Height"
+        Value="28" />
+      <Setter
+        Property="Padding"
+        Value="0" />
+      <Setter
+        Property="CornerRadius"
+        Value="6" />
+      <Setter
+        Property="Background"
+        Value="Transparent" />
+      <Setter
+        Property="BorderThickness"
+        Value="0" />
+      <Setter
+        Property="Foreground"
+        Value="White" />
+    </Style>
+    <Style
+      x:Key="AudienceAvatar"
+      TargetType="Border">
+      <Setter
+        Property="Width"
+        Value="22" />
+      <Setter
+        Property="Height"
+        Value="22" />
+      <Setter
+        Property="CornerRadius"
+        Value="11" />
+      <Setter
+        Property="BorderThickness"
+        Value="1" />
+      <Setter
+        Property="BorderBrush"
+        Value="#FF161B20" />
+      <Setter
+        Property="Margin"
+        Value="-5,0,0,0" />
+    </Style>
+    <Style x:Key="HeroTransportButton" TargetType="Button" BasedOn="{StaticResource DiscoveryWidgetButton}">
+      <Setter Property="Height" Value="32" />
+      <Setter Property="Padding" Value="10,0" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="FontFamily" Value="/Assets/Fonts/IRANSANS.TTF#IRANSans" />
+    </Style>
+  </UserControl.Resources>
+  <Grid>
+  <!-- The shadow stays outside the clipped text overlay, exactly as in StoreCarousel. -->
+  <Grid
+    x:Name="HeroSurface"
+    Height="300"
+    Margin="8,12,8,16"
+    Background="Transparent"
+    FlowDirection="LeftToRight">
+    <VisualStateManager.VisualStateGroups>
+      <VisualStateGroup
+        x:Name="HeroLayouts">
+        <VisualState
+          x:Name="WideHero" />
+        <VisualState
+          x:Name="CompactHero">
+          <VisualState.Setters>
+            <Setter
+              Target="Header.Margin"
+              Value="12,12,12,0" />
+            <Setter
+              Target="InformationGrid.Margin"
+              Value="12,0,12,66" />
+            <Setter
+              Target="InformationCenterColumn.Width"
+              Value="0.6*" />
+            <Setter
+              Target="MainTitle.FontSize"
+              Value="16" />
+            <Setter
+              Target="ArtistName.FontSize"
+              Value="15" />
+            <Setter
+              Target="SongBadge.Width"
+              Value="28" />
+            <Setter
+              Target="SongBadge.Height"
+              Value="28" />
+            <Setter
+              Target="ArtistBadge.Width"
+              Value="28" />
+            <Setter
+              Target="ArtistBadge.Height"
+              Value="28" />
+            <Setter
+              Target="CenterInformation.Visibility"
+              Value="Collapsed" />
+            <Setter
+              Target="ActivityLine.Margin"
+              Value="12,0,12,53" />
+            <Setter
+              Target="ActionsPanel.Margin"
+              Value="12,0,12,12" />
+            <Setter
+              Target="LeftAudienceTail.Visibility"
+              Value="Collapsed" />
+            <Setter
+              Target="RightAudience.Visibility"
+              Value="Collapsed" />
+            <Setter
+              Target="AudienceCaption.Visibility"
+              Value="Collapsed" />
+            <Setter
+              Target="OpenLabel.FontSize"
+              Value="9" />
+            <Setter
+              Target="OpenIcon.Visibility"
+              Value="Collapsed" />
+            <Setter
+              Target="FavoriteButton.Padding"
+              Value="8,0" />
+            <Setter
+              Target="OpenButton.Padding"
+              Value="8,0" />
+            <Setter
+              Target="PageNumber.Visibility"
+              Value="Collapsed" />
+            <Setter
+              Target="TopCaption.Visibility"
+              Value="Collapsed" />
+            <Setter
+              Target="ThumbnailButtons.Spacing"
+              Value="5" />
+          </VisualState.Setters>
+        </VisualState>
+      </VisualStateGroup>
+    </VisualStateManager.VisualStateGroups>
+    <Border
+      CornerRadius="12"
+      Background="#FF090C0F"
+      IsHitTestVisible="False" />
+    <controls:FeatureArtwork
+      x:Name="HeroArtwork"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Stretch"
+      CornerRadius="12"
+      Stretch="UniformToFill"
+      ImageFailed="Artwork_Failed"
+      IsHitTestVisible="False"
+      AutomationProperties.AccessibilityView="Raw" />
+    <Grid
+      x:Name="HeroRoot"
+      CornerRadius="12"
+      Background="Transparent">
+      <MediaPlayerElement x:Name="HeroVideo" AreTransportControlsEnabled="False"
+        AutoPlay="False" Stretch="Uniform" Visibility="Collapsed" IsHitTestVisible="False"
+        AutomationProperties.Name="ویدیوی پیشنهادی میزون" />
+      <!-- A continuous slate tint softens bright artwork; the lower gradient supports the controls. -->
+      <Border
+        x:Name="HeroImageOverlay"
+        CornerRadius="12"
+        IsHitTestVisible="False">
+        <Border.Background>
+          <LinearGradientBrush
+            StartPoint="0,0"
+            EndPoint="0,1">
+            <GradientStop
+              Color="#70141B24"
+              Offset="0" />
+            <GradientStop
+              Color="#48141B24"
+              Offset="0.28" />
+            <GradientStop
+              Color="#38141B24"
+              Offset="0.5" />
+            <GradientStop
+              Color="#7810161E"
+              Offset="0.78" />
+            <GradientStop
+              Color="#B0090C0F"
+              Offset="1" />
+          </LinearGradientBrush>
+        </Border.Background>
+      </Border>
+      <controls:FeatureButton x:Name="ArtworkButton" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+        Click="Open_Click" AutomationProperties.Name="باز کردن جزئیات آهنگ منتخب">
+        <controls:FeatureButton.Template>
+          <ControlTemplate TargetType="Button"><controls:AuthInputActionSurface Background="Transparent" /></ControlTemplate>
+        </controls:FeatureButton.Template>
+      </controls:FeatureButton>
+      <Grid
+        x:Name="Header"
+        Margin="20,20,20,0"
+        VerticalAlignment="Top"
+        ColumnSpacing="8">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition
+            Width="*" />
+          <ColumnDefinition
+            Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <StackPanel
+          Orientation="Horizontal"
+          Spacing="12"
+          VerticalAlignment="Center">
+          <controls:FeatureButton
+            x:Name="MediaOptionsButton"
+            Width="30"
+            Height="30"
+            Padding="0"
+            CornerRadius="7"
+            Background="#FF202428"
+            BorderThickness="0"
+            Foreground="White"
+            AutomationProperties.Name="کنترل‌های پلیر پیشنهادی"
+            ToolTipService.ToolTip="کنترل پخش، صدا و ذخیرهٔ مدیا">
+            <icon:SymbolIcon
+              Symbol="Headphones"
+              FontSize="14" />
+            <controls:FeatureButton.Flyout>
+              <Flyout x:Name="MediaOptionsFlyout" Placement="Bottom" Opening="More_Opening" Closed="More_Closed">
+                <StackPanel Width="260" Spacing="12">
+                  <TextBlock Text="کنترل نمایش" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+                    FlowDirection="RightToLeft" FontWeight="SemiBold" />
+                  <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <controls:FeatureButton x:Name="PlayPauseButton" Style="{StaticResource HeroTransportButton}" Click="PlayPause_Click" AutomationProperties.Name="توقف نمایش">
+                      <icon:SymbolIcon x:Name="PlayPauseIcon" Symbol="Pause" FontSize="16" />
+                    </controls:FeatureButton>
+                    <controls:FeatureButton x:Name="MuteButton" Grid.Column="1" Style="{StaticResource HeroTransportButton}" Click="Mute_Click" Visibility="Collapsed" AutomationProperties.Name="روشن کردن صدای ویدیو">
+                      <icon:SymbolIcon x:Name="MuteIcon" Symbol="SpeakerMute" FontSize="16" />
+                    </controls:FeatureButton>
+                    <Slider x:Name="VolumeSlider" Grid.Column="2" Minimum="0" Maximum="100" Value="70" ValueChanged="VolumeSlider_ValueChanged" AutomationProperties.Name="صدای ویدیو" />
+                  </Grid>
+                  <StackPanel>
+                    <Slider x:Name="PositionSlider" Minimum="0" Maximum="8" Value="0" ValueChanged="PositionSlider_ValueChanged" AutomationProperties.Name="موقعیت نمایش" />
+                    <TextBlock x:Name="PositionText" HorizontalAlignment="Center" FontFamily="Consolas" FontSize="11" AutomationProperties.AccessibilityView="Raw" />
+                  </StackPanel>
+                  <controls:FeatureButton x:Name="PlayTrackButton" Style="{StaticResource HeroTransportButton}" HorizontalAlignment="Stretch" Content="پخش آهنگ در میزون" Click="PlayTrack_Click" />
+                  <controls:FeatureButton x:Name="FullscreenMenuItem" Style="{StaticResource HeroTransportButton}" HorizontalAlignment="Stretch" Content="نمایش ویدیو در تمام پنجره" Click="Fullscreen_Click" />
+                  <controls:FeatureButton x:Name="SaveMenuItem" Style="{StaticResource HeroTransportButton}" HorizontalAlignment="Stretch" Content="ذخیرهٔ تصویر یا ویدیو" Click="Save_Click" />
+                  <controls:FeatureButton Style="{StaticResource HeroTransportButton}" HorizontalAlignment="Stretch" Content="کپی لینک آهنگ" Click="CopyLink_Click" />
+                  <controls:FeatureButton Style="{StaticResource HeroTransportButton}" HorizontalAlignment="Stretch" Content="دریافت دوبارهٔ پیشنهادها" Click="Refresh_Click" />
+                </StackPanel>
+              </Flyout>
+            </controls:FeatureButton.Flyout>
+          </controls:FeatureButton>
+          <StackPanel
+            VerticalAlignment="Center"
+            Spacing="2">
+            <TextBlock
+              x:Name="TopCaption"
+              FontSize="8"
+              Foreground="#FF8B9299"
+              Text="MIZON SELECT" />
+            <TextBlock
+              x:Name="HeaderDuration"
+              FontSize="11"
+              Foreground="White"
+              FontWeight="SemiBold" />
+          </StackPanel>
+        </StackPanel>
+        <StackPanel
+          Grid.Column="1"
+          Orientation="Horizontal"
+          Spacing="5"
+          VerticalAlignment="Center">
+          <controls:FeatureButton
+            x:Name="PreviousButton"
+            Style="{StaticResource HeroIconButton}"
+            Click="Previous_Click"
+            AutomationProperties.Name="پیشنهاد قبلی"
+            ToolTipService.ToolTip="پیشنهاد قبلی">
+            <icon:SymbolIcon
+              Symbol="ChevronLeft"
+              FontSize="12" />
+          </controls:FeatureButton>
+          <StackPanel
+            x:Name="ThumbnailButtons"
+            Orientation="Horizontal"
+            Spacing="8"
+            VerticalAlignment="Center" />
+          <controls:FeatureButton
+            x:Name="NextButton"
+            Style="{StaticResource HeroIconButton}"
+            Click="Next_Click"
+            AutomationProperties.Name="پیشنهاد بعدی"
+            ToolTipService.ToolTip="پیشنهاد بعدی">
+            <icon:SymbolIcon
+              Symbol="ChevronRight"
+              FontSize="12" />
+          </controls:FeatureButton>
+        </StackPanel>
+      </Grid>
+      <Grid
+        x:Name="InformationGrid"
+        Margin="20,0,20,91"
+        VerticalAlignment="Bottom"
+        ColumnSpacing="10">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition
+            Width="3*" />
+          <ColumnDefinition
+            x:Name="InformationCenterColumn"
+            Width="3.5*" />
+          <ColumnDefinition
+            Width="3*" />
+        </Grid.ColumnDefinitions>
+        <StackPanel
+          Spacing="7"
+          VerticalAlignment="Bottom">
+          <Grid
+            x:Name="SongBadge"
+            Width="40"
+            Height="40"
+            CornerRadius="20"
+            BorderBrush="#FF303137"
+            BorderThickness="1"
+            Background="#FF15171D"
+            HorizontalAlignment="Left"
+            Margin="0,0,0,3">
+            <Image
+              x:Name="SongBadgeImage"
+              Width="21"
+              Height="21"
+              Stretch="UniformToFill" />
+          </Grid>
+          <TextBlock
+            x:Name="GenreText"
+            FontSize="9"
+            CharacterSpacing="65"
+            Foreground="#FF787F87"
+            TextTrimming="CharacterEllipsis" />
+          <TextBlock
+            x:Name="MainTitle"
+            FontSize="22"
+            FontWeight="SemiBold"
+            Foreground="White"
+            TextTrimming="CharacterEllipsis"
+            MaxLines="1" />
+        </StackPanel>
+        <StackPanel
+          x:Name="CenterInformation"
+          Grid.Column="1"
+          Spacing="3"
+          VerticalAlignment="Bottom"
+          HorizontalAlignment="Center">
+          <TextBlock
+            x:Name="PersianTitle"
+            FontSize="10"
+            Foreground="#FFA0A2A6"
+            MaxWidth="165"
+            TextTrimming="CharacterEllipsis"
+            FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+            HorizontalAlignment="Center" />
+          <TextBlock
+            x:Name="TrackStatistics"
+            FontSize="15"
+            FontWeight="SemiBold"
+            Foreground="White"
+            HorizontalAlignment="Center" />
+        </StackPanel>
+        <StackPanel
+          Grid.Column="2"
+          Spacing="7"
+          VerticalAlignment="Bottom">
+          <Grid
+            x:Name="ArtistBadge"
+            Width="40"
+            Height="40"
+            CornerRadius="20"
+            BorderBrush="#FF303137"
+            BorderThickness="1"
+            Background="#FF15171D"
+            HorizontalAlignment="Right"
+            Margin="0,0,0,3">
+            <PersonPicture
+              x:Name="ArtistPortrait"
+              Width="26"
+              Height="26" />
+          </Grid>
+          <TextBlock
+            Text="ARTIST"
+            FontSize="9"
+            CharacterSpacing="65"
+            Foreground="#FF787F87"
+            HorizontalAlignment="Right" />
+          <TextBlock
+            x:Name="ArtistName"
+            Foreground="#FFE1E3E6"
+            FontSize="21"
+            FontWeight="Light"
+            FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+            TextTrimming="CharacterEllipsis"
+            TextAlignment="Right"
+            FlowDirection="RightToLeft" />
+        </StackPanel>
+      </Grid>
+      <Grid
+        x:Name="ActivityLine"
+        Height="3"
+        VerticalAlignment="Bottom"
+        Margin="20,0,20,70">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition
+            Width="46*" />
+          <ColumnDefinition
+            Width="22*" />
+          <ColumnDefinition
+            Width="32*" />
+        </Grid.ColumnDefinitions>
+        <Border
+          Background="#FF12BA70"
+          CornerRadius="1.5,0,0,1.5" />
+        <Border
+          Grid.Column="1"
+          Background="#FF3B4147" />
+        <Border
+          Grid.Column="2"
+          Background="#FF0697EA"
+          CornerRadius="0,1.5,1.5,0" />
+      </Grid>
+      <Grid
+        x:Name="ActionsPanel"
+        VerticalAlignment="Bottom"
+        Margin="20,0,20,20"
+        ColumnSpacing="8">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition
+            Width="*" />
+          <ColumnDefinition
+            Width="Auto" />
+          <ColumnDefinition
+            Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border
+          HorizontalAlignment="Left"
+          Height="32"
+          Padding="10,0"
+          CornerRadius="16"
+          BorderBrush="#FF2D3034"
+          BorderThickness="1"
+          Background="#950C1013">
+          <StackPanel
+            Orientation="Horizontal"
+            Spacing="8">
+            <StackPanel
+              Orientation="Horizontal"
+              VerticalAlignment="Center">
+              <Border
+                Style="{StaticResource AudienceAvatar}"
+                Margin="0">
+                <Image
+                  Source="ms-appx:///Assets/Discovery/friend-amir.jpg"
+                  Stretch="UniformToFill" />
+              </Border>
+              <Border
+                Style="{StaticResource AudienceAvatar}">
+                <Image
+                  Source="ms-appx:///Assets/Discovery/friend-sara.jpg"
+                  Stretch="UniformToFill" />
+              </Border>
+              <StackPanel
+                x:Name="LeftAudienceTail"
+                Orientation="Horizontal">
+                <Border
+                  Style="{StaticResource AudienceAvatar}">
+                  <Image
+                    Source="ms-appx:///Assets/Discovery/friend-amir.jpg"
+                    Stretch="UniformToFill" />
+                </Border>
+                <Border
+                  Style="{StaticResource AudienceAvatar}"
+                  Background="#FF27313B">
+                  <TextBlock
+                    Text="+8"
+                    Foreground="White"
+                    FontSize="7"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center" />
+                </Border>
+              </StackPanel>
+            </StackPanel>
+            <TextBlock
+              x:Name="AudienceCaption"
+              Text="همراه تو"
+              FontSize="9"
+              Foreground="#FF92989F"
+              FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+              VerticalAlignment="Center" />
+          </StackPanel>
+        </Border>
+        <controls:FeatureButton
+          x:Name="OpenButton"
+          Grid.Column="1"
+          Click="Open_Click"
+          Height="32"
+          Padding="15,0"
+          CornerRadius="16"
+          BorderBrush="#FF2D3034"
+          BorderThickness="1"
+          Background="#FF090C0F"
+          Foreground="White">
+          <StackPanel
+            Orientation="Horizontal"
+            Spacing="7">
+            <icon:SymbolIcon
+              x:Name="OpenIcon"
+              Symbol="MusicNote1"
+              FontSize="13"
+              VerticalAlignment="Center" />
+            <TextBlock
+              x:Name="OpenLabel"
+              Text="کشف آهنگ"
+              FontSize="10"
+              FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+              VerticalAlignment="Center" />
+            <TextBlock
+              x:Name="PageNumber"
+              FontSize="9"
+              Foreground="#FF868D94"
+              VerticalAlignment="Center" />
+          </StackPanel>
+        </controls:FeatureButton>
+        <controls:FeatureToggleButton
+          x:Name="FavoriteButton"
+          Grid.Column="2"
+          Height="32"
+          Padding="10,0"
+          CornerRadius="16"
+          HorizontalAlignment="Right"
+          BorderBrush="#FF2D3034"
+          BorderThickness="1"
+          Background="#950C1013"
+          Foreground="White"
+          Click="Favorite_Click"
+          AutomationProperties.Name="پسندیدن پیشنهاد"
+          ToolTipService.ToolTip="پسندیدن آهنگ">
+          <StackPanel
+            Orientation="Horizontal"
+            Spacing="7">
+            <icon:SymbolIcon
+              x:Name="FavoriteIcon"
+              Symbol="Heart"
+              FontSize="12"
+              VerticalAlignment="Center" />
+            <TextBlock
+              x:Name="LikesCount"
+              FontSize="10"
+              Foreground="White"
+              VerticalAlignment="Center" />
+            <StackPanel
+              x:Name="RightAudience"
+              Orientation="Horizontal"
+              VerticalAlignment="Center">
+              <Border
+                Style="{StaticResource AudienceAvatar}"
+                Margin="0">
+                <Image
+                  Source="ms-appx:///Assets/Discovery/friend-sara.jpg"
+                  Stretch="UniformToFill" />
+              </Border>
+              <Border
+                Style="{StaticResource AudienceAvatar}">
+                <Image
+                  Source="ms-appx:///Assets/Discovery/friend-amir.jpg"
+                  Stretch="UniformToFill" />
+              </Border>
+            </StackPanel>
+          </StackPanel>
+        </controls:FeatureToggleButton>
+      </Grid>
+      <Border x:Name="StatusPanel" Visibility="Collapsed" Background="#D91A2635" CornerRadius="8"
+        Margin="14,58,14,0" Padding="10,6" VerticalAlignment="Top">
+        <Grid ColumnSpacing="10">
+          <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+          <TextBlock x:Name="StatusText" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FlowDirection="RightToLeft" Foreground="White" FontSize="11" TextWrapping="Wrap" />
+          <controls:FeatureButton x:Name="RetryButton" Grid.Column="1" Visibility="Collapsed" Style="{StaticResource HeroTransportButton}"
+            Content="تلاش دوباره" Click="Retry_Click" AutomationProperties.Name="تلاش دوباره برای نمایش مدیا" />
+        </Grid>
+      </Border>
+      <ProgressBar x:Name="DownloadProgress" VerticalAlignment="Top" Height="2" Minimum="0" Maximum="100"
+        Visibility="Collapsed" AutomationProperties.Name="دریافت ویدیو" />
+    </Grid>
+  </Grid>
+  <Border x:Name="EmptyPanel" Visibility="Collapsed" Style="{StaticResource DiscoveryWidgetSurface}" MinHeight="190" Margin="8,12,8,16">
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Stretch" Spacing="12">
+      <TextBlock x:Name="EmptyText" Style="{StaticResource DiscoveryWidgetCaption}" TextWrapping="Wrap" TextAlignment="Center" />
+      <controls:FeatureButton Style="{StaticResource DiscoveryWidgetFooterButton}" HorizontalAlignment="Center" Click="Refresh_Click"
+        Content="دریافت دوباره" AutomationProperties.Name="دریافت دوبارهٔ پیشنهادهای میزون" />
+    </StackPanel>
+  </Border>
+  </Grid>
+</UserControl>

@@ -4,19 +4,22 @@ using Mizon.Windows.ViewModels.Items;
 
 namespace Mizon.Windows.Pages.DataTemplateSelectors;
 
-public class MainSearchDataTemplateSelector : DataTemplateSelector
+public sealed partial class MainSearchDataTemplateSelector : DataTemplateSelector
 {
-    public DataTemplate PersonDataTemplate { get; set; }
-    public DataTemplate ClientDataTemplate { get; set; }
-    public DataTemplate MusicDataTemplate { get; set; }
-    public DataTemplate MovieDataTemplate { get; set; }
-    public DataTemplate SeriesDataTemplate { get; set; }
+    public DataTemplate StatusDataTemplate { get; set; } = null!;
+    public DataTemplate PersonDataTemplate { get; set; } = null!;
+    public DataTemplate ClientDataTemplate { get; set; } = null!;
+    public DataTemplate MusicDataTemplate { get; set; } = null!;
+    public DataTemplate MovieDataTemplate { get; set; } = null!;
+    public DataTemplate SeriesDataTemplate { get; set; } = null!;
 
 
     protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
     {
         if (item == null)
-            return null;
+            return null!;
+
+        if (item is MainSearchStatusItemViewModel) return StatusDataTemplate;
 
         // تشخیص نوع بر اساس کلاس واقعی شیء
         if (item is MainSearchClientItemViewModel mainSearchClientItemViewModel)

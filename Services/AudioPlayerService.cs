@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
 using Windows.Devices.Enumeration;
 using Windows.Media;
 using Windows.Media.Audio;
@@ -56,6 +57,7 @@ public enum AudioPlayeRepeatMode
 public interface IAudioPlayerService
 {
     event EventHandler<TrackEndedEventArgs>? TrackEnded;
+    event EventHandler? TrackRestarted;
     event EventHandler<PositionUpdatedEventArgs>? PositionUpdated;
     event EventHandler<StateUpdatedEventArgs>? StateUpdated;
 
@@ -76,6 +78,7 @@ public interface IAudioPlayerService
     Task ChangeOutputDeviceAsync(DeviceInformation deviceInformation);
 
     TimeSpan TrackDuration { get; }
+    TimeSpan Position { get; }
     AudioPlayeRepeatMode AudioPlayeRepeatMode { get; set; }
 
     double Volume { get; set; }
@@ -83,7 +86,7 @@ public interface IAudioPlayerService
     double StemMixBalance { get; set; }
 }
 
-public class AudioPlayerService : IAudioPlayerService
+public class AudioPlayerService : IAudioPlayerService, IDisposable
 {
     private AudioGraph _audioGraph;
     private MediaSourceAudioInputNode _audioInputNode;
@@ -116,6 +119,8 @@ public class AudioPlayerService : IAudioPlayerService
     private long _audioGraphGeneration;
     private long _stemDiagnosticSessionId;
     private readonly DispatcherQueue _dispatcher;
+    private readonly DispatcherQueueTimer _positionNotificationTimer;
+    private Window? _lifetimeWindow;
     private readonly ITaskbarService _taskbarService;
     private readonly SemaphoreSlim _outputDeviceChangeLock = new(1, 1);
     private readonly SemaphoreSlim _playbackTransitionLock = new(1, 1);
@@ -126,16 +131,26 @@ public class AudioPlayerService : IAudioPlayerService
     private int _isSourceSwitching;
     private int _trackEndTransitionPending;
     private int _frameProcessingFailureLogged;
+    private Exception? _pendingFrameProcessingFailure;
+    private int _positionNotificationFailureLogged;
+    private int _disposed;
 
 
     public AudioPlayerService(DispatcherQueue dispatcher, ITaskbarService taskbarService)
     {
         _dispatcher = dispatcher;
         _taskbarService = taskbarService;
+        _positionNotificationTimer = dispatcher.CreateTimer();
+        _positionNotificationTimer.Interval = TimeSpan.FromMilliseconds(33);
+        _positionNotificationTimer.Tick += PositionNotificationTimer_Tick;
     }
 
 
     public TimeSpan TrackDuration { get; private set; }
+    public TimeSpan Position
+    {
+        get { lock (_timelineSynchronization) return _lastPosition; }
+    }
 
     public bool IsStemMixing => _vocalsInputNode is not null && _instrumentalInputNode is not null;
 
@@ -165,6 +180,7 @@ public class AudioPlayerService : IAudioPlayerService
     }
 
     public event EventHandler<TrackEndedEventArgs>? TrackEnded;
+    public event EventHandler? TrackRestarted;
     public event EventHandler<PositionUpdatedEventArgs>? PositionUpdated;
     public event EventHandler<StateUpdatedEventArgs>? StateUpdated;
    
@@ -191,6 +207,12 @@ public class AudioPlayerService : IAudioPlayerService
                 // SMTC را مستقیماً به HWND پنجرهٔ اصلی WinUI 3 متصل می‌کند.
                 var mainWindow = App.MainMizonWindow
                     ?? throw new InvalidOperationException("Main window is not available for System Media Transport Controls.");
+
+                if (_lifetimeWindow is null)
+                {
+                    _lifetimeWindow = mainWindow;
+                    _lifetimeWindow.Closed += LifetimeWindow_Closed;
+                }
 
                 var mainWindowHandle = WinRT.Interop.WindowNative.GetWindowHandle(mainWindow);
                 _smtc = SystemMediaTransportControlsInterop.GetForWindow(mainWindowHandle);
@@ -228,7 +250,7 @@ public class AudioPlayerService : IAudioPlayerService
                     if (_playState == AudioPlayerState.Paused)
                         await ResumeAsync();
                     else if (_playState == AudioPlayerState.Idle && !string.IsNullOrWhiteSpace(_currentTrackPath))
-                        await PlayAsync(_currentTrackPath);
+                        await TogglePlayPauseAsync();
                     break;
 
                 case SystemMediaTransportControlsButton.Pause:
@@ -324,6 +346,8 @@ public class AudioPlayerService : IAudioPlayerService
                     await PlayStemMixAsync(_vocalsSourcePath, _instrumentalSourcePath);
                 else
                     await PlayAsync(_currentTrackPath);
+                if (_playState == AudioPlayerState.Playing && Volatile.Read(ref _disposed) == 0)
+                    TrackRestarted?.Invoke(this, EventArgs.Empty);
                 break;
         }
     }
@@ -715,16 +739,21 @@ public class AudioPlayerService : IAudioPlayerService
 
     private TimeSpan FreezeTimelineForSourceSwitch()
     {
+        TimeSpan handoffPosition;
         lock (_timelineSynchronization)
         {
             Volatile.Write(ref _isSourceSwitching, 1);
-            var handoffPosition = _lastPosition;
-            StopAudioAnalysis();
-            _audioGraph.Stop();
-            ResetFrameOutputNode();
-            AppLog.Information($"StemDiag source-switch-frozen. HandoffMs='{handoffPosition.TotalMilliseconds:F0}', State='{_playState}'.");
-            return handoffPosition;
+            handoffPosition = _lastPosition;
         }
+
+        // A quantum already waiting for the timeline lock must be able to finish
+        // before Stop waits for the native graph. The switching flag rejects its
+        // commit, so the handoff stays frozen after releasing the lock.
+        StopAudioAnalysis();
+        _audioGraph.Stop();
+        ResetFrameOutputNode();
+        AppLog.Information($"StemDiag source-switch-frozen. HandoffMs='{handoffPosition.TotalMilliseconds:F0}', State='{_playState}'.");
+        return handoffPosition;
     }
 
     private void SetTimelineAfterSourceSwitch(TimeSpan position)
@@ -831,7 +860,7 @@ public class AudioPlayerService : IAudioPlayerService
 
     private void LogStemDiagnostic(string reason)
     {
-        if (!IsStemMixing)
+        if (!IsStemMixing || Volatile.Read(ref _disposed) != 0)
             return;
 
         AppLog.Information(
@@ -1399,18 +1428,74 @@ public class AudioPlayerService : IAudioPlayerService
 
     private void StartAudioAnalysis()
     {
-        if (_analysisRunning)
+        if (_analysisRunning || Volatile.Read(ref _disposed) != 0)
             return;
 
         _analysisRunning = true;
+        UpdatePositionNotificationTimer();
     }
 
-    private bool _analysisRunning;
+    private volatile bool _analysisRunning;
 
 
     private void StopAudioAnalysis()
     {
         _analysisRunning = false;
+        UpdatePositionNotificationTimer();
+    }
+
+    private void UpdatePositionNotificationTimer()
+    {
+        void Update()
+        {
+            // Read the current state when dispatched: a queued start must not
+            // restart notifications after a newer stop or disposal.
+            if (_analysisRunning && Volatile.Read(ref _disposed) == 0)
+                _positionNotificationTimer.Start();
+            else
+                _positionNotificationTimer.Stop();
+        }
+
+        if (_dispatcher.HasThreadAccess)
+            Update();
+        else
+            _dispatcher.TryEnqueue(Update);
+    }
+
+    private void PositionNotificationTimer_Tick(DispatcherQueueTimer sender, object args)
+    {
+        var frameFailure = Interlocked.Exchange(ref _pendingFrameProcessingFailure, null);
+        if (frameFailure is not null)
+            AppLog.Error("Audio frame processing failed in AudioGraph.QuantumStarted.", frameFailure);
+
+        if (!_analysisRunning || Volatile.Read(ref _isSourceSwitching) != 0 || Volatile.Read(ref _disposed) != 0)
+            return;
+
+        try
+        {
+            // Observe the latest render clock on the UI dispatcher. Slow RGB,
+            // presence, logging or UI observers cannot delay a render quantum,
+            // and timer ticks do not accumulate stale position notifications.
+            var position = Position;
+            if (IsStemMixing)
+            {
+                var wholeSecond = (int)position.TotalSeconds;
+                if (wholeSecond != _lastStemDiagnosticSecond)
+                {
+                    _lastStemDiagnosticSecond = wholeSecond;
+                    LogStemDiagnostic("render-tick");
+                }
+            }
+
+            UpdateTaskbarProgress(position);
+            UpdateSmtcTimeline(position);
+            PositionUpdated?.Invoke(this, new PositionUpdatedEventArgs(position));
+        }
+        catch (Exception exception)
+        {
+            if (Interlocked.Exchange(ref _positionNotificationFailureLogged, 1) == 0)
+                AppLog.Error("Audio playback position notification failed.", exception);
+        }
     }
 
     private void AudioGraph_QuantumStarted(AudioGraph sender, object args)
@@ -1425,13 +1510,18 @@ public class AudioPlayerService : IAudioPlayerService
             // GetFrame returns the audio accumulated since the previous read. It must
             // be consumed from QuantumStarted, not an arbitrary wall-clock timer, so
             // the timeline follows the actual render quanta after a seek/switch.
-            using var frame = _frameOutputNode.GetFrame();
-            ProcessAudioFrame(frame);
+            bool reachedEnd;
+            using (var frame = _frameOutputNode.GetFrame())
+                reachedEnd = ProcessAudioFrame(frame);
+
+            // Release the frame before a transition can stop or seek the graph.
+            if (reachedEnd)
+                QueueTrackEndTransition();
         }
         catch (Exception exception)
         {
             if (Interlocked.Exchange(ref _frameProcessingFailureLogged, 1) == 0)
-                AppLog.Error("Audio frame processing failed in AudioGraph.QuantumStarted.", exception);
+                Interlocked.Exchange(ref _pendingFrameProcessingFailure, exception);
         }
     }
 
@@ -1466,27 +1556,30 @@ public class AudioPlayerService : IAudioPlayerService
     }
 
 
-    private unsafe void ProcessAudioFrame(AudioFrame frame)
+    private unsafe bool ProcessAudioFrame(AudioFrame frame)
     {
         if (!_analysisRunning || Volatile.Read(ref _isSourceSwitching) != 0)
-            return;
+            return false;
 
-        using var buffer = frame.LockBuffer(AudioBufferAccessMode.Read);
-        using var reference = buffer.CreateReference();
-        var byteAccess = reference.As<IMemoryBufferByteAccess>();
+        int samplesPerChannel;
+        using (var buffer = frame.LockBuffer(AudioBufferAccessMode.Read))
+        using (var reference = buffer.CreateReference())
+        {
+            var byteAccess = reference.As<IMemoryBufferByteAccess>();
 
-        byte* dataInBytes;
-        uint capacity;
-        byteAccess.GetBuffer(out dataInBytes, out capacity);
+            byte* dataInBytes;
+            uint capacity;
+            byteAccess.GetBuffer(out dataInBytes, out capacity);
 
-        int floatCount = (int)capacity / sizeof(float);
-        int samplesPerChannel = floatCount / _channelCount;
+            int floatCount = (int)capacity / sizeof(float);
+            samplesPerChannel = floatCount / _channelCount;
+        }
 
         TimeSpan position;
         lock (_timelineSynchronization)
         {
             if (!_analysisRunning || Volatile.Read(ref _isSourceSwitching) != 0)
-                return;
+                return false;
 
             // Timeline is committed atomically with respect to a seek/source switch.
             _totalSamplesProcessed += samplesPerChannel;
@@ -1494,27 +1587,70 @@ public class AudioPlayerService : IAudioPlayerService
             _lastPosition = position;
         }
 
-        if (IsStemMixing)
+        return TrackDuration != TimeSpan.Zero && position >= TrackDuration;
+    }
+
+    private void LifetimeWindow_Closed(object sender, WindowEventArgs args) => Dispose();
+
+    public void Dispose()
+    {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            return;
+
+        _analysisRunning = false;
+        if (_dispatcher.HasThreadAccess)
+            DisposeOnDispatcher();
+        else if (!_dispatcher.TryEnqueue(DisposeOnDispatcher))
+            DisposeAudioGraph();
+
+        GC.SuppressFinalize(this);
+    }
+
+    private void DisposeOnDispatcher()
+    {
+        _positionNotificationTimer.Stop();
+        _positionNotificationTimer.Tick -= PositionNotificationTimer_Tick;
+        if (_lifetimeWindow is not null)
         {
-            var wholeSecond = (int)position.TotalSeconds;
-            if (wholeSecond != _lastStemDiagnosticSecond)
+            _lifetimeWindow.Closed -= LifetimeWindow_Closed;
+            _lifetimeWindow = null;
+        }
+        if (_smtc is not null)
+            _smtc.ButtonPressed -= Smtc_ButtonPressed;
+
+        DisposeAudioGraph();
+    }
+
+    private void DisposeAudioGraph()
+    {
+        var graph = Interlocked.Exchange(ref _audioGraph, null!);
+        if (graph is null)
+            return;
+
+        // Never stop/dispose the native graph while holding the timeline lock:
+        // an in-flight synchronous quantum may still need that lock to finish.
+        try
+        {
+            graph.QuantumStarted -= AudioGraph_QuantumStarted;
+            graph.Stop();
+        }
+        catch (Exception exception)
+        {
+            // An output-device transition may already have released this graph.
+            // Native teardown must not abort window/provider disposal.
+            AppLog.Error("Unable to stop the audio graph during disposal.", exception);
+        }
+        finally
+        {
+            try
             {
-                _lastStemDiagnosticSecond = wholeSecond;
-                LogStemDiagnostic("render-tick");
+                graph.Dispose();
+            }
+            catch (Exception exception)
+            {
+                AppLog.Error("Unable to dispose the audio graph.", exception);
             }
         }
-
-        UpdateTaskbarProgress(position);
-
-        PositionUpdated?.Invoke(
-            this,
-            new PositionUpdatedEventArgs(position)
-        );
-
-        UpdateSmtcTimeline(position);
-
-        if (TrackDuration != TimeSpan.Zero && position >= TrackDuration)
-            QueueTrackEndTransition();
     }
 
     private void QueueTrackEndTransition()
@@ -1543,6 +1679,9 @@ public class AudioPlayerService : IAudioPlayerService
                         UpdateTaskbarProgress(TimeSpan.Zero, force: true);
                         UpdateSmtcTimeline(TimeSpan.Zero);
                         _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
+                        // This runs on the transition worker, never the audio quantum callback.
+                        if (Volatile.Read(ref _disposed) == 0)
+                            TrackRestarted?.Invoke(this, EventArgs.Empty);
                         return;
                     }
 

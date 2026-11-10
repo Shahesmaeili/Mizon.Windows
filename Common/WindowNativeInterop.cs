@@ -1,9 +1,13 @@
 ﻿using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI;
+using Windows.UI.ViewManagement;
 using WinRT.Interop;
 
 namespace Mizon.Windows.Common;
@@ -18,9 +22,6 @@ public class WindowNativeInterop
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, DWMWINDOWATTRIBUTE dwAttribute, ref int pvAttribute, int cbAttribute);
-
-    [DllImport("dwmapi.dll")]
-    private static extern int DwmGetWindowAttribute(IntPtr hwnd, DWMWINDOWATTRIBUTE dwAttribute, out int pvAttribute, int cbAttribute);
 
     private const int GWL_STYLE = -16;
     private const int WS_SYSMENU = 0x00080000;
@@ -63,43 +64,92 @@ public class WindowNativeInterop
 
     public static void SetWindowBorderColor(Window window, Color color)
     {
-        int colorRef = (color.B << 16) | (color.G << 8) | color.R;
-
-        IntPtr hwnd = WindowNative.GetWindowHandle(window);
-
-        DwmSetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR, ref colorRef, 4);
+        RestoreWindowBorderColor(window, ToColorRef(color));
     }
 
-    public static async ValueTask AnimateWindowBorderColor(Window window, Color to, int durationMs = 200)
+    public static int GetWindowBorderColorValue(Window window)
     {
-        Color from = _currentBorderColor;
+        // DWMWA_BORDER_COLOR is set-only: DwmGetWindowAttribute returns E_INVALIDARG.
+        // Keep the last successfully applied frame per window instead of reading it back.
+        return BorderAnimations.TryGetValue(window, out var animation) ? animation.CurrentColor : -1;
+    }
 
-        if (from == to)
-            return;
+    public static void RestoreWindowBorderColor(Window window, int color)
+    {
+        if (BorderAnimations.TryGetValue(window, out var animation)) animation.Cancel();
+        ApplyWindowBorderColor(window, color);
+    }
 
-        const int fps = 60;
-        int totalFrames = (durationMs * fps) / 1000;
-        if (totalFrames <= 0)
-            totalFrames = 1;
+    public static ValueTask AnimateWindowBorderColor(Window window, Color to, int durationMs = 240) =>
+        AnimateWindowBorderColor(window, ToColorRef(to), durationMs);
 
-        for (int i = 0; i <= totalFrames; i++)
+    public static ValueTask AnimateWindowBorderColor(Window window, int to, int durationMs = 240) =>
+        BorderAnimations.GetValue(window, static _ => new BorderAnimation()).AnimateAsync(window, to, durationMs);
+
+    private static readonly ConditionalWeakTable<Window, BorderAnimation> BorderAnimations = new();
+
+    private static int ToColorRef(Color color) => (color.B << 16) | (color.G << 8) | color.R;
+
+    private static void ApplyWindowBorderColor(Window window, int color)
+    {
+        if (DwmSetWindowAttribute(WindowNative.GetWindowHandle(window), DWMWINDOWATTRIBUTE.DWMWA_BORDER_COLOR, ref color, 4) >= 0)
+            BorderAnimations.GetValue(window, static _ => new BorderAnimation()).CurrentColor = color;
+    }
+
+    private sealed class BorderAnimation
+    {
+        private readonly UISettings _settings = new();
+        private CancellationTokenSource? _pending;
+        internal int CurrentColor = -1;
+
+        internal void Cancel() => _pending?.Cancel();
+
+        internal async ValueTask AnimateAsync(Window window, int target, int durationMs)
         {
-            double t = (double)i / totalFrames;
+            Cancel();
+            // Continue from the last applied frame, including an interrupted transition.
+            var current = GetWindowBorderColorValue(window);
+            using var cancellation = new CancellationTokenSource();
+            _pending = cancellation;
+            try
+            {
+                // -2 means no border; -1 means restore the Windows default accent.
+                if (current == target || current == -2 || target == -2 || durationMs <= 0 || !_settings.AnimationsEnabled)
+                {
+                    ApplyWindowBorderColor(window, target);
+                    return;
+                }
 
-            byte r = (byte)(from.R + (to.R - from.R) * t);
-            byte g = (byte)(from.G + (to.G - from.G) * t);
-            byte b = (byte)(from.B + (to.B - from.B) * t);
-
-            var current = Color.FromArgb(255, r, g, b);
-
-            SetWindowBorderColor(window, current);
-
-            await Task.Delay(1000 / fps);
+                var from = ResolveColor(current);
+                var to = ResolveColor(target);
+                var started = Stopwatch.GetTimestamp();
+                while (true)
+                {
+                    cancellation.Token.ThrowIfCancellationRequested();
+                    var progress = Math.Clamp(Stopwatch.GetElapsedTime(started).TotalMilliseconds / durationMs, 0, 1);
+                    var eased = progress * progress * (3 - 2 * progress);
+                    var color = Color.FromArgb(255,
+                        (byte)Math.Round(from.R + (to.R - from.R) * eased),
+                        (byte)Math.Round(from.G + (to.G - from.G) * eased),
+                        (byte)Math.Round(from.B + (to.B - from.B) * eased));
+                    ApplyWindowBorderColor(window, ToColorRef(color));
+                    if (progress >= 1) break;
+                    await Task.Delay(16, cancellation.Token);
+                }
+                // Preserve the native default-color sentinel after the transition finishes.
+                ApplyWindowBorderColor(window, target);
+            }
+            catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
+            finally
+            {
+                if (ReferenceEquals(_pending, cancellation)) _pending = null;
+            }
         }
 
-        _currentBorderColor = to;
+        private Color ResolveColor(int color) => color == -1
+            ? _settings.GetColorValue(UIColorType.Accent)
+            : Color.FromArgb(255, (byte)(color & 0xFF), (byte)((color >> 8) & 0xFF), (byte)((color >> 16) & 0xFF));
     }
-    private static Color _currentBorderColor = Colors.Gray;
 
     //public static Color GetWindowBorderColor(Window window)
     //{

@@ -1,4 +1,5 @@
-﻿using DevWinUI;
+using System;
+using DevWinUI;
 using Microsoft.UI.Xaml;
 using Mizon.API;
 using Mizon.Windows.Services;
@@ -6,13 +7,14 @@ using Windows.UI;
 
 namespace Mizon.Windows.ViewModels;
 
-public class MainViewModel : ViewModelBase
+public partial class MainViewModel : ViewModelBase
 {
     public readonly IAudioPlayerService _audioPlayerService;
 
     protected MizonApi MizonApi { get; }
 
-    protected MizonSocket MizonSocket { get; }
+    private readonly Lazy<MizonSocket> _socket;
+    protected MizonSocket MizonSocket => _socket.Value;
 
     public NavigationService NavigationService { get; }
 
@@ -21,12 +23,12 @@ public class MainViewModel : ViewModelBase
     private RainbowFrame? _rainbowFrame { get; set; }
 
     public MainViewModel(MizonApi mizonApi,
-        MizonSocket mizonSocket,
+        Lazy<MizonSocket> mizonSocket,
         NavigationService navigationService,
         IAudioPlayerService audioPlayerService)
     {
         MizonApi = mizonApi;
-        MizonSocket = mizonSocket;
+        _socket = mizonSocket;
         NavigationService = navigationService;
         _audioPlayerService = audioPlayerService;
     }
@@ -42,6 +44,7 @@ public class MainViewModel : ViewModelBase
 
     public void ChangeWindowBorderColor(Color color)
     {
-        _rainbowFrame!.ChangeFrameColor(color);
+        if (_window is not null)
+            _ = Common.WindowNativeInterop.AnimateWindowBorderColor(_window, color);
     }
 }
