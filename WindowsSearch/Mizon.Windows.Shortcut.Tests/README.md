@@ -1,11 +1,11 @@
 # Desktop music shortcut checks
 
-Run on Windows with the .NET 10 SDK:
+Run on Windows with the .NET 11 SDK:
 
 ```powershell
 dotnet run --project Mizon.Windows.Shortcut.Tests.csproj -c Release
 dotnet publish Mizon.Windows.Shortcut.Tests.csproj -c Release -r win-x64 -p:PublishAot=true
-.\bin\Release\net10.0-windows10.0.22621.0\win-x64\publish\Mizon.Windows.Shortcut.Tests.exe
+.\bin\Release\net11.0-windows10.0.22621.0\win-x64\publish\Mizon.Windows.Shortcut.Tests.exe
 ```
 
 The harness links the production shortcut service, native Shell ABI and music URI

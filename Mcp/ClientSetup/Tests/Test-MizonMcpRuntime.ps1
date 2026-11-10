@@ -37,8 +37,8 @@ function New-Payload([string]$Name) {
     Write-TestText (Join-Path $path 'Mizon.Windows.Mcp.exe') 'synthetic-apphost'
     Write-TestText (Join-Path $path 'Mizon.Windows.Mcp.dll') 'synthetic-managed-entry'
     Write-TestText (Join-Path $path 'Example.Dependency.dll') 'dependency-v1'
-    Write-TestText (Join-Path $path 'Mizon.Windows.Mcp.runtimeconfig.json') '{"runtimeOptions":{"tfm":"net10.0","framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}'
-    Write-TestText (Join-Path $path 'Mizon.Windows.Mcp.deps.json') '{"runtimeTarget":{"name":".NETCoreApp,Version=v10.0/win-x64"},"targets":{".NETCoreApp,Version=v10.0/win-x64":{"Mizon.Windows.Mcp/1.0.0":{"runtime":{"Mizon.Windows.Mcp.dll":{}}},"Example.Dependency/1.0.0":{"runtime":{"lib/net10.0/Example.Dependency.dll":{}}}}},"libraries":{}}'
+    Write-TestText (Join-Path $path 'Mizon.Windows.Mcp.runtimeconfig.json') '{"runtimeOptions":{"tfm":"net11.0","framework":{"name":"Microsoft.NETCore.App","version":"11.0.0"}}}'
+    Write-TestText (Join-Path $path 'Mizon.Windows.Mcp.deps.json') '{"runtimeTarget":{"name":".NETCoreApp,Version=v11.0/win-x64"},"targets":{".NETCoreApp,Version=v11.0/win-x64":{"Mizon.Windows.Mcp/1.0.0":{"runtime":{"Mizon.Windows.Mcp.dll":{}}},"Example.Dependency/1.0.0":{"runtime":{"lib/net11.0/Example.Dependency.dll":{}}}}},"libraries":{}}'
     Write-TestText (Join-Path $path 'nested\data.txt') 'nested-payload-data'
     return $path
 }

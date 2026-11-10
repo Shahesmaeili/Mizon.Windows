@@ -1,6 +1,6 @@
 # Connect an AI client to Mizon
 
-The .NET 10 MCP companion exposes Welcome, Sign in, Create account, appearance
+The .NET 11 MCP companion exposes Welcome, Sign in, Create account, appearance
 preferences, declared page navigation and Mizon taskbar pinning with separate permission groups. The
 WinUI app owns every operation and its permission checks. This setup uses local
 stdio and a Windows pipe restricted to the current user; it opens no TCP port.

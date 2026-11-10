@@ -16,7 +16,7 @@ From the Windows app repository:
 ```powershell
 dotnet run --project WindowsSearch/Mizon.Windows.Activation.Tests -c Release
 dotnet publish WindowsSearch/Mizon.Windows.Activation.Tests -c Release -r win-x64 -p:PublishAot=true -p:EnableAotAnalyzer=true
-& WindowsSearch/Mizon.Windows.Activation.Tests/bin/Release/net10.0/win-x64/publish/Mizon.Windows.Activation.Tests.exe
+& WindowsSearch/Mizon.Windows.Activation.Tests/bin/Release/net11.0/win-x64/publish/Mizon.Windows.Activation.Tests.exe
 ```
 
 JSON reflection is disabled in both managed and native runs. Package fixtures are

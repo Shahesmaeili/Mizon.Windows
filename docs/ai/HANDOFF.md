@@ -2,6 +2,25 @@
 
 Updated: 2026-11-10. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## .NET 11 migration
+
+The current project graph targets .NET 11; SDK 11.0.100 is pinned with patch-only
+roll-forward. Windows target/minimum OS versions and Windows App SDK versions stay
+unchanged. See [the migration task](tasks/2026-11-10-net11-upgrade.md) for validation
+and the benchmark boundary. Previous checkpoint results below remain historical.
+
+The migration reproduced an ExplorerCommands clean-build failure inside Visual
+Studio's full-framework MSBuild (`GenerateClsidMap`, incompatible HostModel metadata
+method). The project now uses the official .NET TaskHost for the three SDK COM
+generation tasks. A fresh VS Rebuild passes; COM hosting remains enabled. No SDK
+installation files, Windows registration or running companion processes were patched.
+
+Fresh .NET 11 verification includes all 16 existing projects plus the new headless
+benchmark, main WinUI Debug/Release x64, managed regression suites, NativeAOT
+activation/pinning checks and actual NativeAOT MCP catalog validation. The detailed
+task note separates compile checks, synthetic behavior and unverified visual/live
+scenarios. Existing preview/nullability/WinRT and Release trim warnings remain.
+
 ## Latest completed behavior
 
 ### Canonical deep links

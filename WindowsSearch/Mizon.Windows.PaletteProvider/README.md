@@ -1,6 +1,6 @@
 # Mizon native Windows Search provider
 
-This .NET 10 out-of-process COM server feeds music and public client profiles from the existing Mizon streaming search API into the new Windows 11 taskbar Search. It implements the `Windows.UI.Palettes.IPaletteItemSourceExtension` contract observed in the installed System Composer runtime. It does not create per-song index documents or desktop shortcuts, and it does not replace search inside the Mizon application.
+This .NET 11 out-of-process COM server feeds music and public client profiles from the existing Mizon streaming search API into the new Windows 11 taskbar Search. It implements the `Windows.UI.Palettes.IPaletteItemSourceExtension` contract observed in the installed System Composer runtime. It does not create per-song index documents or desktop shortcuts, and it does not replace search inside the Mizon application.
 
 The Palettes contract is private and build-specific. The tested system is Windows 11 Insider **26340.9843** with the new taskbar Search enabled. Initial previews still use the older search experience from Start; use the taskbar Search when checking this integration. See Microsoft's [new Search announcement](https://blogs.windows.com/windows-insider/2026/10/07/from-searching-to-doing-building-a-faster-more-streamlined-windows-search/) for that rollout distinction.
 
@@ -91,7 +91,7 @@ From this project directory, use the same x64 configuration for publish and depl
 
 ```powershell
 dotnet publish -c Release -p:Platform=x64 -r win-x64
-.\Deploy.ps1 -PublishDirectory .\bin\x64\Release\net10.0-windows\win-x64\publish
+.\Deploy.ps1 -PublishDirectory .\bin\x64\Release\net11.0-windows\win-x64\publish
 .\Deploy.ps1 -Inspect
 ```
 

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Mizon.Windows.Mcp.Contracts/Mizon.Windows.Mcp.Contracts.csproj" />
+    <Compile Include="../../Services/AppActivationRoute.cs" Link="Production/AppActivationRoute.cs" />
+    <Compile Include="../../Services/AppDeepLinkCatalog.cs" Link="Production/AppDeepLinkCatalog.cs" />
+  </ItemGroup>
+</Project>

@@ -1,6 +1,6 @@
 # Mizon MCP companion
 
-This .NET 10 stdio server uses the official `ModelContextProtocol.Core` SDK. It
+This .NET 11 stdio server uses the official `ModelContextProtocol.Core` SDK. It
 connects to the already-running WinUI application through a current-user named
 pipe. The application remains the authority for authentication, validation,
 navigation, language selection, appearance settings and connection permissions.

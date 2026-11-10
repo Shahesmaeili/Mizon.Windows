@@ -82,7 +82,7 @@ resolve their actual roots before editing; do not create a second copy.
    the app or creating a consent request. Only explicit tool calls connect. Keep
    pipe-availability deadlines separate from the UI-dispatched handshake budget;
    a temporarily busy UI must not cause repeated consent requests.
-6. Use source-generated JSON and explicit dispatch compatible with .NET 10 and
+6. Use source-generated JSON and explicit dispatch compatible with .NET 11 and
    NativeAOT. Avoid reflection-based discovery, dynamic invocation and generic
    shell/SQL/HTTP execution tools. Propagate cancellation and release subscriptions,
    streams, UI bindings and connection resources. Never automatically retry a

@@ -110,7 +110,7 @@
 	</ItemGroup>
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+		<TargetFramework>net11.0-windows10.0.26100.0</TargetFramework>
 		<WindowsSdkPackageVersion>10.0.26100.75</WindowsSdkPackageVersion>
 		<GenerateActionsWinRTComServer>true</GenerateActionsWinRTComServer>
 		<!-- Page actions have no input entities. Keep their registration explicit;
@@ -198,10 +198,10 @@
 		<PackageReference Include="DevWinUI.Shader" Version="10.1.0" />
 		<PackageReference Include="FluentIcons.WinUI" Version="2.2.345" />
 		<PackageReference Include="LiveChartsCore.SkiaSharpView.WinUI" Version="2.1.0-dev-798" />
-		<PackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="10.0.14" />
-		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.14" />
-		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="10.0.14" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="11.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="11.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="11.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0" />
 		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
 		<PackageReference Include="Microsoft.AI.Actions" Version="0.1.0" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.29648.1000-preview" />
@@ -210,8 +210,8 @@
 		<PackageReference Include="RGB.NET.Devices.Asus" Version="3.2.0" />
 		<PackageReference Include="RGB.NET.Devices.OpenRGB" Version="3.2.0" />
 		<PackageReference Include="RGB.NET.Devices.Razer" Version="3.2.0" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.14" />
-		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.14" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="11.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="11.0.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<Content Update="Assets\Animation.gif">

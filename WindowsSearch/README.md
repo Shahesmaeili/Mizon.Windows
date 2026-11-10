@@ -1,6 +1,6 @@
 # Mizon live Windows Search integration
 
-The active integration is the .NET 10 **Palettes provider** for the new Windows taskbar Search. It streams real music and public profile results from the existing Mizon API, supplies native previews and context menus, and opens the selected record through the application's existing single-instance deep links.
+The active integration is the .NET 11 **Palettes provider** for the new Windows taskbar Search. It streams real music and public profile results from the existing Mizon API, supplies native previews and context menus, and opens the selected record through the application's existing single-instance deep links.
 
 This folder contains these active projects:
 

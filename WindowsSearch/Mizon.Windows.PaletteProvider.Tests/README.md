@@ -1,6 +1,6 @@
 # Palette provider ABI tests
 
-This .NET 10 console project links the actual provider C# files. It requires no test framework or additional NuGet packages. It tests the native COM/WinRT boundary, not Windows Search UI visibility.
+This .NET 11 console project links the actual provider C# files. It requires no test framework or additional NuGet packages. It tests the native COM/WinRT boundary, not Windows Search UI visibility.
 
 Run the in-process suite on Windows with the tested Palettes runtime:
 

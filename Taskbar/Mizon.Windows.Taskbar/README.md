@@ -1,6 +1,6 @@
 # Mizon taskbar profile companion
 
-An independent .NET 10 / WinUI 3 process. It initializes a hidden, process-owned native host for `DesktopWindowXamlSource`, then converts that host to `WS_CHILD` and reparents it to `Shell_TrayWnd` before showing it. It does not create a floating overlay, inject into Explorer, or register automatic startup.
+An independent .NET 11 / WinUI 3 process. It initializes a hidden, process-owned native host for `DesktopWindowXamlSource`, then converts that host to `WS_CHILD` and reparents it to `Shell_TrayWnd` before showing it. It does not create a floating overlay, inject into Explorer, or register automatic startup.
 
 The main app launches a copy of the complete build output from an immutable runtime directory. Closing the main app does not close the companion. On logout the snapshot hides and disposes the taskbar island; the process waits for the next authenticated snapshot. Explorer replacement and taskbar DPI/geometry changes recreate or resize only the companion's own child.
 
@@ -38,7 +38,7 @@ The log is `%USERPROFILE%\.mizon\TaskbarProfile\Taskbar.log`.
 
 ```powershell
 dotnet build .\Mizon.Windows.Taskbar.csproj -c Release -p:Platform=x64
-.\bin\x64\Release\net10.0-windows10.0.22621.0\win-x64\Mizon.Windows.Taskbar.exe
+.\bin\x64\Release\net11.0-windows10.0.22621.0\win-x64\Mizon.Windows.Taskbar.exe
 ```
 
 An ordinary duplicate launch exits. `--replace` signals a per-user named event, waits up to eight seconds for the previous companion to release its mutex after cleanup, then starts the new version. It never kills Explorer or the main app. All watchers, timers, event subscriptions, image streams, cursors, the XAML island, and the owned HWND are released during shutdown.

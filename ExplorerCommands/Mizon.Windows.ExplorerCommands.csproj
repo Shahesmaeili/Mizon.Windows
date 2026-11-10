@@ -1,6 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <PropertyGroup>
-    <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
+    <TargetFramework>net11.0-windows10.0.22621.0</TargetFramework>
     <EnableComHosting>true</EnableComHosting>
     <EnableRegFreeCom>true</EnableRegFreeCom>
     <Platforms>x64</Platforms>
@@ -22,4 +23,20 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <!-- SDK 11 COM generation requires its matching HostModel dependencies.
+       VS 18's full-framework task loader can bind incompatible metadata types;
+       the supported .NET TaskHost keeps these tasks in the SDK's own runtime.
+       dotnet CLI builds already use that runtime and keep their normal path. -->
+  <UsingTask TaskName="GenerateClsidMap" Override="true" Runtime="NET" TaskFactory="TaskHostFactory"
+             AssemblyFile="$(MicrosoftNETBuildTasksDirectoryRoot)net11.0\Microsoft.NET.Build.Tasks.dll"
+             Condition="'$(MSBuildRuntimeType)' == 'Full'" />
+  <UsingTask TaskName="GenerateRegFreeComManifest" Override="true" Runtime="NET" TaskFactory="TaskHostFactory"
+             AssemblyFile="$(MicrosoftNETBuildTasksDirectoryRoot)net11.0\Microsoft.NET.Build.Tasks.dll"
+             Condition="'$(MSBuildRuntimeType)' == 'Full'" />
+  <UsingTask TaskName="CreateComHost" Override="true" Runtime="NET" TaskFactory="TaskHostFactory"
+             AssemblyFile="$(MicrosoftNETBuildTasksDirectoryRoot)net11.0\Microsoft.NET.Build.Tasks.dll"
+             Condition="'$(MSBuildRuntimeType)' == 'Full'" />
 </Project>

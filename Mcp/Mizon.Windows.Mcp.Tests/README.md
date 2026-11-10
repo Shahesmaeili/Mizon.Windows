@@ -4,7 +4,7 @@ These console checks need no test framework. The default verification command us
 
 ```powershell
 dotnet build .\Mcp\Mizon.Windows.Mcp.Tests\Mizon.Windows.Mcp.Tests.csproj -c Release
-& .\Mcp\Mizon.Windows.Mcp.Tests\bin\Release\net10.0-windows10.0.19041.0\Mizon.Windows.Mcp.Tests.exe --isolated
+& .\Mcp\Mizon.Windows.Mcp.Tests\bin\Release\net11.0-windows10.0.19041.0\Mizon.Windows.Mcp.Tests.exe --isolated
 ```
 
 The isolated test groups cover pending/scoped/revoked permission policy, output schemas and sanitized errors, framing/EOF/oversize/cancellation, pure discovery in multiple SDK workers, a delayed app handshake, connection reuse, no mutation replay, cancellation while queued or active, and deterministic disposal. They also exercise protected credential persistence across six concurrent processes, configured profile identity, exact persisted scopes, offline revocation, corrupt storage, save failure and cancellation. Appearance coverage verifies independent read/control scopes, source-generated enum/output schemas, validation and typed requests through the actual SDK/pipe boundary. Navigation coverage checks all 16 allowed destinations and rejects undeclared routes/actions, invalid IDs and fields before the pipe, through the actual SDK. `--isolated-connections` runs the 13 connection lifecycle/dispatch groups.

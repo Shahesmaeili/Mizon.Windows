@@ -3,7 +3,7 @@
 .SYNOPSIS
 Stages and registers only the native Mizon Palette provider for the current user.
 .EXAMPLE
-.\Deploy.ps1 -PublishDirectory .\bin\Release\net10.0-windows10.0.26100.0\win-x64\publish
+.\Deploy.ps1 -PublishDirectory .\bin\Release\net11.0-windows\win-x64\publish
 .EXAMPLE
 .\Deploy.ps1 -Inspect
 .NOTES

@@ -1,6 +1,6 @@
 # Mizon: shared AI development workflow
 
-Policy revision: **2026-11-10.1**. Applies to Codex, Claude, Copilot and human contributors.
+Policy revision: **2026-11-10.2**. Applies to Codex, Claude, Copilot and human contributors.
 The user's current request takes precedence. Read the repository's AGENTS.md first.
 
 ## Read before editing
@@ -125,9 +125,10 @@ literal text/newlines. Do not interpolate secrets or arbitrary text into shell c
   use separate Where calls for AND predicates. Never parallelize one DbContext.
 - Preserve IAsyncEnumerable streaming, cancellation, bounded work/backpressure and
   generated JSON metadata through database, API, SDK and consumers.
-- Treat .NET 10/NativeAOT compatibility as an explicit constraint. Avoid reflection
+- Target .NET 11 for current development and check NativeAOT compatibility explicitly. Avoid reflection
   fallback and broad warning suppression. IsAotCompatible is not proof of a full
   native application publish; EF query precompilation remains separately constrained.
+  .NET 10 is retained only as a measured comparison baseline, not a production target.
 - Reuse the existing download/cache and playback ownership services. Do not create
   duplicate audio players, transport sessions or uncontrolled background loops.
 - Preserve accepted designs/animations and functionality unless the task changes them.

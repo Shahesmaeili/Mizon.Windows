@@ -17,11 +17,18 @@ The current developer checkout places this project at `D:/source/repos/Mizon.Win
 
 ## Runtime and build configuration
 
-- Main project: `Mizon.Windows.csproj`, target `net10.0-windows10.0.26100.0`, minimum Windows target `10.0.19041.0`.
+- Main project: `Mizon.Windows.csproj`, target `net11.0-windows10.0.26100.0`, minimum Windows target `10.0.19041.0`.
+- `global.json` selects .NET SDK 11.0.100 with patch-only roll-forward. All companion
+  and verification projects target .NET 11; the OS target/minimum versions are independent.
 - The project uses WinUI 3 and currently references experimental Windows App SDK packages plus preview language/SDK components. Read the project file for exact versions rather than silently upgrading them.
 - Use the existing `x64` development configuration. A mixed AnyCPU/x64 dependency graph has caused problems before; keep related project mappings consistent.
 - `Program.cs` owns the custom entry point and single-instance activation. `App.xaml.cs` owns DI, startup, protocol/App Actions handling and shared service lifetime. `MainWindow` owns the window material, title bar and main navigation frame.
 - Debug compilation, package deployment and NativeAOT publication are different checks. Passing one does not establish the others.
+- ExplorerCommands uses the supported .NET TaskHost for the SDK's three COM-host
+  generation tasks when built inside full-framework Visual Studio MSBuild. This
+  avoids a reproduced SDK 11 `GenerateClsidMap` dependency-binding failure while
+  preserving COM hosting and the normal `dotnet build` path. Do not remove the
+  explicit SDK imports/overrides merely because incremental outputs already exist.
 - The build also builds/packages the MCP host, taskbar profile companion and ExplorerCommands payload. Inspect custom targets before changing build ordering or resource merging. A build may stop the Mizon Explorer command host to release its binaries; do not replace this with an indiscriminate Explorer restart.
 - Package installation/registration, certificates and native shell integration have additional machine requirements. Build-only checks do not install or enable them.
 
@@ -98,6 +105,11 @@ $msbuild = & $vswhere -latest -prerelease -products * -requires Microsoft.Compon
 For a real app run, use the user's existing Visual Studio solution/startup profile when requested. It may start both client and backend. Do not launch a second Visual Studio instance or kill the user's active debugging session merely to verify a build. Do not run Windows UI automation unless the user requests it.
 
 ## NativeAOT and performance boundaries
+
+`Mcp/Mizon.Windows.PerformanceBenchmarks` measures production deep-link parsing
+and source-generated MCP JSON/framing with synthetic data, outside the WinUI host.
+Its README documents warmup, raw samples, allocation units and baseline isolation.
+It cannot establish GUI working set, rendering, playback or native window performance.
 
 Use typed DTOs, source-generated JSON, explicit dispatch and existing C#/WinRT projection patterns. Keep UI changes on the dispatcher and I/O asynchronous. Propagate cancellation, unsubscribe events, cancel outstanding work and release native/video/composition resources at the actual owner's lifetime boundary.
 
