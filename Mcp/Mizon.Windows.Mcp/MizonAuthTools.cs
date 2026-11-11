@@ -10,6 +10,7 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
     private const string EmptySchema = """{"type":"object","properties":{},"additionalProperties":false}""";
     private static readonly Tool[] Catalog =
     [
+        Define("mizon_get_presence_state", "Online presence state", "Read your own current Mizon presence: whether the main window is active, a session and SignalR connection exist, the online indicator, and whether its state is server-confirmed. Requires separate presence read consent. Reads the shared header/taskbar state without connecting, publishing presence, changing focus or reading another user. HasConfirmedState=false means the displayed state is not confirmed by the server.", EmptySchema, readOnly: true),
         Define("mizon_get_music_home", "Music home state", "Read the active music home page: bounded cards in each section, source (API or demo), loading/errors, story and featured-player state. Requires independent music home read permission. Does not navigate, fetch extra pages, expose media file paths, or reveal other pages' business data.", EmptySchema, readOnly: true),
         Define("mizon_refresh_music_home", "Refresh music home", "Refresh one declared music home section or all sections using the same loaders as the live page. Requires music home control. Demo sections remain explicitly marked as demo. Only the active signed-in page is available; no automatic navigation. State is returned only with music home read permission.", MusicHomeRefreshSchema, idempotent: false, openWorld: true),
         Define("mizon_music_home_action", "Operate music home", "Perform one allowlisted action on the active music home page and its visible items. Requires music home control; like and follow additionally require music home submit permission. Normal playback may record activity; opening a story automatically records its view through the same UI flow. Like/follow require enabled=true/false (never a toggle); do not retry after interruption. Follow controls currently affect demo data only. request_download waits for the app's native file picker and requires user interaction; it cannot select a path. Read current state/actions first; unavailable/demo actions may report unavailable. This does not control arbitrary tracks, other pages or backend operations. State is returned only with music home read permission.", MusicHomeActionSchema, idempotent: false, openWorld: true),
@@ -70,6 +71,9 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
         var args = call.Arguments;
         switch (call.Name)
         {
+            case "mizon_get_presence_state":
+                CheckKeys(args);
+                return new() { Operation = "get_presence_state" };
             case "mizon_get_music_home":
                 CheckKeys(args);
                 return new() { Operation = "get_music_home" };

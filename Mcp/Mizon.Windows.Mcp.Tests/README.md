@@ -13,6 +13,11 @@ The test assembly links the actual companion source. A test-only identity shim c
 
 Run the sibling [app permission integration checks](../Mizon.Windows.Mcp.AccessTests/README.md) to verify actual service/view-model behavior for reconnecting workers, persisted consent, offline revocation, storage errors and cancellation across consent generations.
 
+Presence checks verify the argument-free `mizon_get_presence_state` tool through
+the actual SDK and isolated pipe, including rejection of attempts to set online
+state, focus, an account ID or approval. Snapshot serialization and independent
+read-only consent/restoration are covered; no real app is contacted.
+
 Use `--catalog <absolute companion executable path>` to verify an actual published executable (including NativeAOT) without connecting to Mizon. It checks real SDK discovery, input/output schemas and locally rejected invalid arguments. It deliberately skips all valid tool calls, so it cannot create a consent row, read state or change the app.
 
 The optional `--server <absolute companion executable path>` runs the standard checks against that actual executable. Discovery is side-effect-free, but its explicit read/status calls can create a **pending** connection in a running Mizon app. Only use that mode when the task authorizes app integration; leave the test connection unapproved. It never opens the app or submits an account.

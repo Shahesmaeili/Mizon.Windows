@@ -106,6 +106,14 @@
                     <TextBlock Text="{x:Bind Text('PermissionTaskbarControlHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
                 </StackPanel>
             </CheckBox>
+            <TextBlock Text="{x:Bind Text('PresenceGroup', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold"/>
+            <TextBlock Text="{x:Bind Text('PresenceGroupHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+            <CheckBox IsChecked="{x:Bind ViewModel.AllowPresenceRead, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionPresenceRead', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionPresenceReadHint', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('PermissionPresenceRead', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                    <TextBlock Text="{x:Bind Text('PermissionPresenceReadHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+            </CheckBox>
             <TextBlock Text="{x:Bind Text('MusicHomeGroup', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold"/>
             <TextBlock Text="{x:Bind Text('MusicHomeGroupHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
             <CheckBox IsChecked="{x:Bind ViewModel.AllowMusicHomeRead, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionMusicHomeRead', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionMusicHomeReadHint', Localization.Revision), Mode=OneWay}">

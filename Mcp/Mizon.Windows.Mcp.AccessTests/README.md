@@ -38,6 +38,13 @@ gating without deferred work, cancellation, sanitized backend failures, readines
 timeouts, multi-worker revocation, exact persisted scopes, offline revocation and
 adapter disposal. They do not call an external deep link or open a real page.
 
+Presence checks link the production read-only adapter and its shared service contract.
+Synthetic snapshots cover active/inactive, disconnected, pending confirmation and
+signed-out states. The actual permission service enforces independent read consent,
+redacts presence on other responses, restores exact scopes, persists offline
+revocation and suppresses data when consent is revoked during a read. Cancellation,
+sanitized failures and adapter/shared-service lifetime separation are also checked.
+
 These checks establish permission and lifecycle behavior, not visual layout,
 animations, Narrator output or actual UI performance. They do not open Windows
 UI automation or approve the user's real Codex connection.

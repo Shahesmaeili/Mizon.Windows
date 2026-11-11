@@ -40,6 +40,7 @@ public sealed record McpResponse
     public McpNavigationState? Navigation { get; init; }
     public McpTaskbarPinState? TaskbarPin { get; init; }
     public McpMusicHomeState? MusicHome { get; init; }
+    public McpPresenceState? Presence { get; init; }
     public McpConnectionStatus? Connection { get; init; }
 }
 
@@ -60,6 +61,7 @@ public sealed record McpConnectionStatus
     public bool AllowMusicHomeRead { get; init; }
     public bool AllowMusicHomeControl { get; init; }
     public bool AllowMusicHomeSubmit { get; init; }
+    public bool AllowPresenceRead { get; init; }
     public bool IsRemembered { get; init; }
     public bool IsConnected { get; init; }
 }

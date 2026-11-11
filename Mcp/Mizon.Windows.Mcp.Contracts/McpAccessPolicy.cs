@@ -18,10 +18,11 @@ public sealed class McpAccessPolicy
     public bool AllowMusicHomeRead { get; private set; }
     public bool AllowMusicHomeControl { get; private set; }
     public bool AllowMusicHomeSubmit { get; private set; }
+    public bool AllowPresenceRead { get; private set; }
 
     public void Approve(bool read, bool control, bool submit, bool appearanceRead = false, bool appearanceControl = false,
         bool navigationRead = false, bool navigationControl = false, bool taskbarRead = false, bool taskbarControl = false,
-        bool musicHomeRead = false, bool musicHomeControl = false, bool musicHomeSubmit = false)
+        bool musicHomeRead = false, bool musicHomeControl = false, bool musicHomeSubmit = false, bool presenceRead = false)
     {
         if (Status == "disconnected") return;
         AllowRead = read;
@@ -36,6 +37,7 @@ public sealed class McpAccessPolicy
         AllowMusicHomeRead = musicHomeRead;
         AllowMusicHomeControl = musicHomeControl;
         AllowMusicHomeSubmit = musicHomeControl && musicHomeSubmit;
+        AllowPresenceRead = presenceRead;
         Status = "approved";
     }
 
@@ -57,6 +59,7 @@ public sealed class McpAccessPolicy
         "get_taskbar_pin_state" => Status == "approved" && AllowTaskbarRead,
         "request_taskbar_pin" => Status == "approved" && AllowTaskbarControl,
         "get_music_home" => Status == "approved" && AllowMusicHomeRead,
+        "get_presence_state" => Status == "approved" && AllowPresenceRead,
         "refresh_music_home" or "music_home_action" => Status == "approved" && AllowMusicHomeControl,
         "music_home_submit" => Status == "approved" && AllowMusicHomeControl && AllowMusicHomeSubmit,
         _ => false
@@ -71,5 +74,6 @@ public sealed class McpAccessPolicy
         AllowNavigationRead = AllowNavigationControl = false;
         AllowTaskbarRead = AllowTaskbarControl = false;
         AllowMusicHomeRead = AllowMusicHomeControl = AllowMusicHomeSubmit = false;
+        AllowPresenceRead = false;
     }
 }

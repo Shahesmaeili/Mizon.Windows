@@ -14,7 +14,7 @@ internal static class CompanionTests
         "mizon_submit_auth_form", "mizon_clear_auth_form", "mizon_retry_welcome", "mizon_set_app_language",
         "mizon_get_appearance", "mizon_set_appearance", "mizon_get_navigation", "mizon_open_destination",
         "mizon_get_taskbar_pin_state", "mizon_request_taskbar_pin",
-        "mizon_get_music_home", "mizon_refresh_music_home", "mizon_music_home_action"
+        "mizon_get_music_home", "mizon_refresh_music_home", "mizon_music_home_action", "mizon_get_presence_state"
     ];
 
     public static async Task Run(string executable, IReadOnlyList<string>? serverArguments = null, bool catalogOnly = false)
@@ -43,12 +43,12 @@ internal static class CompanionTests
             var output = definition.OutputSchema!.Value;
             Check.That(output.GetProperty("type").GetString() == "object", "Tool result schema must be an object.");
             var properties = output.GetProperty("properties");
-            foreach (var name in new[] { "success", "code", "message", "state", "appearance", "navigation", "taskbarPin", "musicHome", "connection" })
+            foreach (var name in new[] { "success", "code", "message", "state", "appearance", "navigation", "taskbarPin", "musicHome", "presence", "connection" })
                 Check.That(properties.TryGetProperty(name, out _), "Output schema does not describe all response fields.");
             var state = properties.GetProperty("state").GetProperty("properties");
             Check.That(!state.TryGetProperty("password", out _) && !state.TryGetProperty("accessToken", out _), "Output schema exposes a secret.");
             Check.That(state.GetProperty("hasSession").GetProperty("description").GetString()!.Contains("not proof", StringComparison.Ordinal), "Session presence must not claim server verification.");
-            Check.That(definition.Annotations?.ReadOnlyHint == (tool.Name is "mizon_get_connection" or "mizon_get_auth_state" or "mizon_get_appearance" or "mizon_get_navigation" or "mizon_get_taskbar_pin_state" or "mizon_get_music_home"), "A modifying tool is incorrectly marked read-only.");
+            Check.That(definition.Annotations?.ReadOnlyHint == (tool.Name is "mizon_get_connection" or "mizon_get_auth_state" or "mizon_get_appearance" or "mizon_get_navigation" or "mizon_get_taskbar_pin_state" or "mizon_get_music_home" or "mizon_get_presence_state"), "A modifying tool is incorrectly marked read-only.");
             if (tool.Name is "mizon_submit_auth_form" or "mizon_retry_welcome" or "mizon_request_taskbar_pin" or "mizon_refresh_music_home" or "mizon_music_home_action")
                 Check.That(definition.Annotations?.IdempotentHint == false, "A non-idempotent operation is marked safe to repeat.");
 
@@ -103,7 +103,7 @@ internal static class CompanionTests
 
         // These are the only valid tool calls. They never launch a GUI, submit
         // credentials, grant permission or alter application state.
-        foreach (var name in catalogOnly ? Array.Empty<string>() : ["mizon_get_connection", "mizon_get_auth_state", "mizon_get_appearance", "mizon_get_navigation", "mizon_get_music_home"])
+        foreach (var name in catalogOnly ? Array.Empty<string>() : ["mizon_get_connection", "mizon_get_auth_state", "mizon_get_appearance", "mizon_get_navigation", "mizon_get_music_home", "mizon_get_presence_state"])
         {
             var result = await client.CallToolAsync(new CallToolRequestParams { Name = name }, cancellationToken: timeout.Token);
             var output = tools.Single(tool => tool.Name == name).ProtocolTool.OutputSchema!.Value;
@@ -111,13 +111,14 @@ internal static class CompanionTests
             Check.That(!json.TryGetProperty("state", out var state) || state.ValueKind == JsonValueKind.Null, "An unapproved connection revealed private form state.");
             Check.That(!json.TryGetProperty("appearance", out var appearance) || appearance.ValueKind == JsonValueKind.Null, "An unapproved connection revealed appearance state.");
             Check.That(!json.TryGetProperty("navigation", out var navigation) || navigation.ValueKind == JsonValueKind.Null, "An unapproved connection revealed navigation state.");
+            Check.That(!json.TryGetProperty("presence", out var presence) || presence.ValueKind == JsonValueKind.Null, "An unapproved connection revealed online presence.");
             Check.That(!json.TryGetProperty("musicHome", out var musicHome) || musicHome.ValueKind == JsonValueKind.Null, "An unapproved connection revealed music home data.");
             if (json.TryGetProperty("connection", out var connection))
             {
                 Check.That(connection.GetProperty("status").GetString() != "approved", "Test connection was unexpectedly approved.");
                 Check.That(!connection.GetProperty("allowRead").GetBoolean() && !connection.GetProperty("allowControl").GetBoolean() && !connection.GetProperty("allowSubmit").GetBoolean(), "An unapproved connection contains permissions.");
             }
-            if (name is "mizon_get_auth_state" or "mizon_get_appearance" or "mizon_get_navigation" or "mizon_get_music_home") Check.That(result.IsError == true, "Private state access succeeded before approval.");
+            if (name is "mizon_get_auth_state" or "mizon_get_appearance" or "mizon_get_navigation" or "mizon_get_music_home" or "mizon_get_presence_state") Check.That(result.IsError == true, "Private state access succeeded before approval.");
         }
         Check.That(!stderr.Any(line => line.Contains(SecretSentinel, StringComparison.Ordinal)), "The companion logged a credential value.");
     }

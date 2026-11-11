@@ -6,11 +6,13 @@ MCP integration verification. This is a standing development requirement, not a
 claim that existing features are already covered.
 
 Current implemented coverage is **Welcome, Login, Registration, Appearance, declared page navigation,
-Mizon taskbar pinning and the active music home page**.
+Mizon taskbar pinning, the active music home page and current-user online presence**.
 Appearance, navigation and taskbar pinning have independent read/control permissions; authentication grants never authorize them.
 Music home has its own read/control/submit permissions. Its bounded cards, featured
 player, stories and widget actions are documented in [MUSIC_HOME.md](MUSIC_HOME.md).
 It is not a general music-detail, profile, database or backend API surface.
+Online presence has an independent read-only scope; see [PRESENCE.md](PRESENCE.md).
+Its shared indicator snapshot cannot change focus, publish presence or inspect other users.
 Navigation itself exposes location state and opening allowlisted pages/popups only.
 Its approval does not authorize domain data, playback or downloads. Extend
 coverage with the feature being worked on. Do not silently expose unrelated pages,
@@ -46,6 +48,7 @@ Paths below are relative to the Windows app repository root:
 | Stdio host using the official MCP SDK | `Mcp/Mizon.Windows.Mcp/Program.cs` |
 | Explicit tool discovery and dispatch | `Mcp/Mizon.Windows.Mcp/MizonAuthTools.cs` |
 | Music home tool input schemas and explicit parser | `Mcp/Mizon.Windows.Mcp/MizonMusicHomeTools.cs` |
+| Current-user presence contract and read-only adapter | `Mcp/Mizon.Windows.Mcp.Contracts/McpPresenceContracts.cs`, `Services/McpPresenceService.cs`, `Services/ProfilePresenceContracts.cs` |
 | Input descriptions and generated output schemas | `Mcp/Mizon.Windows.Mcp/MizonAuthSchemas.cs` |
 | Companion-to-app connection and cancellation | `Mcp/Mizon.Windows.Mcp/MizonAuthPipeClient.cs` |
 | Consent/settings interface | `UserControls/McpAccessPanel.xaml`, `UserControls/McpConnectionCard.xaml`, `MainWindow.Mcp.cs` |

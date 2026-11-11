@@ -12,6 +12,9 @@
     <Compile Include="..\..\Services\IMcpAppearanceService.cs" Link="Production\IMcpAppearanceService.cs" />
     <Compile Include="..\..\Services\IMcpNavigationService.cs" Link="Production\IMcpNavigationService.cs" />
     <Compile Include="..\..\Services\IMcpTaskbarPinService.cs" Link="Production\IMcpTaskbarPinService.cs" />
+    <Compile Include="..\..\Services\IMcpPresenceService.cs" Link="Production\IMcpPresenceService.cs" />
+    <Compile Include="..\..\Services\McpPresenceService.cs" Link="Production\McpPresenceService.cs" />
+    <Compile Include="..\..\Services\ProfilePresenceContracts.cs" Link="Production\ProfilePresenceContracts.cs" />
     <Compile Include="..\..\Services\IMcpMusicHomeService.cs" Link="Production\IMcpMusicHomeService.cs" />
     <Compile Include="..\..\Services\McpMusicHomeService.cs" Link="Production\McpMusicHomeService.cs" />
     <Compile Include="..\..\Services\McpTaskbarPinService.cs" Link="Production\McpTaskbarPinService.cs" />

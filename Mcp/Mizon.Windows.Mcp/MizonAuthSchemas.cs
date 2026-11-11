@@ -66,7 +66,7 @@ internal static class MizonAuthSchemas
                 return definition;
             }
         }).AsObject();
-        schema["description"] = "Result of a scoped Mizon tool. Always inspect success and code. connection describes only this MCP connection. Authentication, appearance, navigation, taskbar and music-home state each require their own read permission. Passwords, tokens and cookies are never included. A pending, denied or revoked connection cannot bypass consent using another tool.";
+        schema["description"] = "Result of a scoped Mizon tool. Always inspect success and code. connection describes only this MCP connection. Authentication, appearance, navigation, taskbar, music-home and presence state each require their own read permission. Passwords, tokens and cookies are never included. A pending, denied or revoked connection cannot bypass consent using another tool.";
         schema["required"] = new JsonArray("success", "code", "message");
         return ToElement(schema);
     }
@@ -110,7 +110,7 @@ internal static class MizonAuthSchemas
             "isAcrylicSupported" => "Whether the current Windows composition environment supports Acrylic.",
             "isPreferenceSaved" => "Whether the current preference was successfully persisted. A false value means it may not survive a restart.",
             "isWindowAttached" => "Whether a live main window is attached to the appearance service.",
-            "isConnected" => "Whether this client currently has a live connection. Disconnecting does not revoke remembered approval. Disabling MCP suspends access without deleting saved grants.",
+            "isConnected" => "For connection: whether this MCP client is connected; disconnect does not revoke saved consent. For presence: whether Mizon has a live SignalR presence connection; this alone does not confirm online status.",
             "page" => "Current page name: login, register, welcome, or an out-of-scope/unavailable page. Only authentication pages are exposed by these tools.",
             "language" => "Current Mizon language tag, fa-IR or en-US.",
             "hasSession" => "Whether a locally stored session/token is present. This is not proof that the server has verified it or that it remains valid.",
@@ -120,6 +120,11 @@ internal static class MizonAuthSchemas
             "canRequest" => "Whether a pin request is currently available. Windows still requires foreground app and user confirmation.",
             "allowTaskbarRead" => "Independent permission to read Mizon's taskbar pin status.",
             "allowTaskbarControl" => "Independent permission to request Windows pin confirmation, never to approve it or unpin.",
+            "allowPresenceRead" => "Independent user-approved permission to read your current online presence only. It cannot change presence or activate the app window.",
+            "presence" => "Optional current-user presence snapshot shared with the header/taskbar. Returned only with presence read permission. No identifiers, activity history or other users. Check hasConfirmedState before treating isOnline as server-confirmed.",
+            "isWindowActive" => "Whether the main Mizon window is currently active. Reading does not activate it.",
+            "isOnline" => "The current online indicator from the shared presence service; it is server-confirmed only when hasConfirmedState is true.",
+            "hasConfirmedState" => "Whether the server confirmed the current presence state. False during unavailable, disconnected or pending synchronization states.",
             "allowMusicHomeRead" => "Independent permission to read the active music-home page and its bounded visible section contents.",
             "allowMusicHomeControl" => "Independent permission to refresh music home, use its existing navigation/playback controls and change language. Does not authorize likes or follows. Playback/viewing may record normal activity.",
             "allowMusicHomeSubmit" => "Additional permission for music-home like/follow actions; also requires music home control. Does not grant authentication submission or arbitrary backend writes.",

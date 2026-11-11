@@ -23,6 +23,7 @@ public sealed record McpRememberedGrant
     public bool AllowMusicHomeRead { get; init; }
     public bool AllowMusicHomeControl { get; init; }
     public bool AllowMusicHomeSubmit { get; init; }
+    public bool AllowPresenceRead { get; init; }
     public DateTimeOffset ApprovedAt { get; init; }
 }
 
