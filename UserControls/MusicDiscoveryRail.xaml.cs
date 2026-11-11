@@ -191,12 +191,16 @@ public sealed partial class MusicDiscoveryRail : UserControl
             PublicId = person.PersonPublicId,
             Kind = ProfilePreviewKind.Person,
             DisplayName = person.DisplayName,
-            Subtitle = string.IsNullOrWhiteSpace(music.DisplayGenre) ? Localization.GetString("MusicHome/Singer") : Localization.GetString("MusicHome/Singer") + " · " + music.DisplayGenre,
+            SubtitleResourceKey = "MusicHome/Singer",
+            SubtitleSuffix = music.GenreTitle,
+            PersianSubtitleSuffix = music.PersianGenreTitle,
             Avatar = person.ProfileImage,
             Banner = music.CoverImage,
-            Detail = Localization.Format("MusicHome/InTrack", music.DisplayTitle),
-            FooterText = music.PublicId == Guid.Empty ? Localization.GetString("MusicHome/Preview") : string.Empty,
-            PrimaryActionText = music.PublicId == Guid.Empty ? string.Empty : Localization.GetString("MusicHome/ViewTrack"),
+            DetailResourceKey = "MusicHome/InTrack",
+            DetailArgument = music.Title,
+            PersianDetailArgument = music.PersianTitle,
+            FooterResourceKey = music.PublicId == Guid.Empty ? "MusicHome/Preview" : null,
+            PrimaryActionResourceKey = music.PublicId == Guid.Empty ? null : "MusicHome/ViewTrack",
             PrimaryActionSymbol = FluentIcons.Common.Symbol.MusicNote1
         });
     }
