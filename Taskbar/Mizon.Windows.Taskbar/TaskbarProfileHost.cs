@@ -44,6 +44,13 @@ internal sealed partial class TaskbarProfileHost : IDisposable
 
     internal static TaskbarProfileHost? Current { get; private set; }
 
+    internal bool TryGetTaskbarBounds(out Native.Rect bounds)
+    {
+        bounds = default;
+        return !_disposed && _taskbar != 0 && Native.IsWindowVisible(_taskbar)
+            && Native.GetWindowRect(_taskbar, out bounds);
+    }
+
     internal TaskbarProfileHost(DispatcherQueue dispatcher)
     {
         _dispatcher = dispatcher;

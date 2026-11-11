@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -7,6 +8,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Controls;
 using Windows.Foundation;
+using Windows.Graphics;
 using Windows.UI.ViewManagement;
 using WinRT;
 
@@ -16,6 +18,7 @@ namespace Mizon.Windows.Taskbar;
 internal sealed partial class TaskbarMoodButton : Grid, IDisposable
 {
     private const double EffectSize = 208;
+    private const double EffectTaskbarGap = 8;
     private readonly AuthActionButton _button;
     private readonly AnimatedMoodEmoji _loop;
     private readonly TextBlock _fallback;
@@ -248,7 +251,7 @@ internal sealed partial class TaskbarMoodButton : Grid, IDisposable
             _loop.LayoutUpdated -= AnchorLayoutUpdated;
             _loop.LayoutUpdated += AnchorLayoutUpdated;
             effect.IsPlaybackEnabled = true;
-            UpdateEffectPosition();
+            if (!UpdateEffectPosition()) return;
             var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             RoutedEventHandler loaded = (_, _) => ready.TrySetResult();
             effect.Loaded += loaded;
@@ -276,15 +279,31 @@ internal sealed partial class TaskbarMoodButton : Grid, IDisposable
         }
     }
 
-    internal void UpdateEffectPosition()
+    internal bool UpdateEffectPosition()
     {
-        if (_disposed || _popup is not { } popup || !_loop.IsLoaded) return;
-        var center = _loop.TransformToVisual(null).TransformPoint(new Point(_loop.ActualWidth / 2, _loop.ActualHeight / 2));
-        var left = center.X - EffectSize / 2;
-        var top = center.Y - EffectSize / 2;
-        if (!double.IsFinite(left) || !double.IsFinite(top)) return;
-        if (Math.Abs(popup.HorizontalOffset - left) > .01) popup.HorizontalOffset = left;
-        if (Math.Abs(popup.VerticalOffset - top) > .01) popup.VerticalOffset = top;
+        if (_disposed || _popup is not { } popup || !_loop.IsLoaded || _loop.XamlRoot is not { } root
+            || TaskbarProfileHost.Current is not { } host || !host.TryGetTaskbarBounds(out var taskbar)) return false;
+        try
+        {
+            var center = _loop.TransformToVisual(null).TransformPoint(new Point(_loop.ActualWidth / 2, _loop.ActualHeight / 2));
+            // The XAML island is centered inside the taskbar. Convert the actual shell
+            // edge instead of assuming the island starts at the taskbar's top or at 100% DPI.
+            var converter = root.CoordinateConverter;
+            var screenCenter = converter.ConvertLocalToScreen(center);
+            var taskbarTop = converter.ConvertScreenToLocal(new PointInt32(screenCenter.X, taskbar.Top)).Y;
+            var left = center.X - EffectSize / 2;
+            var top = taskbarTop - EffectSize - EffectTaskbarGap;
+            if (!double.IsFinite(left) || !double.IsFinite(top)) return false;
+            if (Math.Abs(popup.HorizontalOffset - left) > .01) popup.HorizontalOffset = left;
+            if (Math.Abs(popup.VerticalOffset - top) > .01) popup.VerticalOffset = top;
+            return true;
+        }
+        catch (Exception error) when (error is COMException or InvalidOperationException)
+        {
+            // Layout/root events can arrive while the island is being disconnected.
+            TaskbarPaths.Log($"Mood effect positioning: {error.GetType().Name}.");
+            return false;
+        }
     }
 
     private static async Task<TaskbarEffectInputScope> PreparePopupInputAsync(AnimatedMoodEmoji effect, CancellationToken token)
@@ -301,12 +320,15 @@ internal sealed partial class TaskbarMoodButton : Grid, IDisposable
         throw new InvalidOperationException("The owned mood effect popup was not presented in time.");
     }
 
-    private void AnchorLayoutUpdated(object? sender, object args) => UpdateEffectPosition();
+    private void AnchorLayoutUpdated(object? sender, object args)
+    {
+        if (!UpdateEffectPosition() && _popup?.IsOpen == true) CancelPlayback();
+    }
 
     private void RootChanged(XamlRoot sender, XamlRootChangedEventArgs args)
     {
         if (!sender.IsHostVisible) CancelPlayback();
-        else UpdateEffectPosition();
+        else if (!UpdateEffectPosition() && _popup?.IsOpen == true) CancelPlayback();
     }
 
     private void MotionPreferenceChanged(UISettings sender, UISettingsAnimationsEnabledChangedEventArgs args)

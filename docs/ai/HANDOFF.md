@@ -2,6 +2,14 @@
 
 Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Taskbar mood click effect placement — 2026-11-11
+
+The click effect now sits entirely above the actual taskbar top, separated by
+8 logical pixels and horizontally centered on the emoji. Screen-to-XAML
+conversion preserves placement across DPI changes; invalid/disconnected roots
+cancel the popup through its existing cleanup path. The main-window emoji is
+unchanged. See [verification and limits](tasks/2026-11-11-taskbar-mood-effect-above.md).
+
 ## Taskbar placement recovery — 2026-11-11
 
 The profile/mood host now reclaims the rightmost suitable free space when Windows
