@@ -172,4 +172,10 @@ Story publishing will be available when this preview is connected.</value></data
   <data name="ArtistGenreOne" xml:space="preserve"><value>Pop · Electronic</value></data>
   <data name="ArtistGenreTwo" xml:space="preserve"><value>Pop · Jazz</value></data>
   <data name="ArtistGenreThree" xml:space="preserve"><value>Electronic · Hip-Hop</value></data>
+  <data name="OrbitVoiceTitle" xml:space="preserve"><value>New voices</value></data>
+  <data name="OrbitVoiceCaption" xml:space="preserve"><value>A sound worth discovering</value></data>
+  <data name="OrbitRhythmTitle" xml:space="preserve"><value>Your rhythm</value></data>
+  <data name="OrbitRhythmCaption" xml:space="preserve"><value>Find the beat of your day</value></data>
+  <data name="OrbitMomentTitle" xml:space="preserve"><value>Feel the moment</value></data>
+  <data name="OrbitMomentCaption" xml:space="preserve"><value>Some songs stay with you</value></data>
 </root>

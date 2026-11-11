@@ -162,6 +162,7 @@
                 ProfileRequested="TopArtist_ProfileRequested"
                 MusicRequested="FeatureHero_OpenMusicRequested" />
             </controls:WidgetLoadHost>
+            <uc:StoryOrbitShowcase/>
             <uc:MusicStoriesPanel x:Name="MusicStories" ViewModel="{x:Bind ViewModel}"
                 StoryRequested="Stories_StoryRequested" AddRequested="Stories_AddRequested"
                 RefreshRequested="Stories_RefreshRequested" />

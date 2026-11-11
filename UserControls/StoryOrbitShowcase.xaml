@@ -1,0 +1,28 @@
+<UserControl
+    x:Class="Mizon.Windows.UserControls.StoryOrbitShowcase"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:uc="using:Mizon.Windows.UserControls"
+    Loaded="Showcase_Loaded" Unloaded="Showcase_Unloaded" SizeChanged="Showcase_SizeChanged"
+    IsTabStop="False" FlowDirection="LeftToRight" AutomationProperties.AccessibilityView="Raw">
+    <ScrollViewer x:Name="ArtworkScroll" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled" ZoomMode="Disabled"
+                  IsTabStop="False" IsVerticalScrollChainingEnabled="True" PointerWheelChanged="Artwork_Wheel">
+        <Grid x:Name="Cards" MaxWidth="1130" Padding="8,4,8,8" ColumnSpacing="12" HorizontalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <uc:StoryOrbitCard Variant="0" MaxWidth="350" VerticalAlignment="Center"
+                Title="{x:Bind Localization.GetString('MusicHome/OrbitVoiceTitle', Localization.Revision), Mode=OneWay}"
+                Caption="{x:Bind Localization.GetString('MusicHome/OrbitVoiceCaption', Localization.Revision), Mode=OneWay}"/>
+            <uc:StoryOrbitCard Grid.Column="1" Variant="1" MaxWidth="350" VerticalAlignment="Center"
+                Title="{x:Bind Localization.GetString('MusicHome/OrbitRhythmTitle', Localization.Revision), Mode=OneWay}"
+                Caption="{x:Bind Localization.GetString('MusicHome/OrbitRhythmCaption', Localization.Revision), Mode=OneWay}"/>
+            <uc:StoryOrbitCard Grid.Column="2" Variant="2" MaxWidth="350" VerticalAlignment="Center"
+                Title="{x:Bind Localization.GetString('MusicHome/OrbitMomentTitle', Localization.Revision), Mode=OneWay}"
+                Caption="{x:Bind Localization.GetString('MusicHome/OrbitMomentCaption', Localization.Revision), Mode=OneWay}"/>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

@@ -32,6 +32,19 @@ Prompt: "Create a premium editorial music app hero asset, a photorealistic cutou
 
 ## Layout references
 
+### Floating story editorial strip (2026-11-11)
+
+`StoryOrbitShowcase` reuses `featured-performer.png` and
+`spotlight-performer-02.png` / `spotlight-performer-03.png`, the existing original
+fictional cutouts documented here and in [SPOTLIGHT-PERFORMERS.md](SPOTLIGHT-PERFORMERS.md).
+These are decorative illustrations, not profiles of actual artists or API data.
+The organic portrait frames are implemented as native vector paths and clips;
+the PNG files themselves are unchanged. The user's
+[Dribbble layout reference](https://cdn.dribbble.com/userupload/36919937/file/original-e77a90b91a73746153dd33367d85943c.png)
+is not distributed in the application.
+
+### Existing discovery sections
+
 - [NFT Store Desktop — Manuel Rovira](https://dribbble.com/shots/15319401-NFT-Store-Desktop): nested rounded cards, contributor strip, artwork and inset action row; orbital sculptural display.
 - [ValuBet — Slava Kornilov / Geex Arts](https://dribbble.com/shots/8801346-ValuBet): central figure protruding from a colored banner, lateral information and split activity line.
 - [ValueBet dark edition — Slava Kornilov / Geex Arts](https://dribbble.com/shots/7800822-ValueBet): current hero reference. A single opaque dark 770:360 surface with the figure cropped inside, three thumbnails in the upper corner, side identities, centered track metadata, and a split line with three inset audience/action groups. Height is bounded to 190–340 logical pixels; compact layouts keep all content inside the same card.

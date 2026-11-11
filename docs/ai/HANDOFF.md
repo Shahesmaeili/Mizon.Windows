@@ -2,6 +2,18 @@
 
 Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Floating story editorial strip — 2026-11-11
+
+MusicPage now places three decorative organic portrait collages immediately
+above MusicStories. Native Composition animates portrait, contours, badge and
+typography independently; existing local fictional performer assets are reused.
+The strip is responsive, localized, skips decorative Narrator output and stops
+its animation/resource work with the page lifecycle and Windows motion setting.
+No new API, MCP action or package is added. See
+[implementation and verification](tasks/2026-11-11-story-orbit-showcase.md).
+Live visual validation was not performed; existing music-home MCP checks and
+Debug x64 compilation passed.
+
 ## VPN page and local Particle — 2026-11-11
 
 Follow-up: constrained page content now explicitly centers within the viewport,
