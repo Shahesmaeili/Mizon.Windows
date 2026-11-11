@@ -15,6 +15,7 @@ public sealed record McpRequest
     public McpAuthForm? Form { get; init; }
     public McpAppearancePreferences? Appearance { get; init; }
     public McpNavigationRequest? Navigation { get; init; }
+    public McpMusicHomeRequest? MusicHome { get; init; }
 }
 
 // Input only. Never include this object in a response, diagnostic or exception log.
@@ -38,6 +39,7 @@ public sealed record McpResponse
     public McpAppearanceState? Appearance { get; init; }
     public McpNavigationState? Navigation { get; init; }
     public McpTaskbarPinState? TaskbarPin { get; init; }
+    public McpMusicHomeState? MusicHome { get; init; }
     public McpConnectionStatus? Connection { get; init; }
 }
 
@@ -55,6 +57,9 @@ public sealed record McpConnectionStatus
     public bool AllowNavigationControl { get; init; }
     public bool AllowTaskbarRead { get; init; }
     public bool AllowTaskbarControl { get; init; }
+    public bool AllowMusicHomeRead { get; init; }
+    public bool AllowMusicHomeControl { get; init; }
+    public bool AllowMusicHomeSubmit { get; init; }
     public bool IsRemembered { get; init; }
     public bool IsConnected { get; init; }
 }

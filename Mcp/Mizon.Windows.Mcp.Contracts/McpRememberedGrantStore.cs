@@ -20,6 +20,9 @@ public sealed record McpRememberedGrant
     public bool AllowNavigationControl { get; init; }
     public bool AllowTaskbarRead { get; init; }
     public bool AllowTaskbarControl { get; init; }
+    public bool AllowMusicHomeRead { get; init; }
+    public bool AllowMusicHomeControl { get; init; }
+    public bool AllowMusicHomeSubmit { get; init; }
     public DateTimeOffset ApprovedAt { get; init; }
 }
 
@@ -112,7 +115,8 @@ public sealed class McpRememberedGrantStore : IDisposable
         if (grant is null || !McpCredentialIdentity.IsValidId(grant.Id)
             || string.IsNullOrWhiteSpace(grant.ClientName) || grant.ClientName.Length > 100
             || grant.ClientVersion is null || grant.ClientVersion.Length > 100
-            || grant.AllowSubmit && !grant.AllowControl || grant.ApprovedAt == default)
+            || grant.AllowSubmit && !grant.AllowControl || grant.AllowMusicHomeSubmit && !grant.AllowMusicHomeControl
+            || grant.ApprovedAt == default)
             throw new IOException("Mizon MCP remembered permission is invalid.");
     }
 

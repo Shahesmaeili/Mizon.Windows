@@ -5,11 +5,14 @@ using ModelContextProtocol.Server;
 
 namespace Mizon.Windows.Mcp;
 
-internal sealed class MizonAuthTools(MizonAuthPipeClient bridge)
+internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
 {
     private const string EmptySchema = """{"type":"object","properties":{},"additionalProperties":false}""";
     private static readonly Tool[] Catalog =
     [
+        Define("mizon_get_music_home", "Music home state", "Read the active music home page: bounded cards in each section, source (API or demo), loading/errors, story and featured-player state. Requires independent music home read permission. Does not navigate, fetch extra pages, expose media file paths, or reveal other pages' business data.", EmptySchema, readOnly: true),
+        Define("mizon_refresh_music_home", "Refresh music home", "Refresh one declared music home section or all sections using the same loaders as the live page. Requires music home control. Demo sections remain explicitly marked as demo. Only the active signed-in page is available; no automatic navigation. State is returned only with music home read permission.", MusicHomeRefreshSchema, idempotent: false, openWorld: true),
+        Define("mizon_music_home_action", "Operate music home", "Perform one allowlisted action on the active music home page and its visible items. Requires music home control; like and follow additionally require music home submit permission. Normal playback may record activity; opening a story automatically records its view through the same UI flow. Like/follow require enabled=true/false (never a toggle); do not retry after interruption. Follow controls currently affect demo data only. request_download waits for the app's native file picker and requires user interaction; it cannot select a path. Read current state/actions first; unavailable/demo actions may report unavailable. This does not control arbitrary tracks, other pages or backend operations. State is returned only with music home read permission.", MusicHomeActionSchema, idempotent: false, openWorld: true),
         Define("mizon_get_taskbar_pin_state", "Taskbar pin state", "Refresh whether Mizon is pinned to Windows taskbar, support, policy, busy and request availability. Requires separate taskbar read permission. Does not reveal other pinned apps or change pinning.", EmptySchema, readOnly: true),
         Define("mizon_request_taskbar_pin", "Request pin to taskbar", "Request the native Windows confirmation to pin Mizon to the taskbar, only at the user's request with Mizon in the foreground. Requires separate taskbar control permission. The user must confirm Windows' dialog; this tool cannot approve it, unpin apps or bypass Windows policy. Never automatically retry a cancelled/interrupted request. State is returned only with taskbar read permission.", EmptySchema, idempotent: false, openWorld: true),
         Define("mizon_get_connection", "Connection permission", "Read only this MCP connection's approval status and granted permissions. Available before approval. It cannot approve a connection.", EmptySchema, readOnly: true),
@@ -67,6 +70,12 @@ internal sealed class MizonAuthTools(MizonAuthPipeClient bridge)
         var args = call.Arguments;
         switch (call.Name)
         {
+            case "mizon_get_music_home":
+                CheckKeys(args);
+                return new() { Operation = "get_music_home" };
+            case "mizon_refresh_music_home":
+            case "mizon_music_home_action":
+                return ParseMusicHome(call.Name, args);
             case "mizon_get_taskbar_pin_state":
                 CheckKeys(args);
                 return new() { Operation = "get_taskbar_pin_state" };

@@ -84,4 +84,16 @@
   <data name="PermissionTaskbarControlHint" xml:space="preserve"><value>فقط هنگام درخواست شما و حضور برنامه در پیش‌زمینه، تأیید ویندوز را نشان می‌دهد؛ بدون تأیید خودکار یا حذف پین.</value></data>
   <data name="ReadTaskbarPin" xml:space="preserve"><value>در حال بررسی وضعیت پین تسک‌بار</value></data>
   <data name="RequestTaskbarPin" xml:space="preserve"><value>در حال درخواست تأیید پین تسک‌بار</value></data>
+  <data name="MusicHomeGroup" xml:space="preserve"><value>صفحهٔ اصلی موسیقی</value></data>
+  <data name="MusicHomeGroupHint" xml:space="preserve"><value>مجوزهای مستقل برای صفحهٔ اصلی موسیقی؛ مجوز ورود یا جابه‌جایی صفحات، دسترسی به این بخش را نمی‌دهد.</value></data>
+  <data name="PermissionMusicHomeRead" xml:space="preserve"><value>خواندن صفحهٔ اصلی موسیقی</value></data>
+  <data name="PermissionMusicHomeReadHint" xml:space="preserve"><value>مشاهدهٔ کارت‌های موسیقی، پلی‌لیست‌ها، استوری‌ها، فعالیت دنبال‌شوندگان، وضعیت بارگذاری و پلیر پیشنهادی. مسیر فایل‌ها و اطلاعات محرمانه نمایش داده نمی‌شوند.</value></data>
+  <data name="PermissionMusicHomeControl" xml:space="preserve"><value>کنترل صفحهٔ اصلی موسیقی</value></data>
+  <data name="PermissionMusicHomeControlHint" xml:space="preserve"><value>به‌روزرسانی بخش‌ها، باز کردن آیتم‌ها، کنترل پخش و استوری، کپی لینک و تغییر زبان. پخش و مشاهده ممکن است فعالیت معمول را ثبت کند؛ دانلود همچنان از انتخابگر فایل برنامه استفاده می‌کند. لایک و دنبال کردن مجوز جدا می‌خواهند.</value></data>
+  <data name="PermissionMusicHomeSubmit" xml:space="preserve"><value>لایک و عملیات دنبال کردن</value></data>
+  <data name="PermissionMusicHomeSubmitHint" xml:space="preserve"><value>به مجوز کنترل موسیقی هم نیاز دارد. لایک پلیر پیشنهادی یا استوری را از طریق برنامه تغییر می‌دهد. دنبال کردن هنرمندان فعلاً نمونهٔ محلی است و در وضعیت مشخص می‌شود. مجوز ساخت حساب یا ارسال فرم ورود را نمی‌دهد.</value></data>
+  <data name="ReadMusicHome" xml:space="preserve"><value>در حال خواندن صفحهٔ موسیقی</value></data>
+  <data name="RefreshMusicHome" xml:space="preserve"><value>در حال به‌روزرسانی صفحهٔ موسیقی</value></data>
+  <data name="ControlMusicHome" xml:space="preserve"><value>در حال کنترل صفحهٔ موسیقی</value></data>
+  <data name="SubmitMusicHome" xml:space="preserve"><value>در حال تغییر لایک یا دنبال کردن در موسیقی</value></data>
 </root>

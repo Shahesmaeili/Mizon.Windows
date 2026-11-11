@@ -25,6 +25,12 @@ internal static class MizonAuthSchemas
             Describe(properties, "commentPublicId", "Nonempty public UUID in dashed D format, required only for music-comment.");
             Describe(properties, "searchQuery", "Search text of 1 to 120 characters without control characters, required only for search. Opens the existing in-app search.");
             Describe(properties, "settingsSection", "Optional section when destination is settings. Selects the existing settings section without changing any setting or permission.");
+            Describe(properties, "section", "Music home section key. Refresh accepts all or any listed section. For actions, all supports set_language and dismiss; genres are display-only. Other actions must apply to the selected section and its current visible items.");
+            Describe(properties, "action", "Music-home-only action. open/play/profile/copy_link use a current item id (optional for current featured/spotlight/news). pause/resume: featured/stories/news. previous/next: featured/spotlight/news/artists/stories. select: those sections or weekly, with index. mute/fullscreen: featured with enabled. seek/volume: featured with value. like: featured/stories, follow: spotlight/artists, each with enabled and submit permission. open_all: library/following; show_recent: library; add_story: stories; open_widget: stories with a visible widget id; request_download: featured; retry: featured/stories; reset_model: spotlight; set_language: all with language. profile on recommended/recent/trending may specify contributor index 0 or 1. Do not send unrelated optional fields.");
+            Describe(properties, "id", "Opaque identifier copied from the current music home state, maximum 100 characters. Required for item open/play/profile/copy_link/follow/open_widget except the current featured/spotlight/news item. Never a file path, arbitrary URL or backend database key.");
+            Describe(properties, "index", "Zero-based current-item index for select. For profile on a recommended/recent/trending music card, optionally choose contributor 0 or 1. Otherwise omit. The live page additionally validates bounds.");
+            Describe(properties, "value", "Only for featured seek (seconds, 0 to actual duration) or featured volume (0 to 1). Omit for other actions.");
+            Describe(properties, "enabled", "Required only for mute, fullscreen, like and follow. Sets the desired state explicitly instead of toggling. Like/follow require additional music home submit permission.");
             if (properties["form"] is JsonObject form)
             {
                 form["description"] = "Fields to update on the visible form. Omitted fields stay unchanged; an empty string clears the field. Filling never submits. Use identifier/password for login and firstName/lastName/username/email/password/confirmPassword for registration.";
@@ -60,7 +66,7 @@ internal static class MizonAuthSchemas
                 return definition;
             }
         }).AsObject();
-        schema["description"] = "Result of a scoped Mizon tool. Always inspect success and code. connection describes only this MCP connection. Authentication, appearance and navigation state each require their own read permission. Passwords, tokens and cookies are never included. A pending, denied or revoked connection cannot bypass consent using another tool.";
+        schema["description"] = "Result of a scoped Mizon tool. Always inspect success and code. connection describes only this MCP connection. Authentication, appearance, navigation, taskbar and music-home state each require their own read permission. Passwords, tokens and cookies are never included. A pending, denied or revoked connection cannot bypass consent using another tool.";
         schema["required"] = new JsonArray("success", "code", "message");
         return ToElement(schema);
     }
@@ -75,7 +81,7 @@ internal static class MizonAuthSchemas
             "message" => "Human-readable outcome or next step. Errors never echo submitted credentials.",
             "state" => "Optional current authentication UI state. Omitted without read permission; never infer permission from its absence or a cached previous result.",
             "connection" => "Optional current connection consent status and grants. These grants can only be changed by the user inside Mizon, not through MCP.",
-            "id" => "Identifier of this client permission entry. A paired client retains the identifier across reconnects; legacy clients without proof have a session-only identifier.",
+            "id" => "Stable identifier within the reported feature. Music items use the exact opaque ID accepted by their listed actions; connection IDs identify permission entries. Never infer a backend integer ID or arbitrary navigation target.",
             "clientName" => "Unverified label supplied by the MCP client during initialization, not a verified publisher identity.",
             "status" => "Connection lifecycle: pending, approved, denied, revoked or disconnected. Only approved connections may use granted scopes.",
             "allowRead" => "User-approved permission to read authentication-page state. Does not expose password contents or tokens.",
@@ -114,6 +120,35 @@ internal static class MizonAuthSchemas
             "canRequest" => "Whether a pin request is currently available. Windows still requires foreground app and user confirmation.",
             "allowTaskbarRead" => "Independent permission to read Mizon's taskbar pin status.",
             "allowTaskbarControl" => "Independent permission to request Windows pin confirmation, never to approve it or unpin.",
+            "allowMusicHomeRead" => "Independent permission to read the active music-home page and its bounded visible section contents.",
+            "allowMusicHomeControl" => "Independent permission to refresh music home, use its existing navigation/playback controls and change language. Does not authorize likes or follows. Playback/viewing may record normal activity.",
+            "allowMusicHomeSubmit" => "Additional permission for music-home like/follow actions; also requires music home control. Does not grant authentication submission or arbitrary backend writes.",
+            "musicHome" => "Optional snapshot of the active music home. Omitted without music home read permission even when a control action succeeds. No local media paths or image bytes.",
+            "sections" => "Bounded snapshots of the music home sections, with at most 20 items per section. Does not fetch all backend records.",
+            "source" => "Data provenance: api for real service data, demo for local sample content, mixed when both occur. Demo contents and actions are never presented as persisted backend data.",
+            "items" => "Only the bounded items currently represented by this home section. IDs are inputs for supported item actions; hasMore indicates remaining results.",
+            "actions" => "Currently supported action names for this item, section or player. The live page revalidates availability and item identity before executing; stale state is not authorization.",
+            "isAvailable" => "Whether the live page or item is currently available for the described action; authentication and consent are separate prerequisites.",
+            "layout" => "Current responsive music-home layout, or unavailable if it is not attached.",
+            "isDemo" => "True for sample data whose actions do not represent a real backend entity.",
+            "canOpen" => "Whether this current card has a supported open action. Display-only and demo cards may be unavailable.",
+            "imageAvailable" => "Whether the current card has an image, without returning image bytes or cache paths.",
+            "hasMore" => "Whether more items exist beyond this bounded section snapshot.",
+            "hero" => "Current featured media player snapshot, separate from the music-detail audio player.",
+            "story" => "Current open music-home story viewer snapshot, when present.",
+            "activeDialog" => "Name of a currently open music-home dialog, if one exists.",
+            "activeStoryId" => "Public/opaque identifier of the currently open story, if present.",
+            "activeArtistId" => "Current spotlight artist identifier; demo artist IDs are not real account IDs.",
+            "activeNewsIndex" => "Current zero-based news slide index, when available.",
+            "selectedDayIndex" => "Current zero-based weekly-rhythm day index, when available.",
+            "isLiked" => "Whether the current user likes the reported item, based on the live page's state.",
+            "canLike" => "Whether the item supports liking now; submit permission is still independently required.",
+            "positionSeconds" => "Playback position in seconds for this player or story.",
+            "durationSeconds" => "Known duration in seconds, zero or absent when unavailable.",
+            "volume" => "Featured-player volume from 0 to 1, independent of mute.",
+            "isLoading" => "Whether this section or player currently awaits data/media.",
+            "isFullscreen" => "Whether the featured player is currently in its full-screen presentation.",
+            "canSeek" => "Whether the featured player has seekable media and a known duration.",
             "isBusy" => "Whether the reported feature has an operation in progress.",
             "canSubmit" => "Whether current form validation allows submission now. Connection submit permission is a separate requirement.",
             "controlsEnabled" => "Whether current-page controls accept user interaction now.",

@@ -31,6 +31,11 @@ internal static class SchemaAssertions
                 : MatchesType(value, type.GetString()!);
             Check.That(matches, "Structured result does not conform to its declared JSON type.");
         }
+        if (value.ValueKind == JsonValueKind.Array && schema.TryGetProperty("items", out var itemSchema))
+        {
+            foreach (var item in value.EnumerateArray()) Validate(item, itemSchema, root);
+            return;
+        }
         if (value.ValueKind != JsonValueKind.Object) return;
         if (schema.TryGetProperty("required", out var required))
             foreach (var property in required.EnumerateArray())

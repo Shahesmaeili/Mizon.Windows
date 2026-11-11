@@ -13,6 +13,7 @@
     <!-- Exercise the real companion transport against a synthetic pipe only. -->
     <Compile Include="..\Mizon.Windows.Mcp\MizonAuthPipeClient.cs" Link="TransportUnderTest\MizonAuthPipeClient.cs" />
     <Compile Include="..\Mizon.Windows.Mcp\MizonAuthTools.cs" Link="TransportUnderTest\MizonAuthTools.cs" />
+    <Compile Include="..\Mizon.Windows.Mcp\MizonMusicHomeTools.cs" Link="TransportUnderTest\MizonMusicHomeTools.cs" />
     <Compile Include="..\Mizon.Windows.Mcp\MizonAuthSchemas.cs" Link="TransportUnderTest\MizonAuthSchemas.cs" />
   </ItemGroup>
 </Project>

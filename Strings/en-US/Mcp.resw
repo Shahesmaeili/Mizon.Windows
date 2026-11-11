@@ -84,4 +84,16 @@
   <data name="PermissionTaskbarControlHint" xml:space="preserve"><value>At your request while Mizon is in the foreground, show Windows' confirmation. Cannot confirm automatically or unpin apps.</value></data>
   <data name="ReadTaskbarPin" xml:space="preserve"><value>Checking taskbar pin status</value></data>
   <data name="RequestTaskbarPin" xml:space="preserve"><value>Requesting taskbar pin confirmation</value></data>
+  <data name="MusicHomeGroup" xml:space="preserve"><value>Music home</value></data>
+  <data name="MusicHomeGroupHint" xml:space="preserve"><value>Separate permissions for the live music discovery page. Existing sign-in or navigation permissions do not grant access.</value></data>
+  <data name="PermissionMusicHomeRead" xml:space="preserve"><value>Read music home</value></data>
+  <data name="PermissionMusicHomeReadHint" xml:space="preserve"><value>Read visible music cards, playlists, stories, following activities, loading status and featured-player state. Does not expose local media paths or credentials.</value></data>
+  <data name="PermissionMusicHomeControl" xml:space="preserve"><value>Control music home</value></data>
+  <data name="PermissionMusicHomeControlHint" xml:space="preserve"><value>Refresh sections, open items, control playback and stories, copy links and change language. Playback and viewing may record normal activity; downloads still use the app's file picker. This does not authorize likes or follows.</value></data>
+  <data name="PermissionMusicHomeSubmit" xml:space="preserve"><value>Like items and use follow actions</value></data>
+  <data name="PermissionMusicHomeSubmitHint" xml:space="preserve"><value>Also requires music home control. May change featured-item or story likes through the app. Artist follow controls are currently local demos, clearly identified in state. Does not create accounts or submit authentication forms.</value></data>
+  <data name="ReadMusicHome" xml:space="preserve"><value>Reading music home</value></data>
+  <data name="RefreshMusicHome" xml:space="preserve"><value>Refreshing music home</value></data>
+  <data name="ControlMusicHome" xml:space="preserve"><value>Controlling music home</value></data>
+  <data name="SubmitMusicHome" xml:space="preserve"><value>Changing a music home like or follow</value></data>
 </root>
