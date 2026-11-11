@@ -5,10 +5,14 @@ accessible through narrowly scoped MCP read-state/actions and to receive meaning
 MCP integration verification. This is a standing development requirement, not a
 claim that existing features are already covered.
 
-Current implemented coverage is **Welcome, Login, Registration, Appearance, declared page navigation and Mizon taskbar pinning**.
+Current implemented coverage is **Welcome, Login, Registration, Appearance, declared page navigation,
+Mizon taskbar pinning and the active music home page**.
 Appearance, navigation and taskbar pinning have independent read/control permissions; authentication grants never authorize them.
-Navigation exposes location state and opening allowlisted pages/popups only. It does not expose music,
-profile or settings business data/actions, playback, downloads or arbitrary URI execution. Extend
+Music home has its own read/control/submit permissions. Its bounded cards, featured
+player, stories and widget actions are documented in [MUSIC_HOME.md](MUSIC_HOME.md).
+It is not a general music-detail, profile, database or backend API surface.
+Navigation itself exposes location state and opening allowlisted pages/popups only.
+Its approval does not authorize domain data, playback or downloads. Extend
 coverage with the feature being worked on. Do not silently expose unrelated pages,
 all services, all endpoints, or arbitrary code execution.
 
@@ -36,13 +40,19 @@ Paths below are relative to the Windows app repository root:
 | Typed appearance contract and shared-settings adapter | `Mcp/Mizon.Windows.Mcp.Contracts/McpAppearanceContracts.cs`, `Services/McpAppearanceService.cs` |
 | Typed navigation contract and shared deep-link adapter | `Mcp/Mizon.Windows.Mcp.Contracts/McpNavigationContracts.cs`, `Services/McpNavigationService.cs`, `Services/AppDeepLinkCatalog.cs` |
 | Typed taskbar pin contract and shared profile-menu adapter | `Mcp/Mizon.Windows.Mcp.Contracts/McpTaskbarPinContracts.cs`, `Services/McpTaskbarPinService.cs`, `Services/TaskbarPinService.cs` |
+| Typed music home contract, input validation and independent permission flags | `Mcp/Mizon.Windows.Mcp.Contracts/McpMusicHomeContracts.cs`, `McpAccessPolicy.cs`, `McpAuthContracts.cs` |
+| Music home adapter and active-page lifetime boundary | `Services/IMcpMusicHomeService.cs`, `Services/McpMusicHomeService.cs`, `Pages/MusicPage.Mcp.cs` |
+| Shared featured player, story and widget controls | `UserControls/DiscoveryFeatureHero.Mcp.cs`, `StoryViewer.Mcp.cs`, `ArtistSpotlight.Mcp.cs`, `WeeklyRhythmPanel.Mcp.cs`, `LatestMusicNewsPanel.Mcp.cs`, `MusicDiscoveryRail.Mcp.cs` |
 | Stdio host using the official MCP SDK | `Mcp/Mizon.Windows.Mcp/Program.cs` |
 | Explicit tool discovery and dispatch | `Mcp/Mizon.Windows.Mcp/MizonAuthTools.cs` |
+| Music home tool input schemas and explicit parser | `Mcp/Mizon.Windows.Mcp/MizonMusicHomeTools.cs` |
 | Input descriptions and generated output schemas | `Mcp/Mizon.Windows.Mcp/MizonAuthSchemas.cs` |
 | Companion-to-app connection and cancellation | `Mcp/Mizon.Windows.Mcp/MizonAuthPipeClient.cs` |
 | Consent/settings interface | `UserControls/McpAccessPanel.xaml`, `UserControls/McpConnectionCard.xaml`, `MainWindow.Mcp.cs` |
 | Protocol, schema, SDK and permission checks | `Mcp/Mizon.Windows.Mcp.Tests/` |
 | App permission/appearance adapter integration checks | `Mcp/Mizon.Windows.Mcp.AccessTests/` |
+| Music home contract, SDK dispatch and production adapter checks | `Mcp/Mizon.Windows.Mcp.Tests/MusicHomeContractTests.cs`, `MusicHomeDispatchTests.cs`, `Mcp/Mizon.Windows.Mcp.AccessTests/MusicHomeTests.cs` |
+| Live music-widget localization model checks | `Mcp/Mizon.Windows.MusicHome.LocalizationTests/` |
 | Client launcher and setup | `Mcp/ClientSetup/README.md` |
 
 Backend operations live in
