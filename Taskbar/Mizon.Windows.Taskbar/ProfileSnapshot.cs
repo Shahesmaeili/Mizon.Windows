@@ -16,6 +16,7 @@ internal sealed record ProfileSnapshot
     public string? OnlinePresenceLabel { get; init; }
     public string? OfflinePresenceLabel { get; init; }
     public Guid? ClientPublicId { get; init; }
+    public string? PackageFamilyName { get; init; }
     public string DisplayName { get; init; } = string.Empty;
     public string? ImagePath { get; init; }
     public Guid? MoodPublicId { get; init; }

@@ -19,6 +19,7 @@ internal static class TaskbarProfileBridge
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".mizon", "TaskbarProfile"),
         Path.Combine(AppContext.BaseDirectory, "Taskbar", "Payload"));
     internal static long CurrentSession => Publisher.CurrentSession;
+    internal static void SetPackageFamilyName(string? packageFamilyName) => Publisher.SetPackageFamilyName(packageFamilyName);
     internal static void SynchronizeAuthentication(string? token) => Publisher.SynchronizeAuthentication(token);
     internal static void PublishProfile(long session, string displayName, string? imagePath, Guid? clientPublicId = null)
         => Publisher.PublishProfile(session, displayName, imagePath, clientPublicId);
@@ -33,6 +34,7 @@ internal sealed class TaskbarProfilePublisher(string directoryPath, string paylo
 {
     private readonly System.Threading.Lock Gate = new();
     private string? _authenticationFingerprint;
+    private string? _packageFamilyName;
     private long _session, _revision = DateTime.UtcNow.Ticks;
     private bool _authenticated, _writing, _launching, _launched;
     private Snapshot? _pending, _current;
@@ -43,6 +45,18 @@ internal sealed class TaskbarProfilePublisher(string directoryPath, string paylo
     private string _languageTag = "fa-IR", _onlinePresenceLabel = "آنلاین", _offlinePresenceLabel = "آفلاین";
 
     internal long CurrentSession { get { lock (Gate) return _session; } }
+
+    internal void SetPackageFamilyName(string? value)
+    {
+        var packageFamilyName = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        if (packageFamilyName?.Length > 255) throw new ArgumentOutOfRangeException(nameof(value));
+        lock (Gate)
+        {
+            if (_packageFamilyName == packageFamilyName) return;
+            _packageFamilyName = packageFamilyName;
+            if (_current is { } current) Queue(current with { Revision = NextRevision() });
+        }
+    }
 
     internal void SynchronizeAuthentication(string? token)
     {
@@ -178,6 +192,7 @@ internal sealed class TaskbarProfilePublisher(string directoryPath, string paylo
     // Called under Gate. A single writer coalesces rapid image/name changes.
     private void Queue(Snapshot snapshot)
     {
+        snapshot = snapshot with { PackageFamilyName = _packageFamilyName };
         _current = _pending = snapshot;
         if (_writing) return;
         _writing = true;
@@ -215,6 +230,7 @@ internal sealed class TaskbarProfilePublisher(string directoryPath, string paylo
                         writer.WriteNumber("mainProcessStartTimeUtcTicks", _mainProcessStartTimeUtcTicks);
                         writer.WriteNumber("presenceUpdatedAtUtcTicks", snapshot.PresenceUpdatedAtUtcTicks);
                         writer.WriteString("languageTag", snapshot.LanguageTag);
+                        writer.WriteString("packageFamilyName", snapshot.PackageFamilyName);
                         writer.WriteString("onlinePresenceLabel", snapshot.OnlinePresenceLabel);
                         writer.WriteString("offlinePresenceLabel", snapshot.OfflinePresenceLabel);
                         writer.WriteEndObject(); writer.Flush();
@@ -358,5 +374,5 @@ internal sealed class TaskbarProfilePublisher(string directoryPath, string paylo
     private sealed record Snapshot(long Session, long Revision, bool IsAuthenticated, Guid? ClientPublicId, string DisplayName, string? ImagePath,
         Guid? MoodPublicId = null, string? MoodEmoji = null, string? MoodTitle = null, string? MoodAnimationPath = null, string? MoodEffectPath = null,
         bool IsOnline = false, long PresenceUpdatedAtUtcTicks = 0, string LanguageTag = "fa-IR",
-        string OnlinePresenceLabel = "آنلاین", string OfflinePresenceLabel = "آفلاین");
+        string OnlinePresenceLabel = "آنلاین", string OfflinePresenceLabel = "آفلاین", string? PackageFamilyName = null);
 }

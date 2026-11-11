@@ -133,6 +133,7 @@ var fixturePath = Path.Combine(Path.GetTempPath(), "MizonPresence-" + Guid.NewGu
 var publisher = new TaskbarProfilePublisher(fixturePath, Path.Combine(fixturePath, "missing-payload"));
 try
 {
+    publisher.SetPackageFamilyName("Mizon.Test_abcd1234");
     publisher.SynchronizeAuthentication("synthetic-token-1");
     var session = publisher.CurrentSession;
     publisher.SetPresenceLocalization("en-US", "Online", "Offline");
@@ -142,10 +143,16 @@ try
     using (var snapshot = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(fixturePath, "profile.json"))))
     {
         var root = snapshot.RootElement;
+        Check(root.GetProperty("packageFamilyName").GetString() == "Mizon.Test_abcd1234", "Current installed package identity is published without changing the IPC version");
         Check(root.GetProperty("isOnline").GetBoolean(), "Late avatar publication preserves presence");
         Check(root.GetProperty("mainProcessId").GetInt32() == Environment.ProcessId && root.GetProperty("mainProcessStartTimeUtcTicks").GetInt64() > 0, "Companion receives verified process lifetime identity");
         Check(root.GetProperty("presenceUpdatedAtUtcTicks").GetInt64() > 0 && root.GetProperty("offlinePresenceLabel").GetString() == "Offline", "Lease and independent offline Narrator label published");
     }
+    publisher.SetPackageFamilyName("Mizon.Reinstalled_abcd1234");
+    await publisher.WaitForIdleAsync();
+    using (var snapshot = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(fixturePath, "profile.json"))))
+        Check(snapshot.RootElement.GetProperty("packageFamilyName").GetString() == "Mizon.Reinstalled_abcd1234"
+            && snapshot.RootElement.GetProperty("isAuthenticated").GetBoolean(), "Package identity refresh preserves the current authenticated account");
     publisher.PublishMood(session, Guid.NewGuid(), "🎵", "Music", null, null);
     publisher.PublishProfile(session, "Refreshed profile", null);
     publisher.PublishPresence(session, false);

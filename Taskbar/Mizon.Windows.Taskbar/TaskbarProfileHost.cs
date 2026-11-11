@@ -13,7 +13,6 @@ using System.Text.Json;
 using Windows.Graphics;
 using Windows.Storage;
 using WinRT;
-using Launcher = Windows.System.Launcher;
 
 namespace Mizon.Windows.Taskbar;
 
@@ -24,15 +23,17 @@ internal sealed partial class TaskbarProfileHost : IDisposable
     private readonly DispatcherQueueTimer _reloadTimer, _geometryTimer;
     private readonly CancellationTokenSource _lifetime = new();
     private readonly TaskbarPresenceMonitor _presence;
+    private readonly TaskbarProfileActivation _activation;
     private DesktopWindowXamlSource? _source;
     private AuthActionButton? _button;
     private PresenceAvatar? _picture;
+    private TaskbarProfileLoadingRing? _loadingRing;
     private TaskbarMoodButton? _moodButton;
     private Grid? _content;
     private ProfileSnapshot _profile = new();
     private nint _window, _taskbar;
     private string? _loadedImagePath, _lastError;
-    private bool _disposed, _geometryQueued, _imageLoading, _attaching;
+    private bool _disposed, _geometryQueued, _imageLoading, _attaching, _hostVisible;
     private long _readGeneration, _imageGeneration;
     private int _regionWidth, _regionHeight;
     private RectInt32 _bounds;
@@ -54,6 +55,8 @@ internal sealed partial class TaskbarProfileHost : IDisposable
     internal TaskbarProfileHost(DispatcherQueue dispatcher)
     {
         _dispatcher = dispatcher;
+        _activation = new(new TaskbarDeepLinkTransport(() => _window));
+        _activation.Changed += Activation_Changed;
         _presence = new(() => _dispatcher.TryEnqueue(() => { if (!_disposed) ApplyPresence(); }));
         Current = this;
         Native.RegisterHostClass();
@@ -100,6 +103,7 @@ internal sealed partial class TaskbarProfileHost : IDisposable
             _snapshotWriteTime = File.GetLastWriteTimeUtc(TaskbarPaths.SnapshotPath);
             if (snapshot.Version != 1) throw new InvalidDataException("Unsupported profile snapshot version.");
             var presentationChanged = !HasSamePresentation(_profile, snapshot);
+            _activation.ApplyProfile(snapshot);
             _profile = snapshot;
             _presence.Apply(snapshot, DateTime.UtcNow.Ticks);
             if (!snapshot.IsAuthenticated)
@@ -114,7 +118,11 @@ internal sealed partial class TaskbarProfileHost : IDisposable
         catch (OperationCanceledException) when (_disposed) { }
         catch (Exception error)
         {
-            if (!_disposed && generation == _readGeneration) _presence.Clear();
+            if (!_disposed && generation == _readGeneration)
+            {
+                _activation.Cancel();
+                _presence.Clear();
+            }
             LogOnce("Profile snapshot", error);
         }
     }
@@ -185,10 +193,14 @@ internal sealed partial class TaskbarProfileHost : IDisposable
                 TaskbarPaths.Log("Attachment: creating XAML profile content.");
                 _picture = new PresenceAvatar { IsHitTestVisible = false, Width = 32, Height = 32 };
                 AutomationProperties.SetAccessibilityView(_picture, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+                _loadingRing = new TaskbarProfileLoadingRing();
+                var avatarContent = new Grid { Width = 36, Height = 36 };
+                avatarContent.Children.Add(_picture);
+                avatarContent.Children.Add(_loadingRing);
                 _button = new AuthActionButton
                 {
                     Style = Application.Current.Resources["ProfileAvatarButtonStyle"].As<Style>(), HoverScale = 1.06, PressedScale = .91,
-                    Content = _picture, Padding = new Thickness(2), MinWidth = 0, MinHeight = 0,
+                    Content = avatarContent, Padding = new Thickness(2), MinWidth = 0, MinHeight = 0,
                     AnimationTarget = _picture.AnimationTarget,
                     CornerRadius = new CornerRadius(100), BorderThickness = new Thickness(0),
                     Background = new SolidColorBrush(Colors.Transparent), HorizontalContentAlignment = HorizontalAlignment.Center,
@@ -196,6 +208,7 @@ internal sealed partial class TaskbarProfileHost : IDisposable
                     Width = 36, Height = 36
                 };
                 _button.Click += ProfileClicked;
+                AutomationProperties.SetLiveSetting(_button, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
                 _moodButton = new TaskbarMoodButton();
                 _content = new Grid { ColumnSpacing = 8, FlowDirection = FlowDirection.LeftToRight };
                 _content.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -324,6 +337,8 @@ internal sealed partial class TaskbarProfileHost : IDisposable
                 finally { if (region != 0) Native.DeleteObject(region); }
             }
             _moodButton?.SetHostVisible(true);
+            _hostVisible = true;
+            _loadingRing?.Update(_activation.IsBusy, true);
             _moodButton?.UpdateEffectPosition();
             LogPlacement($"Taskbar layout: verified free placement={screenBounds.Left},{screenBounds.Top},{screenBounds.Right},{screenBounds.Bottom}; padding={padding}px; inspected={layout.Items.Count}.");
         }
@@ -341,6 +356,8 @@ internal sealed partial class TaskbarProfileHost : IDisposable
 
     private void HideHost(nint window)
     {
+        _hostVisible = false;
+        _loadingRing?.Update(_activation.IsBusy, false);
         _moodButton?.SetHostVisible(false);
         Native.ShowWindow(window, 0);
     }
@@ -394,9 +411,11 @@ internal sealed partial class TaskbarProfileHost : IDisposable
         }
         _picture.IsOnline = online;
         _picture.StatusText = label;
-        AutomationProperties.SetItemStatus(_button, label);
+        var activationStatus = TaskbarActivationText.Status(_profile.LanguageTag, _activation.IsBusy, _activation.Outcome);
+        AutomationProperties.SetItemStatus(_button, activationStatus ?? label);
         ToolTipService.SetToolTip(_button, string.IsNullOrWhiteSpace(_picture.DisplayName)
-            ? label : _picture.DisplayName + " · " + label);
+            ? activationStatus ?? label : _picture.DisplayName + " · " + (activationStatus ?? label));
+        _loadingRing?.Update(_activation.IsBusy, _hostVisible);
     }
 
     private static bool HasSamePresentation(ProfileSnapshot left, ProfileSnapshot right) =>
@@ -431,12 +450,21 @@ internal sealed partial class TaskbarProfileHost : IDisposable
     private async void ProfileClicked(object sender, RoutedEventArgs args)
     {
         if (_disposed || !_profile.IsAuthenticated) return;
+        var outcome = await _activation.OpenAsync();
+        if (!_disposed && outcome.Code is not ("canceled" or "disposed" or "busy"))
+            TaskbarPaths.Log($"Profile activation completed: code={outcome.Code}; success={outcome.Success}.");
+    }
+
+    private void Activation_Changed(object? sender, EventArgs args)
+    {
+        if (_disposed || _button is null || _window == 0) return;
         try
         {
-            var uri = _profile.ClientPublicId is { } id && id != Guid.Empty ? $"mizon://client/{id:D}" : "mizon://music";
-            if (!await Launcher.LaunchUriAsync(new Uri(uri))) TaskbarPaths.Log("Mizon URI activation was not handled.");
+            ApplyPresence();
+            Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer.FromElement(_button)?
+                .RaiseAutomationEvent(Microsoft.UI.Xaml.Automation.Peers.AutomationEvents.LiveRegionChanged);
         }
-        catch (Exception error) { LogOnce("Profile activation", error); }
+        catch (COMException error) { LogOnce("Profile activation presentation", error); }
     }
 
     private void Source_TakeFocusRequested(DesktopWindowXamlSource sender, DesktopWindowXamlSourceTakeFocusRequestedEventArgs args)
@@ -450,17 +478,22 @@ internal sealed partial class TaskbarProfileHost : IDisposable
     {
         if (_window != window) return;
         _window = 0;
+        _activation.Cancel();
         QueueGeometryUpdate(); // Explorer may have restarted; never destroy its replacement.
     }
 
     private void DestroyIsland()
     {
+        _activation.Cancel();
+        _hostVisible = false;
         ++_layoutGeneration;
         ++_imageGeneration;
         _moodButton?.Dispose();
         _moodButton = null;
         if (_button is not null) _button.Click -= ProfileClicked;
         if (_picture is not null) _picture.Source = null;
+        _loadingRing?.Dispose();
+        _loadingRing = null;
         var source = _source;
         _source = null;
         if (source is not null)
@@ -499,6 +532,8 @@ internal sealed partial class TaskbarProfileHost : IDisposable
         if (_disposed) return;
         TaskbarPaths.Log("Companion cleanup beginning.");
         _disposed = true;
+        _activation.Changed -= Activation_Changed;
+        _activation.Dispose();
         _presence.Dispose();
         if (_layoutHook != 0) { Native.UnhookWinEvent(_layoutHook); _layoutHook = 0; }
         _lifetime.Cancel();

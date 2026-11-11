@@ -26,6 +26,33 @@ The main app atomically replaces `%USERPROFILE%\.mizon\TaskbarProfile\profile.js
 
 No token or API credential is transferred. The companion decodes the existing local cached file and uses initials if no photo is available. It observes atomic file replacement using a debounced watcher plus a periodic fallback. Click opens `mizon://client/{id}` when the ID is known, otherwise `mizon://music` opens the main app.
 
+Profile activation now uses Windows `Launcher.LaunchUriForResultsAsync`, targeting
+the main app's optional `packageFamilyName` snapshot field. The main app publishes
+its actual package identity at startup. The companion initializes `LauncherOptions`
+with its own process-owned HWND, never Explorer's HWND. Ordinary protocol launches
+remain available elsewhere; this click requires an actual correlated response.
+
+A stationary progress ring surrounds the photo until the app returns its shared
+versioned `AppDeepLinkResult` envelope. The status badge and its transparent cutout
+remain visible, and photo hover/click animation does not scale the ring. The ring
+pauses when the native host is hidden. Duplicate clicks are ignored. Sign-out,
+account/package changes, island destruction and disposal cancel outstanding work;
+a 60-second deadline also releases loading if the receiver stops responding.
+Late replies cannot update a new account or a newer request. Missing, oversized,
+malformed, wrong-version or uncorrelated responses fail closed, including Windows
+transport `Success` with a null result. No silent fire-and-forget fallback claims
+success. Narrator status and tooltips report localized loading/failure text.
+
+Legacy version-one snapshots remain readable; missing package identity asks the
+user to open Mizon again. The optional field contains no credentials. Payload
+encoding/validation is source-generated and shared with the main app.
+
+`Taskbar/Mizon.Windows.TaskbarActivation.Tests` checks the actual coordinator with
+synthetic native responses and a deterministic clock; it does not launch apps,
+touch Explorer or prove visual rendering/native activation on a particular build.
+The underlying WinUI desktop launch-for-results behavior is OS-dependent; the
+companion already requires Windows 11 22H2 or newer.
+
 Mood fields are optional and use the same version-1 snapshot. The main app downloads and expands the selected animation through its existing media cache, then publishes local paths. The companion never opens another API session or downloads the mood catalog. Profile updates retain the current mood; changing accounts or logging out clears it. Closing the main app leaves the last authenticated snapshot available to the companion.
 
 The mood button sits beside the profile and loops only while visible, respecting Windows' animation preference. Its click effect is prepared once and played in an unconstrained XAML popup horizontally centered above the emoji. The full effect sits eight logical pixels above the actual taskbar top edge, converted from screen coordinates through the XAML root for the current DPI. Only one effect plays at a time; another click restarts it. The popup scene is released when closed, while the parsed animation is retained for the next click. Changing mood, hiding the host, signing out and disposing the island cancel active playback. Placement includes the entire profile-and-mood width, including at higher DPI.

@@ -18,6 +18,7 @@
     <CsWinRTAotOptimizerEnabled>true</CsWinRTAotOptimizerEnabled>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\Services\AppDeepLinkResult.cs" Link="Services\AppDeepLinkResult.cs" />
     <Compile Include="..\..\Controls\AuthActionButton.cs" Link="Controls\AuthActionButton.cs" />
     <Compile Include="..\..\Controls\PresenceAvatar.cs" Link="Controls\PresenceAvatar.cs" />
     <Compile Include="..\..\Controls\PresenceAvatarMetrics.cs" Link="Controls\PresenceAvatarMetrics.cs" />
