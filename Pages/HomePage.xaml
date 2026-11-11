@@ -99,6 +99,7 @@ Color="Transparent" />
                                     Style="{StaticResource ProfileAvatarButtonStyle}" HoverScale="1.06" PressedScale="0.91"
                                     BorderThickness="0" VerticalAlignment="Center"
                                     AutomationProperties.Name="{x:Bind ViewModel.ProfileButtonLabel, Mode=OneWay}"
+                                    AutomationProperties.ItemStatus="{x:Bind ViewModel.ProfilePresenceLabel, Mode=OneWay}"
                                     AutomationProperties.HelpText="نمایش اطلاعات حساب، دانلودها و خروج" ToolTipService.ToolTip="حساب من">
                                 <controls:AuthActionButton.Flyout>
                                     <MenuFlyout x:Name="AccountFlyout" Placement="BottomEdgeAlignedRight" Opening="AccountFlyout_Opening" Opened="AccountFlyout_Opened">
@@ -151,10 +152,12 @@ Color="Transparent" />
                                         </controls:MenuContentHost>
                                     </MenuFlyout>
                                 </controls:AuthActionButton.Flyout>
-                                <Grid CornerRadius="16" Width="32" Height="32">
-                                    <icon:SymbolIcon Symbol="Headphones" IconVariant="Color" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
-                                    <Image Source="{x:Bind ViewModel.ProfileImage, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw"/>
-                                </Grid>
+                                <controls:PresenceAvatar Width="32" Height="32"
+                                    Source="{x:Bind ViewModel.ProfileImage, Mode=OneWay}"
+                                    DisplayName="{x:Bind ViewModel.DisplayName, Mode=OneWay}"
+                                    IsOnline="{x:Bind ViewModel.IsProfileOnline, Mode=OneWay}"
+                                    StatusText="{x:Bind ViewModel.ProfilePresenceLabel, Mode=OneWay}"
+                                    AutomationProperties.AccessibilityView="Raw"/>
                             </controls:AuthActionButton>
                         </StackPanel>
                     </Grid>

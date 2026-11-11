@@ -23,9 +23,10 @@ internal sealed partial class TaskbarProfileHost : IDisposable
     private readonly FileSystemWatcher _watcher;
     private readonly DispatcherQueueTimer _reloadTimer, _geometryTimer;
     private readonly CancellationTokenSource _lifetime = new();
+    private readonly TaskbarPresenceMonitor _presence;
     private DesktopWindowXamlSource? _source;
     private AuthActionButton? _button;
-    private PersonPicture? _picture;
+    private PresenceAvatar? _picture;
     private TaskbarMoodButton? _moodButton;
     private Grid? _content;
     private ProfileSnapshot _profile = new();
@@ -47,6 +48,7 @@ internal sealed partial class TaskbarProfileHost : IDisposable
     internal TaskbarProfileHost(DispatcherQueue dispatcher)
     {
         _dispatcher = dispatcher;
+        _presence = new(() => _dispatcher.TryEnqueue(() => { if (!_disposed) ApplyPresence(); }));
         Current = this;
         Native.RegisterHostClass();
         Directory.CreateDirectory(TaskbarPaths.DirectoryPath);
@@ -91,7 +93,9 @@ internal sealed partial class TaskbarProfileHost : IDisposable
             if (_disposed || generation != _readGeneration) return;
             _snapshotWriteTime = File.GetLastWriteTimeUtc(TaskbarPaths.SnapshotPath);
             if (snapshot.Version != 1) throw new InvalidDataException("Unsupported profile snapshot version.");
+            var presentationChanged = !HasSamePresentation(_profile, snapshot);
             _profile = snapshot;
+            _presence.Apply(snapshot, DateTime.UtcNow.Ticks);
             if (!snapshot.IsAuthenticated)
             {
                 DestroyIsland();
@@ -99,10 +103,14 @@ internal sealed partial class TaskbarProfileHost : IDisposable
                 return;
             }
             EnsureIsland();
-            ApplyProfile();
+            if (presentationChanged) ApplyProfile(); else ApplyPresence();
         }
         catch (OperationCanceledException) when (_disposed) { }
-        catch (Exception error) { LogOnce("Profile snapshot", error); }
+        catch (Exception error)
+        {
+            if (!_disposed && generation == _readGeneration) _presence.Clear();
+            LogOnce("Profile snapshot", error);
+        }
     }
 
     private static async Task<ProfileSnapshot> ReadSnapshotAsync(CancellationToken token)
@@ -125,6 +133,7 @@ internal sealed partial class TaskbarProfileHost : IDisposable
     private void GeometryTimer_Tick(DispatcherQueueTimer sender, object args)
     {
         if (_disposed) return;
+        _presence.Evaluate(DateTime.UtcNow.Ticks);
         try
         {
             if (File.GetLastWriteTimeUtc(TaskbarPaths.SnapshotPath) != _snapshotWriteTime) QueueReload();
@@ -168,7 +177,8 @@ internal sealed partial class TaskbarProfileHost : IDisposable
                 if (Native.GetParent(_window) != taskbar || ((long)Native.GetWindowLongPtr(_window, -16) & 0x40000000) == 0)
                     throw new Win32Exception(Marshal.GetLastPInvokeError(), "The profile host could not become a real taskbar child.");
                 TaskbarPaths.Log("Attachment: creating XAML profile content.");
-                _picture = new PersonPicture { IsHitTestVisible = false, Width = 32, Height = 32 };
+                _picture = new PresenceAvatar { IsHitTestVisible = false, Width = 32, Height = 32 };
+                AutomationProperties.SetAccessibilityView(_picture, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
                 _button = new AuthActionButton
                 {
                     Style = Application.Current.Resources["ProfileAvatarButtonStyle"].As<Style>(), HoverScale = 1.06, PressedScale = .91,
@@ -329,23 +339,50 @@ internal sealed partial class TaskbarProfileHost : IDisposable
     private void ApplyProfile()
     {
         if (_picture is null || _button is null) return;
-        var name = string.IsNullOrWhiteSpace(_profile.DisplayName) ? "حساب میزون" : _profile.DisplayName.Trim();
+        var persian = _profile.LanguageTag?.StartsWith("en", StringComparison.OrdinalIgnoreCase) != true;
+        var name = string.IsNullOrWhiteSpace(_profile.DisplayName) ? (persian ? "حساب میزون" : "Mizon account") : _profile.DisplayName.Trim();
         _picture.DisplayName = name;
         AutomationProperties.SetName(_button, _profile.ClientPublicId is { } id && id != Guid.Empty
-            ? $"باز کردن پروفایل {name} در میزون" : $"باز کردن میزون؛ {name}");
-        AutomationProperties.SetHelpText(_button, "پروفایل حساب واردشده؛ برای باز کردن میزون کلیک کنید.");
-        ToolTipService.SetToolTip(_button, name);
+            ? persian ? $"باز کردن پروفایل {name} در میزون" : $"Open {name}'s profile in Mizon"
+            : persian ? $"باز کردن میزون؛ {name}" : $"Open Mizon; {name}");
+        AutomationProperties.SetHelpText(_button, persian
+            ? "پروفایل حساب واردشده؛ برای باز کردن میزون کلیک کنید." : "Signed-in account profile. Activate to open Mizon.");
+        ApplyPresence();
         _moodButton?.Apply(_profile);
         if (_moodButton is not null) _moodButton.Visibility = _moodButton.HasMood ? Visibility.Visible : Visibility.Collapsed;
         if (_content is not null) _content.ColumnSpacing = _moodButton?.HasMood == true ? 8 : 0;
         QueueGeometryUpdate();
-        if (_loadedImagePath == _profile.ImagePath && (_picture.ProfilePicture is not null || _imageLoading)) return;
+        if (_loadedImagePath == _profile.ImagePath && (_picture.Source is not null || _imageLoading)) return;
         _loadedImagePath = _profile.ImagePath;
-        _picture.ProfilePicture = null;
+        _picture.Source = null;
         var generation = ++_imageGeneration;
         _imageLoading = !string.IsNullOrWhiteSpace(_loadedImagePath);
         if (_imageLoading) _ = LoadImageAsync(_loadedImagePath!, generation);
     }
+
+    private void ApplyPresence()
+    {
+        if (_picture is null || _button is null) return;
+        var online = _presence.IsOnline;
+        var label = online ? _profile.OnlinePresenceLabel : _profile.OfflinePresenceLabel;
+        if (string.IsNullOrWhiteSpace(label))
+        {
+            var english = _profile.LanguageTag?.StartsWith("en", StringComparison.OrdinalIgnoreCase) == true;
+            label = online ? english ? "Online" : "آنلاین" : english ? "Offline" : "آفلاین";
+        }
+        _picture.IsOnline = online;
+        _picture.StatusText = label;
+        AutomationProperties.SetItemStatus(_button, label);
+        ToolTipService.SetToolTip(_button, string.IsNullOrWhiteSpace(_picture.DisplayName)
+            ? label : _picture.DisplayName + " · " + label);
+    }
+
+    private static bool HasSamePresentation(ProfileSnapshot left, ProfileSnapshot right) =>
+        left.IsAuthenticated == right.IsAuthenticated && left.ClientPublicId == right.ClientPublicId
+        && left.DisplayName == right.DisplayName && left.ImagePath == right.ImagePath
+        && left.MoodPublicId == right.MoodPublicId && left.MoodEmoji == right.MoodEmoji
+        && left.MoodTitle == right.MoodTitle && left.MoodAnimationPath == right.MoodAnimationPath
+        && left.MoodEffectPath == right.MoodEffectPath && left.LanguageTag == right.LanguageTag;
 
     private async Task LoadImageAsync(string path, long generation)
     {
@@ -360,7 +397,7 @@ internal sealed partial class TaskbarProfileHost : IDisposable
             await image.SetSourceAsync(stream).AsTask(token);
             if (!_disposed && _profile.IsAuthenticated && generation == _imageGeneration && _picture is not null)
             {
-                _picture.ProfilePicture = image;
+                _picture.Source = image;
                 TaskbarPaths.Log($"Profile image decoded and assigned: {image.PixelWidth}x{image.PixelHeight}.");
             }
         }
@@ -401,7 +438,7 @@ internal sealed partial class TaskbarProfileHost : IDisposable
         _moodButton?.Dispose();
         _moodButton = null;
         if (_button is not null) _button.Click -= ProfileClicked;
-        if (_picture is not null) _picture.ProfilePicture = null;
+        if (_picture is not null) _picture.Source = null;
         var source = _source;
         _source = null;
         if (source is not null)
@@ -441,6 +478,7 @@ internal sealed partial class TaskbarProfileHost : IDisposable
         if (_disposed) return;
         TaskbarPaths.Log("Companion cleanup beginning.");
         _disposed = true;
+        _presence.Dispose();
         if (_layoutHook != 0) { Native.UnhookWinEvent(_layoutHook); _layoutHook = 0; }
         _lifetime.Cancel();
         _watcher.EnableRaisingEvents = false;

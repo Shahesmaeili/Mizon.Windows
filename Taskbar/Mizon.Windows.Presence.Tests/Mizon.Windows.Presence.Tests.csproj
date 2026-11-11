@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Mizon.Windows.Taskbar\TaskbarPresenceMonitor.cs" Link="TaskbarPresenceMonitor.cs" />
+    <Compile Include="..\Mizon.Windows.Taskbar\ProfileSnapshot.cs" Link="ProfileSnapshot.cs" />
+    <Compile Include="..\..\Controls\PresenceAvatarMetrics.cs" Link="PresenceAvatarMetrics.cs" />
+  </ItemGroup>
+</Project>

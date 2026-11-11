@@ -8,6 +8,13 @@ internal sealed record ProfileSnapshot
     public int Version { get; init; } = 1;
     public long Revision { get; init; }
     public bool IsAuthenticated { get; init; }
+    public bool IsOnline { get; init; }
+    public int MainProcessId { get; init; }
+    public long MainProcessStartTimeUtcTicks { get; init; }
+    public long PresenceUpdatedAtUtcTicks { get; init; }
+    public string LanguageTag { get; init; } = "fa-IR";
+    public string? OnlinePresenceLabel { get; init; }
+    public string? OfflinePresenceLabel { get; init; }
     public Guid? ClientPublicId { get; init; }
     public string DisplayName { get; init; } = string.Empty;
     public string? ImagePath { get; init; }

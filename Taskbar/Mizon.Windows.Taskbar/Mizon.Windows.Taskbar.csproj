@@ -19,6 +19,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\Controls\AuthActionButton.cs" Link="Controls\AuthActionButton.cs" />
+    <Compile Include="..\..\Controls\PresenceAvatar.cs" Link="Controls\PresenceAvatar.cs" />
+    <Compile Include="..\..\Controls\PresenceAvatarMetrics.cs" Link="Controls\PresenceAvatarMetrics.cs" />
     <Compile Include="..\..\Controls\AnimatedMoodEmoji.cs" Link="Controls\AnimatedMoodEmoji.cs" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.4.1-experimental" />
     <PackageReference Include="CommunityToolkit.WinUI.Lottie" Version="8.2.250604" />
