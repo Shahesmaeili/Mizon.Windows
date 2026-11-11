@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\Services\AppActivationRoute.cs" Link="AppActivationRoute.cs" />
+    <Compile Include="..\..\Services\AppDeepLinkCatalog.cs" Link="AppDeepLinkCatalog.cs" />
+    <Compile Include="..\..\Services\AppDeepLinkNavigationContracts.cs" Link="AppDeepLinkNavigationContracts.cs" />
+    <Compile Include="..\..\Services\AppDeepLinkResult.cs" Link="AppDeepLinkResult.cs" />
+    <Compile Include="..\..\Services\AppDeepLinkResponseSession.cs" Link="AppDeepLinkResponseSession.cs" />
+    <Compile Include="..\..\Services\AppDeepLinkResultDispatcher.cs" Link="AppDeepLinkResultDispatcher.cs" />
+  </ItemGroup>
+</Project>
