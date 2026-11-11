@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Common;
 using System;
@@ -9,6 +10,10 @@ namespace Mizon.Windows.ViewModels.Items;
 
 public sealed partial class DiscoveryMusicItemViewModel : ViewModelBase
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
+    public void RefreshLocalization() => OnPropertyChanged(string.Empty);
+
     private string _coverImagePath = string.Empty;
     private DiscoveryMusicItemViewModel? _rankSource;
     public Guid PublicId { get; init; }
@@ -22,12 +27,12 @@ public sealed partial class DiscoveryMusicItemViewModel : ViewModelBase
     public Guid? CoverMediaPublicId { get; init; }
     public int CoverDecodeWidth { get; init; } = 480;
     public IReadOnlyList<DiscoveryContributorItemViewModel> Contributors { get; init; } = [];
-    public string Artist => string.Join("، ", Contributors.Select(item => item.DisplayName));
+    public string Artist => string.Join(Localization.IsPersian ? "، " : ", ", Contributors.Select(item => item.DisplayName));
     public ImageSource? ArtistProfileImage => Contributors.FirstOrDefault()?.ProfileImage;
     public DiscoveryContributorItemViewModel? PrimaryContributor => Contributors.Count > 0 ? Contributors[0] : null;
     public DiscoveryContributorItemViewModel? SecondaryContributor => Contributors.Count > 1 ? Contributors[1] : null;
-    public string PrimaryProfileAutomationName => $"نمایش پروفایل {PrimaryArtistName}";
-    public string SecondaryProfileAutomationName => $"نمایش پروفایل {SecondaryArtistName}";
+    public string PrimaryProfileAutomationName => Localization.Format("MusicHome/ProfileName", PrimaryArtistName);
+    public string SecondaryProfileAutomationName => Localization.Format("MusicHome/ProfileName", SecondaryArtistName);
     public Microsoft.UI.Xaml.Visibility PrimaryArtistVisibility => Contributors.Count > 0
         ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
     public string PrimaryArtistName => Contributors.Count > 0 ? Contributors[0].DisplayName : string.Empty;
@@ -36,8 +41,9 @@ public sealed partial class DiscoveryMusicItemViewModel : ViewModelBase
     public Microsoft.UI.Xaml.Visibility SecondaryArtistVisibility => Contributors.Count > 1
         ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
     public string DurationText => Duration.TotalHours >= 1 ? Duration.ToString(@"h\:mm\:ss") : Duration.ToString(@"m\:ss");
-    public string LikesCountText => LikesCount.ToString("N0", CultureInfo.CurrentCulture);
-    public string DisplayTitle => string.IsNullOrWhiteSpace(PersianTitle) ? Title : PersianTitle;
+    public string LikesCountText => LikesCount.ToString("N0", CultureInfo.GetCultureInfo(Localization.LanguageTag));
+    public string DisplayTitle => Localization.IsPersian && !string.IsNullOrWhiteSpace(PersianTitle) ? PersianTitle : Title;
+    public string DisplayGenre => Localization.IsPersian && !string.IsNullOrWhiteSpace(PersianGenreTitle) ? PersianGenreTitle : GenreTitle;
     public string SecondaryTitle => string.Equals(DisplayTitle, Title, StringComparison.OrdinalIgnoreCase) ? string.Empty : Title;
     public Microsoft.UI.Xaml.Visibility SecondaryTitleVisibility => string.IsNullOrWhiteSpace(SecondaryTitle)
         ? Microsoft.UI.Xaml.Visibility.Collapsed : Microsoft.UI.Xaml.Visibility.Visible;
@@ -46,11 +52,11 @@ public sealed partial class DiscoveryMusicItemViewModel : ViewModelBase
         : LikesCount >= 1000
             ? (LikesCount / 1000d).ToString("0.#", CultureInfo.InvariantCulture) + "K"
             : LikesCountText;
-    public string ChartSummaryText => $"{LikesCountText} پسند · {DurationText}";
+    public string ChartSummaryText => Localization.Format("MusicHome/LikesDuration", LikesCountText, DurationText);
     public string ChartAutomationName => $"{DisplayTitle}، {Artist}، {ChartSummaryText}";
-    public string AutomationName => $"{DisplayTitle}، {Artist}، {PersianGenreTitle}، مدت {DurationText}، {LikesCountText} پسند";
+    public string AutomationName => Localization.Format("MusicHome/MusicName", DisplayTitle, Artist, DisplayGenre, DurationText, LikesCountText);
     public string RankText => Rank.ToString("00", CultureInfo.InvariantCulture);
-    public string RankChangeText => Rank % 3 == 0 ? "تازه‌وارد" : $"+{Rank + 2}";
+    public string RankChangeText => Rank % 3 == 0 ? Localization.GetString("MusicHome/NewEntry") : $"+{Rank + 2}";
     public ImageSource? CoverImage { get; private set; }
 
     public string CoverImagePath

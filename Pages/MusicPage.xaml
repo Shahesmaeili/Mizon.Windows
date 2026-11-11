@@ -7,17 +7,18 @@
   xmlns:items="using:Mizon.Windows.ViewModels.Items"
   xmlns:uc="using:Mizon.Windows.UserControls"
   x:Class="Mizon.Windows.Pages.MusicPage"
+  AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/PageName', Localization.Revision), Mode=OneWay}"
+  AutomationProperties.HelpText="{x:Bind Localization.GetString('MusicHome/PageHelp', Localization.Revision), Mode=OneWay}"
   NavigationCacheMode="Enabled"
   Loaded="MusicPage_Loaded"
   Unloaded="MusicPage_Unloaded"
-  SizeChanged="MusicPage_SizeChanged">
+  SizeChanged="MusicPage_SizeChanged"
+    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+    Language="{x:Bind Localization.LanguageTag, Mode=OneWay}">
   <Page.Resources>
     <Style
       x:Key="Caption"
       TargetType="TextBlock">
-      <Setter
-        Property="FontFamily"
-        Value="/Assets/Fonts/IRANSANS.TTF#IRANSans" />
       <Setter
         Property="FontSize"
         Value="10" />
@@ -27,9 +28,6 @@
       <Setter
         Property="TextWrapping"
         Value="Wrap" />
-      <Setter
-        Property="FlowDirection"
-        Value="RightToLeft" />
     </Style>
     <Style
       x:Key="GlassPanel"
@@ -149,16 +147,16 @@
             x:Name="MainFeed"
             Padding="0,0,0,48"
             Spacing="28">
-            <controls:WidgetLoadHost x:Name="FeaturedMediaHost" WidgetName="پلیر پیشنهادهای میزون" SkeletonHeight="300"
+            <controls:WidgetLoadHost x:Name="FeaturedMediaHost" WidgetName="{x:Bind Localization.GetString('MusicHome/HeroName', Localization.Revision), Mode=OneWay}" SkeletonHeight="300"
                                     IsLoading="{x:Bind Features.IsLoading, Mode=OneWay}" HasError="{x:Bind Features.HasError, Mode=OneWay}"
-                                    LoadingText="در حال دریافت پیشنهادها" ReadyText="پیشنهادهای میزون آماده‌اند"
-                                    ErrorText="دریافت پیشنهادهای میزون انجام نشد. دوباره تلاش کن.">
+                                    LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingFeatures', Localization.Revision), Mode=OneWay}" ReadyText="{x:Bind Localization.GetString('MusicHome/FeaturesReady', Localization.Revision), Mode=OneWay}"
+                                    ErrorText="{x:Bind Localization.GetString('MusicHome/FeaturesFailed', Localization.Revision), Mode=OneWay}">
               <uc:DiscoveryFeatureHero
                 x:Name="FeatureHero"
                 ViewModel="{x:Bind Features, Mode=OneWay}"
                 OpenMusicRequested="MainFeature_OpenMusicRequested" PlayMusicRequested="MainFeature_PlayMusicRequested" />
             </controls:WidgetLoadHost>
-            <controls:WidgetLoadHost IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}" LoadingText="در حال دریافت موسیقی‌ها">
+            <controls:WidgetLoadHost IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingMusic', Localization.Revision), Mode=OneWay}">
               <uc:ArtistSpotlight
                 x:Name="FeaturedArtist"
                 ProfileRequested="TopArtist_ProfileRequested"
@@ -169,29 +167,29 @@
                 RefreshRequested="Stories_RefreshRequested" />
             <uc:MusicGenresPanel ViewModel="{x:Bind ViewModel}"
                 RefreshRequested="Genres_RefreshRequested" />
-            <controls:WidgetLoadHost IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}" WidgetName="خواننده‌های برتر" SkeletonHeight="410" LoadingText="در حال دریافت خواننده‌ها">
+            <controls:WidgetLoadHost IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}" WidgetName="{x:Bind Localization.GetString('MusicHome/TopArtists', Localization.Revision), Mode=OneWay}" SkeletonHeight="410" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingArtists', Localization.Revision), Mode=OneWay}">
               <StackPanel
                 x:Name="TopArtistsSection"
                 Spacing="12">
-                <uc:DiscoverySectionToolbar Title="خواننده‌های برتر" Icon="Headphones" AccentColor="#F1C27D">
+                <uc:DiscoverySectionToolbar Title="{x:Bind Localization.GetString('MusicHome/TopArtists', Localization.Revision), Mode=OneWay}" Icon="Headphones" AccentColor="#F1C27D">
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <controls:FeatureButton x:Name="PreviousArtistsButton" Style="{StaticResource DiscoverySectionIconButton}"
-                                Click="PreviousArtists_Click" AutomationProperties.Name="خواننده‌های قبلی" ToolTipService.ToolTip="خواننده‌های قبلی">
+                            <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="PreviousArtistsButton" Style="{StaticResource DiscoverySectionIconButton}"
+                                Click="PreviousArtists_Click" AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/PreviousArtists', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Localization.GetString('MusicHome/PreviousArtists', Localization.Revision), Mode=OneWay}">
                                 <icon:SymbolIcon Symbol="ChevronLeft" FontSize="12" AutomationProperties.AccessibilityView="Raw"/>
                             </controls:FeatureButton>
                             <Border Style="{StaticResource DiscoverySectionBadge}" Width="32" Padding="4">
-                                <TextBlock Text="{x:Bind Discovery.TopArtists.Count, Mode=OneWay}" Style="{StaticResource DiscoverySectionBadgeText}"
-                                    FontSize="11" TextAlignment="Center" FlowDirection="LeftToRight" AutomationProperties.HelpText="تعداد خواننده‌های این فهرست"/>
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Discovery.TopArtists.Count, Mode=OneWay}" Style="{StaticResource DiscoverySectionBadgeText}"
+                                    FontSize="11" TextAlignment="Center" FlowDirection="LeftToRight" AutomationProperties.HelpText="{x:Bind Localization.GetString('MusicHome/ArtistCountHelp', Localization.Revision), Mode=OneWay}"/>
                             </Border>
-                            <controls:FeatureButton x:Name="NextArtistsButton" Style="{StaticResource DiscoverySectionIconButton}"
-                                Click="NextArtists_Click" AutomationProperties.Name="خواننده‌های بعدی" ToolTipService.ToolTip="خواننده‌های بعدی">
+                            <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="NextArtistsButton" Style="{StaticResource DiscoverySectionIconButton}"
+                                Click="NextArtists_Click" AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/NextArtists', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Localization.GetString('MusicHome/NextArtists', Localization.Revision), Mode=OneWay}">
                                 <icon:SymbolIcon Symbol="ChevronRight" FontSize="12" AutomationProperties.AccessibilityView="Raw"/>
                             </controls:FeatureButton>
                         </StackPanel>
-                        <Border Grid.Column="1" Style="{StaticResource DiscoverySectionBadge}" ToolTipService.ToolTip="اطلاعات این بخش نمونهٔ طراحی است">
-                            <TextBlock Text="نمونهٔ طراحی" Style="{StaticResource DiscoverySectionBadgeText}"/>
+                        <Border Grid.Column="1" Style="{StaticResource DiscoverySectionBadge}" ToolTipService.ToolTip="{x:Bind Localization.GetString('MusicHome/DemoHelp', Localization.Revision), Mode=OneWay}">
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Localization.GetString('MusicHome/Demo', Localization.Revision), Mode=OneWay}" Style="{StaticResource DiscoverySectionBadgeText}"/>
                         </Border>
                     </Grid>
                 </uc:DiscoverySectionToolbar>
@@ -226,44 +224,44 @@
                 </ScrollViewer>
               </StackPanel>
             </controls:WidgetLoadHost>
-            <controls:WidgetLoadHost IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}" LoadingText="در حال دریافت موسیقی‌ها"
-                WidgetName="کشف بعدی تو" SkeletonHeight="385">
+            <controls:WidgetLoadHost IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingMusic', Localization.Revision), Mode=OneWay}"
+                WidgetName="{x:Bind Localization.GetString('MusicHome/DiscoverNext', Localization.Revision), Mode=OneWay}" SkeletonHeight="385">
               <StackPanel
                 x:Name="RecommendedSection"
                 Spacing="12">
                 <Grid>
                   <uc:DiscoverySectionHeader
-                    Title="کشف بعدی تو"
+                    Title="{x:Bind Localization.GetString('MusicHome/DiscoverNext', Localization.Revision), Mode=OneWay}"
                     Icon="Sparkle"
                     AccentColor="#A9B8FF"
                     VerticalAlignment="Center" />
                 </Grid>
-                <TextBlock
-                  Text="چند آهنگ برای وقتی که دنبال یک حس تازه‌ای"
+                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+                  Text="{x:Bind Localization.GetString('MusicHome/DiscoverNextSubtitle', Localization.Revision), Mode=OneWay}"
                   Style="{StaticResource Caption}"
-                  TextAlignment="Right" />
+                  TextAlignment="Start" />
                 <uc:MusicDiscoveryRail x:Name="RecommendedRail" ItemsSource="{x:Bind Discovery.RecommendedMusics}"
-                    AutomationProperties.Name="کشف بعدی تو" MusicRequested="Discovery_MusicRequested" />
+                    AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/DiscoverNext', Localization.Revision), Mode=OneWay}" MusicRequested="Discovery_MusicRequested" />
               </StackPanel>
             </controls:WidgetLoadHost>
-            <controls:WidgetLoadHost IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}" LoadingText="در حال دریافت موسیقی‌ها"
-                WidgetName="دوباره به همان حس برگرد" SkeletonHeight="175">
+            <controls:WidgetLoadHost IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingMusic', Localization.Revision), Mode=OneWay}"
+                WidgetName="{x:Bind Localization.GetString('MusicHome/ReturnToMood', Localization.Revision), Mode=OneWay}" SkeletonHeight="175">
               <StackPanel
                 x:Name="RecentSection"
                 Spacing="12">
                 <Grid>
                   <uc:DiscoverySectionHeader
-                    Title="دوباره به همان حس برگرد"
+                    Title="{x:Bind Localization.GetString('MusicHome/ReturnToMood', Localization.Revision), Mode=OneWay}"
                     Icon="History"
                     AccentColor="#8BCBE2"
                     VerticalAlignment="Center" />
                 </Grid>
-                <TextBlock
-                  Text="اخیراً پخش‌شده‌ها"
+                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+                  Text="{x:Bind Localization.GetString('MusicHome/RecentlyPlayed', Localization.Revision), Mode=OneWay}"
                   Style="{StaticResource Caption}"
-                  TextAlignment="Right" />
+                  TextAlignment="Start" />
                 <uc:MusicDiscoveryRail x:Name="RecentRail" IsCompact="True" ItemsSource="{x:Bind Discovery.RecentMusics}"
-                    AutomationProperties.Name="دوباره به همان حس برگرد" MusicRequested="Discovery_MusicRequested" />
+                    AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/ReturnToMood', Localization.Revision), Mode=OneWay}" MusicRequested="Discovery_MusicRequested" />
               </StackPanel>
             </controls:WidgetLoadHost>
             <Border
@@ -281,20 +279,20 @@
                 <ColumnDefinition
                   Width="*" />
               </Grid.ColumnDefinitions>
-              <TextBlock
+              <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
                 Text="MADE FOR YOUR MOMENTS"
                 FontSize="9"
                 CharacterSpacing="160"
                 TextWrapping="Wrap"
                 Opacity="0.3" />
-              <TextBlock
+              <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
                 Grid.Column="1"
-                Text="پیش‌نمایش طراحی · آمار و فهرست‌های موسیقی نمونه‌اند"
+                Text="{x:Bind Localization.GetString('MusicHome/DemoFooter', Localization.Revision), Mode=OneWay}"
                 Style="{StaticResource Caption}"
                 FontSize="9"
                 HorizontalAlignment="Right"
                 MaxWidth="220"
-                TextAlignment="Right" />
+                TextAlignment="Start" />
             </Grid>
           </StackPanel>
         </ScrollViewer>
@@ -313,22 +311,22 @@
             x:Name="EditorialRail"
             Spacing="18"
             Padding="0,0,0,48">
-            <controls:WidgetLoadHost WidgetName="کتابخانهٔ تو"
+            <controls:WidgetLoadHost WidgetName="{x:Bind Localization.GetString('MusicHome/Library', Localization.Revision), Mode=OneWay}"
                                      IsLoading="{x:Bind Library.IsLoading, Mode=OneWay}"
                                      HasError="{x:Bind Library.HasError, Mode=OneWay}"
-                                     SkeletonHeight="360" LoadingText="در حال دریافت کتابخانهٔ تو"
-                                     ReadyText="کتابخانهٔ تو به‌روز شد"
-                                     ErrorText="دریافت کتابخانهٔ تو انجام نشد. دوباره امتحان کن.">
+                                     SkeletonHeight="360" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingLibrary', Localization.Revision), Mode=OneWay}"
+                                     ReadyText="{x:Bind Localization.GetString('MusicHome/LibraryReady', Localization.Revision), Mode=OneWay}"
+                                     ErrorText="{x:Bind Localization.GetString('MusicHome/LibraryFailed', Localization.Revision), Mode=OneWay}">
               <uc:MusicLibraryPanel ViewModel="{x:Bind Library}"
                                     RecentRequested="Library_RecentRequested"
                                     RefreshRequested="Library_RefreshRequested" />
             </controls:WidgetLoadHost>
-            <controls:WidgetLoadHost WidgetName="ریتم هفتهٔ تو" LoadingText="در حال دریافت ریتم هفتهٔ تو"
-                                     ReadyText="ریتم هفتهٔ تو به‌روز شد">
+            <controls:WidgetLoadHost WidgetName="{x:Bind Localization.GetString('MusicHome/WeeklyRhythm', Localization.Revision), Mode=OneWay}" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingWeeklyRhythm', Localization.Revision), Mode=OneWay}"
+                                     ReadyText="{x:Bind Localization.GetString('MusicHome/WeeklyRhythmReady', Localization.Revision), Mode=OneWay}">
               <uc:WeeklyRhythmPanel Summary="{x:Bind Discovery.WeeklyRhythm}" />
             </controls:WidgetLoadHost>
-            <controls:WidgetLoadHost WidgetName="آخرین اخبار" LoadingText="در حال دریافت آخرین اخبار"
-                                     ReadyText="آخرین اخبار به‌روز شد">
+            <controls:WidgetLoadHost WidgetName="{x:Bind Localization.GetString('MusicHome/LatestNews', Localization.Revision), Mode=OneWay}" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingNews', Localization.Revision), Mode=OneWay}"
+                                     ReadyText="{x:Bind Localization.GetString('MusicHome/NewsReady', Localization.Revision), Mode=OneWay}">
               <uc:LatestMusicNewsPanel />
             </controls:WidgetLoadHost>
           </StackPanel>
@@ -348,18 +346,18 @@
             x:Name="CommunityRail"
             Spacing="18"
             Padding="0,0,0,48">
-            <controls:WidgetLoadHost WidgetName="روی موج" IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}"
-                                     LoadingText="در حال دریافت آهنگ‌های روی موج" ReadyText="آهنگ‌های روی موج به‌روز شد">
+            <controls:WidgetLoadHost WidgetName="{x:Bind Localization.GetString('MusicHome/Trending', Localization.Revision), Mode=OneWay}" IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}"
+                                     LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingTrending', Localization.Revision), Mode=OneWay}" ReadyText="{x:Bind Localization.GetString('MusicHome/TrendingReady', Localization.Revision), Mode=OneWay}">
               <uc:TrendingMusicPanel
                 ItemsSource="{x:Bind Discovery.TrendingMusics}"
                 MusicRequested="TrendingMusic_OpenMusicRequested" />
             </controls:WidgetLoadHost>
-            <controls:WidgetLoadHost x:Name="FollowingActivitiesHost" WidgetName="دوستانت چه می‌شنوند؟"
+            <controls:WidgetLoadHost x:Name="FollowingActivitiesHost" WidgetName="{x:Bind Localization.GetString('MusicHome/FriendsListening', Localization.Revision), Mode=OneWay}"
                                      IsLoading="{x:Bind FollowingActivities.IsLoading, Mode=OneWay}"
                                      HasError="{x:Bind FollowingActivities.HasError, Mode=OneWay}"
-                                     SkeletonHeight="320" LoadingText="در حال دریافت فعالیت دوستان"
-                                     ReadyText="فعالیت دوستان به‌روز شد"
-                                     ErrorText="دریافت فعالیت دوستان انجام نشد. دوباره امتحان کن.">
+                                     SkeletonHeight="320" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingFriends', Localization.Revision), Mode=OneWay}"
+                                     ReadyText="{x:Bind Localization.GetString('MusicHome/FriendsReady', Localization.Revision), Mode=OneWay}"
+                                     ErrorText="{x:Bind Localization.GetString('MusicHome/FriendsFailed', Localization.Revision), Mode=OneWay}">
               <uc:FriendMusicActivityPanel
                 ViewModel="{x:Bind FollowingActivities, Mode=OneWay}"
                 ActivityRequested="FriendActivity_OpenRequested"

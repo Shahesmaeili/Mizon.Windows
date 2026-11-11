@@ -4,7 +4,9 @@
     xmlns:controls="using:Mizon.Windows.Controls"
     xmlns:icon="using:FluentIcons.WinUI"
     xmlns:items="using:Mizon.Windows.ViewModels.Items"
-    Loaded="Rail_Loaded" Unloaded="Rail_Unloaded">
+    Loaded="Rail_Loaded" Unloaded="Rail_Unloaded"
+    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+    Language="{x:Bind Localization.LanguageTag, Mode=OneWay}">
     <UserControl.Resources>
         <Style x:Key="MusicSurface" TargetType="controls:DiscoveryCardSurface">
             <Setter Property="Padding" Value="8"/>
@@ -57,10 +59,8 @@
             <Setter Property="UseSystemFocusVisuals" Value="True"/>
         </Style>
         <Style x:Key="MusicTitle" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="/Assets/Fonts/IRANSANS.TTF#IRANSans"/>
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FlowDirection" Value="RightToLeft"/>
             <Setter Property="TextReadingOrder" Value="DetectFromContent"/>
             <Setter Property="TextAlignment" Value="Start"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
@@ -79,9 +79,9 @@
             <controls:DiscoveryCardSurface Style="{StaticResource MusicSurface}" Width="224" Margin="0,6"
                 VerticalAlignment="Top" Tag="{x:Bind}" ArtworkElement="{Binding ElementName=CardArtwork}">
                 <Grid>
-                <controls:FeatureButton Style="{StaticResource MusicHitTarget}" Click="Music_Click" Tag="{x:Bind}"
-                    AutomationProperties.Name="{x:Bind AutomationName}"
-                    AutomationProperties.HelpText="برای باز کردن آهنگ Enter را بزن"/>
+                <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Style="{StaticResource MusicHitTarget}" Click="Music_Click" Tag="{x:Bind}"
+                    AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}"
+                    AutomationProperties.HelpText="{x:Bind Localization.GetString('MusicHome/OpenTrackHelp', Localization.Revision), Mode=OneWay}"/>
                 <StackPanel Spacing="12">
                     <controls:AspectRatioPanel Ratio="1" IsHitTestVisible="False">
                         <Grid CornerRadius="10" Background="{ThemeResource LayerFillColorDefaultBrush}">
@@ -89,14 +89,14 @@
                             <Border Background="{StaticResource ArtworkVeil}" IsHitTestVisible="False"/>
                             <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10"
                                 Background="#A0141B24" CornerRadius="6" Padding="8,4" MaxWidth="130" AutomationProperties.AccessibilityView="Raw">
-                                <TextBlock Text="{x:Bind PersianGenreTitle}" Style="{StaticResource MusicCaption}"
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind DisplayGenre, Mode=OneWay}" Style="{StaticResource MusicCaption}"
                                     Foreground="White" Opacity="0.95" FontSize="9"/>
                             </Border>
                             <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10"
                                 Background="#900D1420" CornerRadius="6" Padding="7,4">
                                 <StackPanel Orientation="Horizontal" Spacing="5" AutomationProperties.AccessibilityView="Raw">
                                     <icon:SymbolIcon Symbol="Headphones" FontSize="10" Foreground="White" Opacity="0.8" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{x:Bind DurationText}" FontSize="10" Foreground="White" FlowDirection="LeftToRight"/>
+                                    <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind DurationText}" FontSize="10" Foreground="White" FlowDirection="LeftToRight"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -107,9 +107,9 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <icon:SymbolIcon Symbol="ArrowUpRight" FontSize="13" Opacity="0.45" VerticalAlignment="Top" Margin="0,5,0,0" AutomationProperties.AccessibilityView="Raw"/>
                             <StackPanel Grid.Column="1" Spacing="3" MinHeight="50">
-                                <TextBlock Text="{x:Bind DisplayTitle}" Style="{StaticResource MusicTitle}"/>
-                                <TextBlock Text="{x:Bind SecondaryTitle}" Style="{StaticResource MusicCaption}" FontSize="10"
-                                    Visibility="{x:Bind SecondaryTitleVisibility}" FlowDirection="LeftToRight" TextAlignment="Right"/>
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind DisplayTitle, Mode=OneWay}" Style="{StaticResource MusicTitle}"/>
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind SecondaryTitle, Mode=OneWay}" Style="{StaticResource MusicCaption}" FontSize="10"
+                                    Visibility="{x:Bind SecondaryTitleVisibility, Mode=OneWay}" FlowDirection="LeftToRight" TextAlignment="Start"/>
                             </StackPanel>
                         </Grid>
                         <Border Grid.Row="1" Height="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" Opacity="0.65" IsHitTestVisible="False"/>
@@ -117,20 +117,20 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" IsHitTestVisible="False">
                                 <icon:SymbolIcon Symbol="Heart" Foreground="#E58AA5" FontSize="11" VerticalAlignment="Center"/>
-                                <TextBlock Text="{x:Bind CompactLikesText}" FontSize="10" Opacity="0.7" FlowDirection="LeftToRight" VerticalAlignment="Center"/>
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind CompactLikesText}" FontSize="10" Opacity="0.7" FlowDirection="LeftToRight" VerticalAlignment="Center"/>
                             </StackPanel>
-                            <TextBlock Grid.Column="1" Text="{x:Bind Artist}" Style="{StaticResource MusicCaption}" FontSize="10"
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Grid.Column="1" Text="{x:Bind Artist, Mode=OneWay}" Style="{StaticResource MusicCaption}" FontSize="10"
                                 Opacity="0.8" VerticalAlignment="Center" IsHitTestVisible="False"/>
                             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="1" VerticalAlignment="Center">
-                                <controls:FeatureButton Style="{StaticResource ProfileHitTarget}" Click="Profile_Click" Tag="{x:Bind SecondaryContributor}"
-                                    Visibility="{x:Bind SecondaryArtistVisibility}" AutomationProperties.Name="{x:Bind SecondaryProfileAutomationName}"
-                                    ToolTipService.ToolTip="{x:Bind SecondaryProfileAutomationName}">
+                                <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Style="{StaticResource ProfileHitTarget}" Click="Profile_Click" Tag="{x:Bind SecondaryContributor}"
+                                    Visibility="{x:Bind SecondaryArtistVisibility}" AutomationProperties.Name="{x:Bind SecondaryProfileAutomationName, Mode=OneWay}"
+                                    ToolTipService.ToolTip="{x:Bind SecondaryProfileAutomationName, Mode=OneWay}">
                                     <PersonPicture Width="24" Height="24" DisplayName="{x:Bind SecondaryArtistName}"
                                         ProfilePicture="{x:Bind SecondaryArtistProfileImage}" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw"/>
                                 </controls:FeatureButton>
-                                <controls:FeatureButton Style="{StaticResource ProfileHitTarget}" Click="Profile_Click" Tag="{x:Bind PrimaryContributor}"
-                                    Visibility="{x:Bind PrimaryArtistVisibility}" AutomationProperties.Name="{x:Bind PrimaryProfileAutomationName}"
-                                    ToolTipService.ToolTip="{x:Bind PrimaryProfileAutomationName}">
+                                <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Style="{StaticResource ProfileHitTarget}" Click="Profile_Click" Tag="{x:Bind PrimaryContributor}"
+                                    Visibility="{x:Bind PrimaryArtistVisibility}" AutomationProperties.Name="{x:Bind PrimaryProfileAutomationName, Mode=OneWay}"
+                                    ToolTipService.ToolTip="{x:Bind PrimaryProfileAutomationName, Mode=OneWay}">
                                     <PersonPicture Width="24" Height="24" DisplayName="{x:Bind PrimaryArtistName}"
                                         ProfilePicture="{x:Bind ArtistProfileImage}" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw"/>
                                 </controls:FeatureButton>
@@ -145,24 +145,24 @@
             <controls:DiscoveryCardSurface Style="{StaticResource MusicSurface}" Width="300" Padding="12" Margin="0,6"
                 VerticalAlignment="Top" Tag="{x:Bind}" ArtworkElement="{Binding ElementName=RecentArtwork}">
                 <Grid>
-                <controls:FeatureButton Style="{StaticResource MusicHitTarget}" Click="Music_Click" Tag="{x:Bind}"
-                    AutomationProperties.Name="{x:Bind AutomationName}"
-                    AutomationProperties.HelpText="برای باز کردن آهنگ Enter را بزن"/>
+                <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Style="{StaticResource MusicHitTarget}" Click="Music_Click" Tag="{x:Bind}"
+                    AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}"
+                    AutomationProperties.HelpText="{x:Bind Localization.GetString('MusicHome/OpenTrackHelp', Localization.Revision), Mode=OneWay}"/>
                 <Grid ColumnSpacing="12">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="88"/></Grid.ColumnDefinitions>
                     <Grid RowSpacing="6">
                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                         <StackPanel Spacing="2" IsHitTestVisible="False">
-                            <TextBlock Text="{x:Bind DisplayTitle}" Style="{StaticResource MusicTitle}" FontSize="13"/>
-                            <TextBlock Text="{x:Bind SecondaryTitle}" Style="{StaticResource MusicCaption}" FontSize="9"
-                                Visibility="{x:Bind SecondaryTitleVisibility}" FlowDirection="LeftToRight" TextAlignment="Right"/>
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind DisplayTitle, Mode=OneWay}" Style="{StaticResource MusicTitle}" FontSize="13"/>
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind SecondaryTitle, Mode=OneWay}" Style="{StaticResource MusicCaption}" FontSize="9"
+                                Visibility="{x:Bind SecondaryTitleVisibility, Mode=OneWay}" FlowDirection="LeftToRight" TextAlignment="Start"/>
                         </StackPanel>
                         <Grid Grid.Row="1" ColumnSpacing="6" VerticalAlignment="Center">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="{x:Bind Artist}" Style="{StaticResource MusicCaption}" Opacity="0.8" VerticalAlignment="Center" IsHitTestVisible="False"/>
-                            <controls:FeatureButton Grid.Column="1" Style="{StaticResource ProfileHitTarget}" Width="28" Height="28" Click="Profile_Click"
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Artist, Mode=OneWay}" Style="{StaticResource MusicCaption}" Opacity="0.8" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                            <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Grid.Column="1" Style="{StaticResource ProfileHitTarget}" Width="28" Height="28" Click="Profile_Click"
                                 Tag="{x:Bind PrimaryContributor}" Visibility="{x:Bind PrimaryArtistVisibility}"
-                                AutomationProperties.Name="{x:Bind PrimaryProfileAutomationName}" ToolTipService.ToolTip="{x:Bind PrimaryProfileAutomationName}">
+                                AutomationProperties.Name="{x:Bind PrimaryProfileAutomationName, Mode=OneWay}" ToolTipService.ToolTip="{x:Bind PrimaryProfileAutomationName, Mode=OneWay}">
                                 <PersonPicture Width="20" Height="20" DisplayName="{x:Bind PrimaryArtistName}"
                                     ProfilePicture="{x:Bind ArtistProfileImage}" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw"/>
                             </controls:FeatureButton>
@@ -171,9 +171,9 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="4" AutomationProperties.AccessibilityView="Raw">
                                 <icon:SymbolIcon Symbol="Heart" FontSize="10" Foreground="#E58AA5" VerticalAlignment="Center"/>
-                                <TextBlock Text="{x:Bind CompactLikesText}" FontSize="9" Opacity="0.65" FlowDirection="LeftToRight" VerticalAlignment="Center"/>
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind CompactLikesText}" FontSize="9" Opacity="0.65" FlowDirection="LeftToRight" VerticalAlignment="Center"/>
                             </StackPanel>
-                            <TextBlock Grid.Column="1" Text="{x:Bind PersianGenreTitle}" Style="{StaticResource MusicCaption}" FontSize="9" VerticalAlignment="Center"/>
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Grid.Column="1" Text="{x:Bind DisplayGenre, Mode=OneWay}" Style="{StaticResource MusicCaption}" FontSize="9" VerticalAlignment="Center"/>
                         </Grid>
                     </Grid>
                     <Grid Grid.Column="1" Width="88" Height="88" CornerRadius="9" VerticalAlignment="Top"
@@ -182,7 +182,7 @@
                         <Border Background="{StaticResource ArtworkVeil}" IsHitTestVisible="False"/>
                         <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="5" Padding="5,2"
                             CornerRadius="4" Background="#900D1420" AutomationProperties.AccessibilityView="Raw">
-                            <TextBlock Text="{x:Bind DurationText}" FontSize="9" Foreground="White" FlowDirection="LeftToRight"/>
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind DurationText}" FontSize="9" Foreground="White" FlowDirection="LeftToRight"/>
                         </Border>
                     </Grid>
                 </Grid>

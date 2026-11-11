@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Common;
 using System;
@@ -10,13 +11,18 @@ namespace Mizon.Windows.ViewModels.Items;
 /// <summary>Presentation data for the sample artist discovery cards.</summary>
 public sealed partial class TopArtistItemViewModel : ViewModelBase
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
+    public void RefreshLocalization() => OnPropertyChanged(string.Empty);
+
     private readonly Point[] _activityPoints;
 
     public Guid PublicId { get; init; }
     public string FirstName { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;
     public string DisplayName => $"{FirstName} {LastName}".Trim();
-    public string GenreTitle { get; init; } = string.Empty;
+    public string GenreResourceKey { get; init; } = string.Empty;
+    public string GenreTitle => string.IsNullOrEmpty(GenreResourceKey) ? string.Empty : Localization.GetString(GenreResourceKey);
     public int FollowersCount { get; init; }
     public int MonthlyListenersCount { get; init; }
     public Color AccentColor { get; init; }
@@ -24,11 +30,11 @@ public sealed partial class TopArtistItemViewModel : ViewModelBase
     public ImageSource? CoverImage { get; }
     public string FollowersText => CompactNumber(FollowersCount + (IsFollowed ? 1 : 0));
     public string MonthlyListenersText => CompactNumber(MonthlyListenersCount);
-    public string FollowersFullText => $"{FollowersCount + (IsFollowed ? 1 : 0):N0} دنبال‌کننده";
-    public string MonthlyListenersFullText => $"{MonthlyListenersCount:N0} شنوندهٔ ماهانه";
-    public string FollowButtonText => IsFollowed ? "دنبال می‌کنید" : "دنبال کردن";
-    public string ProfileAutomationName => $"پروفایل {DisplayName}، {GenreTitle}، {FollowersFullText}، {MonthlyListenersFullText}";
-    public string FollowAutomationName => IsFollowed ? $"لغو دنبال‌کردن آزمایشی {DisplayName}" : $"دنبال‌کردن آزمایشی {DisplayName}";
+    public string FollowersFullText => Localization.Format("MusicHome/FollowersCount", FollowersCount + (IsFollowed ? 1 : 0));
+    public string MonthlyListenersFullText => Localization.Format("MusicHome/ListenersCount", MonthlyListenersCount);
+    public string FollowButtonText => Localization.GetString(IsFollowed ? "MusicHome/Following" : "MusicHome/Follow");
+    public string ProfileAutomationName => string.Join(" Â· ", Localization.Format("MusicHome/ArtistProfileName", DisplayName), GenreTitle, FollowersFullText, MonthlyListenersFullText);
+    public string FollowAutomationName => IsFollowed ? Localization.Format("MusicHome/DemoUnfollowName", DisplayName) : Localization.Format("MusicHome/DemoFollowName", DisplayName);
     public FluentIcons.Common.Symbol FollowSymbol => IsFollowed ? FluentIcons.Common.Symbol.Checkmark : FluentIcons.Common.Symbol.PersonAdd;
 
     public bool IsFollowed

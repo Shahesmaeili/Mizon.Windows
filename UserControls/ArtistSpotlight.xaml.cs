@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -14,6 +15,8 @@ namespace Mizon.Windows.UserControls;
 
 public sealed partial class ArtistSpotlight : UserControl
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
     public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(
         nameof(ItemsSource), typeof(IReadOnlyList<ArtistSpotlightItemViewModel>), typeof(ArtistSpotlight),
         new PropertyMetadata(null, ItemsChanged));
@@ -54,6 +57,9 @@ public sealed partial class ArtistSpotlight : UserControl
     private void Spotlight_Loaded(object sender, RoutedEventArgs e)
     {
         _loaded = true;
+        Bindings.Update();
+        Localization.PropertyChanged -= SpotlightLocalizationChanged;
+        Localization.PropertyChanged += SpotlightLocalizationChanged;
         UpdateLayout(ActualWidth, ActualHeight);
         RenderSelection();
         AnimateEntrance(1);
@@ -62,6 +68,8 @@ public sealed partial class ArtistSpotlight : UserControl
     private void Spotlight_Unloaded(object sender, RoutedEventArgs e)
     {
         _loaded = false;
+        Localization.PropertyChanged -= SpotlightLocalizationChanged;
+        Bindings.StopTracking();
         ResetContentMotion();
         if (_current is not null) _current.Artist.PropertyChanged -= ArtistChanged;
         ReleaseModelGlow();
@@ -120,7 +128,22 @@ public sealed partial class ArtistSpotlight : UserControl
         UpdateModelGlow();
         PreviousButton.IsEnabled = NextButton.IsEnabled = items.Count > 1;
         UpdateFollow();
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(ProfileButton, $"پروفایل {artist.DisplayName}");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(ProfileButton, Localization.Format("MusicHome/ArtistProfileName", artist.DisplayName));
+    }
+
+    private void SpotlightLocalizationChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (!_loaded || _current is not { } current || args.PropertyName != nameof(LocalizationService.Revision)) return;
+        // Text-only refresh: keep model orientation, scroll and the current selection.
+        GenreText.Text = current.Artist.GenreTitle;
+        ToolTipService.SetToolTip(ArtistName, current.Description);
+        ToolTipService.SetToolTip(ArtistModel, current.ModelAttribution);
+        SongsText.Text = current.SongCountText;
+        RatingText.Text = current.RatingText;
+        ListenerText.Text = current.Artist.MonthlyListenersFullText;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(ProfileButton,
+            Localization.Format("MusicHome/ArtistProfileName", current.Artist.DisplayName));
+        UpdateFollow();
     }
 
     private void ArtistChanged(object? sender, PropertyChangedEventArgs args)

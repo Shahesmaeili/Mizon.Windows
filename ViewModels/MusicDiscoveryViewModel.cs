@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Common;
 using Mizon.Windows.ViewModels.Items;
@@ -12,6 +13,7 @@ namespace Mizon.Windows.ViewModels;
 /// <summary>Local presentation data for the home redesign. No API or playback state is changed.</summary>
 public sealed partial class MusicDiscoveryViewModel : ViewModelBase
 {
+    public LocalizationService Localization => LocalizationService.Current;
     private readonly IReadOnlyList<DiscoveryMusicItemViewModel> _previewMusics;
     private readonly ImageSource? _malePortrait = ImageSourceFactory.Create("/Assets/Discovery/friend-amir.jpg", 96);
     private readonly ImageSource? _femalePortrait = ImageSourceFactory.Create("/Assets/Discovery/friend-sara.jpg", 96);
@@ -38,21 +40,21 @@ public sealed partial class MusicDiscoveryViewModel : ViewModelBase
         TopArtists.Add(new("/Assets/Discovery/friend-amir.jpg", "/Assets/Discovery/artist-stage-01.jpg",
             [0.48, 0.22, 0.56, 0.60, 0.91, 0.79, 0.64, 0.36, 0.20, 0.39, 0.22, 0.48, 0.15, 0.28, 0.23, 0.47, 0.37, 0.64, 0.58, 0.29, 0.42])
         {
-            FirstName = "آرمان", LastName = "راد", GenreTitle = "پاپ · الکترونیک",
+            FirstName = "آرمان", LastName = "راد", GenreResourceKey = "MusicHome/ArtistGenreOne",
             FollowersCount = 21400, MonthlyListenersCount = 124800,
             AccentColor = global::Windows.UI.Color.FromArgb(255, 18, 166, 237)
         });
         TopArtists.Add(new("/Assets/Discovery/friend-sara.jpg", "/Assets/Discovery/artist-stage-02.jpg",
             [0.23, 0.34, 0.46, 0.21, 0.31, 0.29, 0.39, 0.66, 0.79, 0.82, 0.56, 0.62, 0.47, 0.22, 0.39, 0.16, 0.26, 0.34, 0.24, 0.47, 0.30])
         {
-            FirstName = "رها", LastName = "مهر", GenreTitle = "پاپ · جاز",
+            FirstName = "رها", LastName = "مهر", GenreResourceKey = "MusicHome/ArtistGenreTwo",
             FollowersCount = 18700, MonthlyListenersCount = 98600,
             AccentColor = global::Windows.UI.Color.FromArgb(255, 236, 74, 114)
         });
         TopArtists.Add(new("/Assets/Discovery/artist-portrait-03.jpg", "/Assets/Discovery/slow-motion.jpg",
             [0.28, 0.48, 0.38, 0.17, 0.36, 0.63, 0.55, 0.70, 0.57, 0.34, 0.44, 0.27, 0.39, 0.32, 0.42, 0.22, 0.28, 0.36, 0.31, 0.24, 0.42])
         {
-            FirstName = "ماهان", LastName = "نوری", GenreTitle = "الکترونیک · هیپ‌هاپ",
+            FirstName = "ماهان", LastName = "نوری", GenreResourceKey = "MusicHome/ArtistGenreThree",
             FollowersCount = 15200, MonthlyListenersCount = 86400,
             AccentColor = global::Windows.UI.Color.FromArgb(255, 18, 166, 237)
         });
@@ -60,26 +62,26 @@ public sealed partial class MusicDiscoveryViewModel : ViewModelBase
         [
             new("ms-appx:///Assets/Discovery/Models/MoeinBust.glb")
             {
-                ModelAttribution = "معین · بازسازی سه‌بعدی از عکس با هوش مصنوعی · عکس‌ها: Mehrshad Adkins 01 / Mehrshad.Adkins · CC BY-SA 4.0 — اطلاعات پروفایل نمایشی است",
+                ModelAttributionKey = "MusicHome/MoeinAttribution",
                 ModelYawInDegrees = 180, ModelViewScale = 1, ModelVerticalFocus = 0,
                 Artist = TopArtists[0], SongCount = 42, Rating = 4.9,
-                Description = "صدای شب‌های روشن؛ جایی میان ملودی‌های پاپ و ضربان شهر.",
+                DescriptionKey = "MusicHome/SpotlightOneDescription",
                 LatestMusics = GetArtistMusics(TopArtists[0])
             },
             new("ms-appx:///Assets/Discovery/Models/AyaScan.glb")
             {
-                ModelAttribution = "AYA2 · 3D Lab. Kyoto · CC BY 4.0 — اسکن واقعی انسان برای پروفایل نمایشی",
+                ModelAttributionKey = "MusicHome/AyaAttribution",
                 ModelYawInDegrees = -75, ModelViewScale = 2.1f, ModelVerticalFocus = .5f,
                 Artist = TopArtists[1], SongCount = 28, Rating = 4.8,
-                Description = "روایت‌های آرام با رنگی از جاز؛ برای لحظه‌هایی که می‌خواهی بمانند.",
+                DescriptionKey = "MusicHome/SpotlightTwoDescription",
                 LatestMusics = GetArtistMusics(TopArtists[1])
             },
             new("ms-appx:///Assets/Discovery/Models/KanaScan.glb")
             {
-                ModelAttribution = "Kana · ddd (endonoriko) · CC BY 4.0 — مدل واقعی انسان برای پروفایل نمایشی",
+                ModelAttributionKey = "MusicHome/KanaAttribution",
                 ModelYawInDegrees = 0, ModelViewScale = 2.1f, ModelVerticalFocus = .5f,
                 Artist = TopArtists[2], SongCount = 36, Rating = 4.9,
-                Description = "ریتم‌های تازه، صداهای بی‌مرز؛ یک قدم جلوتر از موج بعدی.",
+                DescriptionKey = "MusicHome/SpotlightThreeDescription",
                 LatestMusics = GetArtistMusics(TopArtists[2])
             }
         ];
@@ -104,22 +106,22 @@ public sealed partial class MusicDiscoveryViewModel : ViewModelBase
     public bool IsEmpty => !IsLoading && !HasResults;
     public bool HasError => false;
     public string ErrorMessage => string.Empty;
-    public string PreviewNotice { get => field; private set => SetField(ref field, value); } = "نمونهٔ طراحی";
+    public string PreviewNotice { get => Localization.GetString(field); private set => SetField(ref field, value); } = "MusicHome/Demo";
 
     // This local preview is ready in the constructor. Synchronous filtering must
     // not hide all widgets behind a skeleton or replay their entrance animations.
     public bool IsLoading => false;
 
-    public string SelectedGenreTitle { get => field; private set => SetField(ref field, value); } = "همهٔ سبک‌ها";
+    public string SelectedGenreTitle { get => string.IsNullOrEmpty(field) ? Localization.GetString("MusicHome/AllGenres") : field; private set => SetField(ref field, value); } = string.Empty;
 
     public Task LoadAsync(bool force = false, Guid? genrePublicId = null, string? genreTitle = null)
     {
         var filter = genrePublicId.HasValue && !string.IsNullOrWhiteSpace(genreTitle) ? NormalizeGenre(genreTitle) : string.Empty;
         if (!force && _genreFilter == filter) return Task.CompletedTask;
         _genreFilter = filter;
-        SelectedGenreTitle = string.IsNullOrWhiteSpace(genreTitle) ? "همهٔ سبک‌ها" : genreTitle;
+        SelectedGenreTitle = string.IsNullOrWhiteSpace(genreTitle) ? string.Empty : genreTitle;
         IReadOnlyList<DiscoveryMusicItemViewModel> musics = _previewMusics;
-        PreviewNotice = "نمونهٔ طراحی";
+        PreviewNotice = "MusicHome/Demo";
         if (genrePublicId is not null && !string.IsNullOrWhiteSpace(genreTitle))
         {
             var filtered = _previewMusics.Where(item => NormalizeGenre(item.GenreTitle) == filter
@@ -129,10 +131,22 @@ public sealed partial class MusicDiscoveryViewModel : ViewModelBase
                 musics = filtered;
                 SelectedGenreTitle = filtered[0].PersianGenreTitle;
             }
-            else PreviewNotice = "برای این سبک هنوز دادهٔ نمونه نداریم؛ همهٔ نمونه‌ها نمایش داده می‌شوند.";
+            else PreviewNotice = "MusicHome/NoGenreDemo";
         }
         Populate(musics);
         return Task.CompletedTask;
+    }
+
+    public void RefreshLocalization()
+    {
+        foreach (var item in _previewMusics) item.RefreshLocalization();
+        foreach (var item in TrendingMusics) item.RefreshLocalization();
+        foreach (var item in RecentMusics) item.RefreshLocalization();
+        foreach (var item in RecommendedMusics) item.RefreshLocalization();
+        foreach (var artist in TopArtists) artist.RefreshLocalization();
+        foreach (var spotlight in ArtistSpotlights) spotlight.RefreshLocalization();
+        OnPropertyChanged(nameof(PreviewNotice));
+        OnPropertyChanged(nameof(SelectedGenreTitle));
     }
 
     public void CancelLoading() { }

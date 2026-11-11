@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using System;
 using System.Linq;
 using Microsoft.UI.Xaml.Media;
@@ -7,6 +8,10 @@ namespace Mizon.Windows.ViewModels.Items;
 
 public sealed class StoryItemViewModel : ViewModelBase
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
+    public void RefreshLocalization() => OnPropertyChanged(string.Empty);
+
     public Guid PublicId { get; init; }
     public Guid PreviewMediaPublicId { get; init; }
     public Guid? CreatorProfileMediaPublicId
@@ -38,13 +43,13 @@ public sealed class StoryItemViewModel : ViewModelBase
         }
     }
     public double RingOpacity => ViewedByMe ? 0.3 : 1;
-    public string ViewStateText => ViewedByMe ? "دیده‌شده" : "جدید";
+    public string ViewStateText => Localization.GetString(ViewedByMe ? "MusicHome/Viewed" : "MusicHome/New");
     public string CreatorInitials => string.Concat(
         string.IsNullOrWhiteSpace(CreatorFirstName) ? string.Empty : CreatorFirstName[..1],
         string.IsNullOrWhiteSpace(CreatorLastName) ? string.Empty : CreatorLastName[..1]);
     public string CreatorDisplayName => string.Join(" ", new[] { CreatorFirstName, CreatorLastName }.Where(x => !string.IsNullOrWhiteSpace(x)));
     public string StoryAutomationName => string.Join("، ",
-        new[] { "استوری", CreatorDisplayName, Title, ViewStateText }.Where(value => !string.IsNullOrWhiteSpace(value)));
+        new[] { Localization.GetString("MusicHome/Story"), CreatorDisplayName, Title, ViewStateText }.Where(value => !string.IsNullOrWhiteSpace(value)));
     public ImageSource? PreviewImage { get; private set; }
     public ImageSource? CreatorProfileImage { get; private set; }
 

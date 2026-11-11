@@ -18,7 +18,7 @@ public partial class MusicPageViewModel
     public bool IsHomeGenresLoading { get => field; private set => SetField(ref field, value); } = true;
     public string HomeGenresMessage
     {
-        get => field;
+        get => string.IsNullOrEmpty(field) ? string.Empty : LocalizationService.Current.GetString(field);
         private set
         {
             if (SetField(ref field, value)) OnPropertyChanged(nameof(HomeGenresStatusVisibility));
@@ -27,10 +27,11 @@ public partial class MusicPageViewModel
     public Microsoft.UI.Xaml.Visibility HomeGenresStatusVisibility => string.IsNullOrEmpty(HomeGenresMessage)
         ? Microsoft.UI.Xaml.Visibility.Collapsed : Microsoft.UI.Xaml.Visibility.Visible;
 
-    public async Task RefreshHomeWidgetsAsync()
+    public async Task RefreshHomeWidgetsAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         CancelHomeWidgetLoading(false);
-        var cancellation = _homeLoadCancellation = new();
+        var cancellation = _homeLoadCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var version = _homeLoadVersion;
         IsHomeStoriesLoading = true;
         IsHomeGenresLoading = true;
@@ -38,14 +39,28 @@ public partial class MusicPageViewModel
         {
             // Independent widgets become ready independently; no sequence of API waits.
             await Task.WhenAll(LoadHomeGenresAsync(version, cancellation.Token), LoadHomeStoriesAsync(version, cancellation.Token));
+            cancellationToken.ThrowIfCancellationRequested();
         }
         finally
         {
             if (ReferenceEquals(cancellation, _homeLoadCancellation))
                 _homeLoadCancellation = null;
             // The request owner disposes only after both operations have drained.
+            if (version == _homeLoadVersion)
+            {
+                IsHomeStoriesLoading = false;
+                IsHomeGenresLoading = false;
+            }
             cancellation.Dispose();
         }
+    }
+
+    public void RefreshHomeLocalization()
+    {
+        foreach (var story in HomeStories) story.RefreshLocalization();
+        foreach (var genre in MusicGenreTypes) genre.RefreshLocalization();
+        OnPropertyChanged(nameof(HomeGenresMessage));
+        OnPropertyChanged(nameof(HomeStoriesMessage));
     }
 
     public void CancelHomeWidgetLoading() => CancelHomeWidgetLoading(true);
@@ -75,7 +90,7 @@ public partial class MusicPageViewModel
             if (!IsCurrentHomeLoad(version, token)) return;
             if (!response.IsSuccess || response.Content is null)
             {
-                HomeGenresMessage = "دریافت سبک‌ها انجام نشد؛ دوباره تلاش کن.";
+                HomeGenresMessage = "MusicHome/GenresFailed";
                 HomeGenresRetryVisibility = Microsoft.UI.Xaml.Visibility.Visible;
                 return;
             }
@@ -92,14 +107,14 @@ public partial class MusicPageViewModel
                 };
             }).ToArray();
             SynchronizeWidgetItems(MusicGenreTypes, items);
-            if (items.Length == 0) HomeGenresMessage = "هنوز سبکی ثبت نشده.";
+            if (items.Length == 0) HomeGenresMessage = "MusicHome/NoGenres";
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception exception)
         {
             if (!IsCurrentHomeLoad(version, token)) return;
             AppLog.Error("Home genres could not be loaded.", exception);
-            HomeGenresMessage = "دریافت سبک‌ها انجام نشد؛ دوباره تلاش کن.";
+            HomeGenresMessage = "MusicHome/GenresFailed";
             HomeGenresRetryVisibility = Microsoft.UI.Xaml.Visibility.Visible;
         }
         finally
@@ -118,7 +133,7 @@ public partial class MusicPageViewModel
             if (!IsCurrentHomeLoad(version, token)) return;
             if (!response.IsSuccess || response.Content is null)
             {
-                HomeStoriesMessage = "دریافت استوری‌ها انجام نشد؛ دوباره تلاش کن.";
+                HomeStoriesMessage = "MusicHome/StoriesFailed";
                 HomeStoriesRetryVisibility = Microsoft.UI.Xaml.Visibility.Visible;
                 return;
             }
@@ -144,7 +159,7 @@ public partial class MusicPageViewModel
             foreach (var oldItem in HomeStories)
                 if (!retainedItems.Contains(oldItem)) oldItem.ReleaseImages();
             SynchronizeWidgetItems(HomeStories, items);
-            if (items.Length == 0) HomeStoriesMessage = "هنوز استوری فعالی منتشر نشده.";
+            if (items.Length == 0) HomeStoriesMessage = "MusicHome/NoStories";
             // Publish metadata immediately. The rail hydrates only realized cards and
             // owns the bounded image queue and each card's cancellation lifetime.
         }
@@ -153,7 +168,7 @@ public partial class MusicPageViewModel
         {
             if (!IsCurrentHomeLoad(version, token)) return;
             AppLog.Error("Home stories could not be loaded.", exception);
-            HomeStoriesMessage = "دریافت استوری‌ها انجام نشد؛ دوباره تلاش کن.";
+            HomeStoriesMessage = "MusicHome/StoriesFailed";
             HomeStoriesRetryVisibility = Microsoft.UI.Xaml.Visibility.Visible;
         }
         finally

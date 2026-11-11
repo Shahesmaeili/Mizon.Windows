@@ -33,6 +33,8 @@ namespace Mizon.Windows.UserControls;
 // One bounded API feed, one active decoder. Ordinary navigation never starts music.
 public sealed partial class DiscoveryFeatureHero : UserControl
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
     public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
         nameof(ViewModel), typeof(MusicFeaturesViewModel), typeof(DiscoveryFeatureHero), new PropertyMetadata(null, ViewModelChanged));
     private readonly UISettings _settings = new();
@@ -57,6 +59,8 @@ public sealed partial class DiscoveryFeatureHero : UserControl
     private long _lastTick, _fullWindowToken;
     private double _imagePosition;
     private string? _layoutState;
+    private string? _statusResourceKey;
+    private bool _statusIsError;
 
     public DiscoveryFeatureHero()
     {
@@ -94,6 +98,8 @@ public sealed partial class DiscoveryFeatureHero : UserControl
     {
         if (_loaded || !IsLoaded) return;
         _loaded = true;
+        Bindings.Update();
+        Localization.PropertyChanged += HeroLocalizationChanged;
         _playRequested = _settings.AnimationsEnabled;
         _lighting = new(HeroSurface);
         _media = new(HeroVideo, Downloader);
@@ -118,6 +124,8 @@ public sealed partial class DiscoveryFeatureHero : UserControl
     {
         if (IsLoaded || !_loaded) return;
         _loaded = false;
+        Localization.PropertyChanged -= HeroLocalizationChanged;
+        Bindings.StopTracking();
         MediaOptionsFlyout.Hide();
         CancelSelection();
         DetachViewModel();
@@ -198,7 +206,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
             _selected = null;
             HeroSurface.Visibility = Visibility.Collapsed;
             EmptyPanel.Visibility = Visibility.Visible;
-            EmptyText.Text = ViewModel?.StatusText ?? "هنوز پیشنهادی برای نمایش ثبت نشده.";
+            EmptyText.Text = ViewModel?.StatusText ?? Localization.GetString("MusicHome/NoFeatures");
             UpdateActive();
             return;
         }
@@ -263,7 +271,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         try
         {
             _sourceLoading = true;
-            ShowStatus("در حال آماده‌سازی ویدیو…");
+            ShowLocalizedStatus("MusicHome/PreparingVideo");
             UpdateTransport();
             var info = await ViewModel!.GetMediaAsync(item, token);
             token.ThrowIfCancellationRequested();
@@ -281,7 +289,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         catch (Exception exception)
         {
             AppLog.Error("Featured video could not be loaded.", exception);
-            if (_loaded && version == _selectionVersion) ShowStatus("پخش ویدیو انجام نشد. دوباره تلاش کن.", true);
+            if (_loaded && version == _selectionVersion) ShowLocalizedStatus("MusicHome/VideoFailed", true);
         }
         finally
         {
@@ -312,12 +320,12 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         FavoriteIcon.Foreground = item.LikedByMe ? _likedBrush : _normalBrush;
         FavoriteButton.IsChecked = item.LikedByMe;
         FavoriteButton.IsEnabled = !item.IsLikeBusy;
-        AutomationProperties.SetName(FavoriteButton, item.LikedByMe ? "برداشتن پسند آهنگ" : "پسندیدن آهنگ");
-        AutomationProperties.SetItemStatus(FavoriteButton, item.LikedByMe ? "پسندیده شده" : "پسندیده نشده");
-        AutomationProperties.SetName(OpenButton, $"کشف آهنگ {item.DisplayTitle}");
-        AutomationProperties.SetName(ArtworkButton, $"باز کردن آهنگ {item.DisplayTitle}");
-        AutomationProperties.SetName(PlayTrackButton, $"پخش آهنگ {item.DisplayTitle} در میزون");
-        AutomationProperties.SetName(PositionSlider, item.IsVideo ? "موقعیت ویدیو، بر حسب ثانیه" : "زمان نمایش تصویر، بر حسب ثانیه");
+        AutomationProperties.SetName(FavoriteButton, item.LikedByMe ? Localization.GetString("MusicHome/UnlikeTrack") : Localization.GetString("MusicHome/LikeTrack"));
+        AutomationProperties.SetItemStatus(FavoriteButton, item.LikedByMe ? Localization.GetString("MusicHome/Liked") : Localization.GetString("MusicHome/NotLiked"));
+        AutomationProperties.SetName(OpenButton, Localization.Format("MusicHome/DiscoverTrackName", item.DisplayTitle));
+        AutomationProperties.SetName(ArtworkButton, Localization.Format("MusicHome/OpenTrackName", item.DisplayTitle));
+        AutomationProperties.SetName(PlayTrackButton, Localization.Format("MusicHome/PlayTrackName", item.DisplayTitle));
+        AutomationProperties.SetName(PositionSlider, item.IsVideo ? Localization.GetString("MusicHome/VideoPosition") : Localization.GetString("MusicHome/ImagePosition"));
         if (Uri.TryCreate(item.ImagePath, UriKind.Absolute, out var uri) && !Equals(HeroArtwork.Source, uri))
         {
             HeroArtwork.TransitionDuration = _settings.AnimationsEnabled && CanPresent ? TimeSpan.FromMilliseconds(260) : TimeSpan.Zero;
@@ -326,8 +334,8 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         if (!item.IsVideo)
         {
             if (!string.IsNullOrEmpty(item.ArtworkErrorText)) ShowStatus(item.ArtworkErrorText, true);
-            else if (item.IsArtworkLoading) ShowStatus("در حال دریافت تصویر…");
-            else if (StatusText.Text == "در حال دریافت تصویر…") ShowStatus(string.Empty);
+            else if (item.IsArtworkLoading) ShowLocalizedStatus("MusicHome/DownloadingImage");
+            else if (_statusResourceKey == "MusicHome/DownloadingImage") ShowStatus(string.Empty);
         }
         PreviousButton.IsEnabled = NextButton.IsEnabled = ViewModel.Items.Count > 1;
         BuildThumbnails();
@@ -366,11 +374,11 @@ public sealed partial class DiscoveryFeatureHero : UserControl
             button.Width = button.Height = _layoutState == "CompactHero" ? 24 : 30;
             button.BorderBrush = index == _index ? _selectedStroke : _normalStroke;
             ((Image)((Grid)button.Content).Children[0]).Source = item.PreviewImage;
-            AutomationProperties.SetName(button, $"پیشنهاد {index + 1}: {item.DisplayTitle}");
+            AutomationProperties.SetName(button, Localization.Format("MusicHome/FeatureNumber", index + 1, item.DisplayTitle));
             ToolTipService.SetToolTip(button, item.Title);
             AutomationProperties.SetPositionInSet(button, index + 1);
             AutomationProperties.SetSizeOfSet(button, items.Count);
-            AutomationProperties.SetItemStatus(button, index == _index ? "انتخاب‌شده" : string.Empty);
+            AutomationProperties.SetItemStatus(button, index == _index ? Localization.GetString("MusicHome/Selected") : string.Empty);
         }
     }
 
@@ -416,7 +424,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         var playing = video ? _media?.WantsToPlay == true : _playRequested;
         PlayPauseIcon.Symbol = playing ? Symbol.Pause : Symbol.Play;
         PlayPauseButton.IsEnabled = !video || _media?.IsReady == true;
-        AutomationProperties.SetName(PlayPauseButton, playing ? "توقف نمایش" : "ادامهٔ نمایش");
+        AutomationProperties.SetName(PlayPauseButton, playing ? Localization.GetString("MusicHome/PausePresentation") : Localization.GetString("MusicHome/ResumePresentation"));
         MuteButton.Visibility = video ? Visibility.Visible : Visibility.Collapsed;
         // Extra video controls stay in the headphone flyout; the artwork overlay retains its original layout.
         VolumeSlider.IsEnabled = video;
@@ -424,7 +432,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         VolumeSlider.IsHitTestVisible = video;
         VolumeSlider.IsTabStop = video;
         MuteIcon.Symbol = _media?.IsMuted != false ? Symbol.SpeakerMute : Symbol.Speaker2;
-        AutomationProperties.SetName(MuteButton, _media?.IsMuted != false ? "روشن کردن صدای ویدیو" : "بی‌صدا کردن ویدیو");
+        AutomationProperties.SetName(MuteButton, _media?.IsMuted != false ? Localization.GetString("MusicHome/UnmuteVideo") : Localization.GetString("MusicHome/MuteVideo"));
         FullscreenMenuItem.IsEnabled = video && _media?.IsReady == true;
         SaveMenuItem.IsEnabled = !_saving;
         HeroVideo.Visibility = video && _media?.IsReady == true ? Visibility.Visible : Visibility.Collapsed;
@@ -450,7 +458,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
     private async void Media_Changed(object? sender, EventArgs args)
     {
         if (!_loaded) return;
-        if (_media?.IsReady == true) ShowStatus(_media.IsBuffering ? "در حال آماده‌سازی پخش…" : string.Empty);
+        if (_media?.IsReady == true) ShowStatus(_media.IsBuffering ? Localization.GetString("MusicHome/Buffering") : string.Empty);
         if (_media is { IsReady: true } media && !_videoEnded)
         {
             if (media.IsPlaying) _playRequested = true;
@@ -474,13 +482,31 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         finally { _audioPausePending = false; }
     }
     private void Media_Ended(object? sender, EventArgs args) { _videoEnded = true; UpdateTransport(); UpdateActive(); }
-    private void Media_Failed(object? sender, string message) => ShowStatus("پخش ویدیو انجام نشد. دوباره تلاش کن.", true);
+    private void Media_Failed(object? sender, string message) => ShowLocalizedStatus("MusicHome/VideoFailed", true);
     private void Artwork_Failed(object? sender, string message)
     {
-        if (_loaded && _selected?.IsVideo == false) ShowStatus("نمایش تصویر انجام نشد. دوباره تلاش کن.", true);
+        if (_loaded && _selected?.IsVideo == false) ShowLocalizedStatus("MusicHome/ImageFailed", true);
     }
+    private void HeroLocalizationChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (!_loaded || args.PropertyName != nameof(LocalizationService.Revision)) return;
+        var statusKey = _statusResourceKey;
+        var statusError = _statusIsError;
+        EmptyText.Text = ViewModel?.StatusText ?? Localization.GetString("MusicHome/NoFeatures");
+        UpdatePresentation();
+        if (statusKey is not null) ShowLocalizedStatus(statusKey, statusError);
+    }
+
+    private void ShowLocalizedStatus(string resourceKey, bool error = false)
+    {
+        ShowStatus(Localization.GetString(resourceKey), error);
+        _statusResourceKey = resourceKey;
+    }
+
     private void ShowStatus(string text, bool error = false)
     {
+        _statusResourceKey = null;
+        _statusIsError = error;
         StatusText.Text = text;
         StatusPanel.Visibility = string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible;
         RetryButton.Visibility = error ? Visibility.Visible : Visibility.Collapsed;
@@ -517,7 +543,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
             }
             if (_loaded && version == _selectionVersion) media.IsMuted = !media.IsMuted;
         }
-        catch (Exception exception) { AppLog.Error("Featured video audio could not be changed.", exception); ShowStatus("تغییر صدای ویدیو انجام نشد."); }
+        catch (Exception exception) { AppLog.Error("Featured video audio could not be changed.", exception); ShowLocalizedStatus("MusicHome/VolumeFailed"); }
         UpdateTransport();
     }
 
@@ -567,7 +593,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         {
             FavoriteButton.IsChecked = item.LikedByMe;
             if (!succeeded) ShowStatus(model.ActionStatusText);
-            else AccessibilityAnnouncements.Announce(FavoriteButton, item.LikedByMe ? "آهنگ پسندیده شد" : "پسند آهنگ برداشته شد", "hero-like");
+            else AccessibilityAnnouncements.Announce(FavoriteButton, item.LikedByMe ? Localization.GetString("MusicHome/TrackLiked") : Localization.GetString("MusicHome/TrackUnliked"), "hero-like");
         }
     }
     private async void Refresh_Click(object sender, RoutedEventArgs args)
@@ -587,17 +613,27 @@ public sealed partial class DiscoveryFeatureHero : UserControl
             var data = new DataPackage();
             data.SetText($"mizon://music/{item.MusicPublicId:D}");
             Clipboard.SetContent(data);
-            ShowStatus("لینک آهنگ کپی شد.");
+            ShowLocalizedStatus("MusicHome/LinkCopied");
             AccessibilityAnnouncements.Announce(StatusText, StatusText.Text, "hero-copy");
         }
-        catch (Exception exception) { AppLog.Error("Featured music link could not be copied.", exception); ShowStatus("کپی لینک انجام نشد."); }
+        catch (Exception exception) { AppLog.Error("Featured music link could not be copied.", exception); ShowLocalizedStatus("MusicHome/CopyFailed"); }
     }
     private async void Save_Click(object sender, RoutedEventArgs args)
     {
+        try { await SaveCurrentAsync(); }
+        catch (OperationCanceledException) { }
+        catch (Exception exception) { AppLog.Error("Featured media export failed.", exception); }
+    }
+
+    private async Task SaveCurrentAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
         if (_saving || _selected is not { } item || ViewModel is not { } model) return;
         _saving = true;
         var version = _selectionVersion;
-        var token = _selectionCancellation?.Token ?? CancellationToken.None;
+        using var request = CancellationTokenSource.CreateLinkedTokenSource(
+            cancellationToken, _selectionCancellation?.Token ?? CancellationToken.None);
+        var token = request.Token;
         try
         {
             var info = await model.GetMediaAsync(item, token);
@@ -607,23 +643,24 @@ public sealed partial class DiscoveryFeatureHero : UserControl
             if (!_loaded || version != _selectionVersion) return;
             var picker = new FileSavePicker { SuggestedFileName = Path.GetFileNameWithoutExtension(info.FileName) };
             var extension = Path.GetExtension(info.FileName);
-            picker.FileTypeChoices.Add(item.IsVideo ? "ویدیو" : "تصویر", new List<string> { string.IsNullOrEmpty(extension) ? ".bin" : extension });
+            picker.FileTypeChoices.Add(item.IsVideo ? Localization.GetString("MusicHome/Video") : Localization.GetString("MusicHome/Image"), new List<string> { string.IsNullOrEmpty(extension) ? ".bin" : extension });
             WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(App.MainMizonWindow));
-            var target = await picker.PickSaveFileAsync();
+            var target = await picker.PickSaveFileAsync().AsTask(token);
             token.ThrowIfCancellationRequested();
             if (!_loaded || version != _selectionVersion) return;
             if (target is not null)
             {
-                var source = await StorageFile.GetFileFromPathAsync(path);
-                await source.CopyAndReplaceAsync(target);
-                if (_loaded && version == _selectionVersion) ShowStatus("فایل ذخیره شد.");
+                var source = await StorageFile.GetFileFromPathAsync(path).AsTask(token);
+                await source.CopyAndReplaceAsync(target).AsTask(token);
+                if (_loaded && version == _selectionVersion) ShowLocalizedStatus("MusicHome/Saved");
             }
         }
-        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
         catch (Exception exception)
         {
             AppLog.Error("Featured media export failed.", exception);
-            if (_loaded && version == _selectionVersion) ShowStatus("ذخیرهٔ فایل انجام نشد.");
+            if (_loaded && version == _selectionVersion) ShowLocalizedStatus("MusicHome/SaveFailed");
+            throw;
         }
         finally
         {

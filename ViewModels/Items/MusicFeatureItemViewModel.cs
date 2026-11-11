@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using Microsoft.UI.Xaml.Media;
 using Mizon.API.Client.Responses.Musics;
 using Mizon.Windows.Common;
@@ -10,6 +11,14 @@ namespace Mizon.Windows.ViewModels.Items;
 /// <summary>One server-owned selection. Images are shared thumbnails; the hero uses the cached original path.</summary>
 public sealed partial class MusicFeatureItemViewModel : ViewModelBase
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
+    public void RefreshLocalization()
+    {
+        UpdateLocalizedText();
+        OnPropertyChanged(string.Empty);
+    }
+
     private MusicFeatureItemResponse _response = new();
     private string _imagePath = string.Empty;
     private ImageSource? _previewImage;
@@ -33,11 +42,11 @@ public sealed partial class MusicFeatureItemViewModel : ViewModelBase
     public int DisplaySeconds => Math.Clamp(_response.DisplaySeconds, 3, 60);
     public string Title => _response.Title ?? string.Empty;
     public string? PersianTitle => _response.PersianTitle;
-    public string DisplayTitle => string.IsNullOrWhiteSpace(PersianTitle) ? Title : PersianTitle;
+    public string DisplayTitle => Localization.IsPersian && !string.IsNullOrWhiteSpace(PersianTitle) ? PersianTitle : Title;
     public string Artist => _artist;
     public string ArtistText => _artist;
-    public string GenreText => _genre;
-    public string GenreTitle => _genre;
+    public string GenreText => string.Join(" Â· ", _response.Genres.Select(genre => Localization.IsPersian && !string.IsNullOrWhiteSpace(genre.PersianTitle) ? genre.PersianTitle : genre.Title));
+    public string GenreTitle => GenreText;
     public string? PrimaryAccentColor => _response.PrimaryAccentColor;
     public double DurationSeconds => _response.DurationSeconds is > 0 and < 86400 ? _response.DurationSeconds.Value : 0;
     public string DurationText => DurationSeconds > 0
@@ -45,8 +54,8 @@ public sealed partial class MusicFeatureItemViewModel : ViewModelBase
         : string.Empty;
     public int LikesCount => Math.Max(0, _response.LikesCount);
     public int ViewsCount => Math.Max(0, _response.ViewsCount);
-    public string LikesCountText => LikesCount.ToString("N0", CultureInfo.CurrentCulture);
-    public string ViewsCountText => $"{ViewsCount:N0} بازدید";
+    public string LikesCountText => LikesCount.ToString("N0", CultureInfo.GetCultureInfo(Localization.LanguageTag));
+    public string ViewsCountText => Localization.Format("MusicHome/ViewsCount", ViewsCount);
     public bool LikedByMe => _response.LikedByMe;
     public bool IsLikeBusy { get => _isLikeBusy; internal set => SetField(ref _isLikeBusy, value); }
     public string ImagePath => _imagePath;
@@ -56,19 +65,15 @@ public sealed partial class MusicFeatureItemViewModel : ViewModelBase
     public ImageSource? CoverImage => _previewImage;
     public ImageSource? ArtistProfileImage => _artistProfileImage;
     public bool IsArtworkLoading => _isArtworkLoading;
-    public string ArtworkErrorText => _artworkErrorText;
-    public string AutomationName => $"{(IsVideo ? "ویدیو" : "تصویر")}، {DisplayTitle}، {Artist}، {LikesCountText} پسند";
+    public string ArtworkErrorText => string.IsNullOrEmpty(_artworkErrorText) ? string.Empty : Localization.GetString(_artworkErrorText);
+    public string AutomationName => Localization.Format("MusicHome/FeatureName", Localization.GetString(IsVideo ? "MusicHome/Video" : "MusicHome/Image"), DisplayTitle, Artist, LikesCountText);
 
     internal void Update(MusicFeatureItemResponse response)
     {
         var oldArtworkId = ArtworkMediaPublicId;
         var oldProfileId = _artistProfileMediaPublicId;
         _response = response;
-        _artist = string.Join("، ", response.Contributors.Select(person =>
-            string.Join(" ", new[] { person.FirstName, person.LastName }.Where(part => !string.IsNullOrWhiteSpace(part))))
-            .Where(name => name.Length > 0));
-        _genre = string.Join(" · ", response.Genres.Select(genre =>
-            string.IsNullOrWhiteSpace(genre.PersianTitle) ? genre.Title : genre.PersianTitle));
+        UpdateLocalizedText();
         _artistProfileMediaPublicId = response.Contributors.FirstOrDefault()?.ProfileMediaPublicId;
         if (oldArtworkId != ArtworkMediaPublicId)
         {
@@ -83,6 +88,15 @@ public sealed partial class MusicFeatureItemViewModel : ViewModelBase
         }
         // One typed binding refresh, only when server data arrives; never during resize.
         OnPropertyChanged(string.Empty);
+    }
+
+    private void UpdateLocalizedText()
+    {
+        _artist = string.Join(Localization.IsPersian ? "، " : ", ", _response.Contributors.Select(person =>
+            string.Join(" ", new[] { person.FirstName, person.LastName }.Where(part => !string.IsNullOrWhiteSpace(part))))
+            .Where(name => name.Length > 0));
+        _genre = string.Join(" · ", _response.Genres.Select(genre =>
+            Localization.IsPersian && !string.IsNullOrWhiteSpace(genre.PersianTitle) ? genre.PersianTitle : genre.Title));
     }
 
     internal void SetArtwork(string path)

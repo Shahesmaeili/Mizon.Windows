@@ -5,7 +5,9 @@
     xmlns:controls="using:Mizon.Windows.Controls"
     xmlns:icon="using:FluentIcons.WinUI"
     xmlns:items="using:Mizon.Windows.ViewModels.Items"
-    Loaded="Panel_Loaded" Unloaded="Panel_Unloaded">
+    Loaded="Panel_Loaded" Unloaded="Panel_Unloaded"
+    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+    Language="{x:Bind Localization.LanguageTag, Mode=OneWay}">
     <UserControl.Resources>
         <Style x:Key="StoryButton" TargetType="controls:StoryActionButton">
             <Setter Property="Padding" Value="0"/>
@@ -40,7 +42,7 @@
         Click="Story_Click"
         BorderBrush="Transparent"
         AutomationProperties.Name="{x:Bind StoryAutomationName, Mode=OneWay}"
-        AutomationProperties.HelpText="باز کردن استوری؛ با کلید Enter نیز باز می‌شود.">
+        AutomationProperties.HelpText="{x:Bind Localization.GetString('MusicHome/OpenStoryHelp', Localization.Revision), Mode=OneWay}">
         <Border
           CornerRadius="10"
           BorderThickness="1"
@@ -107,10 +109,10 @@
                     Fill="#86E1C6"
                     Opacity="{x:Bind RingOpacity, Mode=OneWay}"
                     VerticalAlignment="Center" />
-                  <TextBlock
+                  <TextBlock FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
                     Text="{x:Bind ViewStateText, Mode=OneWay}"
                     Foreground="White"
-                    FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+                    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
                     FontSize="8" />
                 </StackPanel>
               </Border>
@@ -124,8 +126,8 @@
                 Visibility="{x:Bind Title, Converter={StaticResource NullOrEmptyToCollapsedConverter}}">
                 <TextBlock
                   Text="{x:Bind Title}"
-                  FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
-                  FlowDirection="RightToLeft"
+                  FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+                  FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
                   TextReadingOrder="DetectFromContent"
                   Foreground="White"
                   FontSize="9"
@@ -147,7 +149,7 @@
               Canvas.ZIndex="1">
               <Grid
                 CornerRadius="9">
-                <TextBlock
+                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
                   Text="{x:Bind CreatorInitials}"
                   FontSize="10"
                   HorizontalAlignment="Center"
@@ -157,10 +159,10 @@
                   Stretch="UniformToFill" />
               </Grid>
             </Border>
-            <TextBlock
+            <TextBlock FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
               Grid.Row="1"
               Text="{x:Bind CreatorDisplayName}"
-              FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+              FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
               FontSize="9"
               TextAlignment="Center"
               TextTrimming="CharacterEllipsis"
@@ -181,15 +183,15 @@
     </DataTemplate>
     </UserControl.Resources>
     <controls:WidgetLoadHost IsLoading="{x:Bind ViewModel.IsHomeStoriesLoading, Mode=OneWay}"
-        SkeletonHeight="230" LoadingText="در حال دریافت استوری‌ها" WidgetName="استوری‌ها">
+        SkeletonHeight="230" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingStories', Localization.Revision), Mode=OneWay}" WidgetName="{x:Bind Localization.GetString('MusicHome/Stories', Localization.Revision), Mode=OneWay}">
         <StackPanel Spacing="9">
-            <controls:FeatureButton Content="تلاش دوباره" Click="Retry_Click" Style="{StaticResource DiscoverySectionActionButton}"
+            <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Content="{x:Bind Localization.GetString('MusicHome/Retry', Localization.Revision), Mode=OneWay}" Click="Retry_Click" Style="{StaticResource DiscoverySectionActionButton}"
                 HorizontalAlignment="Left" Visibility="{x:Bind ViewModel.HomeStoriesRetryVisibility, Mode=OneWay}"
-                AutomationProperties.Name="دریافت دوبارهٔ استوری‌ها"/>
+                AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/RefreshStories', Localization.Revision), Mode=OneWay}"/>
             <ScrollViewer x:Name="StoriesScrollViewer" HorizontalScrollMode="Enabled"
                 HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled"
                 ZoomMode="Disabled" ViewChanging="Rail_ViewChanging"
-                AutomationProperties.Name="استوری‌ها؛ برای مشاهدهٔ موارد بیشتر به صورت افقی پیمایش کنید">
+                AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/StoriesScrollHelp', Localization.Revision), Mode=OneWay}">
                 <Grid ColumnSpacing="10" Height="230">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
@@ -204,7 +206,7 @@
                       Margin="0,7"
                       Click="Add_Click"
                       BorderBrush="{ThemeResource SystemAccentColor}"
-                      AutomationProperties.Name="افزودن استوری">
+                      AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/AddStory', Localization.Revision), Mode=OneWay}">
                       <Border
                         CornerRadius="8"
                         Background="{ThemeResource CardBackgroundFillColorSecondary}"
@@ -252,9 +254,9 @@
                               </LinearGradientBrush>
                             </Border.Background>
                           </Border>
-                          <TextBlock
-                            Text="استوری شما"
-                            FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+                          <TextBlock FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+                            Text="{x:Bind Localization.GetString('MusicHome/YourStory', Localization.Revision), Mode=OneWay}"
+                            FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
                             FontSize="9"
                             Opacity="0.5"
                             HorizontalAlignment="Center"
@@ -284,9 +286,9 @@
                                   VerticalAlignment="Center" />
                               </Grid>
                             </Border>
-                            <TextBlock
-                              Text="افزودن استوری"
-                              FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+                            <TextBlock FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+                              Text="{x:Bind Localization.GetString('MusicHome/AddStory', Localization.Revision), Mode=OneWay}"
+                              FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
                               FontSize="11"
                               HorizontalAlignment="Center" />
                           </StackPanel>
@@ -308,8 +310,8 @@
                         <ItemsRepeater.Layout><StackLayout Orientation="Horizontal" Spacing="10"/></ItemsRepeater.Layout>
                     </ItemsRepeater>
                     <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.HomeStoriesMessage, Mode=OneWay}"
-                        FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" Opacity="0.55"
-                        FlowDirection="RightToLeft" TextAlignment="Start" TextWrapping="Wrap"
+                        FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FontSize="10" Opacity="0.55"
+                        FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextAlignment="Start" TextWrapping="Wrap"
                         MaxWidth="200" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
                 </Grid>
             </ScrollViewer>

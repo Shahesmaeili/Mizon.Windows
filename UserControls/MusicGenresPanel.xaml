@@ -5,14 +5,14 @@
     xmlns:icon="using:FluentIcons.WinUI"
     xmlns:items="using:Mizon.Windows.ViewModels.Items"
     xmlns:uc="using:Mizon.Windows.UserControls"
-    Loaded="Panel_Loaded" Unloaded="Panel_Unloaded">
+    Loaded="Panel_Loaded" Unloaded="Panel_Unloaded"
+    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+    Language="{x:Bind Localization.LanguageTag, Mode=OneWay}">
     <UserControl.Resources>
         <Style x:Key="Caption" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="/Assets/Fonts/IRANSANS.TTF#IRANSans"/>
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="Opacity" Value="0.55"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
-            <Setter Property="FlowDirection" Value="RightToLeft"/>
             <Setter Property="TextAlignment" Value="Start"/>
         </Style>
         <Style x:Key="GenreButton" TargetType="controls:DiscoveryCardButton">
@@ -53,7 +53,7 @@
         Click="Genre_Click"
         HoverBorderBrush="{x:Bind AccentBrush}"
         ToolTipService.ToolTip="{x:Bind Title}"
-        AutomationProperties.Name="{x:Bind AutomationName}">
+        AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}">
           <Grid
             CornerRadius="7">
             <Border
@@ -134,15 +134,15 @@
                 VerticalAlignment="Top"
                 Margin="0,0,44,0"
                 Spacing="5">
-                <TextBlock
+                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
                   Text="{x:Bind Title}"
                   FontSize="19"
                   FontWeight="SemiBold"
                   TextTrimming="CharacterEllipsis" />
                 <TextBlock
                   Text="{x:Bind PersianTitle}"
-                  FlowDirection="RightToLeft" TextReadingOrder="DetectFromContent" TextAlignment="Start"
-                  FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+                  FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextReadingOrder="DetectFromContent" TextAlignment="Start"
+                  FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
                   FontSize="11"
                   Opacity="0.7"
                   TextTrimming="CharacterEllipsis" />
@@ -157,13 +157,13 @@
                   <StackPanel
                     Orientation="Horizontal"
                     Spacing="5">
-                    <TextBlock
-                      Text="{x:Bind MusicsCountText}"
+                    <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+                      Text="{x:Bind MusicsCountText, Mode=OneWay}"
                       FontSize="12"
                       FontWeight="SemiBold" />
-                    <TextBlock
-                      Text="آهنگ"
-                      FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+                    <TextBlock FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+                      Text="{x:Bind Localization.GetString('MusicHome/Track', Localization.Revision), Mode=OneWay}"
+                      FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
                       FontSize="10"
                       Opacity="0.6"
                       VerticalAlignment="Center" />
@@ -182,30 +182,30 @@
       </controls:DiscoveryCardButton>
     </DataTemplate>
     </UserControl.Resources>
-            <controls:WidgetLoadHost IsLoading="{x:Bind ViewModel.IsHomeGenresLoading, Mode=OneWay}" SkeletonHeight="180" LoadingText="در حال دریافت سبک‌های موسیقی" WidgetName="سبک‌های موسیقی">
+            <controls:WidgetLoadHost IsLoading="{x:Bind ViewModel.IsHomeGenresLoading, Mode=OneWay}" SkeletonHeight="180" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingGenres', Localization.Revision), Mode=OneWay}" WidgetName="{x:Bind Localization.GetString('MusicHome/MusicGenres', Localization.Revision), Mode=OneWay}">
               <StackPanel
                 Spacing="10">
-                <uc:DiscoverySectionToolbar Title="هر سبک، یک جهان" Icon="MusicNote1" AccentColor="#F0A4BE">
-                    <controls:FeatureButton Style="{StaticResource DiscoverySectionActionButton}" Click="Clear_Click"
-                        AutomationProperties.Name="همهٔ سبک‌ها">
+                <uc:DiscoverySectionToolbar Title="{x:Bind Localization.GetString('MusicHome/GenreHeading', Localization.Revision), Mode=OneWay}" Icon="MusicNote1" AccentColor="#F0A4BE">
+                    <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Style="{StaticResource DiscoverySectionActionButton}" Click="Clear_Click"
+                        AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/AllGenres', Localization.Revision), Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <icon:SymbolIcon Symbol="ArrowLeft" FontSize="12" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
-                            <TextBlock Text="همهٔ سبک‌ها" FlowDirection="RightToLeft" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" VerticalAlignment="Center"/>
+                            <TextBlock Text="{x:Bind Localization.GetString('MusicHome/AllGenres', Localization.Revision), Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FontSize="10" VerticalAlignment="Center"/>
                         </StackPanel>
                     </controls:FeatureButton>
                 </uc:DiscoverySectionToolbar>
-                <Grid ColumnSpacing="8" FlowDirection="RightToLeft"
+                <Grid ColumnSpacing="8" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
                             Visibility="{x:Bind ViewModel.HomeGenresStatusVisibility, Mode=OneWay}">
                   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                  <TextBlock Text="{x:Bind ViewModel.HomeGenresMessage, Mode=OneWay}" Style="{StaticResource Caption}" TextWrapping="Wrap" />
-                  <controls:FeatureButton Grid.Column="1" Content="تلاش دوباره" Click="Refresh_Click" Style="{StaticResource DiscoverySectionActionButton}"
-                      FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
+                  <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind ViewModel.HomeGenresMessage, Mode=OneWay}" Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                  <controls:FeatureButton Grid.Column="1" Content="{x:Bind Localization.GetString('MusicHome/Retry', Localization.Revision), Mode=OneWay}" Click="Refresh_Click" Style="{StaticResource DiscoverySectionActionButton}"
+                      FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
                       Visibility="{x:Bind ViewModel.HomeGenresRetryVisibility, Mode=OneWay}"
-                      AutomationProperties.Name="دریافت دوبارهٔ سبک‌های موسیقی" />
+                      AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/RefreshGenres', Localization.Revision), Mode=OneWay}" />
                 </Grid>
                 <ScrollViewer
                   x:Name="GenreScroll" ViewChanging="Rail_ViewChanging" ZoomMode="Disabled"
-                  AutomationProperties.Name="دسته‌بندی‌های موسیقی؛ برای موارد بیشتر به صورت افقی پیمایش کنید"
+                  AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/GenresScrollHelp', Localization.Revision), Mode=OneWay}"
                   HorizontalScrollMode="Enabled"
                   HorizontalScrollBarVisibility="Hidden"
                   VerticalScrollMode="Disabled"

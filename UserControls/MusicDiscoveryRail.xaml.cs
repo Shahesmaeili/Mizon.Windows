@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -13,6 +14,8 @@ namespace Mizon.Windows.UserControls;
 
 public sealed partial class MusicDiscoveryRail : UserControl
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
     public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(
         nameof(ItemsSource), typeof(IReadOnlyList<DiscoveryMusicItemViewModel>), typeof(MusicDiscoveryRail),
         new PropertyMetadata(null, ItemsChanged));
@@ -75,6 +78,7 @@ public sealed partial class MusicDiscoveryRail : UserControl
     {
         if (_loaded) return;
         _loaded = true;
+        Bindings.Update();
         RailScroll.AddHandler(PointerWheelChangedEvent, new PointerEventHandler(Rail_Wheel), true);
         UpdateCardWidth(RailScroll.ActualWidth);
         ResetInteraction();
@@ -84,6 +88,7 @@ public sealed partial class MusicDiscoveryRail : UserControl
     {
         if (!_loaded || IsLoaded) return;
         _loaded = false;
+        Bindings.StopTracking();
         RailScroll.RemoveHandler(PointerWheelChangedEvent, new PointerEventHandler(Rail_Wheel));
         DisposeProfilePopup();
         ResetInteraction();
@@ -186,12 +191,12 @@ public sealed partial class MusicDiscoveryRail : UserControl
             PublicId = person.PersonPublicId,
             Kind = ProfilePreviewKind.Person,
             DisplayName = person.DisplayName,
-            Subtitle = string.IsNullOrWhiteSpace(music.PersianGenreTitle) ? "خواننده" : "خواننده · " + music.PersianGenreTitle,
+            Subtitle = string.IsNullOrWhiteSpace(music.DisplayGenre) ? Localization.GetString("MusicHome/Singer") : Localization.GetString("MusicHome/Singer") + " · " + music.DisplayGenre,
             Avatar = person.ProfileImage,
             Banner = music.CoverImage,
-            Detail = "در این آهنگ\n" + music.DisplayTitle,
-            FooterText = music.PublicId == Guid.Empty ? "پیش‌نمایش طراحی" : string.Empty,
-            PrimaryActionText = music.PublicId == Guid.Empty ? string.Empty : "مشاهدهٔ آهنگ",
+            Detail = Localization.Format("MusicHome/InTrack", music.DisplayTitle),
+            FooterText = music.PublicId == Guid.Empty ? Localization.GetString("MusicHome/Preview") : string.Empty,
+            PrimaryActionText = music.PublicId == Guid.Empty ? string.Empty : Localization.GetString("MusicHome/ViewTrack"),
             PrimaryActionSymbol = FluentIcons.Common.Symbol.MusicNote1
         });
     }

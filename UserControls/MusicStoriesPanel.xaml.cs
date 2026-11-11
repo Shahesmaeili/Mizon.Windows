@@ -16,6 +16,8 @@ namespace Mizon.Windows.UserControls;
 
 public sealed partial class MusicStoriesPanel : UserControl
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
     public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
         nameof(ViewModel), typeof(MusicPageViewModel), typeof(MusicStoriesPanel), new PropertyMetadata(null, ViewModelChanged));
 
@@ -60,6 +62,7 @@ public sealed partial class MusicStoriesPanel : UserControl
     {
         if (_loaded) return;
         _loaded = true;
+        Bindings.Update();
         StoriesScrollViewer.AddHandler(PointerWheelChangedEvent, new PointerEventHandler(Rail_Wheel), true);
         AttachSource();
     }
@@ -68,6 +71,7 @@ public sealed partial class MusicStoriesPanel : UserControl
     {
         if (IsLoaded || !_loaded) return;
         _loaded = false;
+        Bindings.StopTracking();
         StoriesScrollViewer.RemoveHandler(PointerWheelChangedEvent, new PointerEventHandler(Rail_Wheel));
         DetachSource();
         StopImages();

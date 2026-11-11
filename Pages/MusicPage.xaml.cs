@@ -7,6 +7,7 @@ using Mizon.Windows.ViewModels;
 using Mizon.Windows.ViewModels.Items;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
@@ -14,6 +15,8 @@ namespace Mizon.Windows.Pages;
 
 public sealed partial class MusicPage : Page
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
     public MusicPageViewModel ViewModel { get; }
     public MusicDiscoveryViewModel Discovery { get; } = new();
     public MusicLibraryViewModel Library { get; }
@@ -57,6 +60,11 @@ public sealed partial class MusicPage : Page
         UpdateLayout(ActualWidth);
         if (_homeWidgetsActive) return;
         _homeWidgetsActive = true;
+        ActivateMcpHome();
+        Localization.PropertyChanged -= MusicHomeLocalizationChanged;
+        Localization.PropertyChanged += MusicHomeLocalizationChanged;
+        RefreshHomeLanguage();
+        Bindings.Update();
         if (Features is null)
         {
             var services = ((App)Application.Current).Services;
@@ -80,6 +88,8 @@ public sealed partial class MusicPage : Page
     {
         if (IsLoaded) return;
         _homeWidgetsActive = false;
+        DeactivateMcpHome();
+        Localization.PropertyChanged -= MusicHomeLocalizationChanged;
         CloseStory();
         _followingStoryPresenter?.Dispose();
         _followingStoryPresenter = null;
@@ -93,6 +103,19 @@ public sealed partial class MusicPage : Page
         // This page is cached. Release account data and compiled-binding subscriptions
         // on departure; reconstruct the small feed only when this page returns.
         Bindings.Update();
+        Bindings.StopTracking();
+    }
+
+    private void MusicHomeLocalizationChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (_homeWidgetsActive && args.PropertyName == nameof(LocalizationService.Revision)) RefreshHomeLanguage();
+    }
+
+    private void RefreshHomeLanguage()
+    {
+        Discovery.RefreshLocalization();
+        ViewModel.RefreshHomeLocalization();
+        Features?.RefreshLocalization();
     }
 
     private async void Library_RefreshRequested(object? sender, EventArgs e) => await Library.RefreshAsync();
@@ -181,8 +204,8 @@ public sealed partial class MusicPage : Page
 
     private async void Stories_RefreshRequested(object? sender, EventArgs args) => await ViewModel.RefreshHomeWidgetsAsync();
 
-    private async void Stories_AddRequested(object? sender, EventArgs args) => await ShowPreviewDialogAsync("استوری جدید",
-        new TextBlock { Text = "یک لحظه، یک آهنگ، یک داستان.\nساخت و انتشار استوری در مرحلهٔ اتصال این طرح تکمیل می‌شود.", TextWrapping = TextWrapping.Wrap, FlowDirection = FlowDirection.RightToLeft });
+    private async void Stories_AddRequested(object? sender, EventArgs args) => await ShowPreviewDialogAsync(Localization.GetString("MusicHome/NewStory"),
+        new TextBlock { Text = Localization.GetString("MusicHome/StoryPreviewExplanation"), TextWrapping = TextWrapping.Wrap, FlowDirection = Localization.FlowDirection });
 
     private async void Stories_StoryRequested(object? sender, UserControls.StoryRequestedEventArgs args)
     {
@@ -294,10 +317,10 @@ public sealed partial class MusicPage : Page
             CornerRadius = new CornerRadius(12),
             Child = new Image { Source = item.CoverImage, Height = 240, Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill }
         });
-        panel.Children.Add(new TextBlock { Text = item.PersianTitle, FontSize = 20, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+        panel.Children.Add(new TextBlock { Text = item.DisplayTitle, FontSize = 20, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
         panel.Children.Add(new TextBlock { Text = item.Artist, Opacity = 0.65 });
-        panel.Children.Add(new TextBlock { Text = $"{item.DurationText}  ·  {item.LikesCountText} لایک", Opacity = 0.6 });
-        panel.Children.Add(new TextBlock { Text = "نمونهٔ طراحی؛ پخش این کارت بعد از اتصال به داده‌های واقعی فعال می‌شود.", TextWrapping = TextWrapping.Wrap, FontSize = 11, Opacity = 0.55, FlowDirection = FlowDirection.RightToLeft });
+        panel.Children.Add(new TextBlock { Text = Localization.Format("MusicHome/PreviewDurationLikes", item.DurationText, item.LikesCountText), Opacity = 0.6 });
+        panel.Children.Add(new TextBlock { Text = Localization.GetString("MusicHome/TrackPreviewExplanation"), TextWrapping = TextWrapping.Wrap, FontSize = 11, Opacity = 0.55, FlowDirection = Localization.FlowDirection });
         await ShowPreviewDialogAsync(item.Title, panel);
     }
 
@@ -307,13 +330,16 @@ public sealed partial class MusicPage : Page
         _dialogOpen = true;
         try
         {
-            await new ContentDialog
+            var dialog = new ContentDialog
             {
                 XamlRoot = XamlRoot, RequestedTheme = ActualTheme,
-                Title = title, Content = content, CloseButtonText = "بستن"
-            }.ShowAsync();
+                FlowDirection = Localization.FlowDirection, FontFamily = Localization.TextFontFamily, Language = Localization.LanguageTag,
+                Title = title, Content = content, CloseButtonText = Localization.GetString("MusicHome/Close")
+            };
+            _mcpPreviewDialog = dialog;
+            await dialog.ShowAsync();
         }
-        finally { _dialogOpen = false; }
+        finally { _mcpPreviewDialog = null; _dialogOpen = false; }
     }
 
     private async void TopArtist_ProfileRequested(object? sender, TopArtistItemViewModel artist)
@@ -328,9 +354,9 @@ public sealed partial class MusicPage : Page
         panel.Children.Add(new TextBlock
         {
             Text = artist.FollowersFullText + "  ·  " + artist.MonthlyListenersFullText,
-            FlowDirection = FlowDirection.RightToLeft, TextWrapping = TextWrapping.Wrap, FontSize = 12
+            FlowDirection = Localization.FlowDirection, TextWrapping = TextWrapping.Wrap, FontSize = 12
         });
-        panel.Children.Add(new TextBlock { Text = "آهنگ‌های این خواننده", FlowDirection = FlowDirection.RightToLeft, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+        panel.Children.Add(new TextBlock { Text = Localization.GetString("MusicHome/ArtistTracks"), FlowDirection = Localization.FlowDirection, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
         foreach (var music in Discovery.GetArtistMusics(artist))
         {
             var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
@@ -344,8 +370,8 @@ public sealed partial class MusicPage : Page
         }
         panel.Children.Add(new TextBlock
         {
-            Text = "پروفایل و آمار نمونهٔ طراحی؛ دنبال‌کردن فعلاً فقط در همین پیش‌نمایش ذخیره می‌شود.",
-            TextWrapping = TextWrapping.Wrap, FlowDirection = FlowDirection.RightToLeft, FontSize = 10, Opacity = 0.55
+            Text = Localization.GetString("MusicHome/ArtistPreviewExplanation"),
+            TextWrapping = TextWrapping.Wrap, FlowDirection = Localization.FlowDirection, FontSize = 10, Opacity = 0.55
         });
         await ShowPreviewDialogAsync(artist.DisplayName, panel);
     }

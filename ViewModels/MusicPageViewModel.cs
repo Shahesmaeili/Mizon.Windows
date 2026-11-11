@@ -81,7 +81,7 @@ public partial class MusicPageViewModel : MainViewModel
     public ObservableCollection<StoryItemViewModel> Stories { get; } = [];
     public ObservableCollection<StoryItemViewModel> HomeStories { get; } = [];
     public bool IsHomeStoriesLoading { get => field; private set => SetField(ref field, value); } = true;
-    public string HomeStoriesMessage { get => field; private set => SetField(ref field, value); } = string.Empty;
+    public string HomeStoriesMessage { get => string.IsNullOrEmpty(field) ? string.Empty : LocalizationService.Current.GetString(field); private set => SetField(ref field, value); } = string.Empty;
 
     public bool IsMusicDownloading
     {

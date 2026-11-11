@@ -3,13 +3,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Mizon.Windows.Controls"
     xmlns:icon="using:FluentIcons.WinUI"
-    Loaded="Card_Loaded" Unloaded="Card_Unloaded">
+    Loaded="Card_Loaded" Unloaded="Card_Unloaded"
+    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+    Language="{x:Bind Localization.LanguageTag, Mode=OneWay}">
     <UserControl.Resources>
         <Style x:Key="ArtistCaption" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="/Assets/Fonts/IRANSANS.TTF#IRANSans"/>
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="Opacity" Value="0.65"/>
-            <Setter Property="FlowDirection" Value="RightToLeft"/>
             <Setter Property="TextReadingOrder" Value="DetectFromContent"/>
             <Setter Property="TextAlignment" Value="Start"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
@@ -28,10 +28,10 @@
         Background="{ThemeResource CardBackgroundFillColorSecondary}">
         <Grid RowSpacing="10">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-            <controls:FeatureButton x:Name="ProfileButton" Style="{StaticResource ArtistProfileAction}" Margin="8,8,8,0"
+            <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="ProfileButton" Style="{StaticResource ArtistProfileAction}" Margin="8,8,8,0"
                 Click="Profile_Click" HorizontalAlignment="Stretch"
                 AutomationProperties.Name="{x:Bind Item.ProfileAutomationName, Mode=OneWay}"
-                AutomationProperties.HelpText="نمایش پروفایل و آهنگ‌های این خواننده؛ آمار این بخش نمونه است">
+                AutomationProperties.HelpText="{x:Bind Localization.GetString('MusicHome/ArtistProfileHelp', Localization.Revision), Mode=OneWay}">
                 <Grid RowSpacing="0" AutomationProperties.AccessibilityView="Raw">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="92"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="32"/>
@@ -56,9 +56,9 @@
                     <Grid Grid.Row="1" ColumnSpacing="8" Margin="6,8,6,0">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel Spacing="3" VerticalAlignment="Center" MinHeight="46">
-                            <TextBlock Text="{x:Bind Item.DisplayName, Mode=OneWay}" Style="{StaticResource ArtistCaption}"
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Item.DisplayName, Mode=OneWay}" Style="{StaticResource ArtistCaption}"
                                 FontSize="15" FontWeight="SemiBold" Opacity="1"/>
-                            <TextBlock Text="{x:Bind Item.GenreTitle, Mode=OneWay}" Style="{StaticResource ArtistCaption}" FontSize="9"/>
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Item.GenreTitle, Mode=OneWay}" Style="{StaticResource ArtistCaption}" FontSize="9"/>
                         </StackPanel>
                         <Border Grid.Column="1" Width="56" Height="56" CornerRadius="28" Padding="3" Margin="0,-28,0,0" VerticalAlignment="Top"
                             Background="{ThemeResource LayerFillColorDefaultBrush}" BorderThickness="1.5">
@@ -73,19 +73,19 @@
                         <StackPanel Spacing="5">
                             <Grid ColumnSpacing="5">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Text="{x:Bind Item.MonthlyListenersText, Mode=OneWay}" FontSize="14" FontWeight="SemiBold" FlowDirection="LeftToRight" TextAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Item.MonthlyListenersText, Mode=OneWay}" FontSize="14" FontWeight="SemiBold" FlowDirection="LeftToRight" TextAlignment="Start" TextTrimming="CharacterEllipsis"/>
                                 <icon:SymbolIcon Grid.Column="1" Symbol="Headphones" FontSize="12" Opacity="0.55" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
                             </Grid>
-                            <TextBlock Text="شنوندهٔ ماهانه" Style="{StaticResource ArtistCaption}" FontSize="9"/>
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Localization.GetString('MusicHome/MonthlyListeners', Localization.Revision), Mode=OneWay}" Style="{StaticResource ArtistCaption}" FontSize="9"/>
                         </StackPanel>
                         <Border Grid.Column="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" Margin="0,2"/>
                         <StackPanel Grid.Column="2" Spacing="5">
                             <Grid ColumnSpacing="5">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Text="{x:Bind Item.FollowersText, Mode=OneWay}" FontSize="14" FontWeight="SemiBold" FlowDirection="LeftToRight" TextAlignment="Right" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Item.FollowersText, Mode=OneWay}" FontSize="14" FontWeight="SemiBold" FlowDirection="LeftToRight" TextAlignment="Start" TextTrimming="CharacterEllipsis"/>
                                 <icon:SymbolIcon Grid.Column="1" Symbol="People" FontSize="12" Opacity="0.55" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
                             </Grid>
-                            <TextBlock Text="دنبال‌کننده" Style="{StaticResource ArtistCaption}" FontSize="9"/>
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Localization.GetString('MusicHome/Followers', Localization.Revision), Mode=OneWay}" Style="{StaticResource ArtistCaption}" FontSize="9"/>
                         </StackPanel>
                     </Grid>
                     <Path x:Name="ActivityPath" Grid.Row="3" Margin="6,9,6,0" Stretch="Fill" StrokeThickness="1.2" Opacity="0.24"
@@ -94,14 +94,14 @@
                     </Path>
                 </Grid>
             </controls:FeatureButton>
-            <controls:FeatureButton x:Name="FollowButton" Grid.Row="1" Margin="12,0,12,12" MinHeight="36"
+            <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="FollowButton" Grid.Row="1" Margin="12,0,12,12" MinHeight="36"
                 Style="{StaticResource DiscoverySectionActionButton}" Click="Follow_Click"
                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                 AutomationProperties.Name="{x:Bind Item.FollowAutomationName, Mode=OneWay}"
-                AutomationProperties.HelpText="دنبال‌کردن آزمایشی؛ فقط در پیش‌نمایش این صفحه نگه داشته می‌شود">
+                AutomationProperties.HelpText="{x:Bind Localization.GetString('MusicHome/DemoFollowHelp', Localization.Revision), Mode=OneWay}">
                 <StackPanel Orientation="Horizontal" Spacing="7">
-                    <TextBlock Text="{x:Bind Item.FollowButtonText, Mode=OneWay}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans"
-                        FontSize="11" FlowDirection="RightToLeft" TextReadingOrder="UseFlowDirection" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Bind Item.FollowButtonText, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+                        FontSize="11" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextReadingOrder="UseFlowDirection" VerticalAlignment="Center"/>
                     <icon:SymbolIcon Symbol="{x:Bind Item.FollowSymbol, Mode=OneWay}" FontSize="13" VerticalAlignment="Center"
                         AutomationProperties.AccessibilityView="Raw"/>
                 </StackPanel>

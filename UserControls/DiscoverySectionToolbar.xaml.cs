@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -10,6 +11,8 @@ namespace Mizon.Windows.UserControls;
 [ContentProperty(Name = nameof(Actions))]
 public sealed partial class DiscoverySectionToolbar : UserControl
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(
         nameof(Title), typeof(string), typeof(DiscoverySectionToolbar), new PropertyMetadata(string.Empty));
     public static readonly DependencyProperty IconProperty = DependencyProperty.Register(
@@ -21,7 +24,23 @@ public sealed partial class DiscoverySectionToolbar : UserControl
 
     private bool? _compact;
 
-    public DiscoverySectionToolbar() => InitializeComponent();
+    public DiscoverySectionToolbar()
+    {
+        InitializeComponent();
+        Loaded += LocalizationLoaded;
+        Unloaded += LocalizationUnloaded;
+    }
+
+    private void LocalizationLoaded(object sender, RoutedEventArgs args) => Bindings.Update();
+    private void LocalizationUnloaded(object sender, RoutedEventArgs args)
+    {
+        if (!IsLoaded) Bindings.StopTracking();
+    }
+
+    // These headers place the title/icon on the visual end; invert only the header
+    // grid in English, leaving the page's independent columns and media untouched.
+    public FlowDirection HeaderLayoutDirection(int revision) =>
+        Localization.IsPersian ? FlowDirection.LeftToRight : FlowDirection.RightToLeft;
 
     public string Title { get => (string)GetValue(TitleProperty); set => SetValue(TitleProperty, value); }
     public Symbol Icon { get => (Symbol)GetValue(IconProperty); set => SetValue(IconProperty, value); }

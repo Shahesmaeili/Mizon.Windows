@@ -29,9 +29,8 @@ public sealed partial class MusicFeaturesViewModel(MizonApi api, MediaDownloader
     public bool HasLoaded { get; private set; }
     public bool HasError { get; private set; }
     public bool HasItems => Items.Count > 0;
-    public string StatusText => HasError ? "دریافت پیشنهادهای میزون انجام نشد. دوباره امتحان کن."
-        : "هنوز پیشنهادی برای نمایش ثبت نشده است.";
-    public string ActionStatusText { get => field; private set => SetField(ref field, value); } = string.Empty;
+    public string StatusText => LocalizationService.Current.GetString(HasError ? "MusicHome/FeatureServiceFailed" : "MusicHome/FeatureServiceEmpty");
+    public string ActionStatusText { get => string.IsNullOrEmpty(field) ? string.Empty : LocalizationService.Current.GetString(field); private set => SetField(ref field, value); } = string.Empty;
     public Visibility EmptyVisibility => HasLoaded && !IsLoading && !HasError && !HasItems ? Visibility.Visible : Visibility.Collapsed;
     public Visibility ErrorVisibility => HasError ? Visibility.Visible : Visibility.Collapsed;
 
@@ -109,7 +108,7 @@ public sealed partial class MusicFeaturesViewModel(MizonApi api, MediaDownloader
         {
             if (item.PreviewImage is not null) continue;
             if (item.ArtworkMediaPublicId is { } id && id != Guid.Empty) item.BeginArtworkLoad();
-            else if (!item.IsVideo) item.SetArtworkError("تصویر این پیشنهاد در دسترس نیست.");
+            else if (!item.IsVideo) item.SetArtworkError("MusicHome/FeatureImageUnavailable");
         }
         var ids = items.SelectMany(item => new[]
         {
@@ -163,7 +162,7 @@ public sealed partial class MusicFeaturesViewModel(MizonApi api, MediaDownloader
             if (!IsCurrent(version, token)) return;
             foreach (var item in items)
                 if (item.ArtworkMediaPublicId == id && item.PreviewImage is null)
-                    item.SetArtworkError("دریافت تصویر انجام نشد. دوباره تلاش کن.");
+                    item.SetArtworkError("MusicHome/FeatureImageFailed");
         }
     }
 
@@ -184,12 +183,12 @@ public sealed partial class MusicFeaturesViewModel(MizonApi api, MediaDownloader
             if (_disposed || linked.IsCancellationRequested || owner != api.GetToken() || owner != _ownerToken) return false;
             if (!response.IsSuccess || response.Content is not { } content)
             {
-                ActionStatusText = "ثبت پسند انجام نشد. دوباره امتحان کن.";
+                ActionStatusText = "MusicHome/LikeFailed";
                 return false;
             }
             foreach (var candidate in Items.Where(candidate => candidate.MusicPublicId == musicId))
                 candidate.ApplyLike(content.LikedByMe, content.LikesCount);
-            ActionStatusText = content.LikedByMe ? "آهنگ پسندیده شد." : "پسند آهنگ برداشته شد.";
+            ActionStatusText = content.LikedByMe ? "MusicHome/LikeSaved" : "MusicHome/UnlikeSaved";
             return true;
         }
         catch (OperationCanceledException) when (linked.IsCancellationRequested) { return false; }
@@ -197,7 +196,7 @@ public sealed partial class MusicFeaturesViewModel(MizonApi api, MediaDownloader
         {
             if (!_disposed && owner == _ownerToken)
             {
-                ActionStatusText = "ثبت پسند انجام نشد. دوباره امتحان کن.";
+                ActionStatusText = "MusicHome/LikeFailed";
                 AppLog.Error("Music feature like could not be updated.", error);
             }
             return false;
@@ -237,6 +236,14 @@ public sealed partial class MusicFeaturesViewModel(MizonApi api, MediaDownloader
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(EmptyVisibility));
         OnPropertyChanged(nameof(ErrorVisibility));
+    }
+
+    public void RefreshLocalization()
+    {
+        if (_disposed) return;
+        foreach (var item in Items) item.RefreshLocalization();
+        OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(ActionStatusText));
     }
 
     public void Dispose()

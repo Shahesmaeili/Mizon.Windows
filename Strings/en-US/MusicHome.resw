@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="HeroName" xml:space="preserve"><value>Mizon featured player</value></data>
+  <data name="LoadingFeatures" xml:space="preserve"><value>Loading featured media</value></data>
+  <data name="FeaturesReady" xml:space="preserve"><value>Featured media is ready</value></data>
+  <data name="FeaturesFailed" xml:space="preserve"><value>Featured media could not be loaded. Try again.</value></data>
+  <data name="LoadingMusic" xml:space="preserve"><value>Loading music</value></data>
+  <data name="TopArtists" xml:space="preserve"><value>Top artists</value></data>
+  <data name="LoadingArtists" xml:space="preserve"><value>Loading artists</value></data>
+  <data name="PreviousArtists" xml:space="preserve"><value>Previous artists</value></data>
+  <data name="NextArtists" xml:space="preserve"><value>Next artists</value></data>
+  <data name="ArtistCountHelp" xml:space="preserve"><value>Number of artists in this list</value></data>
+  <data name="DemoHelp" xml:space="preserve"><value>This section contains design preview data</value></data>
+  <data name="Demo" xml:space="preserve"><value>Design preview</value></data>
+  <data name="DiscoverNext" xml:space="preserve"><value>Your next discovery</value></data>
+  <data name="DiscoverNextSubtitle" xml:space="preserve"><value>A few tracks for your next mood</value></data>
+  <data name="ReturnToMood" xml:space="preserve"><value>Return to that feeling</value></data>
+  <data name="RecentlyPlayed" xml:space="preserve"><value>Recently played</value></data>
+  <data name="DemoFooter" xml:space="preserve"><value>Design preview · Music lists and statistics are sample data</value></data>
+  <data name="Library" xml:space="preserve"><value>Your library</value></data>
+  <data name="LoadingLibrary" xml:space="preserve"><value>Loading your library</value></data>
+  <data name="LibraryReady" xml:space="preserve"><value>Your library is up to date</value></data>
+  <data name="LibraryFailed" xml:space="preserve"><value>Your library could not be loaded. Try again.</value></data>
+  <data name="WeeklyRhythm" xml:space="preserve"><value>Your weekly rhythm</value></data>
+  <data name="LoadingWeeklyRhythm" xml:space="preserve"><value>Loading your weekly rhythm</value></data>
+  <data name="WeeklyRhythmReady" xml:space="preserve"><value>Your weekly rhythm is up to date</value></data>
+  <data name="LatestNews" xml:space="preserve"><value>Latest news</value></data>
+  <data name="LoadingNews" xml:space="preserve"><value>Loading the latest news</value></data>
+  <data name="NewsReady" xml:space="preserve"><value>The latest news is ready</value></data>
+  <data name="Trending" xml:space="preserve"><value>On the wave</value></data>
+  <data name="LoadingTrending" xml:space="preserve"><value>Loading trending music</value></data>
+  <data name="TrendingReady" xml:space="preserve"><value>Trending music is up to date</value></data>
+  <data name="FriendsListening" xml:space="preserve"><value>What are your friends listening to?</value></data>
+  <data name="LoadingFriends" xml:space="preserve"><value>Loading friends’ activity</value></data>
+  <data name="FriendsReady" xml:space="preserve"><value>Friends’ activity is up to date</value></data>
+  <data name="FriendsFailed" xml:space="preserve"><value>Friends’ activity could not be loaded. Try again.</value></data>
+  <data name="ResetModel" xml:space="preserve"><value>Reset model rotation</value></data>
+  <data name="RotateHint" xml:space="preserve"><value>Drag to rotate</value></data>
+  <data name="LatestTracks" xml:space="preserve"><value>Latest tracks</value></data>
+  <data name="Rating" xml:space="preserve"><value>Rating</value></data>
+  <data name="Followers" xml:space="preserve"><value>Followers</value></data>
+  <data name="Track" xml:space="preserve"><value>Tracks</value></data>
+  <data name="PreviousArtist" xml:space="preserve"><value>Previous artist</value></data>
+  <data name="NextArtist" xml:space="preserve"><value>Next artist</value></data>
+  <data name="ViewProfile" xml:space="preserve"><value>View profile</value></data>
+  <data name="ArtistProfile" xml:space="preserve"><value>Artist profile</value></data>
+  <data name="Profile" xml:space="preserve"><value>Profile</value></data>
+  <data name="Follow" xml:space="preserve"><value>Follow</value></data>
+  <data name="FeaturedVideo" xml:space="preserve"><value>Mizon featured video</value></data>
+  <data name="OpenFeature" xml:space="preserve"><value>Open featured track details</value></data>
+  <data name="PlayerControls" xml:space="preserve"><value>Featured player controls</value></data>
+  <data name="PlayerControlsHelp" xml:space="preserve"><value>Playback, volume and media saving controls</value></data>
+  <data name="DisplayControls" xml:space="preserve"><value>Playback controls</value></data>
+  <data name="PausePresentation" xml:space="preserve"><value>Pause presentation</value></data>
+  <data name="ResumePresentation" xml:space="preserve"><value>Resume presentation</value></data>
+  <data name="UnmuteVideo" xml:space="preserve"><value>Unmute video</value></data>
+  <data name="MuteVideo" xml:space="preserve"><value>Mute video</value></data>
+  <data name="VideoVolume" xml:space="preserve"><value>Video volume</value></data>
+  <data name="PresentationPosition" xml:space="preserve"><value>Presentation position</value></data>
+  <data name="PlayInMizon" xml:space="preserve"><value>Play track in Mizon</value></data>
+  <data name="VideoFullWindow" xml:space="preserve"><value>Show video in full window</value></data>
+  <data name="SaveMedia" xml:space="preserve"><value>Save image or video</value></data>
+  <data name="CopyMusicLink" xml:space="preserve"><value>Copy track link</value></data>
+  <data name="RefreshFeatures" xml:space="preserve"><value>Refresh featured media</value></data>
+  <data name="PreviousFeature" xml:space="preserve"><value>Previous feature</value></data>
+  <data name="NextFeature" xml:space="preserve"><value>Next feature</value></data>
+  <data name="WithYou" xml:space="preserve"><value>Listening with you</value></data>
+  <data name="DiscoverTrack" xml:space="preserve"><value>Discover a track</value></data>
+  <data name="LikeFeature" xml:space="preserve"><value>Like featured track</value></data>
+  <data name="LikeTrack" xml:space="preserve"><value>Like track</value></data>
+  <data name="Retry" xml:space="preserve"><value>Try again</value></data>
+  <data name="RetryMedia" xml:space="preserve"><value>Try loading this media again</value></data>
+  <data name="DownloadingVideo" xml:space="preserve"><value>Downloading video</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="RefreshMizonFeatures" xml:space="preserve"><value>Refresh Mizon featured media</value></data>
+  <data name="OpenTrackHelp" xml:space="preserve"><value>Press Enter to open this track</value></data>
+  <data name="LoadingGenres" xml:space="preserve"><value>Loading music genres</value></data>
+  <data name="MusicGenres" xml:space="preserve"><value>Music genres</value></data>
+  <data name="GenreHeading" xml:space="preserve"><value>Every genre, a new world</value></data>
+  <data name="AllGenres" xml:space="preserve"><value>All genres</value></data>
+  <data name="RefreshGenres" xml:space="preserve"><value>Refresh music genres</value></data>
+  <data name="GenresScrollHelp" xml:space="preserve"><value>Music genres. Scroll horizontally for more.</value></data>
+  <data name="OpenStoryHelp" xml:space="preserve"><value>Open story. You can also press Enter.</value></data>
+  <data name="LoadingStories" xml:space="preserve"><value>Loading stories</value></data>
+  <data name="Stories" xml:space="preserve"><value>Stories</value></data>
+  <data name="RefreshStories" xml:space="preserve"><value>Refresh stories</value></data>
+  <data name="StoriesScrollHelp" xml:space="preserve"><value>Stories. Scroll horizontally for more.</value></data>
+  <data name="AddStory" xml:space="preserve"><value>Add story</value></data>
+  <data name="YourStory" xml:space="preserve"><value>Your story</value></data>
+  <data name="ArtistProfileHelp" xml:space="preserve"><value>View this artist’s profile and tracks. Statistics are sample data.</value></data>
+  <data name="MonthlyListeners" xml:space="preserve"><value>Monthly listeners</value></data>
+  <data name="DemoFollowHelp" xml:space="preserve"><value>Preview follow. Stored only within this page’s design preview.</value></data>
+  <data name="NoFeatures" xml:space="preserve"><value>No featured media is available yet.</value></data>
+  <data name="PreparingVideo" xml:space="preserve"><value>Preparing video…</value></data>
+  <data name="VideoFailed" xml:space="preserve"><value>Video could not be played. Try again.</value></data>
+  <data name="UnlikeTrack" xml:space="preserve"><value>Unlike track</value></data>
+  <data name="Liked" xml:space="preserve"><value>Liked</value></data>
+  <data name="NotLiked" xml:space="preserve"><value>Not liked</value></data>
+  <data name="VideoPosition" xml:space="preserve"><value>Video position in seconds</value></data>
+  <data name="ImagePosition" xml:space="preserve"><value>Image display time in seconds</value></data>
+  <data name="DownloadingImage" xml:space="preserve"><value>Loading image…</value></data>
+  <data name="Selected" xml:space="preserve"><value>Selected</value></data>
+  <data name="Buffering" xml:space="preserve"><value>Buffering…</value></data>
+  <data name="ImageFailed" xml:space="preserve"><value>Image could not be displayed. Try again.</value></data>
+  <data name="VolumeFailed" xml:space="preserve"><value>Video volume could not be changed.</value></data>
+  <data name="TrackLiked" xml:space="preserve"><value>Track liked</value></data>
+  <data name="TrackUnliked" xml:space="preserve"><value>Track unliked</value></data>
+  <data name="LinkCopied" xml:space="preserve"><value>Track link copied.</value></data>
+  <data name="CopyFailed" xml:space="preserve"><value>Link could not be copied.</value></data>
+  <data name="Video" xml:space="preserve"><value>Video</value></data>
+  <data name="Image" xml:space="preserve"><value>Image</value></data>
+  <data name="Saved" xml:space="preserve"><value>File saved.</value></data>
+  <data name="SaveFailed" xml:space="preserve"><value>File could not be saved.</value></data>
+  <data name="Singer" xml:space="preserve"><value>Artist</value></data>
+  <data name="Preview" xml:space="preserve"><value>Design preview</value></data>
+  <data name="ViewTrack" xml:space="preserve"><value>View track</value></data>
+  <data name="NewStory" xml:space="preserve"><value>New story</value></data>
+  <data name="StoryPreviewExplanation" xml:space="preserve"><value>A moment, a track, a story.
+Story publishing will be available when this preview is connected.</value></data>
+  <data name="TrackPreviewExplanation" xml:space="preserve"><value>Design preview. Playback will be available when this card is connected to real data.</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="ArtistTracks" xml:space="preserve"><value>Tracks by this artist</value></data>
+  <data name="ArtistPreviewExplanation" xml:space="preserve"><value>Profile and statistics are a design preview. Following is currently stored only in this preview.</value></data>
+  <data name="GenresFailed" xml:space="preserve"><value>Genres could not be loaded. Try again.</value></data>
+  <data name="NoGenres" xml:space="preserve"><value>No genres are available yet.</value></data>
+  <data name="StoriesFailed" xml:space="preserve"><value>Stories could not be loaded. Try again.</value></data>
+  <data name="NoStories" xml:space="preserve"><value>No active stories have been published yet.</value></data>
+  <data name="FeatureServiceFailed" xml:space="preserve"><value>Featured media could not be loaded. Try again.</value></data>
+  <data name="FeatureServiceEmpty" xml:space="preserve"><value>No featured media is available yet.</value></data>
+  <data name="FeatureImageUnavailable" xml:space="preserve"><value>The image for this feature is unavailable.</value></data>
+  <data name="FeatureImageFailed" xml:space="preserve"><value>Image could not be loaded. Try again.</value></data>
+  <data name="LikeFailed" xml:space="preserve"><value>Your like could not be saved. Try again.</value></data>
+  <data name="LikeSaved" xml:space="preserve"><value>Track liked.</value></data>
+  <data name="UnlikeSaved" xml:space="preserve"><value>Track unliked.</value></data>
+  <data name="NoGenreDemo" xml:space="preserve"><value>No sample tracks are available for this genre. Showing all previews.</value></data>
+  <data name="Following" xml:space="preserve"><value>Following</value></data>
+  <data name="Viewed" xml:space="preserve"><value>Seen</value></data>
+  <data name="New" xml:space="preserve"><value>New</value></data>
+  <data name="Story" xml:space="preserve"><value>Story</value></data>
+  <data name="NewEntry" xml:space="preserve"><value>New entry</value></data>
+  <data name="ArtistLabel" xml:space="preserve"><value>ARTIST</value></data>
+  <data name="PageName" xml:space="preserve"><value>Music home</value></data>
+  <data name="PageHelp" xml:space="preserve"><value>Featured music, stories, library and friends’ music activity</value></data>
+  <data name="ProfileName" xml:space="preserve"><value>View {0}’s profile</value></data>
+  <data name="ArtistProfileName" xml:space="preserve"><value>{0}’s profile</value></data>
+  <data name="DiscoverTrackName" xml:space="preserve"><value>Discover {0}</value></data>
+  <data name="OpenTrackName" xml:space="preserve"><value>Open {0}</value></data>
+  <data name="PlayTrackName" xml:space="preserve"><value>Play {0} in Mizon</value></data>
+  <data name="FeatureNumber" xml:space="preserve"><value>Feature {0}: {1}</value></data>
+  <data name="DemoFollowed" xml:space="preserve"><value>Followed {0} in this preview</value></data>
+  <data name="DemoUnfollowed" xml:space="preserve"><value>Unfollowed {0} in this preview</value></data>
+  <data name="DemoFollowName" xml:space="preserve"><value>Follow {0} in preview</value></data>
+  <data name="DemoUnfollowName" xml:space="preserve"><value>Unfollow {0} in preview</value></data>
+  <data name="FollowersCount" xml:space="preserve"><value>{0:N0} followers</value></data>
+  <data name="ListenersCount" xml:space="preserve"><value>{0:N0} monthly listeners</value></data>
+  <data name="ViewsCount" xml:space="preserve"><value>{0:N0} views</value></data>
+  <data name="LikesDuration" xml:space="preserve"><value>{0} likes · {1}</value></data>
+  <data name="MusicName" xml:space="preserve"><value>{0}, {1}, {2}, duration {3}, {4} likes</value></data>
+  <data name="FeatureName" xml:space="preserve"><value>{0}, {1}, {2}, {3} likes</value></data>
+  <data name="GenreName" xml:space="preserve"><value>{0} genre, {1:N0} tracks</value></data>
+  <data name="PreviewDurationLikes" xml:space="preserve"><value>{0} · {1} likes</value></data>
+  <data name="InTrack" xml:space="preserve"><value>On this track
+{0}</value></data>
+  <data name="MoeinAttribution" xml:space="preserve"><value>Moein · AI-assisted 3D reconstruction from photographs · Photos: Mehrshad Adkins 01 / Mehrshad.Adkins · CC BY-SA 4.0 — Profile data is illustrative</value></data>
+  <data name="AyaAttribution" xml:space="preserve"><value>AYA2 · 3D Lab. Kyoto · CC BY 4.0 — Human scan for an illustrative profile</value></data>
+  <data name="KanaAttribution" xml:space="preserve"><value>Kana · ddd (endonoriko) · CC BY 4.0 — Human model for an illustrative profile</value></data>
+  <data name="SpotlightOneDescription" xml:space="preserve"><value>The sound of bright nights, between pop melodies and the city’s pulse.</value></data>
+  <data name="SpotlightTwoDescription" xml:space="preserve"><value>Quiet stories with a touch of jazz, for moments you want to keep.</value></data>
+  <data name="SpotlightThreeDescription" xml:space="preserve"><value>Fresh rhythms and sounds without boundaries, one step ahead of the next wave.</value></data>
+  <data name="ArtistGenreOne" xml:space="preserve"><value>Pop · Electronic</value></data>
+  <data name="ArtistGenreTwo" xml:space="preserve"><value>Pop · Jazz</value></data>
+  <data name="ArtistGenreThree" xml:space="preserve"><value>Electronic · Hip-Hop</value></data>
+</root>

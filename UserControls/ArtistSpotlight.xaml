@@ -8,14 +8,14 @@
     xmlns:items="using:Mizon.Windows.ViewModels.Items"
     Loaded="Spotlight_Loaded"
     Unloaded="Spotlight_Unloaded"
-    SizeChanged="Spotlight_SizeChanged">
+    SizeChanged="Spotlight_SizeChanged"
+    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+    Language="{x:Bind Localization.LanguageTag, Mode=OneWay}">
     <UserControl.Resources>
         <SolidColorBrush x:Key="SpotlightAccent" Color="#A6C8FF" />
         <Style x:Key="Caption" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="/Assets/Fonts/IRANSANS.TTF#IRANSans" />
             <Setter Property="FontSize" Value="10" />
             <Setter Property="Opacity" Value="0.6" />
-            <Setter Property="FlowDirection" Value="RightToLeft" />
             <Setter Property="TextAlignment" Value="Right" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
@@ -132,18 +132,18 @@
                         </Border.Background>
                     </Border>
                     <StackPanel x:Name="StageLabel" IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="14,14,0,0" Spacing="4">
-                        <TextBlock x:Name="StageCaption" Text="ARTIST" FontSize="8" CharacterSpacing="230" Opacity="0.45" />
-                        <TextBlock x:Name="PageNumber" Text="01 / 03" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource SpotlightAccent}" Opacity="0.8" />
+                        <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" x:Name="StageCaption" Text="{x:Bind Localization.GetString('MusicHome/ArtistLabel', Localization.Revision), Mode=OneWay}" FontSize="8" CharacterSpacing="230" Opacity="0.45" />
+                        <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" x:Name="PageNumber" Text="01 / 03" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource SpotlightAccent}" Opacity="0.8" />
                     </StackPanel>
                     <Grid VerticalAlignment="Bottom" Margin="10,0,8,9" ColumnSpacing="5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Button Style="{StaticResource NavButton}" Click="ResetModel_Click" AutomationProperties.Name="بازنشانی زاویهٔ مدل" ToolTipService.ToolTip="بازنشانی زاویهٔ مدل" common:CursorExtensions.Cursor="Hand">
+                        <Button FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Style="{StaticResource NavButton}" Click="ResetModel_Click" AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/ResetModel', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Localization.GetString('MusicHome/ResetModel', Localization.Revision), Mode=OneWay}" common:CursorExtensions.Cursor="Hand">
                             <icon:SymbolIcon Symbol="ArrowCounterclockwise" FontSize="12" />
                         </Button>
-                        <TextBlock x:Name="RotationHint" Grid.Column="1" Text="بگیر و بچرخان" Style="{StaticResource Caption}" FontSize="8" VerticalAlignment="Center" IsHitTestVisible="False" />
+                        <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" x:Name="RotationHint" Grid.Column="1" Text="{x:Bind Localization.GetString('MusicHome/RotateHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource Caption}" FontSize="8" VerticalAlignment="Center" IsHitTestVisible="False" />
                     </Grid>
                 </Grid>
                 <Grid x:Name="TrackArea" Grid.Column="1" Margin="10,16,10,16" RowSpacing="8">
@@ -152,7 +152,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <Grid x:Name="TracksHeading">
-                        <TextBlock Text="آخرین آهنگ‌ها" Style="{StaticResource Caption}" FontSize="11" Opacity="0.85" />
+                        <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Localization.GetString('MusicHome/LatestTracks', Localization.Revision), Mode=OneWay}" Style="{StaticResource Caption}" FontSize="11" Opacity="0.85" />
                         <icon:SymbolIcon Symbol="MusicNote1" FontSize="10" HorizontalAlignment="Left" Foreground="{StaticResource SpotlightAccent}" />
                     </Grid>
                     <ScrollViewer x:Name="TracksScroll" Grid.Row="1" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Hidden" ZoomMode="Disabled" PointerWheelChanged="TracksScroll_PointerWheelChanged">
@@ -162,21 +162,21 @@
                             </ItemsRepeater.Layout>
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate x:DataType="items:DiscoveryMusicItemViewModel">
-                                    <Button Style="{StaticResource TrackButton}" Tag="{x:Bind}" Click="Track_Click" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Title}" ToolTipService.ToolTip="{x:Bind Title}">
+                                    <Button FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Style="{StaticResource TrackButton}" Tag="{x:Bind}" Click="Track_Click" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Title}" ToolTipService.ToolTip="{x:Bind Title}">
                                         <Grid ColumnSpacing="6">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="32" />
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Spacing="1" VerticalAlignment="Center">
-                                                <TextBlock Text="{x:Bind PersianTitle}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" TextAlignment="Right" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind DisplayTitle, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FontSize="10" TextAlignment="Start" TextTrimming="CharacterEllipsis" />
                                                 <Grid ColumnSpacing="5">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto" />
                                                         <ColumnDefinition Width="*" />
                                                     </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{x:Bind DurationText}" FontSize="8" Opacity="0.45" />
-                                                    <TextBlock Grid.Column="1" Text="{x:Bind Title}" FontSize="8" Opacity="0.45" TextAlignment="Right" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind DurationText}" FontSize="8" Opacity="0.45" />
+                                                    <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Grid.Column="1" Text="{x:Bind Title}" FontSize="8" Opacity="0.45" TextAlignment="Start" TextTrimming="CharacterEllipsis" />
                                                 </Grid>
                                             </StackPanel>
                                             <Grid Grid.Column="1" Width="32" Height="32" CornerRadius="7" Background="#12FFFFFF">
@@ -207,11 +207,11 @@
                                 <ColumnDefinition Width="3" />
                             </Grid.ColumnDefinitions>
                             <StackPanel x:Name="ArtistIdentity" Spacing="3" FlowDirection="LeftToRight">
-                                <TextBlock x:Name="ArtistName" FontSize="24" FontWeight="Bold" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" HorizontalAlignment="Right" TextAlignment="Right" FlowDirection="RightToLeft" TextTrimming="CharacterEllipsis" AutomationProperties.HeadingLevel="Level2" />
+                                <TextBlock x:Name="ArtistName" FontSize="24" FontWeight="Bold" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" HorizontalAlignment="Right" TextAlignment="Start" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextTrimming="CharacterEllipsis" AutomationProperties.HeadingLevel="Level2" />
                                 <Border HorizontalAlignment="Right" CornerRadius="5" Padding="6,1" Background="#09FFFFFF">
                                     <StackPanel Orientation="Horizontal" Spacing="5">
                                         <icon:SymbolIcon Symbol="MusicNote1" FontSize="9" VerticalAlignment="Center" Foreground="{StaticResource SpotlightAccent}" Opacity="0.75" />
-                                        <TextBlock x:Name="GenreText" Style="{StaticResource Caption}" FontSize="9" Foreground="{StaticResource SpotlightAccent}" Opacity="0.95" />
+                                        <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" x:Name="GenreText" Style="{StaticResource Caption}" FontSize="9" Foreground="{StaticResource SpotlightAccent}" Opacity="0.95" />
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
@@ -232,9 +232,9 @@
                                     <Grid ColumnSpacing="3">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                         <icon:SymbolIcon Symbol="Star" Foreground="#F3CF8D" FontSize="9" VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="1" Text="امتیاز" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
+                                        <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Grid.Column="1" Text="{x:Bind Localization.GetString('MusicHome/Rating', Localization.Revision), Mode=OneWay}" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
                                     </Grid>
-                                    <TextBlock x:Name="RatingText" Grid.Row="1" Style="{StaticResource MetricValue}" Foreground="#F3CF8D" VerticalAlignment="Center" />
+                                    <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" x:Name="RatingText" Grid.Row="1" Style="{StaticResource MetricValue}" Foreground="#F3CF8D" VerticalAlignment="Center" />
                                 </Grid>
                             </Border>
                             <Border Grid.Column="1" Style="{StaticResource MetricTile}">
@@ -246,9 +246,9 @@
                                     <Grid ColumnSpacing="3">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                         <icon:SymbolIcon Symbol="People" Foreground="{StaticResource SpotlightAccent}" FontSize="9" VerticalAlignment="Center" Opacity="0.8" />
-                                        <TextBlock Grid.Column="1" Text="دنبال‌کننده" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
+                                        <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Grid.Column="1" Text="{x:Bind Localization.GetString('MusicHome/Followers', Localization.Revision), Mode=OneWay}" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
                                     </Grid>
-                                    <TextBlock x:Name="FollowersText" Grid.Row="1" Style="{StaticResource MetricValue}" VerticalAlignment="Center" />
+                                    <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" x:Name="FollowersText" Grid.Row="1" Style="{StaticResource MetricValue}" VerticalAlignment="Center" />
                                 </Grid>
                             </Border>
                             <Border Grid.Column="2" Style="{StaticResource MetricTile}">
@@ -260,9 +260,9 @@
                                     <Grid ColumnSpacing="3">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                         <icon:SymbolIcon Symbol="MusicNote1" Foreground="{StaticResource SpotlightAccent}" FontSize="9" VerticalAlignment="Center" Opacity="0.8" />
-                                        <TextBlock Grid.Column="1" Text="آهنگ" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
+                                        <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Grid.Column="1" Text="{x:Bind Localization.GetString('MusicHome/Track', Localization.Revision), Mode=OneWay}" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
                                     </Grid>
-                                    <TextBlock x:Name="SongsText" Grid.Row="1" Style="{StaticResource MetricValue}" VerticalAlignment="Center" />
+                                    <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" x:Name="SongsText" Grid.Row="1" Style="{StaticResource MetricValue}" VerticalAlignment="Center" />
                                 </Grid>
                             </Border>
                         </Grid>
@@ -276,7 +276,7 @@
                                 <Viewbox x:Name="ListeningChart" Width="48" Height="16" Stretch="Fill" VerticalAlignment="Center" IsHitTestVisible="False">
                                     <Path x:Name="ListeningTrend" Width="250" Height="56" Stretch="Fill" Stroke="{StaticResource SpotlightAccent}" StrokeThickness="5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.6" AutomationProperties.AccessibilityView="Raw" />
                                 </Viewbox>
-                                <TextBlock x:Name="ListenerText" Grid.Column="1" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" x:Name="ListenerText" Grid.Column="1" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
                                 <icon:SymbolIcon Grid.Column="2" Symbol="Headphones" FontSize="11" Foreground="{StaticResource SpotlightAccent}" VerticalAlignment="Center" Opacity="0.85" />
                             </Grid>
                         </Border>
@@ -290,22 +290,22 @@
                         <Border Background="#0BFFFFFF" CornerRadius="10" BorderThickness="1" BorderBrush="#18FFFFFF" Padding="1,0">
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                <Button x:Name="PreviousButton" Style="{StaticResource DockNavigationButton}" Click="Previous_Click" ToolTipService.ToolTip="خوانندهٔ قبلی" AutomationProperties.Name="خوانندهٔ قبلی" common:CursorExtensions.Cursor="Hand">
+                                <Button FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="PreviousButton" Style="{StaticResource DockNavigationButton}" Click="Previous_Click" ToolTipService.ToolTip="{x:Bind Localization.GetString('MusicHome/PreviousArtist', Localization.Revision), Mode=OneWay}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/PreviousArtist', Localization.Revision), Mode=OneWay}" common:CursorExtensions.Cursor="Hand">
                                     <icon:SymbolIcon Symbol="ChevronLeft" FontSize="11" />
                                 </Button>
                                 <Border Grid.Column="1" HorizontalAlignment="Left" Width="1" Margin="0,8" Background="#18FFFFFF" IsHitTestVisible="False" />
-                                <Button x:Name="NextButton" Grid.Column="1" Style="{StaticResource DockNavigationButton}" Click="Next_Click" ToolTipService.ToolTip="خوانندهٔ بعدی" AutomationProperties.Name="خوانندهٔ بعدی" common:CursorExtensions.Cursor="Hand">
+                                <Button FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="NextButton" Grid.Column="1" Style="{StaticResource DockNavigationButton}" Click="Next_Click" ToolTipService.ToolTip="{x:Bind Localization.GetString('MusicHome/NextArtist', Localization.Revision), Mode=OneWay}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/NextArtist', Localization.Revision), Mode=OneWay}" common:CursorExtensions.Cursor="Hand">
                                     <icon:SymbolIcon Symbol="ChevronRight" FontSize="11" />
                                 </Button>
                             </Grid>
                         </Border>
-                        <Button x:Name="ProfileButton" Grid.Column="1" Click="Profile_Click" Height="32" MinWidth="0" MinHeight="0" Padding="6,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10" Background="#08FFFFFF" BorderBrush="#18FFFFFF" ToolTipService.ToolTip="دیدن پروفایل" AutomationProperties.Name="پروفایل خواننده" common:CursorExtensions.Cursor="Hand">
+                        <Button FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="ProfileButton" Grid.Column="1" Click="Profile_Click" Height="32" MinWidth="0" MinHeight="0" Padding="6,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" CornerRadius="10" Background="#08FFFFFF" BorderBrush="#18FFFFFF" ToolTipService.ToolTip="{x:Bind Localization.GetString('MusicHome/ViewProfile', Localization.Revision), Mode=OneWay}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/ArtistProfile', Localization.Revision), Mode=OneWay}" common:CursorExtensions.Cursor="Hand">
                             <StackPanel Orientation="Horizontal" Spacing="5">
                                 <icon:SymbolIcon Symbol="Person" FontSize="12" VerticalAlignment="Center" />
-                                <TextBlock x:Name="ProfileText" Text="پروفایل" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" />
+                                <TextBlock FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" x:Name="ProfileText" Text="{x:Bind Localization.GetString('MusicHome/Profile', Localization.Revision), Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FontSize="10" />
                             </StackPanel>
                         </Button>
-                        <Button x:Name="FollowButton" Grid.Column="2" Click="Follow_Click" Content="دنبال کردن" Width="84" Height="32" MinWidth="0" MinHeight="0" Padding="6,0" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="10" FontWeight="SemiBold" CornerRadius="10" Background="{StaticResource SpotlightAccent}" Foreground="#FF111924" BorderThickness="0" common:CursorExtensions.Cursor="Hand" />
+                        <Button x:Name="FollowButton" Grid.Column="2" Click="Follow_Click" Content="{x:Bind Localization.GetString('MusicHome/Follow', Localization.Revision), Mode=OneWay}" Width="84" Height="32" MinWidth="0" MinHeight="0" Padding="6,0" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FontSize="10" FontWeight="SemiBold" CornerRadius="10" Background="{StaticResource SpotlightAccent}" Foreground="#FF111924" BorderThickness="0" common:CursorExtensions.Cursor="Hand" />
                     </Grid>
                 </Grid>
             </Grid>

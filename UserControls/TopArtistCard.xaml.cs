@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Mizon.Windows.Common;
@@ -9,6 +10,8 @@ namespace Mizon.Windows.UserControls;
 /// <summary>A translucent artist card with independent profile and follow actions.</summary>
 public sealed partial class TopArtistCard : UserControl
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
     public static readonly DependencyProperty ItemProperty = DependencyProperty.Register(
         nameof(Item), typeof(TopArtistItemViewModel), typeof(TopArtistCard), new PropertyMetadata(null, ItemChanged));
 
@@ -82,7 +85,7 @@ public sealed partial class TopArtistCard : UserControl
         if (Item is not { } artist) return;
         artist.IsFollowed = !artist.IsFollowed;
         AccessibilityAnnouncements.Announce(FollowButton,
-            artist.IsFollowed ? $"{artist.DisplayName} در این پیش‌نمایش دنبال شد" : $"دنبال‌کردن {artist.DisplayName} در این پیش‌نمایش لغو شد",
+            artist.IsFollowed ? Localization.Format("MusicHome/DemoFollowed", artist.DisplayName) : Localization.Format("MusicHome/DemoUnfollowed", artist.DisplayName),
             "ArtistPreviewFollow");
     }
 }

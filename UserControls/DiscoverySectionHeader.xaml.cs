@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -7,6 +8,8 @@ namespace Mizon.Windows.UserControls;
 
 public sealed partial class DiscoverySectionHeader : UserControl
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(
         nameof(Title), typeof(string), typeof(DiscoverySectionHeader), new PropertyMetadata(string.Empty));
     public static readonly DependencyProperty IconProperty = DependencyProperty.Register(
@@ -17,7 +20,23 @@ public sealed partial class DiscoverySectionHeader : UserControl
     public static readonly DependencyProperty IsCompactProperty = DependencyProperty.Register(
         nameof(IsCompact), typeof(bool), typeof(DiscoverySectionHeader), new PropertyMetadata(false, CompactChanged));
 
-    public DiscoverySectionHeader() => InitializeComponent();
+    public DiscoverySectionHeader()
+    {
+        InitializeComponent();
+        Loaded += LocalizationLoaded;
+        Unloaded += LocalizationUnloaded;
+    }
+
+    private void LocalizationLoaded(object sender, RoutedEventArgs args) => Bindings.Update();
+    private void LocalizationUnloaded(object sender, RoutedEventArgs args)
+    {
+        if (!IsLoaded) Bindings.StopTracking();
+    }
+
+    // These headers place the title/icon on the visual end; invert only the header
+    // grid in English, leaving the page's independent columns and media untouched.
+    public FlowDirection HeaderLayoutDirection(int revision) =>
+        Localization.IsPersian ? FlowDirection.LeftToRight : FlowDirection.RightToLeft;
 
     public string Title
     {
