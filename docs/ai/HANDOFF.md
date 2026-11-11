@@ -2,6 +2,14 @@
 
 Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Taskbar placement recovery — 2026-11-11
+
+The profile/mood host now reclaims the rightmost suitable free space when Windows
+removes an item. Removed the sticky previous-position shortcut; unchanged bounds
+still skip native movement. Debug x64 build, 36 actual companion layout checks and
+159 existing MCP access checks passed. Live shell UI was not manipulated.
+See [evidence and limits](tasks/2026-11-11-taskbar-reclaim-space.md).
+
 ## Header/taskbar presence — 2026-11-11
 
 Header and taskbar share a bottom-right online/offline badge with a transparent

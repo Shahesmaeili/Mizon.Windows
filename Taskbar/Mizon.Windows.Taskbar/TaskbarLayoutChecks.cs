@@ -23,12 +23,11 @@ internal static class TaskbarLayoutChecks
         Check(TaskbarLayoutLocator.TryPlace(layout, 99, 300, 45, 10, out var wide) && wide.Right - wide.Left == 300, "arbitrary wide host fits using its whole width");
         Check(!TaskbarLayoutLocator.TryPlace(layout, 99, 340, 45, 10, out _), "wide host with insufficient clearance is hidden");
         Check(!TaskbarLayoutLocator.TryPlace(layout, 99, 45, 61, 10, out _), "host taller than the taskbar is hidden");
-        var previous = Rect(400, 1027, 45, 45);
-        Check(TaskbarLayoutLocator.TryPlace(layout, 99, 45, 45, 10, out var retained, previous) && retained.Left == 400, "a safe previous placement does not jitter");
-        Check(TaskbarLayoutLocator.TryPlace(layout, 99, 100, 45, 10, out var resized, previous) && resized.Right - resized.Left == 100, "resized host does not retain stale footprint");
+        Check(TaskbarLayoutLocator.TryPlace(layout, 99, 45, 45, 10, out var repeated) && repeated.Equals(avatar), "unchanged occupancy produces the same bounds without jitter");
+        Check(TaskbarLayoutLocator.TryPlace(layout, 99, 100, 45, 10, out var resized) && resized.Right - resized.Left == 100, "resized host uses its complete current footprint");
         // The profile and mood are one 80-DIP host, including their eight-DIP gap.
         // An interval that fits only the old avatar must never clip the second action.
-        Check(TaskbarLayoutLocator.TryPlace(layout, 99, 80, 36, 8, out var pair, avatar)
+        Check(TaskbarLayoutLocator.TryPlace(layout, 99, 80, 36, 8, out var pair)
             && pair.Left == 467 && pair.Right == 547 && pair.Top == 1032 && pair.Bottom == 1068,
             "adding mood repositions the complete pair instead of retaining avatar-only bounds");
         var avatarOnlyGap = new TaskbarLayout(1, root,
@@ -37,9 +36,20 @@ internal static class TaskbarLayoutChecks
             && !TaskbarLayoutLocator.TryPlace(avatarOnlyGap, 99, 80, 36, 8, out _),
             "avatar-only clearance hides the complete pair rather than overlapping another taskbar item");
         var pairBlocked = new TaskbarLayout(1, root, [.. layout.Items, Item("new app", Rect(511, 1020, 36, 60))]);
-        Check(TaskbarLayoutLocator.TryPlace(pairBlocked, 99, 80, 36, 8, out var movedPair, pair)
-            && movedPair.Right + 8 <= 511,
-            "an item appearing under the mood half invalidates the previous pair placement");
+        Check(TaskbarLayoutLocator.TryPlace(pairBlocked, 99, 80, 36, 8, out var movedPair)
+            && movedPair.Left == 423 && movedPair.Right == 503,
+            "an item appearing under the pair moves the entire host left");
+        Check(TaskbarLayoutLocator.TryPlace(layout, 99, 80, 36, 8, out var restoredPair)
+            && restoredPair.Equals(pair), "removing the temporary item restores the original right-aligned position");
+        for (var cycle = 0; cycle < 4; cycle++)
+        {
+            Check(TaskbarLayoutLocator.TryPlace(pairBlocked, 99, 80, 36, 8, out var blockedAgain) && blockedAgain.Equals(movedPair)
+                && TaskbarLayoutLocator.TryPlace(layout, 99, 80, 36, 8, out var restoredAgain) && restoredAgain.Equals(pair),
+                "repeated insertion and removal never accumulates leftward drift");
+        }
+        var reordered = layout with { Items = layout.Items.Reverse().Concat(layout.Items.Take(1)).ToArray() };
+        Check(TaskbarLayoutLocator.TryPlace(reordered, 99, 80, 36, 8, out var samePair) && samePair.Equals(pair),
+            "automation ordering and duplicate obstacles cannot move an unchanged layout");
         Check(!TaskbarLayoutLocator.TryPlace(new(1, root, []), 99, 45, 45, 10, out _), "missing occupancy evidence never guesses");
         Check(!TaskbarLayoutLocator.TryPlace(new(1, root, [Item("full", root)]), 99, 45, 45, 10, out _), "fully occupied taskbar hides host");
         var shifted = new TaskbarLayout(1, Rect(-1920, -60, 1920, 60),
@@ -54,6 +64,23 @@ internal static class TaskbarLayoutChecks
         Check(TaskbarLayoutLocator.TryPlace(scaled, 99, 120, 54, 12, out var scaledPair)
             && scaledPair.Right == 1188 && scaledPair.Left == 1068 && scaledPair.Top == 18,
             "150-percent scaling reserves both 36-DIP buttons and their eight-DIP gap");
+        void CheckReturnAfterRemoval(TaskbarLayout baseline, TaskbarLayoutItem temporary, int width, int height, int clearance)
+        {
+            var blocked = baseline with { Items = baseline.Items.Append(temporary).ToArray() };
+            Check(TaskbarLayoutLocator.TryPlace(baseline, 99, width, height, clearance, out var before)
+                && TaskbarLayoutLocator.TryPlace(blocked, 99, width, height, clearance, out var during)
+                && !before.Equals(during)
+                && TaskbarLayoutLocator.TryPlace(baseline, 99, width, height, clearance, out var after)
+                && after.Equals(before), "temporary occupancy removal restores placement for " + temporary.AutomationId);
+        }
+        CheckReturnAfterRemoval(layout, Item("avatar only", Rect(511, 1020, 36, 60)), 36, 36, 8);
+        CheckReturnAfterRemoval(scaled, Item("150-percent DPI", Rect(1120, 0, 80, 90)), 120, 54, 12);
+        CheckReturnAfterRemoval(shifted, Item("negative coordinates", Rect(-1350, -60, 50, 60)), 200, 45, 10);
+        CheckReturnAfterRemoval(vertical, Item("vertical taskbar", Rect(0, 450, 60, 50)), 45, 100, 10);
+        var noSpace = new TaskbarLayout(1, root, new[] { Item("temporary full occupancy", root) });
+        Check(!TaskbarLayoutLocator.TryPlace(noSpace, 99, 80, 36, 8, out _)
+            && TaskbarLayoutLocator.TryPlace(layout, 99, 80, 36, 8, out var visibleAgain) && visibleAgain.Equals(pair),
+            "host returns to its preferred position after all free space was temporarily occupied");
         var own = new TaskbarLayout(1, root, [.. layout.Items, Item("self", Rect(198, 1020, 357, 60), 99)]);
         Check(TaskbarLayoutLocator.TryPlace(own, 99, 45, 45, 10, out _), "own child is excluded from occupancy");
         foreach (var item in layout.Items)

@@ -39,7 +39,6 @@ internal sealed partial class TaskbarProfileHost : IDisposable
     private DateTime _snapshotWriteTime;
     private bool _layoutPending;
     private long _layoutGeneration;
-    private Native.Rect? _screenBounds;
     private string? _lastPlacement;
     private nint _layoutHook;
 
@@ -244,7 +243,7 @@ internal sealed partial class TaskbarProfileHost : IDisposable
             var hostWidth = Math.Max(16, (int)Math.Round((hasMood ? 80 : 36) * scale));
             var hostHeight = Math.Max(16, (int)Math.Round(36 * scale));
             var padding = (int)Math.Round(8 * scale);
-            if (!TaskbarLayoutLocator.TryPlace(layout, Environment.ProcessId, hostWidth, hostHeight, padding, out var screenBounds, _screenBounds))
+            if (!TaskbarLayoutLocator.TryPlace(layout, Environment.ProcessId, hostWidth, hostHeight, padding, out var screenBounds))
             {
                 HideHost(window);
                 LogPlacement("Taskbar layout: no verified free interval fits the profile and mood; child hidden.");
@@ -260,7 +259,6 @@ internal sealed partial class TaskbarProfileHost : IDisposable
                 LogPlacement("Taskbar layout: profile and mood are outside the visible monitor; child paused and hidden.");
                 return;
             }
-            _screenBounds = screenBounds;
             var clientBounds = screenBounds;
             Native.MapWindowPoints(0, taskbar, ref clientBounds, 2);
             var bounds = new RectInt32(clientBounds.Left, clientBounds.Top, hostWidth, hostHeight);
@@ -479,7 +477,6 @@ internal sealed partial class TaskbarProfileHost : IDisposable
         _bounds = default;
         _loadedImagePath = null;
         _imageLoading = false;
-        _screenBounds = null;
         _lastPlacement = null;
     }
 

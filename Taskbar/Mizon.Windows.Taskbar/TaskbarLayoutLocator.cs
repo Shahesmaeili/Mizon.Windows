@@ -79,7 +79,7 @@ internal static unsafe partial class TaskbarLayoutLocator
             || item.ClassName.Contains("Widgets", StringComparison.Ordinal);
     }
 
-    internal static bool TryPlace(TaskbarLayout layout, int ownProcessId, int width, int height, int padding, out Native.Rect placement, Native.Rect? previous = null)
+    internal static bool TryPlace(TaskbarLayout layout, int ownProcessId, int width, int height, int padding, out Native.Rect placement)
     {
         placement = default;
         var root = layout.Bounds;
@@ -101,20 +101,9 @@ internal static unsafe partial class TaskbarLayoutLocator
         // No positive evidence about the shell layout is safer than a guessed placement.
         if (occupied.Count == 0) return false;
         occupied.Sort(static (first, second) => first.Start.CompareTo(second.Start));
-        if (previous is { } retained)
-        {
-            var retainedStart = horizontal ? retained.Left : retained.Top;
-            var retainedEnd = horizontal ? retained.Right : retained.Bottom;
-            var retainedCrossStart = horizontal ? retained.Top : retained.Left;
-            var expectedCrossStart = horizontal ? root.Top + (root.Bottom - root.Top - height) / 2 : root.Left + (root.Right - root.Left - width) / 2;
-            if (retained.Right - retained.Left == width && retained.Bottom - retained.Top == height && retainedCrossStart == expectedCrossStart
-                && retainedStart >= start + padding && retainedEnd <= end - padding
-                && !occupied.Any(block => retainedStart < block.End + padding && retainedEnd > block.Start - padding))
-            {
-                placement = retained;
-                return true;
-            }
-        }
+        // Always anchor to the rightmost available gap (bottommost when vertical).
+        // A still-safe old position can be stranded after a temporary item disappears.
+        // Identical layouts produce identical bounds; the host skips redundant moves.
         var cursor = start;
         (int Start, int End)? preferred = null;
         foreach (var block in occupied)
