@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Pages;
 using Mizon.Windows.ViewModels.Items;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mizon.Windows.Services;
@@ -13,39 +14,61 @@ public static class FollowingActivityNavigation
     public static async Task OpenAsync(FriendMusicActivityItemViewModel activity, NavigationService navigation,
         Func<FollowingActivityStoryPresenter> storyPresenter, Image? coverSource = null)
     {
-        if (!activity.CanOpen) return;
         try
         {
-            switch (activity.TargetKind)
-            {
-                case FollowingActivityTargetKind.Story:
-                    await storyPresenter().OpenAsync(activity.StoryPublicId!.Value, coverSource);
-                    break;
-                case FollowingActivityTargetKind.MusicComment:
-                    var musicId = activity.MusicPublicId!.Value;
-                    var commentId = activity.MusicCommentPublicId!.Value;
-                    if (navigation.CurrentInternalPage is MusicsPage current && current.MusicPublicId == musicId)
-                        await current.OpenCommentAsync(commentId);
-                    else
-                        navigation.InternalNavigate(typeof(MusicsPage), new()
-                        {
-                            [PageConstants.MUSIC_ID] = musicId,
-                            [PageConstants.MUSIC_COMMENT_ID] = commentId
-                        }, coverSource);
-                    break;
-                case FollowingActivityTargetKind.Music:
-                    navigation.InternalNavigate(typeof(MusicsPage), new()
-                    {
-                        [PageConstants.MUSIC_ID] = activity.MusicPublicId!.Value
-                    }, coverSource);
-                    break;
-                case FollowingActivityTargetKind.MusicPlaylist:
-                    navigation.OpenMusicPlaylist(activity.MusicPlaylistPublicId!.Value);
-                    break;
-            }
+            await TryOpenAsync(activity, navigation, storyPresenter, coverSource);
         }
         catch (OperationCanceledException) { }
         catch (Exception error) { AppLog.Error("Following activity destination could not be opened.", error); }
+    }
+
+    internal static async Task<bool> TryOpenAsync(FriendMusicActivityItemViewModel activity, NavigationService navigation,
+        Func<FollowingActivityStoryPresenter> storyPresenter, Image? coverSource = null, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!activity.CanOpen) return false;
+        switch (activity.TargetKind)
+        {
+            case FollowingActivityTargetKind.Story:
+                if (activity.StoryPublicId is not { } storyId || storyId == Guid.Empty) return false;
+                var presenter = storyPresenter();
+                await presenter.OpenAsync(storyId, coverSource, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                return presenter.ActiveViewer is not null && presenter.CurrentStoryPublicId == storyId;
+            case FollowingActivityTargetKind.MusicComment:
+                if (activity.MusicPublicId is not { } commentMusicId || commentMusicId == Guid.Empty
+                    || activity.MusicCommentPublicId is not { } commentId || commentId == Guid.Empty) return false;
+                if (navigation.CurrentInternalPage is MusicsPage current && current.MusicPublicId == commentMusicId)
+                {
+                    await current.OpenCommentAsync(commentId, cancellationToken);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    return ReferenceEquals(navigation.CurrentInternalPage, current);
+                }
+                cancellationToken.ThrowIfCancellationRequested();
+                navigation.InternalNavigate(typeof(MusicsPage), new()
+                {
+                    [PageConstants.MUSIC_ID] = commentMusicId,
+                    [PageConstants.MUSIC_COMMENT_ID] = commentId
+                }, coverSource);
+                // Navigation intentionally unloads the source page and cancels its
+                // lifetime. Validate the destination without treating that as failure.
+                return navigation.CurrentInternalPage is MusicsPage commentPage && commentPage.MusicPublicId == commentMusicId;
+            case FollowingActivityTargetKind.Music:
+                if (activity.MusicPublicId is not { } musicId || musicId == Guid.Empty) return false;
+                cancellationToken.ThrowIfCancellationRequested();
+                navigation.InternalNavigate(typeof(MusicsPage), new()
+                {
+                    [PageConstants.MUSIC_ID] = musicId
+                }, coverSource);
+                return navigation.CurrentInternalPage is MusicsPage musicPage && musicPage.MusicPublicId == musicId;
+            case FollowingActivityTargetKind.MusicPlaylist:
+                if (activity.MusicPlaylistPublicId is not { } playlistId || playlistId == Guid.Empty) return false;
+                cancellationToken.ThrowIfCancellationRequested();
+                navigation.OpenMusicPlaylist(playlistId);
+                return navigation.CurrentInternalPage is MusicPlaylistPage playlistPage && playlistPage.PlaylistPublicId == playlistId;
+            default:
+                return false;
+        }
     }
 
     internal static Image? FindCover(DependencyObject? root)

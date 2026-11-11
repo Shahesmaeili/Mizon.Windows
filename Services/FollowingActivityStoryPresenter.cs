@@ -28,6 +28,7 @@ public sealed class FollowingActivityStoryPresenter : IDisposable
     private Guid _storyId;
     private bool _disposed;
     internal Guid? CurrentStoryPublicId => _viewer is null ? null : _storyId;
+    internal StoryViewer? ActiveViewer => _viewer;
 
     public FollowingActivityStoryPresenter()
     {
