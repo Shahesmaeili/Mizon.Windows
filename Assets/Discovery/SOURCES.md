@@ -42,6 +42,12 @@ be located. These are decorative editorial samples, not artist/profile API data.
 The reference screenshot itself is not shipped. Crops, silhouettes, typography,
 numbers and badges are native XAML/Composition layers, not flattened screenshots.
 
+`Common/StoryOrbitGeometry.cs` separately traces the six photo and outer-paper
+boundaries from the 1600x1200 reference. Hidden portions under lettering/badges
+are smooth interpolations; this is not the designer's original vector file.
+The paper outline is not a scaled copy of the photo. Layout/crop coordinates
+share that reference space; surrounding matte remains translucent over Mizon.
+
 | Asset | Source / credit | Provenance |
 | --- | --- | --- |
 | `orbit-models.png` | Original fictional adult portrait generated using built-in imagegen, 2026-11-11 | User-approved similar replacement for the left image; not a photograph of Sasha Belyaeva or a reconstruction of the exact original. Final prompt below. |

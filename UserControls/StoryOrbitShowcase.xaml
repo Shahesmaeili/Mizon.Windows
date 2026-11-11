@@ -8,15 +8,16 @@
     <ScrollViewer x:Name="ArtworkScroll" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
                   VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled" ZoomMode="Disabled"
                   IsTabStop="False" IsVerticalScrollChainingEnabled="True" PointerWheelChanged="Artwork_Wheel">
-        <Grid x:Name="Cards" MaxWidth="1130" Padding="8,4,8,8" ColumnSpacing="12" HorizontalAlignment="Center">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <uc:StoryOrbitCard Variant="0" MaxWidth="350" VerticalAlignment="Center" Title="Models"/>
-            <uc:StoryOrbitCard Grid.Column="1" Variant="1" MaxWidth="350" VerticalAlignment="Center" Title="Illustration"/>
-            <uc:StoryOrbitCard Grid.Column="2" Variant="2" MaxWidth="350" VerticalAlignment="Center" Title="Team"/>
-        </Grid>
+        <Viewbox x:Name="Cards" MaxWidth="1130" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center">
+            <!-- One coordinate system preserves the unequal shapes, vertical
+                 staggering and whitespace instead of fitting three equal tiles. -->
+            <!-- Extra space includes the entire soft-shadow falloff and motion;
+                 ScrollViewer must not cut off the paper edge's lower shadow. -->
+            <Canvas Width="1440" Height="560">
+                <uc:StoryOrbitCard Canvas.Left="40" Variant="0" Title="Models"/>
+                <uc:StoryOrbitCard Canvas.Left="480" Variant="1" Title="Illustration"/>
+                <uc:StoryOrbitCard Canvas.Left="920" Variant="2" Title="Team"/>
+            </Canvas>
+        </Viewbox>
     </ScrollViewer>
 </UserControl>

@@ -4,6 +4,11 @@ Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion 
 
 ## Floating story editorial strip — 2026-11-11
 
+The follow-up now traces six separate photo/paper contours from the supplied
+1600x1200 reference, replacing scaled duplicate outlines. A shared layout space
+preserves the reference's staggering/crops; tinted ambient and neutral contact
+shadows include reserved edge space. See [traced frames and validation](tasks/2026-11-11-story-orbit-traced-frames.md).
+
 MusicPage now places three decorative organic portrait collages immediately
 above MusicStories. Native Composition animates portrait, contours, badge and
 typography independently. The reference-match follow-up uses the original

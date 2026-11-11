@@ -6,56 +6,44 @@
     Loaded="Card_Loaded" Unloaded="Card_Unloaded"
     IsHitTestVisible="False" IsTabStop="False" FlowDirection="LeftToRight" Language="en-US"
     AutomationProperties.AccessibilityView="Raw">
-    <!-- A fixed design coordinate space keeps the clip and portrait aligned at
-         every DPI/width. Only the surrounding Viewbox participates in resizing. -->
-    <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
-        <Canvas Width="330" Height="350" AutomationProperties.AccessibilityView="Raw">
-            <TextBlock x:Name="Edition" Canvas.Left="231" Canvas.Top="8"
-                       FontFamily="/Assets/Fonts/BodoniModa.ttf#Bodoni Moda" FontSize="64" TextLineBounds="Tight"
-                       RenderTransformOrigin="0.5,0.5"/>
-            <Grid x:Name="Contour" Canvas.Left="27" Canvas.Top="48" Width="260" Height="230"
-                  RenderTransformOrigin="0.5,0.5">
-                <Grid.RenderTransform><CompositeTransform ScaleX="1.055" ScaleY="1.055" Rotation="-6"/></Grid.RenderTransform>
-                <Path x:Name="Outline" StrokeThickness="1.1" Opacity="0.45"/>
+    <!-- All three collages share the reference's coordinate scale. The parent
+         scales the complete arrangement once, including typography and gaps. -->
+    <Canvas Width="480" Height="520" AutomationProperties.AccessibilityView="Raw">
+        <TextBlock x:Name="Edition" FontFamily="/Assets/Fonts/BodoniModa.ttf#Bodoni Moda"
+                   FontSize="88" TextLineBounds="Tight" RenderTransformOrigin="0,0"/>
+        <!-- The outer paper edge is traced independently of the photograph.
+             Its translucent fill retains the window material between the edges. -->
+        <Grid x:Name="Contour" Width="480" Height="520">
+            <Grid x:Name="AmbientShadowHost"/>
+            <Grid x:Name="ContactShadowHost"/>
+            <Grid Opacity="0.07">
+                <Path x:Name="MatteShape" Stretch="None"/>
             </Grid>
-            <Grid x:Name="EchoContour" Canvas.Left="35" Canvas.Top="43" Width="260" Height="230"
-                  RenderTransformOrigin="0.5,0.5">
-                <Grid.RenderTransform><CompositeTransform ScaleX="1.1" ScaleY="1.1" Rotation="3"/></Grid.RenderTransform>
-                <Path x:Name="EchoOutline" StrokeThickness="0.6" Opacity="0.1"/>
+            <Path x:Name="Outline" Stretch="None" StrokeThickness="1.6" Opacity="0.55"/>
+        </Grid>
+        <Grid x:Name="Artwork" Width="480" Height="520">
+            <Grid x:Name="PictureFrame" Width="480" Height="520">
+                <Grid.Background><SolidColorBrush x:Name="ArtworkColor"/></Grid.Background>
+                <Canvas>
+                    <Image x:Name="Portrait" Stretch="UniformToFill"/>
+                </Canvas>
             </Grid>
-            <Grid x:Name="Artwork" Canvas.Left="32" Canvas.Top="45" Width="260" Height="230">
-                <Grid x:Name="ShadowHost"/>
-                <Path x:Name="ShadowMask" Fill="Black"/>
-                <Grid x:Name="PictureFrame" Width="260" Height="230">
-                    <Grid.Background><SolidColorBrush x:Name="ArtworkColor"/></Grid.Background>
-                    <Canvas>
-                        <Image x:Name="Portrait" Canvas.Left="-10" Canvas.Top="-14"
-                               Width="280" Height="420" Stretch="UniformToFill"/>
-                    </Canvas>
-                </Grid>
-            </Grid>
-            <StackPanel x:Name="Badge" Canvas.Left="47" Canvas.Top="49" Width="32" Spacing="3"
-                        RenderTransformOrigin="0.5,0.5">
-                <TextBlock x:Name="RatingText" FontSize="9" FontFamily="Segoe UI Variable" HorizontalAlignment="Center"
-                           Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-                <Border Width="32" Height="32" CornerRadius="16" Background="Black">
-                    <icon:SymbolIcon Symbol="Star" IconVariant="Filled" FontSize="13"
-                                     Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-            </StackPanel>
-            <!-- The title is a separate foreground layer, never part of the
-                 image clip. Its native alpha shadow stays readable over glass. -->
-            <Grid x:Name="Headline" Canvas.Left="20" Canvas.Top="183" Width="294" Height="92"
-                  RenderTransformOrigin="0.5,0.5">
-                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
-                    <Grid>
-                        <Grid x:Name="TitleShadowHost"/>
-                        <TextBlock x:Name="TitleText" Text="{x:Bind Title, Mode=OneWay}" Foreground="White"
-                                   FontFamily="/Assets/Fonts/BodoniModa.ttf#Bodoni Moda" FontSize="74" FontWeight="Normal" TextLineBounds="Tight"
-                                   TextWrapping="NoWrap" TextTrimming="None"/>
-                    </Grid>
-                </Viewbox>
-            </Grid>
+        </Grid>
+        <Canvas x:Name="Badge" Width="58" Height="70" RenderTransformOrigin="0.5,0.7">
+            <TextBlock x:Name="RatingText" Width="58" FontSize="12" FontFamily="Segoe UI Variable"
+                       TextAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+            <Border Canvas.Left="9" Canvas.Top="28" Width="40" Height="40" CornerRadius="20" Background="Black">
+                <icon:SymbolIcon Symbol="Star" IconVariant="Filled" FontSize="16"
+                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
         </Canvas>
-    </Viewbox>
+        <!-- Lettering deliberately overlaps the silhouette and sits outside
+             its clipping geometry, as in the reference. -->
+        <Grid x:Name="Headline" RenderTransformOrigin="0,0">
+            <Grid x:Name="TitleShadowHost"/>
+            <TextBlock x:Name="TitleText" Text="{x:Bind Title, Mode=OneWay}" Foreground="White"
+                       FontFamily="/Assets/Fonts/BodoniModa.ttf#Bodoni Moda" FontSize="102"
+                       FontWeight="Normal" TextLineBounds="Tight" TextWrapping="NoWrap" TextTrimming="None"/>
+        </Grid>
+    </Canvas>
 </UserControl>
