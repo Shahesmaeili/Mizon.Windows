@@ -7,7 +7,9 @@ using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Markup;
 using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Common;
+using Mizon.Windows.Services;
 using System;
+using System.ComponentModel;
 
 namespace Mizon.Windows.Controls;
 
@@ -22,7 +24,7 @@ public sealed partial class WidgetLoadHost : Grid
     public static readonly DependencyProperty SkeletonHeightProperty = DependencyProperty.Register(
         nameof(SkeletonHeight), typeof(double), typeof(WidgetLoadHost), new PropertyMetadata(180d, Changed));
     public static readonly DependencyProperty LoadingTextProperty = DependencyProperty.Register(
-        nameof(LoadingText), typeof(string), typeof(WidgetLoadHost), new PropertyMetadata("در حال دریافت اطلاعات", Changed));
+        nameof(LoadingText), typeof(string), typeof(WidgetLoadHost), new PropertyMetadata(string.Empty, Changed));
     public static readonly DependencyProperty WidgetNameProperty = DependencyProperty.Register(
         nameof(WidgetName), typeof(string), typeof(WidgetLoadHost), new PropertyMetadata(string.Empty, Changed));
     public static readonly DependencyProperty ReadyTextProperty = DependencyProperty.Register(
@@ -30,7 +32,7 @@ public sealed partial class WidgetLoadHost : Grid
     public static readonly DependencyProperty HasErrorProperty = DependencyProperty.Register(
         nameof(HasError), typeof(bool), typeof(WidgetLoadHost), new PropertyMetadata(false, Changed));
     public static readonly DependencyProperty ErrorTextProperty = DependencyProperty.Register(
-        nameof(ErrorText), typeof(string), typeof(WidgetLoadHost), new PropertyMetadata("دریافت اطلاعات انجام نشد. دوباره امتحان کن.", Changed));
+        nameof(ErrorText), typeof(string), typeof(WidgetLoadHost), new PropertyMetadata(string.Empty, Changed));
 
     private readonly ContentPresenter _body = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly Border _skeleton;
@@ -53,8 +55,7 @@ public sealed partial class WidgetLoadHost : Grid
     {
         _status = new TextBlock
         {
-            FontFamily = new FontFamily("/Assets/Fonts/IRANSANS.TTF#IRANSans"), FontSize = 11,
-            FlowDirection = FlowDirection.RightToLeft, TextAlignment = TextAlignment.Start, Opacity = .7,
+            FontSize = 11, TextAlignment = TextAlignment.Start, Opacity = .7,
             TextReadingOrder = TextReadingOrder.UseFlowDirection, TextWrapping = TextWrapping.Wrap,
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
@@ -73,6 +74,7 @@ public sealed partial class WidgetLoadHost : Grid
         Loaded += Host_Loaded;
         Unloaded += Host_Unloaded;
         EffectiveViewportChanged += Host_EffectiveViewportChanged;
+        UpdateLanguage();
         ApplyState();
     }
 
@@ -84,7 +86,7 @@ public sealed partial class WidgetLoadHost : Grid
         lines.Children.Add(_status);
         for (var i = 0; i < 3; i++)
         {
-            var row = new Grid { ColumnSpacing = 10, FlowDirection = FlowDirection.RightToLeft };
+            var row = new Grid { ColumnSpacing = 10 };
             row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
             row.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
             row.Children.Add(Block(36, 36, 8));
@@ -132,6 +134,7 @@ public sealed partial class WidgetLoadHost : Grid
         {
             _loaded = true;
             AccessibilitySettings.AnimationsEnabledChanged += AnimationsChanged;
+            LocalizationService.Current.PropertyChanged += LanguageChanged;
         }
         if (!ReferenceEquals(_root, XamlRoot))
         {
@@ -140,13 +143,18 @@ public sealed partial class WidgetLoadHost : Grid
             if (_root is not null) _root.Changed += Root_Changed;
         }
         _hostVisible = _root?.IsHostVisible == true;
+        UpdateLanguage();
         ApplyState();
     }
 
     private void Host_Unloaded(object sender, RoutedEventArgs args)
     {
         if (IsLoaded) return; // Responsive column reparenting can deliver a deferred Unloaded event.
-        if (_loaded) AccessibilitySettings.AnimationsEnabledChanged -= AnimationsChanged;
+        if (_loaded)
+        {
+            AccessibilitySettings.AnimationsEnabledChanged -= AnimationsChanged;
+            LocalizationService.Current.PropertyChanged -= LanguageChanged;
+        }
         _loaded = false;
         _inViewport = false;
         _hostVisible = false;
@@ -154,6 +162,35 @@ public sealed partial class WidgetLoadHost : Grid
         _root = null;
         ReleaseEntrance();
         _progress.IsIndeterminate = false;
+    }
+
+    private string EffectiveLoadingText => string.IsNullOrWhiteSpace(LoadingText)
+        ? LocalizationService.Current.GetString("MusicSurface/WidgetLoading") : LoadingText;
+    private string EffectiveErrorText => string.IsNullOrWhiteSpace(ErrorText)
+        ? LocalizationService.Current.GetString("MusicSurface/WidgetLoadFailed") : ErrorText;
+
+    private void LanguageChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (_loaded && args.PropertyName == nameof(LocalizationService.Revision)) UpdateLanguage();
+    }
+
+    private void UpdateLanguage()
+    {
+        var localization = LocalizationService.Current;
+        _status.FontFamily = localization.TextFontFamily;
+        _status.FlowDirection = localization.FlowDirection;
+        // Only the placeholder follows reading order; the widget keeps its own layout.
+        // Existing rows inherit this value without rebuilding or replaying the entrance.
+        _skeleton.FlowDirection = localization.FlowDirection;
+        UpdateStatusText();
+    }
+
+    private void UpdateStatusText()
+    {
+        var loadingText = EffectiveLoadingText;
+        if (_status.Text != loadingText) _status.Text = loadingText;
+        var itemStatus = IsLoading ? loadingText : HasError ? EffectiveErrorText : ReadyText;
+        if (AutomationProperties.GetItemStatus(this) != itemStatus) AutomationProperties.SetItemStatus(this, itemStatus);
     }
 
     /// <summary>Use after setting IsLoading=true when replacing the widget's identity, not on refresh.</summary>
@@ -189,9 +226,7 @@ public sealed partial class WidgetLoadHost : Grid
         if (_skeleton is null) return;
         // Refresh changes state, not the content's visual tree or focus.
         if (!ReferenceEquals(_body.Content, Widget)) _body.Content = Widget;
-        if (_status.Text != LoadingText) _status.Text = LoadingText;
-        var itemStatus = IsLoading ? LoadingText : HasError ? ErrorText : ReadyText;
-        if (AutomationProperties.GetItemStatus(this) != itemStatus) AutomationProperties.SetItemStatus(this, itemStatus);
+        UpdateStatusText();
         var skeletonHeight = double.IsFinite(SkeletonHeight) ? Math.Max(0, SkeletonHeight) : 180;
         if (_skeleton.MinHeight != skeletonHeight) _skeleton.MinHeight = skeletonHeight;
         var initial = IsLoading && !_hasPresented;
@@ -288,7 +323,7 @@ public sealed partial class WidgetLoadHost : Grid
             _pendingLoadingAnnouncement = null;
             // Wait until the current batch of bindings includes HasError. The host remains
             // visible when the skeleton disappears and when existing data is refreshed.
-            var message = loading ? LoadingText : HasError ? ErrorText : ReadyText;
+            var message = loading ? EffectiveLoadingText : HasError ? EffectiveErrorText : ReadyText;
             AccessibilityAnnouncements.Announce(this, message, $"Widget:{WidgetName}");
         });
     }

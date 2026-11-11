@@ -47,7 +47,7 @@
                             </Border>
                         </Grid>
                         <StackPanel Grid.Row="1" Spacing="3">
-                            <TextBlock Text="{x:Bind DisplayTitle}"  FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Stretch"  TextReadingOrder="UseFlowDirection"  TextTrimming="CharacterEllipsis" MaxLines="2" TextWrapping="Wrap" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                            <TextBlock Text="{x:Bind DisplayTitle, Mode=OneWay}"  FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Stretch"  TextReadingOrder="UseFlowDirection"  TextTrimming="CharacterEllipsis" MaxLines="2" TextWrapping="Wrap" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                             <TextBlock Text="{x:Bind Artist}" Style="{StaticResource WaveCaption}" FontSize="10" Foreground="White" Opacity="0.76" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                         </StackPanel>
                         <Grid Grid.Row="2" ColumnSpacing="8" Margin="0,2,0,0">
@@ -57,7 +57,7 @@
                             </Border>
                             <TextBlock Grid.Column="1" Text="{x:Bind DurationText}" Foreground="White" FontSize="9" Opacity="0.62" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                                <TextBlock Text="{x:Bind CompactLikesText}" Foreground="#FFF3DECB" FontSize="11" FontWeight="SemiBold" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                                <TextBlock Text="{x:Bind CompactLikesText, Mode=OneWay}" Foreground="#FFF3DECB" FontSize="11" FontWeight="SemiBold" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                                 <icon:SymbolIcon Symbol="Heart" FontSize="11" Foreground="{StaticResource WaveAccent}" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
                             </StackPanel>
                         </Grid>
@@ -75,13 +75,13 @@
                     </StackPanel>
                     <Grid Grid.Column="1" VerticalAlignment="Center" RowSpacing="2">
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                        <TextBlock Text="{x:Bind DisplayTitle}"  FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Stretch"  TextReadingOrder="UseFlowDirection"  TextTrimming="CharacterEllipsis" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                        <TextBlock Text="{x:Bind DisplayTitle, Mode=OneWay}"  FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Stretch"  TextReadingOrder="UseFlowDirection"  TextTrimming="CharacterEllipsis" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                         <TextBlock Grid.Row="1" Text="{x:Bind Artist}" Style="{StaticResource WaveCaption}" FontSize="8" Opacity="0.55" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                         <Grid Grid.Row="2" ColumnSpacing="5">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                             <TextBlock Text="{x:Bind DurationText}" FontSize="8" Opacity="0.38" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                             <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
-                                <TextBlock Text="{x:Bind CompactLikesText}" FontSize="8" Foreground="{StaticResource WaveAccent}" Opacity="0.8" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                                <TextBlock Text="{x:Bind CompactLikesText, Mode=OneWay}" FontSize="8" Foreground="{StaticResource WaveAccent}" Opacity="0.8" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                                 <icon:SymbolIcon Symbol="Heart" FontSize="8" Foreground="{StaticResource WaveAccent}" Opacity="0.8" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
                             </StackPanel>
                         </Grid>
