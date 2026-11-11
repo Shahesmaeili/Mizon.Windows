@@ -162,7 +162,7 @@
       HorizontalAlignment="Stretch"
       VerticalAlignment="Stretch"
       CornerRadius="12"
-      Stretch="UniformToFill"
+      Stretch="Fill"
       ImageFailed="Artwork_Failed"
       IsHitTestVisible="False"
       AutomationProperties.AccessibilityView="Raw" />

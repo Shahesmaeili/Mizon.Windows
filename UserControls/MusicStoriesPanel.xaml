@@ -67,7 +67,7 @@
               <Image
                 x:Name="CardArtwork"
                 Source="{x:Bind PreviewImage, Mode=OneWay}"
-                Stretch="UniformToFill" />
+                Stretch="Fill" />
               <Border
                 CornerRadius="9,9,0,0"
                 IsHitTestVisible="False">
