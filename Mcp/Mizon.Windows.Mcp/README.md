@@ -58,6 +58,13 @@ same account.
 | `mizon_open_destination` | Open a typed, allowlisted destination through the existing deep-link route handler |
 | `mizon_get_taskbar_pin_state` | Refresh Mizon's actual Windows taskbar pin status, support and availability |
 | `mizon_request_taskbar_pin` | Request Windows' native confirmation to pin Mizon; never confirm it automatically |
+| `mizon_get_vpn_state` | Read bounded state from the active VPN page under independent VPN read consent |
+| `mizon_set_vpn_particles` | Set the VPN page's decorative-particle preference under VPN control consent |
+| `mizon_open_vpn_settings` | Open the fixed Windows VPN settings page; never configure or connect a tunnel |
+
+The VPN page requires its own read/control permissions; older grants default
+both to false. It must be active and signed in, and has no configured tunnel in
+this version. See [VPN contracts and verification](../VPN.md).
 
 Taskbar scopes default to false, including in existing remembered approvals. The
 tools share `TaskbarPinService` with the profile menu and cannot choose another app,

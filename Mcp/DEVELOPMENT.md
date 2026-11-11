@@ -6,7 +6,10 @@ MCP integration verification. This is a standing development requirement, not a
 claim that existing features are already covered.
 
 Current implemented coverage is **Welcome, Login, Registration, Appearance, declared page navigation,
-Mizon taskbar pinning, the active music home page, current-user online presence and main-window presentation**.
+Mizon taskbar pinning, the active music home page, current-user online presence, main-window presentation and the active VPN page**.
+VPN has independent read/control grants; [VPN.md](VPN.md) documents its bounded
+page state, decorative-particle preference and fixed Windows settings launch.
+There is no tunnel engine or configuration mutation in these tools.
 Main-window read/control permissions are independent from appearance and music;
 see [window presentation](WINDOW_PRESENTATION.md) for its bounded state/actions.
 Appearance, navigation and taskbar pinning have independent read/control permissions; authentication grants never authorize them.

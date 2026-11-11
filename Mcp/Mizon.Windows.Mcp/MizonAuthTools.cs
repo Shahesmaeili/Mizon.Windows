@@ -10,6 +10,10 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
     private const string EmptySchema = """{"type":"object","properties":{},"additionalProperties":false}""";
     private static readonly Tool[] Catalog =
     [
+        Define("mizon_get_vpn_state", "VPN page status", "Read the active signed-in VPN page: configuration, connection status, network availability, busy state and decorative particle preference. Requires independent VPN read consent. Does not navigate, start a tunnel, expose IP addresses or credentials, or query other applications. This implementation has no configured tunnel.", EmptySchema, readOnly: true),
+        Define("mizon_set_vpn_particles", "Set VPN page animation", "Set decorative particles on the active VPN page. Requires independent VPN control consent. Windows reduced-motion preference still applies. Does not change network or VPN settings. Readback requires VPN read consent.",
+            """{"type":"object","properties":{"enabled":{"type":"boolean","description":"Desired decorative-particle preference on the active VPN page. Explicit true or false, not a toggle."}},"required":["enabled"],"additionalProperties":false}"""),
+        Define("mizon_open_vpn_settings", "Open Windows VPN settings", "Open only the system Windows VPN settings page through the active signed-in Mizon VPN page. Requires independent VPN control consent. Does not connect, disconnect, edit configuration or accept an arbitrary URI. Never automatically retry an interrupted launch. Readback requires VPN read consent.", EmptySchema, idempotent: false, openWorld: true),
         Define("mizon_get_presence_state", "Online presence state", "Read your own current Mizon presence: whether the main window is active, a session and SignalR connection exist, the online indicator, and whether its state is server-confirmed. Requires separate presence read consent. Reads the shared header/taskbar state without connecting, publishing presence, changing focus or reading another user. HasConfirmedState=false means the displayed state is not confirmed by the server.", EmptySchema, readOnly: true),
         Define("mizon_get_window_state", "Main-window presentation", "Read whether the Mizon main window is available, fullscreen, and currently showing its fullscreen controls. Requires separate window read consent. Does not reveal window coordinates/handles, other windows or page contents, and does not activate the window.", EmptySchema, readOnly: true),
         Define("mizon_set_fullscreen", "Set main-window fullscreen", "Enter or leave fullscreen for the existing Mizon main window through the same operation as its own controls. fullScreen is an explicit desired state, not a toggle. Requires separate window control consent; readback requires window read consent. Does not minimize, close, focus, resize or reposition other windows, and does not change video-only fullscreen or saved theme preferences.",
@@ -74,6 +78,18 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
         var args = call.Arguments;
         switch (call.Name)
         {
+            case "mizon_get_vpn_state":
+                CheckKeys(args);
+                return new() { Operation = "get_vpn_state" };
+            case "mizon_open_vpn_settings":
+                CheckKeys(args);
+                return new() { Operation = "open_vpn_settings" };
+            case "mizon_set_vpn_particles":
+                CheckKeys(args, "enabled");
+                if (args is null || !args.TryGetValue("enabled", out var particlesEnabled)
+                    || particlesEnabled.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+                    throw new ArgumentException();
+                return new() { Operation = "set_vpn_particles", Vpn = new() { Enabled = particlesEnabled.GetBoolean() } };
             case "mizon_get_window_state":
                 CheckKeys(args);
                 return new() { Operation = "get_window_state" };

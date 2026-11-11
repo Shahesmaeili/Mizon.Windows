@@ -26,6 +26,8 @@ public sealed record McpRememberedGrant
     public bool AllowPresenceRead { get; init; }
     public bool AllowWindowRead { get; init; }
     public bool AllowWindowControl { get; init; }
+    public bool AllowVpnRead { get; init; }
+    public bool AllowVpnControl { get; init; }
     public DateTimeOffset ApprovedAt { get; init; }
 }
 

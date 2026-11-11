@@ -22,10 +22,13 @@ public sealed class McpAccessPolicy
     public bool AllowWindowRead { get; private set; }
     public bool AllowWindowControl { get; private set; }
 
+    public bool AllowVpnRead { get; private set; }
+    public bool AllowVpnControl { get; private set; }
+
     public void Approve(bool read, bool control, bool submit, bool appearanceRead = false, bool appearanceControl = false,
         bool navigationRead = false, bool navigationControl = false, bool taskbarRead = false, bool taskbarControl = false,
         bool musicHomeRead = false, bool musicHomeControl = false, bool musicHomeSubmit = false, bool presenceRead = false,
-        bool windowRead = false, bool windowControl = false)
+        bool windowRead = false, bool windowControl = false, bool vpnRead = false, bool vpnControl = false)
     {
         if (Status == "disconnected") return;
         AllowRead = read;
@@ -43,6 +46,8 @@ public sealed class McpAccessPolicy
         AllowPresenceRead = presenceRead;
         AllowWindowRead = windowRead;
         AllowWindowControl = windowControl;
+        AllowVpnRead = vpnRead;
+        AllowVpnControl = vpnControl;
         Status = "approved";
     }
 
@@ -65,6 +70,8 @@ public sealed class McpAccessPolicy
         "request_taskbar_pin" => Status == "approved" && AllowTaskbarControl,
         "get_music_home" => Status == "approved" && AllowMusicHomeRead,
         "get_presence_state" => Status == "approved" && AllowPresenceRead,
+        "get_vpn_state" => Status == "approved" && AllowVpnRead,
+        "set_vpn_particles" or "open_vpn_settings" => Status == "approved" && AllowVpnControl,
         "get_window_state" => Status == "approved" && AllowWindowRead,
         "set_fullscreen" => Status == "approved" && AllowWindowControl,
         "refresh_music_home" or "music_home_action" => Status == "approved" && AllowMusicHomeControl,
@@ -83,5 +90,6 @@ public sealed class McpAccessPolicy
         AllowMusicHomeRead = AllowMusicHomeControl = AllowMusicHomeSubmit = false;
         AllowPresenceRead = false;
         AllowWindowRead = AllowWindowControl = false;
+        AllowVpnRead = AllowVpnControl = false;
     }
 }

@@ -109,4 +109,13 @@
   <data name="PermissionWindowControlHint" xml:space="preserve"><value>فقط حالت تمام‌صفحهٔ پنجرهٔ اصلی میزون را تغییر می‌دهد؛ مجوز بستن، کوچک‌کردن، جابه‌جایی پنجره یا تغییر تنظیمات ظاهر نیست.</value></data>
   <data name="ReadWindow" xml:space="preserve"><value>در حال خواندن وضعیت پنجره</value></data>
   <data name="ChangeWindow" xml:space="preserve"><value>در حال تغییر حالت تمام‌صفحه</value></data>
+  <data name="VpnGroup" xml:space="preserve"><value>صفحهٔ VPN</value></data>
+  <data name="VpnGroupHint" xml:space="preserve"><value>دسترسی مستقل به صفحهٔ فعال VPN؛ بدون اطلاعات سرور، رمز اتصال، آدرس IP یا تنظیمات سیستم.</value></data>
+  <data name="PermissionVpnRead" xml:space="preserve"><value>خواندن وضعیت صفحهٔ VPN</value></data>
+  <data name="PermissionVpnReadHint" xml:space="preserve"><value>خواندن وضعیت شبکه، پیکربندی، مشغول بودن و تنظیم انیمیشن، فقط هنگام باز بودن این صفحه.</value></data>
+  <data name="PermissionVpnControl" xml:space="preserve"><value>کنترل گزینه‌های صفحهٔ VPN</value></data>
+  <data name="PermissionVpnControlHint" xml:space="preserve"><value>روشن یا خاموش کردن ذرات تزئینی و باز کردن تنظیمات VPN ویندوز؛ بدون اتصال، قطع اتصال یا تغییر تنظیمات VPN.</value></data>
+  <data name="ReadVpn" xml:space="preserve"><value>خواندن صفحهٔ VPN</value></data>
+  <data name="ChangeVpnParticles" xml:space="preserve"><value>تغییر انیمیشن صفحهٔ VPN</value></data>
+  <data name="OpenVpnSettings" xml:space="preserve"><value>باز کردن تنظیمات VPN ویندوز</value></data>
 </root>

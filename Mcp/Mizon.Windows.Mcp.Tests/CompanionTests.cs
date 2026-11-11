@@ -15,7 +15,8 @@ internal static class CompanionTests
         "mizon_get_appearance", "mizon_set_appearance", "mizon_get_navigation", "mizon_open_destination",
         "mizon_get_taskbar_pin_state", "mizon_request_taskbar_pin",
         "mizon_get_music_home", "mizon_refresh_music_home", "mizon_music_home_action", "mizon_get_presence_state",
-        "mizon_get_window_state", "mizon_set_fullscreen"
+        "mizon_get_window_state", "mizon_set_fullscreen",
+        "mizon_get_vpn_state", "mizon_set_vpn_particles", "mizon_open_vpn_settings"
     ];
 
     public static async Task Run(string executable, IReadOnlyList<string>? serverArguments = null, bool catalogOnly = false)
@@ -44,12 +45,12 @@ internal static class CompanionTests
             var output = definition.OutputSchema!.Value;
             Check.That(output.GetProperty("type").GetString() == "object", "Tool result schema must be an object.");
             var properties = output.GetProperty("properties");
-            foreach (var name in new[] { "success", "code", "message", "state", "appearance", "navigation", "taskbarPin", "musicHome", "presence", "window", "connection" })
+            foreach (var name in new[] { "success", "code", "message", "state", "appearance", "navigation", "taskbarPin", "musicHome", "presence", "window", "vpn", "connection" })
                 Check.That(properties.TryGetProperty(name, out _), "Output schema does not describe all response fields.");
             var state = properties.GetProperty("state").GetProperty("properties");
             Check.That(!state.TryGetProperty("password", out _) && !state.TryGetProperty("accessToken", out _), "Output schema exposes a secret.");
             Check.That(state.GetProperty("hasSession").GetProperty("description").GetString()!.Contains("not proof", StringComparison.Ordinal), "Session presence must not claim server verification.");
-            Check.That(definition.Annotations?.ReadOnlyHint == (tool.Name is "mizon_get_connection" or "mizon_get_auth_state" or "mizon_get_appearance" or "mizon_get_navigation" or "mizon_get_taskbar_pin_state" or "mizon_get_music_home" or "mizon_get_presence_state" or "mizon_get_window_state"), "A modifying tool is incorrectly marked read-only.");
+            Check.That(definition.Annotations?.ReadOnlyHint == (tool.Name is "mizon_get_connection" or "mizon_get_auth_state" or "mizon_get_appearance" or "mizon_get_navigation" or "mizon_get_taskbar_pin_state" or "mizon_get_music_home" or "mizon_get_presence_state" or "mizon_get_window_state" or "mizon_get_vpn_state"), "A modifying tool is incorrectly marked read-only.");
             if (tool.Name is "mizon_submit_auth_form" or "mizon_retry_welcome" or "mizon_request_taskbar_pin" or "mizon_refresh_music_home" or "mizon_music_home_action")
                 Check.That(definition.Annotations?.IdempotentHint == false, "A non-idempotent operation is marked safe to repeat.");
 

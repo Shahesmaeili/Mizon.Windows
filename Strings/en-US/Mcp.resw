@@ -109,4 +109,13 @@
   <data name="PermissionWindowControlHint" xml:space="preserve"><value>Change only the main Mizon window's fullscreen mode. Does not grant closing, minimizing, moving windows or changing appearance preferences.</value></data>
   <data name="ReadWindow" xml:space="preserve"><value>Reading window presentation</value></data>
   <data name="ChangeWindow" xml:space="preserve"><value>Changing fullscreen mode</value></data>
+  <data name="VpnGroup" xml:space="preserve"><value>VPN page</value></data>
+  <data name="VpnGroupHint" xml:space="preserve"><value>Independent access to the active VPN page. No tunnel, server credentials, IP address or OS configuration is exposed.</value></data>
+  <data name="PermissionVpnRead" xml:space="preserve"><value>Read VPN page status</value></data>
+  <data name="PermissionVpnReadHint" xml:space="preserve"><value>Read network availability, configuration, busy state and animation preference while this page is open.</value></data>
+  <data name="PermissionVpnControl" xml:space="preserve"><value>Control VPN page options</value></data>
+  <data name="PermissionVpnControlHint" xml:space="preserve"><value>Enable or disable decorative particles and open Windows VPN settings. Does not connect, disconnect or modify a VPN.</value></data>
+  <data name="ReadVpn" xml:space="preserve"><value>Reading VPN page</value></data>
+  <data name="ChangeVpnParticles" xml:space="preserve"><value>Changing VPN page animation</value></data>
+  <data name="OpenVpnSettings" xml:space="preserve"><value>Opening Windows VPN settings</value></data>
 </root>

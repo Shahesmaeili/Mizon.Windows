@@ -120,6 +120,20 @@
                     <TextBlock Text="{x:Bind Text('PermissionWindowControlHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
                 </StackPanel>
             </CheckBox>
+            <TextBlock Text="{x:Bind Text('VpnGroup', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold"/>
+            <TextBlock Text="{x:Bind Text('VpnGroupHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+            <CheckBox IsChecked="{x:Bind ViewModel.AllowVpnRead, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionVpnRead', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionVpnReadHint', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('PermissionVpnRead', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                    <TextBlock Text="{x:Bind Text('PermissionVpnReadHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+            </CheckBox>
+            <CheckBox IsChecked="{x:Bind ViewModel.AllowVpnControl, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionVpnControl', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionVpnControlHint', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('PermissionVpnControl', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                    <TextBlock Text="{x:Bind Text('PermissionVpnControlHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+            </CheckBox>
             <TextBlock Text="{x:Bind Text('PresenceGroup', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold"/>
             <TextBlock Text="{x:Bind Text('PresenceGroupHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
             <CheckBox IsChecked="{x:Bind ViewModel.AllowPresenceRead, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionPresenceRead', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionPresenceReadHint', Localization.Revision), Mode=OneWay}">

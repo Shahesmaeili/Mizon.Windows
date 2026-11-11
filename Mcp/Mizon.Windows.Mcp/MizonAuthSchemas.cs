@@ -68,7 +68,7 @@ internal static class MizonAuthSchemas
                 return definition;
             }
         }).AsObject();
-        schema["description"] = "Result of a scoped Mizon tool. Always inspect success and code. connection describes only this MCP connection. Authentication, appearance, navigation, taskbar, music-home, presence and main-window state each require their own read permission. Passwords, tokens and cookies are never included. A pending, denied or revoked connection cannot bypass consent using another tool.";
+        schema["description"] = "Result of a scoped Mizon tool. Always inspect success and code. connection describes only this MCP connection. Authentication, appearance, navigation, taskbar, music-home, presence, VPN and main-window state each require their own read permission. Passwords, tokens and cookies are never included. A pending, denied or revoked connection cannot bypass consent using another tool.";
         schema["required"] = new JsonArray("success", "code", "message");
         return ToElement(schema);
     }
@@ -115,7 +115,7 @@ internal static class MizonAuthSchemas
             "isAcrylicSupported" => "Whether the current Windows composition environment supports Acrylic.",
             "isPreferenceSaved" => "Whether the current preference was successfully persisted. A false value means it may not survive a restart.",
             "isWindowAttached" => "Whether a live main window is attached to the appearance service.",
-            "isConnected" => "For connection: whether this MCP client is connected; disconnect does not revoke saved consent. For presence: whether Mizon has a live SignalR presence connection; this alone does not confirm online status.",
+            "isConnected" => "For connection: whether this MCP client is connected; disconnect does not revoke saved consent. For presence: whether Mizon has a live SignalR presence connection; this alone does not confirm online status. For VPN: whether an actual tunnel is connected; currently false.",
             "page" => "Current page name: login, register, welcome, or an out-of-scope/unavailable page. Only authentication pages are exposed by these tools.",
             "language" => "Current Mizon language tag, fa-IR or en-US.",
             "hasSession" => "Whether a locally stored session/token is present. This is not proof that the server has verified it or that it remains valid.",
@@ -126,6 +126,13 @@ internal static class MizonAuthSchemas
             "allowTaskbarRead" => "Independent permission to read Mizon's taskbar pin status.",
             "allowTaskbarControl" => "Independent permission to request Windows pin confirmation, never to approve it or unpin.",
             "allowPresenceRead" => "Independent user-approved permission to read your current online presence only. It cannot change presence or activate the app window.",
+            "allowVpnRead" => "Independent permission to read bounded state from the active VPN page. Existing authentication, navigation and other grants do not authorize it.",
+            "allowVpnControl" => "Independent permission to change VPN-page decorative particles and open Windows VPN settings. No tunnel connection, OS configuration or arbitrary URI operations.",
+            "vpn" => "Optional active VPN page snapshot. Returned only with independent VPN read permission, including after control operations. No IP addresses, server identifiers or credentials.",
+            "isConfigured" => "Whether this page has a configured VPN tunnel. Currently false; network availability is not a VPN connection.",
+            "networkStatus" => "Current network availability category: internet, local, offline or unknown. Not a VPN connectivity guarantee or proof of Internet access.",
+            "particlesEnabled" => "User preference for decorative VPN-page particles. Rendering also respects motionAllowed and page/window lifecycle.",
+            "motionAllowed" => "Whether Windows currently permits UI animations.",
             "allowWindowRead" => "Independent permission to read main-window availability, fullscreen and control visibility. Existing appearance/music/navigation grants do not authorize it.",
             "allowWindowControl" => "Independent permission to enter or exit main-window fullscreen. Does not grant other window operations, state reads, theme changes or page data.",
             "window" => "Optional bounded main-window presentation snapshot, returned only with separate window read permission. Control-only requests never disclose this state.",
@@ -188,7 +195,7 @@ internal static class MizonAuthSchemas
 
     private static void Describe(JsonObject properties, string name, string text)
     {
-        if (properties[name] is JsonObject property) property["description"] = text;
+        if (properties[name] is JsonObject property && property["description"] is null) property["description"] = text;
     }
 
     private static JsonElement ToElement(JsonNode schema)

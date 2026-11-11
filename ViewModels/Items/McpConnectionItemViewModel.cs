@@ -25,6 +25,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
     private bool _allowPresenceRead;
     private bool _allowWindowRead;
     private bool _allowWindowControl;
+    private bool _allowVpnRead;
+    private bool _allowVpnControl;
     private bool _isBusy;
     private string _currentOperation = string.Empty;
     private DateTimeOffset? _lastActivity;
@@ -77,6 +79,9 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         "open_destination" => Text("OpenDestination"), "get_taskbar_pin_state" => Text("ReadTaskbarPin"),
         "request_taskbar_pin" => Text("RequestTaskbarPin"),
         "get_presence_state" => Text("ReadPresence"),
+        "get_vpn_state" => Text("ReadVpn"),
+        "set_vpn_particles" => Text("ChangeVpnParticles"),
+        "open_vpn_settings" => Text("OpenVpnSettings"),
         "get_window_state" => Text("ReadWindow"),
         "set_fullscreen" => Text("ChangeWindow"),
         "get_music_home" => Text("ReadMusicHome"), "refresh_music_home" => Text("RefreshMusicHome"),
@@ -106,6 +111,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
     public bool AllowPresenceRead { get => _allowPresenceRead; set { if (CanApprove) SetField(ref _allowPresenceRead, value); } }
     public bool AllowWindowRead { get => _allowWindowRead; set { if (CanApprove) SetField(ref _allowWindowRead, value); } }
     public bool AllowWindowControl { get => _allowWindowControl; set { if (CanApprove) SetField(ref _allowWindowControl, value); } }
+    public bool AllowVpnRead { get => _allowVpnRead; set { if (CanApprove) SetField(ref _allowVpnRead, value); } }
+    public bool AllowVpnControl { get => _allowVpnControl; set { if (CanApprove) SetField(ref _allowVpnControl, value); } }
     public bool AllowMusicHomeRead { get => _allowMusicHomeRead; set { if (CanApprove) SetField(ref _allowMusicHomeRead, value); } }
     public bool AllowMusicHomeControl
     {
@@ -153,7 +160,7 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         RenewAuthorization();
         _policy.Approve(AllowRead, AllowControl, AllowSubmit, AllowAppearanceRead, AllowAppearanceControl,
             AllowNavigationRead, AllowNavigationControl, AllowTaskbarRead, AllowTaskbarControl,
-            AllowMusicHomeRead, AllowMusicHomeControl, AllowMusicHomeSubmit, AllowPresenceRead, AllowWindowRead, AllowWindowControl);
+            AllowMusicHomeRead, AllowMusicHomeControl, AllowMusicHomeSubmit, AllowPresenceRead, AllowWindowRead, AllowWindowControl, AllowVpnRead, AllowVpnControl);
         NotifyStatus();
     }
 
@@ -173,6 +180,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         SetField(ref _allowPresenceRead, grant.AllowPresenceRead, nameof(AllowPresenceRead));
         SetField(ref _allowWindowRead, grant.AllowWindowRead, nameof(AllowWindowRead));
         SetField(ref _allowWindowControl, grant.AllowWindowControl, nameof(AllowWindowControl));
+        SetField(ref _allowVpnRead, grant.AllowVpnRead, nameof(AllowVpnRead));
+        SetField(ref _allowVpnControl, grant.AllowVpnControl, nameof(AllowVpnControl));
         SetField(ref _allowMusicHomeControl, grant.AllowMusicHomeControl, nameof(AllowMusicHomeControl));
         SetField(ref _allowMusicHomeSubmit, grant.AllowMusicHomeControl && grant.AllowMusicHomeSubmit, nameof(AllowMusicHomeSubmit));
         _isRemembered = true;
@@ -223,7 +232,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         AllowMusicHomeRead = _policy.AllowMusicHomeRead, AllowMusicHomeControl = _policy.AllowMusicHomeControl,
         AllowMusicHomeSubmit = _policy.AllowMusicHomeSubmit,
         AllowPresenceRead = _policy.AllowPresenceRead,
-        AllowWindowRead = _policy.AllowWindowRead, AllowWindowControl = _policy.AllowWindowControl
+        AllowWindowRead = _policy.AllowWindowRead, AllowWindowControl = _policy.AllowWindowControl,
+        AllowVpnRead = _policy.AllowVpnRead, AllowVpnControl = _policy.AllowVpnControl
     };
 
     internal void RefreshLocalization()
