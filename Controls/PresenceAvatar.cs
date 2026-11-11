@@ -27,6 +27,7 @@ public sealed partial class PresenceAvatar : Grid
         nameof(DisplayName), typeof(string), typeof(PresenceAvatar), new PropertyMetadata(string.Empty, PresentationChanged));
 
     private readonly PersonPicture _picture = new() { IsHitTestVisible = false, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+    private readonly Grid _photoHost = new() { IsHitTestVisible = false, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
     private readonly Canvas _badgeHost = new() { IsHitTestVisible = false };
     private readonly Ellipse _badge = new() { IsHitTestVisible = false };
     private readonly SolidColorBrush _online = new(Color.FromArgb(255, 48, 201, 127));
@@ -42,8 +43,9 @@ public sealed partial class PresenceAvatar : Grid
         // A parent's RTL reading order must not mirror the physical badge corner.
         FlowDirection = FlowDirection.LeftToRight;
         IsHitTestVisible = false;
+        _photoHost.Children.Add(_picture);
         _badgeHost.Children.Add(_badge);
-        Children.Add(_picture);
+        Children.Add(_photoHost);
         Children.Add(_badgeHost);
         AutomationProperties.SetAccessibilityView(_picture, AccessibilityView.Raw);
         AutomationProperties.SetAccessibilityView(_badgeHost, AccessibilityView.Raw);
@@ -57,6 +59,8 @@ public sealed partial class PresenceAvatar : Grid
     public bool IsOnline { get => (bool)GetValue(IsOnlineProperty); set => SetValue(IsOnlineProperty, value); }
     public string StatusText { get => (string?)GetValue(StatusTextProperty) ?? string.Empty; set => SetValue(StatusTextProperty, value); }
     public string DisplayName { get => (string?)GetValue(DisplayNameProperty) ?? string.Empty; set => SetValue(DisplayNameProperty, value); }
+    // Only the photo moves; the exclusion clip and status badge are stationary siblings.
+    public FrameworkElement AnimationTarget => _picture;
 
     private static void PresentationChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args) => ((PresenceAvatar)sender).UpdatePresentation();
     private void UpdatePresentation()
@@ -99,32 +103,49 @@ public sealed partial class PresenceAvatar : Grid
         var left = (ActualWidth - metrics.Size) / 2;
         var top = (ActualHeight - metrics.Size) / 2;
         _picture.Width = _picture.Height = metrics.Size;
+        _photoHost.Width = _photoHost.Height = metrics.Size;
         _badge.Width = _badge.Height = metrics.BadgeDiameter;
         Canvas.SetLeft(_badge, left + metrics.BadgeCenter - metrics.BadgeDiameter / 2);
         Canvas.SetTop(_badge, top + metrics.BadgeCenter - metrics.BadgeDiameter / 2);
         if (_clip is not null && _size == metrics.Size) return;
 
-        var visual = ElementCompositionPreview.GetElementVisual(_picture);
+        var visual = ElementCompositionPreview.GetElementVisual(_photoHost);
         var compositor = visual.Compositor;
-        using var circle = CanvasGeometry.CreateCircle(CanvasDevice.GetSharedDevice(),
-            (float)(metrics.Size / 2), (float)(metrics.Size / 2), (float)(metrics.Size / 2));
+        // PersonPicture supplies the circular crop. Let that circle grow on hover,
+        // while the transparent clearance around the badge never moves or scales.
+        using var area = CanvasGeometry.CreateRectangle(CanvasDevice.GetSharedDevice(),
+            -16, -16, (float)metrics.Size + 32, (float)metrics.Size + 32);
         using var gap = CanvasGeometry.CreateCircle(CanvasDevice.GetSharedDevice(),
             (float)metrics.BadgeCenter, (float)metrics.BadgeCenter, (float)metrics.CutoutRadius);
-        var cutout = circle.CombineWith(gap, Matrix3x2.Identity, CanvasGeometryCombine.Exclude);
-        var path = compositor.CreatePathGeometry(new CompositionPath(cutout));
-        var clip = compositor.CreateGeometricClip(path);
-        ReleaseClip();
-        _cutout = cutout;
-        _path = path;
-        _clip = clip;
-        _size = metrics.Size;
-        visual.Clip = clip;
+        CanvasGeometry? cutout = area.CombineWith(gap, Matrix3x2.Identity, CanvasGeometryCombine.Exclude);
+        CompositionPathGeometry? path = null;
+        CompositionGeometricClip? clip = null;
+        try
+        {
+            path = compositor.CreatePathGeometry(new CompositionPath(cutout));
+            clip = compositor.CreateGeometricClip(path);
+            ReleaseClip();
+            visual.Clip = clip;
+            _cutout = cutout;
+            _path = path;
+            _clip = clip;
+            _size = metrics.Size;
+            cutout = null;
+            path = null;
+            clip = null;
+        }
+        finally
+        {
+            clip?.Dispose();
+            path?.Dispose();
+            cutout?.Dispose();
+        }
     }
 
     private void ReleaseClip()
     {
         if (_clip is null) return;
-        ElementCompositionPreview.GetElementVisual(_picture).Clip = null;
+        ElementCompositionPreview.GetElementVisual(_photoHost).Clip = null;
         _clip.Dispose(); _clip = null;
         _path?.Dispose(); _path = null;
         _cutout?.Dispose(); _cutout = null;

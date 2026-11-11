@@ -10,6 +10,10 @@ own the state; disconnected, inactive or closed ownership cannot stay green.
 Taskbar process/lease checks preserve the companion's independent lifetime.
 `mizon_get_presence_state` adds a separate read-only Presence consent group.
 
+The follow-up increases badge clearance to 2.5 logical pixels, keeps the badge
+stationary while only the photo animates, and extends the taskbar HWND region to
+include the whole badge. See [spacing/motion evidence](tasks/2026-11-11-profile-presence-spacing.md).
+
 Verified: integrated Debug x64 build; 38 coordinator/IPC assertions in managed and
 NativeAOT execution; 50 avatar/taskbar checks; 159 MCP access assertions; 38/38 MCP
 protocol groups; native MCP catalog and matching server/SDK SignalR diagnostics.

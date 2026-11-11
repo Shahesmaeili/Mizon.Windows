@@ -11,6 +11,6 @@ internal readonly record struct PresenceAvatarMetrics(double Size, double BadgeD
         if (!double.IsFinite(size) || size <= 0 || size > float.MaxValue) return default;
         var badge = size * (9d / 32);
         var center = size - badge / 2 - size / 64;
-        return new(size, badge, center, badge / 2 + size * (1.5 / 32));
+        return new(size, badge, center, badge / 2 + size * (2.5 / 32));
     }
 }

@@ -183,6 +183,7 @@ internal sealed partial class TaskbarProfileHost : IDisposable
                 {
                     Style = Application.Current.Resources["ProfileAvatarButtonStyle"].As<Style>(), HoverScale = 1.06, PressedScale = .91,
                     Content = _picture, Padding = new Thickness(2), MinWidth = 0, MinHeight = 0,
+                    AnimationTarget = _picture.AnimationTarget,
                     CornerRadius = new CornerRadius(100), BorderThickness = new Thickness(0),
                     Background = new SolidColorBrush(Colors.Transparent), HorizontalContentAlignment = HorizontalAlignment.Center,
                     VerticalContentAlignment = VerticalAlignment.Center, UseSystemFocusVisuals = true,
@@ -274,8 +275,8 @@ internal sealed partial class TaskbarProfileHost : IDisposable
             else Native.ShowWindow(window, 4);
             if (_regionWidth != hostWidth || _regionHeight != hostHeight)
             {
-                // Keep the gap transparent and hit-testable by the taskbar, while
-                // clipping each of our two independent buttons to its own circle.
+                // Keep the inter-button gap hit-testable by the taskbar. The avatar's
+                // fixed status badge extends outside its circular native window region.
                 var avatarWidth = Math.Max(16, (int)Math.Round(36 * scale));
                 var region = Native.CreateEllipticRgn(0, 0, avatarWidth + 1, hostHeight + 1);
                 if (region == 0) throw new Win32Exception(Marshal.GetLastPInvokeError(), "Could not create the profile hit region.");
@@ -293,6 +294,22 @@ internal sealed partial class TaskbarProfileHost : IDisposable
                         }
                         finally { Native.DeleteObject(moodRegion); }
                     }
+                    var avatarLeft = hasMood ? (int)Math.Round(44 * scale) : 0;
+                    var badge = PresenceAvatarMetrics.ForSize(32);
+                    var badgeCenter = (2 + badge.BadgeCenter) * scale;
+                    var badgeRadius = badge.BadgeDiameter / 2 * scale + 1;
+                    var badgeRegion = Native.CreateEllipticRgn(
+                        avatarLeft + (int)Math.Floor(badgeCenter - badgeRadius),
+                        (int)Math.Floor(badgeCenter - badgeRadius),
+                        avatarLeft + (int)Math.Ceiling(badgeCenter + badgeRadius) + 1,
+                        (int)Math.Ceiling(badgeCenter + badgeRadius) + 1);
+                    if (badgeRegion == 0) throw new Win32Exception(Marshal.GetLastPInvokeError(), "Could not create the presence badge region.");
+                    try
+                    {
+                        if (Native.CombineRgn(region, region, badgeRegion, 2) == 0)
+                            throw new Win32Exception(Marshal.GetLastPInvokeError(), "Could not combine the presence badge region.");
+                    }
+                    finally { Native.DeleteObject(badgeRegion); }
                     if (Native.SetWindowRgn(window, region, true) == 0)
                         throw new Win32Exception(Marshal.GetLastPInvokeError(), "Could not apply the taskbar hit region.");
                     region = 0; // Windows owns the successfully assigned region.

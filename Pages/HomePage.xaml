@@ -98,6 +98,7 @@ Color="Transparent" />
                             <usercontrols:MoodButton ViewModel="{x:Bind ViewModel}" VerticalAlignment="Center"/>
                             <controls:AuthActionButton x:Name="ProfilePersonButtton" Width="32" Height="32" Padding="0" CornerRadius="16"
                                     Style="{StaticResource ProfileAvatarButtonStyle}" HoverScale="1.06" PressedScale="0.91"
+                                    AnimationTarget="{x:Bind CurrentProfileAvatar.AnimationTarget}"
                                     BorderThickness="0" VerticalAlignment="Center"
                                     AutomationProperties.Name="{x:Bind ViewModel.ProfileButtonLabel, Mode=OneWay}"
                                     AutomationProperties.ItemStatus="{x:Bind ViewModel.ProfilePresenceLabel, Mode=OneWay}"
@@ -153,7 +154,7 @@ Color="Transparent" />
                                         </controls:MenuContentHost>
                                     </MenuFlyout>
                                 </controls:AuthActionButton.Flyout>
-                                <controls:PresenceAvatar Width="32" Height="32"
+                                <controls:PresenceAvatar x:Name="CurrentProfileAvatar" Width="32" Height="32"
                                     Source="{x:Bind ViewModel.ProfileImage, Mode=OneWay}"
                                     DisplayName="{x:Bind ViewModel.DisplayName, Mode=OneWay}"
                                     IsOnline="{x:Bind ViewModel.IsProfileOnline, Mode=OneWay}"

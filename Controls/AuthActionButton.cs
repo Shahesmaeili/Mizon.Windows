@@ -15,9 +15,16 @@ public sealed partial class AuthActionButton : Button
         nameof(HoverScale), typeof(double), typeof(AuthActionButton), new PropertyMetadata(1.012d, MotionChanged));
     public static readonly DependencyProperty PressedScaleProperty = DependencyProperty.Register(
         nameof(PressedScale), typeof(double), typeof(AuthActionButton), new PropertyMetadata(.98d, MotionChanged));
+    public static readonly DependencyProperty AnimationTargetProperty = DependencyProperty.Register(
+        nameof(AnimationTarget), typeof(FrameworkElement), typeof(AuthActionButton),
+        new PropertyMetadata(null, AnimationTargetChanged));
 
     public double HoverScale { get => (double)GetValue(HoverScaleProperty); set => SetValue(HoverScaleProperty, value); }
     public double PressedScale { get => (double)GetValue(PressedScaleProperty); set => SetValue(PressedScaleProperty, value); }
+    public FrameworkElement? AnimationTarget { get => (FrameworkElement?)GetValue(AnimationTargetProperty); set => SetValue(AnimationTargetProperty, value); }
+
+    private static void AnimationTargetChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args) =>
+        ((AuthActionButton)sender).ApplyAnimationTarget();
 
     private static void MotionChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args) =>
         ((AuthActionButton)sender).Animate();
@@ -34,16 +41,20 @@ public sealed partial class AuthActionButton : Button
             RegisterPropertyChangedCallback(property, (_, _) => Animate());
         Loaded += (_, _) =>
         {
+            if (_loaded) return;
             _loaded = true;
             ProtectedCursor = _cursor ??= InputSystemCursor.Create(InputSystemCursorShape.Hand);
             _settings.AnimationsEnabledChanged += PreferenceChanged;
-            Animate(false);
+            ApplyAnimationTarget();
         };
         Unloaded += (_, _) =>
         {
+            if (!_loaded) return;
             _loaded = false;
             _settings.AnimationsEnabledChanged -= PreferenceChanged;
+            if (_surface is not null) _surface.SizeChanged -= SizeChanged;
             Stop();
+            if (_visual is not null) _visual.Scale = Vector3.One;
             ProtectedCursor = null;
             _cursor?.Dispose();
             _cursor = null;
@@ -52,16 +63,24 @@ public sealed partial class AuthActionButton : Button
 
     protected override void OnApplyTemplate()
     {
-        if (_surface is not null) _surface.SizeChanged -= SizeChanged;
         Stop();
         base.OnApplyTemplate();
-        // Animate only the content. Scaling a one-pixel outline causes subpixel flicker
-        // and makes it disagree with the stationary hit target and keyboard focus outline.
-        _surface = GetTemplateChild("ActionContent") as FrameworkElement;
-        _visual = _surface is null ? null : ElementCompositionPreview.GetElementVisual(_surface);
         _frame = GetTemplateChild("ActionSurface") is UIElement frame ? ElementCompositionPreview.GetElementVisual(frame) : null;
         _light = GetTemplateChild("ActionLight") is UIElement light ? ElementCompositionPreview.GetElementVisual(light) : null;
-        if (_surface is not null) _surface.SizeChanged += SizeChanged;
+        ApplyAnimationTarget();
+    }
+
+    private void ApplyAnimationTarget()
+    {
+        if (_surface is not null) _surface.SizeChanged -= SizeChanged;
+        Stop();
+        if (_visual is not null) _visual.Scale = Vector3.One;
+        // Animate only the content. Scaling a one-pixel outline causes subpixel flicker
+        // and makes it disagree with the stationary hit target and keyboard focus outline.
+        // Composite content can select its photo, keeping status decorations stationary.
+        _surface = AnimationTarget ?? GetTemplateChild("ActionContent") as FrameworkElement;
+        _visual = _surface is null ? null : ElementCompositionPreview.GetElementVisual(_surface);
+        if (_loaded && _surface is not null) _surface.SizeChanged += SizeChanged;
         Center();
         Animate(false);
     }
