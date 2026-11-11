@@ -70,6 +70,7 @@ Color="Transparent" />
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="auto"/>
                         <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition x:Name="RightCaptionInset" Width="0"/>
                     </Grid.ColumnDefinitions>
 
       
@@ -91,7 +92,7 @@ Color="Transparent" />
 </AnimatedVisualPlayer>-->
 
 
-                    <Grid Grid.Column="3" HorizontalAlignment="Right" Margin="8,0,148,0" VerticalAlignment="Center">
+                    <Grid Grid.Column="3" HorizontalAlignment="Right" Margin="8,0,8,0" VerticalAlignment="Center">
                         <Border CornerRadius="8,16,16,8" Background="#0FFFFFFF" IsHitTestVisible="False"/>
                         <StackPanel Orientation="Horizontal">
 

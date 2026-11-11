@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Mizon.Windows"
     xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:common="using:Mizon.Windows.Common"
     xmlns:icon="using:FluentIcons.WinUI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -13,6 +14,9 @@
     Title="Mizon">
   
     <Grid x:Name="RootGrid">
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Key="F11" Invoked="FullScreenShortcut_Invoked"/>
+        </Grid.KeyboardAccelerators>
 
         <Grid.Resources>
             <!--<SolidColorBrush x:Key="TeachingTipTransientBackground" 
@@ -42,6 +46,34 @@
             
         </Button>-->
         <Grid x:Name="WindowOverlayHost" Canvas.ZIndex="10000" Visibility="Collapsed"/>
+        <!-- Overlay-only window controls: revealing them never resizes page content. -->
+        <Grid x:Name="FullScreenEdge" Canvas.ZIndex="10002" Height="3" VerticalAlignment="Top"
+              Background="Transparent" Visibility="Collapsed" PointerEntered="FullScreenEdge_PointerEntered"
+              AutomationProperties.AccessibilityView="Raw"/>
+        <Border x:Name="FullScreenControls" Canvas.ZIndex="10003" Visibility="Collapsed"
+                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="8" Padding="4" CornerRadius="12"
+                Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}" BorderThickness="1"
+                PointerEntered="FullScreenControls_PointerEntered" PointerExited="FullScreenControls_PointerExited"
+                LostFocus="FullScreenControls_LostFocus">
+            <StackPanel Orientation="Horizontal" Spacing="4" FlowDirection="LeftToRight">
+                <Button x:Name="MinimizeWindowButton" Width="40" Height="36" Padding="0" CornerRadius="8"
+                        Click="MinimizeWindow_Click" common:CursorExtensions.Cursor="Hand">
+                    <icon:SymbolIcon Symbol="Subtract" FontSize="16"/>
+                </Button>
+                <Button x:Name="ExitFullScreenButton" Height="36" Padding="12,0" CornerRadius="8"
+                        Click="ExitFullScreen_Click" common:CursorExtensions.Cursor="Hand">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icon:SymbolIcon Symbol="FullScreenMinimize" FontSize="16"/>
+                        <TextBlock x:Name="ExitFullScreenLabel" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button x:Name="CloseWindowButton" Width="40" Height="36" Padding="0" CornerRadius="8"
+                        Click="CloseWindow_Click" common:CursorExtensions.Cursor="Hand">
+                    <icon:SymbolIcon Symbol="Dismiss" FontSize="16"/>
+                </Button>
+            </StackPanel>
+        </Border>
         <StackPanel x:Name="McpAccessNotice" Canvas.ZIndex="10001" Visibility="Collapsed"
                     HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16" MaxWidth="460" Spacing="8">
             <InfoBar x:Name="McpPendingInfo" IsOpen="False" Severity="Informational" IsClosable="True"

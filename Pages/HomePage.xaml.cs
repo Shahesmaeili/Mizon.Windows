@@ -1,6 +1,7 @@
 ﻿using DevWinUI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Input;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -33,6 +34,7 @@ namespace Mizon.Windows.Pages
         private CancellationTokenSource? _searchCancellationTokenSource;
         private InputNonClientPointerSource? _titleBarPointerSource;
         private XamlRoot? _titleBarRoot;
+        private AppWindow? _titleBarWindow;
         private RectInt32[] _titleBarInteractiveRects = [];
         private bool _titleBarRegionUpdateQueued;
         private ConnectedAnimation? _profileConnectedAnimation;
@@ -255,6 +257,8 @@ namespace Mizon.Windows.Pages
 
             _titleBarPointerSource = InputNonClientPointerSource.GetForWindowId(App.MainMizonWindow.AppWindow.Id);
             _titleBarRoot = XamlRoot;
+            _titleBarWindow = App.MainMizonWindow.AppWindow;
+            _titleBarWindow.Changed += TitleBarWindow_Changed;
             if (_titleBarRoot is not null) _titleBarRoot.Changed += TitleBarRoot_Changed;
             DragAreaOverlayGrid.LayoutUpdated += TitleBar_LayoutUpdated;
             UpdateTitleBarPointerRegions();
@@ -262,6 +266,10 @@ namespace Mizon.Windows.Pages
 
         private void TitleBarRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args) => QueueTitleBarRegionUpdate();
         private void TitleBar_LayoutUpdated(object? sender, object args) => QueueTitleBarRegionUpdate();
+        private void TitleBarWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)
+        {
+            if (args.DidPresenterChange || args.DidSizeChange) QueueTitleBarRegionUpdate();
+        }
 
         private void QueueTitleBarRegionUpdate()
         {
@@ -278,12 +286,31 @@ namespace Mizon.Windows.Pages
             if (_titleBarPointerSource is null || !IsLoaded || App.MainMizonWindow is null)
                 return;
 
+            var window = App.MainMizonWindow.AppWindow;
+            var titleBar = window.TitleBar;
+            var fullScreen = window.Presenter.Kind == AppWindowPresenterKind.FullScreen;
+            var scale = XamlRoot?.RasterizationScale ?? 1;
+            var rightInset = fullScreen ? 0 : titleBar.RightInset / scale;
+            if (Math.Abs(RightCaptionInset.Width.Value - rightInset) > .01)
+                RightCaptionInset.Width = new GridLength(rightInset);
+
+            // Fullscreen has no native caption region. Let all header controls and
+            // the window's top-edge reveal surface receive normal client input.
+            if (fullScreen)
+            {
+                if (_titleBarInteractiveRects.Length != 0)
+                {
+                    _titleBarPointerSource.SetRegionRects(NonClientRegionKind.Passthrough, []);
+                    _titleBarInteractiveRects = [];
+                }
+                return;
+            }
+
             // WinUI owns the native full-width Tall caption. Only register the
             // interactive holes: writing Caption here competes with its layout updates.
             var header = Common.TitleBarRegions.GetPixelBounds(DragAreaOverlay);
             if (header is not RectInt32 headerRect)
                 return;
-            var titleBar = App.MainMizonWindow.AppWindow.TitleBar;
             var left = Math.Max(headerRect.X, titleBar.LeftInset);
             var right = Math.Max(left, headerRect.X + headerRect.Width - titleBar.RightInset);
             var captionRect = new RectInt32(left, headerRect.Y, right - left, headerRect.Height);
@@ -324,6 +351,11 @@ namespace Mizon.Windows.Pages
             _profileConnectedAnimation = null;
 
             DragAreaOverlayGrid.LayoutUpdated -= TitleBar_LayoutUpdated;
+            if (_titleBarWindow is not null)
+            {
+                _titleBarWindow.Changed -= TitleBarWindow_Changed;
+                _titleBarWindow = null;
+            }
             if (_titleBarRoot is not null) _titleBarRoot.Changed -= TitleBarRoot_Changed;
             _titleBarRoot = null;
             _titleBarRegionUpdateQueued = false;

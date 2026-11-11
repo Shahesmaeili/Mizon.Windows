@@ -2,6 +2,22 @@
 
 Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Fullscreen header and window controls — 2026-11-11
+
+Home's hardcoded 148-DIP caption margin is replaced by the actual Windows
+RightInset converted through the current XAML scale; fullscreen reserves zero
+caption space and clears stale native passthrough regions. A top-edge WinUI
+overlay reveals minimize/exit/close controls without reflow; F11 uses the same
+presenter operation. This is app-owned UI: the installed SDK has no configurable
+OS-provided mouse-hover fullscreen toolbar. Minimize retains fullscreen.
+
+Independent window read/control MCP grants expose a bounded state and explicit
+fullscreen setting; older grants do not authorize either. Debug x64 build,
+187 access assertions, 41/41 MCP protocol groups and the NativeAOT MCP host/catalog
+passed. Live hover/DPI/Narrator/fullscreen restore were not automated.
+See [implementation and validation](tasks/2026-11-11-fullscreen-header.md) and
+[MCP contract](../../Mcp/WINDOW_PRESENTATION.md).
+
 ## Taskbar mood click effect placement — 2026-11-11
 
 The click effect now sits entirely above the actual taskbar top, separated by

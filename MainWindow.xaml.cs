@@ -76,6 +76,7 @@ public sealed partial class MainWindow : Window
         AppWindow.TitleBar.IconShowOptions = Microsoft.UI.Windowing.IconShowOptions.ShowIconAndSystemMenu;
         AppWindow.TitleBar.PreferredHeightOption = Microsoft.UI.Windowing.TitleBarHeightOption.Tall;
         _appearanceAttachment = AppearanceSettingsService.Current.Attach(this);
+        InitializeWindowPresentation();
         var navigationService = ((App)App.Current).Services.GetRequiredService<NavigationService>();
         navigationService.MainInitialize(MainFrame);
         navigationService.MainNavigationChanged += NavigationChanged;
@@ -141,6 +142,7 @@ public sealed partial class MainWindow : Window
         {
             RefreshTitle();
             UpdatePresenceLanguage();
+            UpdateWindowPresentationLabels();
         }
     }
 
@@ -162,6 +164,7 @@ public sealed partial class MainWindow : Window
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
+        DisposeWindowPresentation();
         Activated -= PresenceWindowActivated;
         _presenceStorage.AuthenticationChanged -= PresenceAuthenticationChanged;
         if (((App)Application.Current).Services.GetRequiredService<NavigationService>().CurrentMainPage is HomePage home)
@@ -182,7 +185,9 @@ public sealed partial class MainWindow : Window
 
     internal void ActivateExistingWindow()
     {
-        if (AppWindow.Presenter is OverlappedPresenter presenter && presenter.State == OverlappedPresenterState.Minimized)
+        if (IsIconic(WindowNative.GetWindowHandle(this)))
+            ShowWindow(WindowNative.GetWindowHandle(this), 9); // SW_RESTORE, including a minimized fullscreen presenter.
+        else if (AppWindow.Presenter is OverlappedPresenter presenter && presenter.State == OverlappedPresenterState.Minimized)
             presenter.Restore();
         AppWindow.Show();
         Activate();
@@ -205,10 +210,7 @@ public sealed partial class MainWindow : Window
 
     private void TaskbarService_FullScreenRequested(object? sender, EventArgs eventArgs)
     {
-        if (AppWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen)
-            AppWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
-        else
-            AppWindow.SetPresenter(AppWindowPresenterKind.FullScreen);
+        SetFullScreen(!IsFullScreen);
     }
 
 

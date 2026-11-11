@@ -212,7 +212,7 @@ public partial class App : Application
                     ? navigationService.CurrentInternalPage as IMcpMusicHomePage : null,
                 () => !string.IsNullOrWhiteSpace(localStorageService.GetJwtToken())),
             presence: new McpPresenceService(Services.GetRequiredService<ProfilePresenceService>()),
-            windowPresentation: new McpWindowPresentationService(() => MainMizonWindow));
+            windowPresentation: new McpWindowPresentationService(() => MainMizonWindow as IWindowPresentationHost));
         MainMizonWindow.Closed += MainWindow_Closed;
         // The authenticated shell starts the socket after account validation. Login and
         // Welcome do not need SignalR's connection, transport buffers or reconnect loop.

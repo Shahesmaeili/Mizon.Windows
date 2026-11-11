@@ -70,6 +70,11 @@ Implemented domains are authentication pages, appearance, declared destination n
 
 Opening a music/profile/settings page through navigation is not permission to read all its business data, change settings, play music or submit a form. Full feature-by-feature business MCP coverage has **not** been implemented. Extend narrowly when adding new behavior, and use the same underlying service/operation as the UI.
 
+Main-window presentation also has independent Window read/control grants. They
+expose availability/fullscreen/control visibility and an explicit fullscreen
+setting only; they do not authorize arbitrary window geometry, closing or
+minimization. See [WINDOW_PRESENTATION.md](../../Mcp/WINDOW_PRESENTATION.md).
+
 Pairing can persist across restarts, but only the exact user-approved scopes are restored. Discovery may be public; protected calls are not. No test may approve a real connection, enter real account details or click the Windows pin confirmation just to make a test pass.
 
 ## Headless verification map
