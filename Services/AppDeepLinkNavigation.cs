@@ -30,11 +30,12 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
 
     public AppNavigationSnapshot GetState()
     {
+        var pendingUri = App.PendingResultUri ?? App.PendingActivation.ToUri();
         // Welcome is an internal validation stage, never a public URI destination.
         if (_navigation.CurrentMainPage is WelcomePage)
-            return new("welcome", null, App.PendingActivation.ToUri(), false, _hasSession);
+            return new("welcome", null, pendingUri, false, _hasSession);
         var current = CurrentDestination();
-        return new(current?.RouteKey ?? "unavailable", current?.ToUri(), App.PendingActivation.ToUri(),
+        return new(current?.RouteKey ?? "unavailable", current?.ToUri(), pendingUri,
             _navigation.CurrentMainPage is HomePage && _navigation.CanInternalGoBack, _hasSession);
     }
 
@@ -64,6 +65,7 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (_disposed) return new(false, "unavailable", "The app navigation connection has closed.");
+        if (!request.HasDestination) return new(false, "invalid_uri", "The URI is not a supported Mizon destination.");
         if (App.MainMizonWindow?.DispatcherQueue.HasThreadAccess != true)
             throw new InvalidOperationException("App navigation requires the UI dispatcher.");
         if (_navigation.CurrentMainPage is LoginPage { ViewModel.ControlsIsEnabled: false })
@@ -79,7 +81,8 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
             {
                 Operation = "open_page", Page = request.Destination
             }, cancellationToken);
-            return new(result.Success, result.Code, result.Message);
+            cancellationToken.ThrowIfCancellationRequested();
+            return new(result.Success, result.Code, result.Message, result.Success ? ResultData(request, "opened") : null);
         }
 
         var home = _navigation.CurrentMainPage as HomePage ?? await ValidateSessionAsync(cancellationToken);
@@ -91,10 +94,34 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
             return new(false, "page_changed", "The active page changed before navigation completed.");
         var opened = await home.OpenDestinationAsync(request, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
-        return opened
-            ? new(true, "opened", "The destination was opened using the app navigation flow; content may still be loading.")
-            : new(false, "page_unavailable", "The destination is unavailable or navigation was superseded.");
+        if (!opened || _disposed || !ReferenceEquals(_navigation.CurrentMainPage, home))
+            return new(false, "page_unavailable", "The destination is unavailable or navigation was superseded.");
+        if (request.ClientPublicId is Guid clientId)
+        {
+            if (_navigation.CurrentInternalPage is not ClientProfilePage profile || profile.ClientPublicId != clientId
+                || !await McpAuthenticationService.WaitForLoadedAsync(profile, cancellationToken))
+                return new(false, "page_changed", "The profile page changed before it could be loaded.");
+            var loaded = await profile.WaitForProfileAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!ReferenceEquals(_navigation.CurrentInternalPage, profile) || _disposed
+                || !ReferenceEquals(_navigation.CurrentMainPage, home) || !_hasSession)
+                return new(false, "page_changed", "The profile page changed before loading completed.");
+            if (!loaded) return new(false, "profile_unavailable", "The profile could not be loaded. Check the account and connection.");
+            return new(true, "completed", "The profile was opened and loaded.", ResultData(request, "completed"));
+        }
+        var completed = request.MusicAction is MusicActivationAction.Play or MusicActivationAction.Download
+            || request.StoryPublicId is not null || request.MusicCommentPublicId is not null;
+        return completed
+            ? new(true, "completed", "The requested destination operation completed.", ResultData(request, "completed"))
+            : new(true, "opened", "The destination was opened; its content may still be loading.", ResultData(request, "opened"));
     }
+
+    private static AppDeepLinkResultData ResultData(AppActivationRequest request, string stage) => new()
+    {
+        Destination = request.RouteKey!, Uri = request.ToUri()!, CompletionStage = stage,
+        PublicId = request.ClientPublicId ?? request.MusicPublicId ?? request.PlaylistPublicId ?? request.StoryPublicId,
+        CommentPublicId = request.MusicCommentPublicId, SettingsSection = request.SettingsSection
+    };
 
     private async Task<HomePage?> ValidateSessionAsync(CancellationToken cancellationToken)
     {

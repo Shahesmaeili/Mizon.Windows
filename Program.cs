@@ -14,13 +14,13 @@ namespace Mizon.Windows;
 // Redirect before constructing App, its services, sockets or any XAML window.
 internal static partial class Program
 {
-    private static readonly ConcurrentQueue<AppActivationRequest> Activations = new();
+    private static readonly ConcurrentQueue<AppActivationEnvelope> Activations = new();
     private static DispatcherQueue? _dispatcher;
-    private static Action<AppActivationRequest>? _receiveActivation;
+    private static Action<AppActivationEnvelope>? _receiveActivation;
     private static AppInstance? _instance;
     private static readonly ConcurrentQueue<PendingAction> PendingActions = new();
     private static Func<string, bool>? _invokeAction;
-    private static bool _exiting;
+    private static volatile bool _exiting;
 
     [STAThread]
     public static int Main(string[] args)
@@ -42,10 +42,12 @@ internal static partial class Program
                 RedirectActivation(activation, _instance);
             return 0;
         }
-        Activations.Enqueue(AppActivationRequest.FromActivation(activation));
+        Activations.Enqueue(AppActivationEnvelope.FromActivation(activation));
         _instance.Activated += (_, forwarded) =>
         {
-            Activations.Enqueue(AppActivationRequest.FromActivation(forwarded));
+            var envelope = AppActivationEnvelope.FromActivation(forwarded);
+            if (_exiting) { envelope.Close("unavailable", "The app is closing."); return; }
+            Activations.Enqueue(envelope);
             _dispatcher?.TryEnqueue(DrainActivations);
         };
         try
@@ -71,6 +73,8 @@ internal static partial class Program
         finally
         {
             _exiting = true;
+            _receiveActivation = null;
+            while (Activations.TryDequeue(out var queued)) queued.Close("unavailable", "The app has closed.");
             _invokeAction = null;
             while (PendingActions.TryDequeue(out var pending)) pending.Completion.TrySetResult(false);
             // SDK 0.1.0 owns its COM factory for the process lifetime; it exposes
@@ -80,7 +84,7 @@ internal static partial class Program
         return 0;
     }
 
-    internal static void ConnectActivationHandler(DispatcherQueue dispatcher, Action<AppActivationRequest> handler)
+    internal static void ConnectActivationHandler(DispatcherQueue dispatcher, Action<AppActivationEnvelope> handler)
     {
         _receiveActivation = handler;
         _dispatcher = dispatcher;

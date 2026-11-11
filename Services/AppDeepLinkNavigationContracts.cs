@@ -14,4 +14,4 @@ internal interface IAppDeepLinkNavigation
 internal sealed record AppNavigationSnapshot(string Destination, string? Uri, string? PendingUri,
     bool CanGoBack, bool HasSession);
 
-internal sealed record AppNavigationOutcome(bool Success, string Code, string Message);
+internal sealed record AppNavigationOutcome(bool Success, string Code, string Message, AppDeepLinkResultData? Data = null);

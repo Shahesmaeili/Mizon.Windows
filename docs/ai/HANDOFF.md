@@ -2,6 +2,30 @@
 
 Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Correlated deep-link responses and taskbar loading — 2026-11-11
+
+The existing `mizon` protocol now declares `ReturnResults="optional"`. Native
+results use the bounded version-1 source-generated JSON envelope in
+`Services/AppDeepLinkResult.cs`; see [the caller contract](../../DeepLinks.md).
+Program retains the native result operation before single-instance redirection
+returns. Startup, cancellation, replacement, failure and closure report at most
+once through the existing navigation flow. Page-only success is explicitly
+`opened`; profile, comment, story readiness and playback/download use their
+actual completion outcome. Normal shell links keep their existing behavior.
+
+The independent taskbar profile waits for a verified native response and shows
+a stationary ProgressRing beside the unchanged presence badge/photo animation.
+It uses the main app's published PFN, a caller-owned HWND, a 60-second deadline,
+and account/disposal cancellation. No token is published to the companion.
+MCP navigation receives typed receipts and native pending URI under existing
+independent navigation permissions; it still cannot play/download music.
+
+Debug x64 and headless/native helper checks passed. Deployment, actual taskbar
+child-HWND result delivery/focus, visible ring/DPI and Narrator speech remain
+unverified; no Windows UI automation or registration changes were performed.
+The changed protocol manifest requires a normal MSIX Deploy before runtime use.
+See [integration evidence and limits](tasks/2026-11-11-deep-link-results-integration.md).
+
 ## Fullscreen header and window controls — 2026-11-11
 
 Crash follow-up: native thumbnail/F11/button presenter mutations are deferred and

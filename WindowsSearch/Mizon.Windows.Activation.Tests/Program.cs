@@ -77,6 +77,10 @@ Check(manifest.Root.GetNamespaceOfPrefix("uap3") == uap3
 Check(extensions.Elements(uap + "Extension").Any(extension =>
     (string?)extension.Attribute("Category") == "windows.protocol"
     && (string?)extension.Element(uap + "Protocol")?.Attribute("Name") == "mizon"), "manifest preserves mizon protocol registration");
+Check(extensions.Elements(uap + "Extension").Elements(uap + "Protocol")
+    .Where(protocol => (string?)protocol.Attribute("Name") == "mizon")
+    .All(protocol => (string?)protocol.Attribute("ReturnResults") == "optional"),
+    "mizon accepts result calls while preserving ordinary browser and shell links");
 var actionExtensions = extensions.Elements(uap3 + "Extension")
     .Where(extension => (string?)extension.Attribute("Category") == "windows.appExtension")
     .Elements(uap3 + "AppExtension")

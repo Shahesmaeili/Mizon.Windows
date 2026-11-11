@@ -53,7 +53,7 @@
 
 		<Extensions>
 			<uap:Extension Category="windows.protocol">
-				<uap:Protocol Name="mizon">
+        <uap:Protocol Name="mizon" ReturnResults="optional">
 					<uap:DisplayName>Mizon App</uap:DisplayName>
 				</uap:Protocol>
 			</uap:Extension>

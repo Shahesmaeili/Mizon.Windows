@@ -34,7 +34,13 @@ public sealed partial class ClientProfilePage : Page
     private readonly StackPanel _identity = new() { Orientation = Orientation.Horizontal, Spacing = 24 };
     private readonly StackPanel _identityText = new() { Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
     private CancellationTokenSource? _request;
+    private TaskCompletionSource<bool> _profileReady = NewProfileCompletion();
     public Guid ClientPublicId { get; private set; }
+
+    private static TaskCompletionSource<bool> NewProfileCompletion() => new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    // Navigation receipts wait for the existing UI request, never a second API call.
+    internal Task<bool> WaitForProfileAsync(CancellationToken cancellationToken) => _profileReady.Task.WaitAsync(cancellationToken);
 
     public ClientProfilePage()
     {
@@ -76,18 +82,27 @@ public sealed partial class ClientProfilePage : Page
     protected override void OnNavigatedTo(NavigationEventArgs args)
     {
         base.OnNavigatedTo(args);
+        _profileReady.TrySetResult(false);
+        _profileReady = NewProfileCompletion();
+        ClientPublicId = Guid.Empty;
         if (args.Parameter is Dictionary<string, object> parameters
             && parameters.TryGetValue(PageConstants.CLIENT_ID, out var value) && value is Guid id)
             ClientPublicId = id;
     }
 
     private async void PageLoaded(object sender, RoutedEventArgs args) => await LoadProfileAsync();
-    private async void RetryClick(object sender, RoutedEventArgs args) => await LoadProfileAsync();
+    private async void RetryClick(object sender, RoutedEventArgs args)
+    {
+        _profileReady.TrySetResult(false);
+        _profileReady = NewProfileCompletion();
+        await LoadProfileAsync();
+    }
 
     private async Task LoadProfileAsync()
     {
         CancelRequest();
-        if (ClientPublicId == Guid.Empty) return;
+        var ready = _profileReady;
+        if (ClientPublicId == Guid.Empty) { ready.TrySetResult(false); return; }
         var request = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         _request = request;
         var token = request.Token;
@@ -120,6 +135,7 @@ public sealed partial class ClientProfilePage : Page
                 token.ThrowIfCancellationRequested();
                 _avatar.ProfilePicture = image.Image;
             }
+            ready.TrySetResult(true);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -134,6 +150,7 @@ public sealed partial class ClientProfilePage : Page
         }
         finally
         {
+            ready.TrySetResult(false);
             if (ReferenceEquals(_request, request))
             {
                 _loading.IsActive = false; _loading.Visibility = Visibility.Collapsed;
@@ -179,6 +196,7 @@ public sealed partial class ClientProfilePage : Page
     private void PageUnloaded(object sender, RoutedEventArgs args)
     {
         if (IsLoaded) return;
+        _profileReady.TrySetResult(false);
         CancelRequest(); _avatar.ProfilePicture = null;
         _name.Text = _username.Text = _fullName.Text = _nickname.Text = string.Empty;
     }

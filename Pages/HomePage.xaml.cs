@@ -571,7 +571,10 @@ namespace Mizon.Windows.Pages
                     var presenter = _activationStoryPresenter = new FollowingActivityStoryPresenter();
                     await presenter.OpenAsync(storyId, cancellationToken: token);
                     token.ThrowIfCancellationRequested();
-                    return presenter.CurrentStoryPublicId == storyId;
+                    if (presenter.CurrentStoryPublicId != storyId || presenter.ActiveViewer is not { } viewer) return false;
+                    var ready = await viewer.WaitForPresentationAsync(token);
+                    token.ThrowIfCancellationRequested();
+                    return ready && presenter.CurrentStoryPublicId == storyId;
                 }
                 if (request.MusicPublicId is Guid musicId)
                 {
@@ -583,9 +586,9 @@ namespace Mizon.Windows.Pages
                             [PageConstants.MUSIC_ID] = musicId
                         }));
                         if (navigation.CurrentInternalPage is not MusicsPage comments) return false;
-                        await comments.OpenCommentAsync(commentId, token);
+                        var found = await comments.OpenCommentAsync(commentId, token);
                         token.ThrowIfCancellationRequested();
-                        return true;
+                        return found;
                     }
                     return await OpenMusicActivationAsync(musicId, request.MusicAction, token);
                 }

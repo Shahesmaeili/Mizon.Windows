@@ -19,18 +19,18 @@ public sealed partial class MusicsPage
     private TaskCompletionSource? _coverNavigationSettled;
 
     // Also used when an activity points into the music page that is already open.
-    public async Task OpenCommentAsync(Guid commentPublicId, CancellationToken cancellationToken = default)
+    public async Task<bool> OpenCommentAsync(Guid commentPublicId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (commentPublicId == Guid.Empty) return;
+        if (commentPublicId == Guid.Empty) return false;
         if (!_pageActive)
         {
             if (!cancellationToken.CanBeCanceled)
             {
                 _pendingCommentPublicId = commentPublicId;
-                return;
+                return false;
             }
-            if (!await McpAuthenticationService.WaitForLoadedAsync(this, cancellationToken) || !_pageActive) return;
+            if (!await McpAuthenticationService.WaitForLoadedAsync(this, cancellationToken) || !_pageActive) return false;
         }
         CancelCommentNavigation();
         _pendingCommentPublicId = Guid.Empty;
@@ -45,27 +45,27 @@ public sealed partial class MusicsPage
             // Frame.Navigated initializes the shared model. The low-priority turn also
             // lets the connected cover start before an API response can scroll the page.
             await NextCommentLayoutTurnAsync(token);
-            if (!IsCurrent()) return;
+            if (!IsCurrent()) return false;
             var found = await ViewModel.FocusMusicCommentAsync(musicId, commentPublicId, token);
-            if (!IsCurrent()) return;
+            if (!IsCurrent()) return false;
             if (_coverNavigationSettled is { Task.IsCompleted: false } cover)
                 await cover.Task.WaitAsync(token);
-            if (!IsCurrent()) return;
+            if (!IsCurrent()) return false;
             if (!found)
             {
                 ShowCommentNavigationMessage("این نظر دیگر در دسترس نیست یا دریافت آن انجام نشد.");
-                return;
+                return false;
             }
 
             await NextCommentLayoutTurnAsync(token);
-            if (!IsCurrent()) return;
+            if (!IsCurrent()) return false;
             var item = ViewModel.MusicDetailsComments.FirstOrDefault(x => x.PublicId == commentPublicId);
-            if (item is null) return;
+            if (item is null) return false;
             var index = ViewModel.MusicDetailsComments.IndexOf(item);
-            if (MusicDetailsCommentsRepeater.GetOrCreateElement(index) is not FrameworkElement element) return;
+            if (MusicDetailsCommentsRepeater.GetOrCreateElement(index) is not FrameworkElement element) return false;
             await NextCommentLayoutTurnAsync(token);
             if (!IsCurrent() || element.DataContext is not MusicDetailsCommentItemViewModel current
-                || current.PublicId != commentPublicId) return;
+                || current.PublicId != commentPublicId) return false;
 
             if (element is Control control) control.Focus(FocusState.Programmatic);
             element.StartBringIntoView(new BringIntoViewOptions
@@ -75,6 +75,7 @@ public sealed partial class MusicsPage
                 HorizontalAlignmentRatio = 0.5
             });
             AccessibilityAnnouncements.Announce(element, "نظر موردنظر نمایش داده شد. " + item.AutomationName, "FollowingComment");
+            return true;
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception exception)
@@ -95,6 +96,8 @@ public sealed partial class MusicsPage
         {
             if (ReferenceEquals(_commentNavigationCancellation, request)) _commentNavigationCancellation = null;
         }
+
+        return false;
 
         bool IsCurrent() => _pageActive && !token.IsCancellationRequested && version == _commentNavigationVersion
             && MusicPublicId == musicId && ViewModel.CurrentMusicPublicId == musicId;

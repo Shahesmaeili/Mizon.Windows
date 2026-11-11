@@ -76,6 +76,97 @@ if (AppDeepLinkCatalog.TryCreate("music-details", musicPublicId, null, null, nul
 
 پارامترهای ناشناخته، چندباره، اطلاعات ورود، پورت، fragment، مسیر فایل، آدرس API، شناسهٔ خالی و encoding خراب پذیرفته نمی‌شوند. دیپ‌لینک توکن یا پسورد دریافت نمی‌کند.
 
+## پاسخ استاندارد دیپ‌لینک
+
+همهٔ مقصدهای جدول با `LaunchUriForResultsAsync` قابل فراخوانی‌اند. پروتکل با
+`ReturnResults="optional"` ثبت شده؛ لینک عادی مرورگر/Win+R همچنان کار می‌کند، ولی
+`LaunchUriAsync` فقط نتیجهٔ شروع برنامه را می‌دهد و پاسخ عملیات را دریافت نمی‌کند.
+بعد از تغییر مانیفست، Deploy مجدد MSIX لازم است.
+
+در ورودی `ValueSet` این دو مقدار ارسال شوند:
+
+- `mizon.responseVersion`: عدد صحیح `1`.
+- `mizon.requestId`: شناسهٔ GUID یکتای درخواست، به صورت رشته.
+
+اگر این دو مقدار ارسال نشوند، نسخهٔ ۱ و شناسهٔ تولیدشده توسط برنامه استفاده
+می‌شود؛ مقدار نامعتبر یا نسخهٔ پشتیبانی‌نشده خطاست. پاسخ JSON در کلید
+`mizon.response` قرار می‌گیرد. شناسهٔ پاسخ باید با درخواست تطبیق داده شود؛ موفق
+بودن `LaunchUriResult.Status` بدون پاسخ معتبر، موفقیت عملیات Mizon نیست.
+
+```json
+{
+  "version": 1,
+  "requestId": "882e51dc-a69f-4410-98fc-d46eff3e8e2f",
+  "success": true,
+  "code": "completed",
+  "message": "The profile was opened and loaded.",
+  "data": {
+    "destination": "client",
+    "uri": "mizon://client/75dc8868-fda0-47f8-aef4-820591742ada",
+    "completionStage": "completed",
+    "publicId": "75dc8868-fda0-47f8-aef4-820591742ada"
+  }
+}
+```
+
+`data` اختیاری و دارای قرارداد تایپ‌شده است: مقصد، URI استاندارد، مرحلهٔ انجام،
+و در صورت نیاز `publicId`، `commentPublicId` و `settingsSection`. اطلاعات تکمیلی
+آینده نیز با فیلد مشخص به همین قرارداد اضافه می‌شود؛ پسورد، توکن، مسیر فایل و
+متن خام exception در پاسخ نیست. سقف پاسخ ۱۶ KiB و JSON بدون reflection است.
+
+| نتیجه | معنی |
+| --- | --- |
+| `opened` | صفحه یا کادر جستجو باز شده؛ دریافت همهٔ داده‌های آن صفحه ممکن است هنوز ادامه داشته باشد. |
+| `completed` | عملیات پخش/دانلود، دریافت پروفایل، آماده‌شدن محتوای استوری یا پیدا شدن و نمایش کامنت انجام شده است. |
+| `invalid_uri` / `invalid_request` / `unsupported_version` | مسیر یا قرارداد درخواست قابل پذیرش نیست. |
+| `requires_sign_in` | نشست معتبر وجود ندارد؛ درخواست پاسخ‌دار برای بعد از ورود ذخیره نمی‌شود. |
+| `busy` | ارسال فرم ورود/ثبت‌نام یا خروج از حساب در حال انجام است. |
+| `profile_unavailable` / `page_unavailable` / `page_changed` | دریافت مقصد ممکن نبود یا کاربر صفحه را عوض کرد. |
+| `superseded` / `cancelled` | درخواست جدید جایگزین شده یا برنامه عملیات را لغو کرده است. |
+| `timed_out` | زمان پاسخ تمام شده است. |
+| `unavailable` / `app_closed` / `navigation_failed` | برنامه بسته شده یا باز کردن مقصد انجام نشد. |
+
+پاسخ دقیقاً یک بار ارسال می‌شود. مهلت سمت دریافت‌کننده معمولاً ۵۰ ثانیه و برای
+دانلود صریح ۵ دقیقه است. درخواست‌های معمولیِ بدون پاسخ همچنان رفتار قبلیِ حفظ
+مقصد تا ورود را دارند. پاسخ `opened` تأیید وجود رکورد در API نیست؛ برای مثال
+صفحهٔ جزئیات آهنگ می‌تواند باز شده باشد و سپس وضعیت خطای API را نمایش دهد.
+
+نمونهٔ فراخوانی دسکتاپ از کد داخل مجموعهٔ Mizon:
+
+```csharp
+var requestId = Guid.NewGuid();
+var options = new Windows.System.LauncherOptions
+{
+    TargetApplicationPackageFamilyName = mainAppPackageFamilyName
+};
+WinRT.Interop.InitializeWithWindow.Initialize(options, callerWindowHandle);
+var input = new Windows.Foundation.Collections.ValueSet
+{
+    [AppDeepLinkResultProtocol.VersionKey] = 1,
+    [AppDeepLinkResultProtocol.RequestIdKey] = requestId.ToString("D")
+};
+var response = await Windows.System.Launcher.LaunchUriForResultsAsync(uri, options, input);
+if (response.Status == Windows.System.LaunchUriStatus.Success
+    && response.Result is { } values
+    && values.TryGetValue(AppDeepLinkResultProtocol.ResponseKey, out var raw)
+    && AppDeepLinkResultProtocol.TryParse(raw as string, requestId, out var result))
+{
+    // result.Success: نتیجهٔ عملیات؛ result.Data: اطلاعات تکمیلی تایپ‌شده.
+}
+```
+
+کامپنیون تسک‌بار PFN واقعی برنامه را از snapshot حساب می‌گیرد؛ HWND خود
+کامپنیون را به ویندوز می‌دهد، نه HWND اکسپلورر. با کلیک پروفایل، حلقهٔ لودینگ
+تا پاسخ معتبر یا خطا فعال است؛ کلیک تکراری درخواست دوم نمی‌سازد. مهلت کلاینت
+۶۰ ثانیه است. خروج/تعویض حساب، تخریب پنجره و Dispose، درخواست و انیمیشن را
+آزاد می‌کنند. پاسخ دیررس نمی‌تواند وضعیت درخواست جدید را تغییر دهد. حلقه با
+هاور عکس بزرگ نمی‌شود و فاصلهٔ بج آنلاین بودن حفظ می‌شود.
+
+منابع API:
+[WinUI 3 protocol-for-results receiver](https://learn.microsoft.com/en-us/windows/ai/app-actions/actions-uri-launch)،
+[Launcher and manifest contract](https://learn.microsoft.com/en-us/uwp/launch-resume/how-to-launch-an-app-for-results)،
+[desktop HWND initialization sample](https://github.com/dotnet/maui/blob/main/src/Essentials/src/MediaPicker/MediaPicker.windows.cs).
+
 ## MCP
 
 - `mizon_get_navigation`: مقصد فعلی، URI استاندارد، مقصد منتظر و امکان بازگشت.

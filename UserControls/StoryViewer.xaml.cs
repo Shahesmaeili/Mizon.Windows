@@ -64,6 +64,10 @@ public sealed partial class StoryViewer : UserControl, IDisposable
         _timer.Tick += Timer_Tick;
     }
 
+    private TaskCompletionSource<bool> _presentationReady = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    internal Task<bool> WaitForPresentationAsync(CancellationToken token) => _presentationReady.Task.WaitAsync(token);
+
     public Task OpenAsync(MusicPageViewModel viewModel, IReadOnlyList<StoryItemViewModel> stories, int index) =>
         OpenWithTransitionAsync(viewModel, stories, index, null, CancellationToken.None);
 
@@ -121,6 +125,8 @@ public sealed partial class StoryViewer : UserControl, IDisposable
     private async Task OpenIndexAsync(int index, bool preserveEntrance = false)
     {
         if (_closing || _closed || _viewModel is not { } viewModel || index < 0 || index >= _stories.Count) return;
+        _presentationReady.TrySetResult(false);
+        _presentationReady = new(TaskCreationOptions.RunContinuationsAsynchronously);
         _ready = false;
         if (!preserveEntrance) CancelOpeningTransition(clearPreview: true);
         _version++;
@@ -316,6 +322,7 @@ public sealed partial class StoryViewer : UserControl, IDisposable
     {
         if (_closing || _closed || _ready || _detail is null || _request is not { } request || !IsCurrent(request)) return;
         _ready = true;
+        _presentationReady.TrySetResult(true);
         if (_openingTransition is null) CancelOpeningTransition(clearPreview: true);
         LoadingPanel.Visibility = Visibility.Collapsed;
         LoadingRing.IsActive = false;
@@ -537,6 +544,7 @@ public sealed partial class StoryViewer : UserControl, IDisposable
     private void ShowError(string message)
     {
         if (_closing || _closed) return;
+        _presentationReady.TrySetResult(false);
         _ready = false;
         StopPlayback();
         CancelOpeningTransition(clearPreview: true);
@@ -567,6 +575,7 @@ public sealed partial class StoryViewer : UserControl, IDisposable
     {
         if (_closing) return;
         _closing = true;
+        _presentationReady.TrySetResult(false);
         _version++;
         _lifetime.Cancel();
         _request?.Cancel();

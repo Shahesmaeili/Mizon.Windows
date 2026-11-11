@@ -109,6 +109,7 @@ public partial class App : Application
     internal static void CancelPendingNavigation()
     {
         ClearPendingActivation();
+        ((App)Current).CancelResultActivation("cancelled", "Navigation was cancelled by the app.");
         if (((App)Current).Services.GetRequiredService<NavigationService>().CurrentMainPage is HomePage home)
             home.CancelDestination();
     }
@@ -116,11 +117,47 @@ public partial class App : Application
     private bool _initialized;
     private AppActionsService? _appActions;
     private MulticastDiscoveryServiceV2? _discoveryService;
+    private AppDeepLinkResultDispatcher? _deepLinkResults;
+    private AppActivationEnvelope? _pendingResultActivation;
+    private bool _closing;
+    internal static string? PendingResultUri => Current is App app
+        ? app._pendingResultActivation is { Response.IsCompleted: false } pending
+            ? pending.Request.ToUri() : app._deepLinkResults?.PendingUri
+        : null;
+
+    private void ReceiveActivation(AppActivationEnvelope envelope)
+    {
+        if (_closing) { envelope.Close("unavailable", "The app is closing."); return; }
+        if (envelope.Response is not { } response)
+        {
+            ReceiveActivation(envelope.Request);
+            return;
+        }
+        if (response.IsCompleted) { response.Dispose(); return; }
+        if (!envelope.Request.HasDestination)
+        {
+            envelope.Close("invalid_uri", "The URI is not a supported Mizon destination.");
+            return;
+        }
+        CancelResultActivation("superseded", "A newer deep-link request replaced this request.");
+        ClearPendingActivation();
+        if (_deepLinkResults is null) _pendingResultActivation = envelope;
+        else _ = _deepLinkResults.DispatchAsync(envelope.Request, response);
+        if (MainMizonWindow is MainWindow window) window.ActivateExistingWindow();
+    }
+
+    private void CancelResultActivation(string code, string message)
+    {
+        _pendingResultActivation?.Close(code, message);
+        _pendingResultActivation = null;
+        _deepLinkResults?.CancelActive(code, message);
+    }
 
     private void ReceiveActivation(AppActivationRequest request)
     {
         if (request.HasDestination)
         {
+            CancelResultActivation("superseded", "Another app activation replaced this request.");
             PendingActivation = request;
             if (_initialized) OpenPendingActivation();
         }
@@ -175,6 +212,8 @@ public partial class App : Application
     private void AppInitialize()
     {
         AppLog.Information("Application initialization started.");
+        try { TaskbarProfileBridge.SetPackageFamilyName(global::Windows.ApplicationModel.Package.Current.Id.FamilyName); }
+        catch (InvalidOperationException) { TaskbarProfileBridge.SetPackageFamilyName(null); }
         var localStorageService = Services.GetRequiredService<LocalStorageService>();
         var navigationService = Services.GetRequiredService<NavigationService>();
         // Subscribe before the first navigation; login/logout replace the shell tasks as one list.
@@ -203,9 +242,11 @@ public partial class App : Application
             Program.ConnectAppActionHandler(_appActions.Invoke);
         }
         var authentication = new McpAuthenticationService(navigationService, localStorageService);
+        var deepLinkNavigation = new AppDeepLinkNavigation(navigationService, localStorageService, authentication);
+        _deepLinkResults = new AppDeepLinkResultDispatcher(deepLinkNavigation);
         McpAccessService.Current.Start(MainMizonWindow!.DispatcherQueue,
             authentication, new McpAppearanceService(AppearanceSettingsService.Current),
-            new McpNavigationService(new AppDeepLinkNavigation(navigationService, localStorageService, authentication)),
+            new McpNavigationService(deepLinkNavigation),
             new McpTaskbarPinService(TaskbarPinService.Current),
             new McpMusicHomeService(
                 () => navigationService.CurrentMainPage is Pages.HomePage { ViewModel.IsSigningOut: false }
@@ -214,6 +255,11 @@ public partial class App : Application
             presence: new McpPresenceService(Services.GetRequiredService<ProfilePresenceService>()),
             windowPresentation: new McpWindowPresentationService(() => MainMizonWindow as IWindowPresentationHost));
         MainMizonWindow.Closed += MainWindow_Closed;
+        if (_pendingResultActivation is { } pendingResult)
+        {
+            _pendingResultActivation = null;
+            _ = _deepLinkResults.DispatchAsync(pendingResult.Request, pendingResult.Response!);
+        }
         // The authenticated shell starts the socket after account validation. Login and
         // Welcome do not need SignalR's connection, transport buffers or reconnect loop.
 
@@ -221,6 +267,10 @@ public partial class App : Application
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
+        _closing = true;
+        CancelResultActivation("unavailable", "The app has closed.");
+        _deepLinkResults?.Dispose();
+        _deepLinkResults = null;
         MainMizonWindow!.Closed -= MainWindow_Closed;
         _appActions?.Dispose();
         _appActions = null;

@@ -25,6 +25,12 @@ Failure may omit data entirely. A timeout, cancelled/revoked request or disposed
 adapter does not manufacture a successful receipt. `mizon_get_navigation` reads
 the current location and does not retain/replay earlier invocation receipts.
 
+The existing `navigation.pendingUri` also reflects an in-flight native
+protocol-for-results request. It is cleared when that response finishes, times
+out or is replaced, even if an older asynchronous operation is still unwinding.
+It stays behind navigation read permission and does not expose the companion's
+private UI, credentials or additional business data.
+
 The app/taskbar result transport shares `Services/AppDeepLinkResult.cs`. Its
 source-generated camel-case JSON rejects unknown/duplicate properties, missing
 required fields, mismatched/empty request UUIDs, other protocol versions and
