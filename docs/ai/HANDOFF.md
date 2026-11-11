@@ -1,8 +1,14 @@
 # Windows handoff
 
-Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
+Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
 ## Floating story editorial strip — 2026-11-11
+
+Image-loading fix (2026-11-12): the packaged app log showed all three cards
+failing in `Path.set_Data`: the outline and matte reused one parent-owned XAML
+PathGeometry. Each now owns a separate geometry tree. Optional decoration/motion
+failure no longer hides the successfully initialized photo. See
+[cause and checks](tasks/2026-11-12-story-orbit-image-loading.md).
 
 The follow-up now traces six separate photo/paper contours from the supplied
 1600x1200 reference, replacing scaled duplicate outlines. A shared layout space

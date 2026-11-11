@@ -43,6 +43,17 @@ public sealed partial class StoryOrbitCard : UserControl
         try
         {
             CreateArtwork();
+        }
+        catch (Exception error)
+        {
+            ReleaseComposition();
+            PictureFrame.Visibility = Visibility.Collapsed;
+            AppLog.Error("Story editorial photo/clip could not initialize.", error);
+            return;
+        }
+
+        try
+        {
             var variant = Math.Clamp(Variant, 0, 2);
             var direction = variant == 1 ? -1 : 1;
             var phase = variant * 113f;
@@ -57,12 +68,10 @@ public sealed partial class StoryOrbitCard : UserControl
         }
         catch (Exception error)
         {
-            // Keep decoration failure out of the music-page navigation path.
+            // Animation is optional; keep the successfully loaded static image.
             _motion?.Dispose();
             _motion = null;
-            ReleaseComposition();
-            PictureFrame.Visibility = Visibility.Collapsed;
-            AppLog.Error("Story editorial artwork could not initialize composition.", error);
+            AppLog.Error("Story editorial motion could not initialize.", error);
         }
     }
 
@@ -95,7 +104,6 @@ public sealed partial class StoryOrbitCard : UserControl
         // These are two separately traced curves. Expanding the photo path
         // would lose the reference's waist, draped bottom and unequal rim gaps.
         var origin = new Vector2(120 + variant * 440, 320);
-        Outline.Data = MatteShape.Data = CreateOutline(StoryOrbitGeometry.Contour(variant), origin);
         using var builder = new CanvasPathBuilder(CanvasDevice.GetSharedDevice());
         var points = StoryOrbitGeometry.Photo(variant);
         builder.BeginFigure(points[0] - origin);
@@ -110,6 +118,27 @@ public sealed partial class StoryOrbitCard : UserControl
         _pathGeometry = compositor.CreatePathGeometry(_compositionPath);
         _clip = compositor.CreateGeometricClip(_pathGeometry);
         visual.Clip = _clip;
+
+        try
+        {
+            CreateDecoration(variant, accent, origin, compositor);
+        }
+        catch (Exception error)
+        {
+            // A paper-edge or shadow failure must not hide a decoded photograph
+            // or remove its successfully created clip.
+            ReleaseDecoration();
+            AppLog.Error("Story editorial decoration is unavailable; photo retained.", error);
+        }
+    }
+
+    private void CreateDecoration(int variant, Color accent, Vector2 origin, Compositor compositor)
+    {
+        var contour = StoryOrbitGeometry.Contour(variant);
+        // WinUI Geometry has one owning Path. Share immutable coordinates,
+        // never the PathGeometry/PathFigure/BezierSegment DependencyObjects.
+        Outline.Data = CreateOutline(contour, origin);
+        MatteShape.Data = CreateOutline(contour, origin);
 
         // The shape's own fill is opaque; only its parent is translucent, so
         // the live alpha mask retains a clean silhouette for both soft shadows.
@@ -224,22 +253,28 @@ public sealed partial class StoryOrbitCard : UserControl
         _motion = null;
         ReleaseComposition();
         Portrait.Source = null;
-        Outline.Data = MatteShape.Data = null;
     }
 
     private void ReleaseComposition()
     {
         ElementCompositionPreview.GetElementVisual(PictureFrame).Clip = null;
+        ReleaseDecoration();
+        _clip?.Dispose(); _clip = null;
+        _pathGeometry?.Dispose(); _pathGeometry = null;
+        _compositionPath = null;
+        _canvasGeometry?.Dispose(); _canvasGeometry = null;
+    }
+
+    private void ReleaseDecoration()
+    {
         ElementCompositionPreview.SetElementChildVisual(AmbientShadowHost, null);
         ElementCompositionPreview.SetElementChildVisual(ContactShadowHost, null);
         ElementCompositionPreview.SetElementChildVisual(TitleShadowHost, null);
         ReleaseShadow(ref _titleShadowVisual, ref _titleShadow);
         ReleaseShadow(ref _contactVisual, ref _contactShadow);
         ReleaseShadow(ref _ambientVisual, ref _ambientShadow);
-        _clip?.Dispose(); _clip = null;
-        _pathGeometry?.Dispose(); _pathGeometry = null;
-        _compositionPath = null;
-        _canvasGeometry?.Dispose(); _canvasGeometry = null;
+        Outline.Data = null;
+        MatteShape.Data = null;
     }
 
     private static void ReleaseShadow(ref SpriteVisual? visual, ref DropShadow? shadow)
