@@ -68,7 +68,7 @@ internal static partial class Program
             host.BeforeApply = enabled =>
             {
                 host.BeforeApply = null;
-                host.Transition.Request(!enabled);
+                host.Transition.Request();
                 Assert(host.Queue.Count == 0, "Requests raised inside native apply do not queue or apply recursively");
                 Assert(Capture(() => host.Transition.Set(!enabled)) is InvalidOperationException,
                     "A reentrant direct set is explicitly rejected");
@@ -78,16 +78,16 @@ internal static partial class Program
             Assert(host.FullScreen && host.Queue.Count == 1 && host.Applied.Count == 1,
                 "A request received during apply is deferred to the next dispatcher turn");
             host.Drain();
-            Assert(!host.FullScreen && host.Applied.SequenceEqual([true, false]), "Deferred requests run after the first native transition completes");
-            host.BeforeApply = enabled =>
+            Assert(!host.FullScreen && host.Applied.SequenceEqual([true, false]), "A toggle during queued apply reverses the in-flight target despite stale native state");
+            host.BeforeApply = _ =>
             {
                 host.BeforeApply = null;
-                host.Transition.Request(!enabled);
+                host.Transition.Request();
             };
             host.Transition.Set(true);
             Assert(host.FullScreen && host.Queue.Count == 1, "Requests during a direct MCP set also wait for a later dispatcher turn");
             host.Drain();
-            Assert(!host.FullScreen, "UI request issued during direct setting retains its intended target");
+            Assert(!host.FullScreen, "A toggle during direct setting reverses the in-flight target despite stale native state");
         }
         using (var host = new TransitionHost())
         {

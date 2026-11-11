@@ -11,12 +11,12 @@ internal sealed class WindowPresentationTransition(
     Action<Exception> reportFailure) : IDisposable
 {
     private bool? _pending;
-    private bool _queued, _applying, _disposed;
+    private bool _queued, _applying, _applyingTarget, _disposed;
 
     public void Request(bool? enabled = null)
     {
         if (_disposed) return;
-        try { _pending = enabled ?? !(_pending ?? currentState()); }
+        try { _pending = enabled ?? !(_pending ?? (_applying ? _applyingTarget : currentState())); }
         catch (Exception error) { Report(error); return; }
         QueuePending();
     }
@@ -59,6 +59,7 @@ internal sealed class WindowPresentationTransition(
 
     private void Apply(bool enabled)
     {
+        _applyingTarget = enabled;
         _applying = true;
         try
         {

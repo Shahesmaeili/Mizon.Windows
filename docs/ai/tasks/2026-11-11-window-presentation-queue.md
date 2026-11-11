@@ -15,7 +15,9 @@ accepts a dispatcher enqueue callback, current-state getter, native setter and
 failure reporter. The enqueue delegate must schedule a later dispatcher turn.
 
 `Request(bool? enabled = null)` coalesces pending intents into one callback; null
-toggles the pending target or current state. The latest explicit target wins.
+toggles the pending target, then the in-flight target, then current state. The
+in-flight target matters when native presenter callbacks arrive before the native
+state getter reflects the transition. The latest explicit target wins.
 `Set(bool)` cancels an older pending intent, applies synchronously and propagates
 errors for immediate MCP readback. A reentrant direct Set is rejected explicitly.
 Requests received during apply are queued only after apply returns. Failed enqueue
@@ -30,8 +32,12 @@ native resources, reflection or new MCP tools/scopes are introduced.
 assertions**, including 28 new assertions against the actual linked helper.
 Coverage includes rapid double toggle, last-target coalescing, synchronous direct
 override, idempotency, rejected/throwing enqueue, native and state-lookup failures,
-reentrancy, next-turn requests during apply, disposal and late callbacks. Existing
+reentrancy, next-turn requests during apply (including targetless toggles before
+native state changes, for both queued and direct setting), disposal and late callbacks. Existing
 production MCP permission/lifecycle and pipe checks also pass with synthetic data.
+The targetless-toggle regression failed against the prior helper, then the full
+215-assertion suite passed after tracking the in-flight target. Assertion counts
+are unchanged; the two existing apply-time scenarios now exercise real toggles.
 
 No real app, user consent, Windows UI automation, whole WinUI build or full-app
 NativeAOT publication was performed. Integration owner will wire the actual window
