@@ -303,7 +303,8 @@ public sealed partial class MainWindow : IWindowPresentationHost
         ExitFullScreenLabel.Text = exit;
         ExitFullScreenLabel.FontFamily = localization.TextFontFamily;
         AutomationProperties.SetName(FullScreenControls, localization.GetString("Window/FullScreenControls"));
-        SetWindowControlLabel(ExitFullScreenButton, exit + " (F11)");
+        SetWindowControlLabel(ExitFullScreenButton, exit);
+        AutomationProperties.SetAcceleratorKey(ExitFullScreenButton, "F11");
         SetWindowControlLabel(MinimizeWindowButton, localization.GetString("Window/Minimize"));
         SetWindowControlLabel(CloseWindowButton, localization.GetString("Window/Close"));
     }

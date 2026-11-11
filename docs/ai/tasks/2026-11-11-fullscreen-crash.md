@@ -1,7 +1,7 @@
 # Fullscreen transition crash investigation and callback isolation
 
-- Status: source hardening implemented; reported native crash has
-  not been reproduced in the full application after this change.
+- Status: source hardening implemented; user retested entry/exit and reported
+  no further crash on 2026-11-11. The original inner exception remains unknown.
 - Owner: Codex root; queue helper/tests: music_home_contracts; independent review:
   music_home_widgets.
 - Date: 2026-11-11.
@@ -69,15 +69,16 @@ Evidence logs: `D:/MizonTaskDiagnostics/Presence/verification/fullscreen-crash-b
 and `fullscreen-crash-access.log`. No package dependency, reflection or new JSON
 contract was introduced. Whole-app NativeAOT publication was not performed.
 
-Actual full-application fullscreen interaction, animation smoothness and crash
-resolution still require a live reproduction check. The configured MCP catalog
+Follow-up live validation: the user rebuilt/ran in Visual Studio, repeated the
+previously failing fullscreen action and answered “no longer crashed.” This
+confirms their tested scenario; it does not establish a reproduced root cause,
+all monitor/DPI combinations or measured animation smoothness. The configured MCP catalog
 does not expose the new window tools yet, and no Window-domain consent was granted
 for that connection; access was not self-approved or bypassed.
 
 ## Handoff / publication
 
-Build/start the latest source in the user's existing Visual Studio solution and
-repeat the failing enter/exit action. If it fails again, collect the new
+The requested live retest is complete by user confirmation. If it fails again, collect the new
 `Window presentation:` / `Title-bar native regions:` entries and the debugger's
 inner exception or dump. Do not infer resolution from the headless queue checks.
 Task-owned commits are integrated and pushed to origin/main after review; Git

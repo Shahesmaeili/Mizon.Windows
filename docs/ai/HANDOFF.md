@@ -9,9 +9,14 @@ coalesced outside input callbacks; chrome updates follow presenter completion,
 toolbar motion is stopped before replacing the presenter, and native header
 regions wait for the new inset layout. Late/disposed callbacks are guarded.
 Debug x64 build and 215 access/transition assertions passed. The reported
-CoreMessagingXP stowed exception lacked its inner exception/dump: these checks
-do not prove the original live crash resolved. New phase/region diagnostics are
-available for the user's next run. See [crash evidence and remaining live check](tasks/2026-11-11-fullscreen-crash.md).
+CoreMessagingXP stowed exception lacked its inner exception/dump. The user then
+retested fullscreen entry/exit and confirmed no further crash on 2026-11-11.
+This is user-reported live validation, not an automated reproduction of its cause.
+See [crash evidence](tasks/2026-11-11-fullscreen-crash.md).
+
+The following visual fix suppresses RootGrid's automatic F11 hover tooltip and
+removes F11 from the exit-button tooltip. F11 still invokes the same operation and
+remains available as Narrator accelerator metadata; see [tooltip follow-up](tasks/2026-11-11-hide-fullscreen-tooltip.md).
 
 Home's hardcoded 148-DIP caption margin is replaced by the actual Windows
 RightInset converted through the current XAML scale; fullscreen reserves zero

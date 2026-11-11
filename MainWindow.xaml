@@ -13,7 +13,7 @@
 
     Title="Mizon">
   
-    <Grid x:Name="RootGrid">
+    <Grid x:Name="RootGrid" KeyboardAcceleratorPlacementMode="Hidden">
         <Grid.KeyboardAccelerators>
             <KeyboardAccelerator Key="F11" Invoked="FullScreenShortcut_Invoked"/>
         </Grid.KeyboardAccelerators>
