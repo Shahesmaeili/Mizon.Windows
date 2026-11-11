@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Title" xml:space="preserve"><value>VPN میزون</value></data>
+  <data name="Subtitle" xml:space="preserve"><value>نگاهی به وضعیت اتصال تو</value></data>
+  <data name="ConnectionTitle" xml:space="preserve"><value>فضای اتصال</value></data>
+  <data name="ProviderCaption" xml:space="preserve"><value>VPN میزون · پیکربندی نشده</value></data>
+  <data name="SetupTitle" xml:space="preserve"><value>شروع یک اتصال تازه</value></data>
+  <data name="SetupDescription" xml:space="preserve"><value>سرویس VPN میزون هنوز پیکربندی نشده است. اتصال‌های فعلی خودت را می‌توانی در تنظیمات ویندوز مدیریت کنی.</value></data>
+  <data name="OpenSettings" xml:space="preserve"><value>تنظیمات VPN ویندوز</value></data>
+  <data name="OpenSettingsHelp" xml:space="preserve"><value>تنظیمات VPN ویندوز را باز می‌کند؛ اتصال VPN را برقرار یا قطع نمی‌کند.</value></data>
+  <data name="NetworkTitle" xml:space="preserve"><value>وضعیت اتصال</value></data>
+  <data name="InternetTitle" xml:space="preserve"><value>دسترسی به اینترنت</value></data>
+  <data name="InternetAvailable" xml:space="preserve"><value>اینترنت در دسترس است</value></data>
+  <data name="LocalOnly" xml:space="preserve"><value>شبکهٔ محلی · اینترنت محدود</value></data>
+  <data name="Offline" xml:space="preserve"><value>اتصال شبکه برقرار نیست</value></data>
+  <data name="NetworkUnknown" xml:space="preserve"><value>وضعیت شبکه در دسترس نیست</value></data>
+  <data name="MizonTunnel" xml:space="preserve"><value>سرویس VPN میزون</value></data>
+  <data name="NotConfigured" xml:space="preserve"><value>پیکربندی نشده · اتصال میزون فعال نیست</value></data>
+  <data name="AppearanceTitle" xml:space="preserve"><value>حال‌وهوای تو</value></data>
+  <data name="Particles" xml:space="preserve"><value>ذرات تعاملی</value></data>
+  <data name="ParticlesHelp" xml:space="preserve"><value>نمایش یا پنهان‌کردن ذرات متحرک؛ انتخابت روی این دستگاه ذخیره می‌شود.</value></data>
+  <data name="On" xml:space="preserve"><value>روشن</value></data>
+  <data name="Off" xml:space="preserve"><value>خاموش</value></data>
+  <data name="MotionDescription" xml:space="preserve"><value>وقتی این صفحه در دید نیست، حرکت ذرات متوقف می‌شود.</value></data>
+  <data name="MotionReduced" xml:space="preserve"><value>حرکت ذرات از تنظیم انیمیشن ویندوز پیروی می‌کند.</value></data>
+  <data name="Download" xml:space="preserve"><value>دانلود</value></data>
+  <data name="Ping" xml:space="preserve"><value>تأخیر</value></data>
+  <data name="Upload" xml:space="preserve"><value>آپلود</value></data>
+  <data name="DownloadUnavailable" xml:space="preserve"><value>دانلود VPN: تا برقراری اتصال، در دسترس نیست</value></data>
+  <data name="PingUnavailable" xml:space="preserve"><value>تأخیر VPN: تا برقراری اتصال، در دسترس نیست</value></data>
+  <data name="UploadUnavailable" xml:space="preserve"><value>آپلود VPN: تا برقراری اتصال، در دسترس نیست</value></data>
+  <data name="MetricsHelp" xml:space="preserve"><value>مصرف و تأخیر پس از پیکربندی اتصال VPN میزون نمایش داده می‌شوند. دسترسی به اینترنت به معنی فعال بودن VPN نیست.</value></data>
+  <data name="Loading" xml:space="preserve"><value>در حال بررسی اتصال</value></data>
+  <data name="Ready" xml:space="preserve"><value>وضعیت اتصال آماده است</value></data>
+  <data name="NoticeTitle" xml:space="preserve"><value>پیام اتصال</value></data>
+  <data name="PreferenceSaveError" xml:space="preserve"><value>این انتخاب فعلاً اعمال شد، اما روی دستگاه ذخیره نشد.</value></data>
+  <data name="EnvironmentError" xml:space="preserve"><value>اطلاعات اتصال ویندوز فعلاً در دسترس نیست.</value></data>
+  <data name="SettingsTimeout" xml:space="preserve"><value>باز شدن تنظیمات ویندوز بیش از حد طول کشید. دوباره تلاش کن.</value></data>
+  <data name="SettingsError" xml:space="preserve"><value>تنظیمات VPN ویندوز باز نشد. دوباره تلاش کن.</value></data>
+</root>

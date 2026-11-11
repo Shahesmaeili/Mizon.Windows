@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Title" xml:space="preserve"><value>Mizon VPN</value></data>
+  <data name="Subtitle" xml:space="preserve"><value>Your connection, at a glance.</value></data>
+  <data name="ConnectionTitle" xml:space="preserve"><value>Connection space</value></data>
+  <data name="ProviderCaption" xml:space="preserve"><value>Mizon VPN · not configured</value></data>
+  <data name="SetupTitle" xml:space="preserve"><value>Your connection starts here</value></data>
+  <data name="SetupDescription" xml:space="preserve"><value>Mizon's VPN service is not configured yet. You can manage your existing connections in Windows settings.</value></data>
+  <data name="OpenSettings" xml:space="preserve"><value>Windows VPN settings</value></data>
+  <data name="OpenSettingsHelp" xml:space="preserve"><value>Opens Windows VPN settings. This does not connect or disconnect a VPN.</value></data>
+  <data name="NetworkTitle" xml:space="preserve"><value>Connection overview</value></data>
+  <data name="InternetTitle" xml:space="preserve"><value>Internet access</value></data>
+  <data name="InternetAvailable" xml:space="preserve"><value>Internet available</value></data>
+  <data name="LocalOnly" xml:space="preserve"><value>Local network · limited internet</value></data>
+  <data name="Offline" xml:space="preserve"><value>No network connection</value></data>
+  <data name="NetworkUnknown" xml:space="preserve"><value>Network status unavailable</value></data>
+  <data name="MizonTunnel" xml:space="preserve"><value>Mizon VPN service</value></data>
+  <data name="NotConfigured" xml:space="preserve"><value>Not configured · no active Mizon tunnel</value></data>
+  <data name="AppearanceTitle" xml:space="preserve"><value>Make it yours</value></data>
+  <data name="Particles" xml:space="preserve"><value>Interactive particles</value></data>
+  <data name="ParticlesHelp" xml:space="preserve"><value>Show or hide the animated particles. Your choice is saved on this device.</value></data>
+  <data name="On" xml:space="preserve"><value>On</value></data>
+  <data name="Off" xml:space="preserve"><value>Off</value></data>
+  <data name="MotionDescription" xml:space="preserve"><value>Motion pauses when this page is out of view.</value></data>
+  <data name="MotionReduced" xml:space="preserve"><value>Motion follows your Windows animation preference.</value></data>
+  <data name="Download" xml:space="preserve"><value>Downloaded</value></data>
+  <data name="Ping" xml:space="preserve"><value>Latency</value></data>
+  <data name="Upload" xml:space="preserve"><value>Uploaded</value></data>
+  <data name="DownloadUnavailable" xml:space="preserve"><value>VPN download: unavailable until connected</value></data>
+  <data name="PingUnavailable" xml:space="preserve"><value>VPN latency: unavailable until connected</value></data>
+  <data name="UploadUnavailable" xml:space="preserve"><value>VPN upload: unavailable until connected</value></data>
+  <data name="MetricsHelp" xml:space="preserve"><value>Usage and latency will appear when Mizon has a configured VPN connection. Internet access alone does not mean a VPN is active.</value></data>
+  <data name="Loading" xml:space="preserve"><value>Checking your connection</value></data>
+  <data name="Ready" xml:space="preserve"><value>Connection overview ready</value></data>
+  <data name="NoticeTitle" xml:space="preserve"><value>Connection notice</value></data>
+  <data name="PreferenceSaveError" xml:space="preserve"><value>This choice is applied for now, but could not be saved on this device.</value></data>
+  <data name="EnvironmentError" xml:space="preserve"><value>Windows connection information is temporarily unavailable.</value></data>
+  <data name="SettingsTimeout" xml:space="preserve"><value>Windows settings took too long to open. You can try again.</value></data>
+  <data name="SettingsError" xml:space="preserve"><value>Windows VPN settings could not be opened. Try again.</value></data>
+</root>

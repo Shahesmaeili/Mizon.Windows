@@ -2,6 +2,22 @@
 
 Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## VPN page and local Particle — 2026-11-11
+
+VPNPage now uses its own upstream-derived Particle control, retaining the effect
+with bounded work and explicit Win2D/observer cleanup. DevWinUI remains installed
+for other pages, per the user's scope. The page has responsive translucent
+cards, live fa/en resources, dark/light/high-contrast, shared loading and
+accessible controls. Internet state comes from Windows; no VPN tunnel service
+exists yet, so usage and Mizon connection status remain honestly unavailable.
+The setup action opens Windows VPN settings; it does not establish a connection.
+
+The page exposes independent MCP VPN read/control scopes, including saved
+particle preference, loading and bounded errors. See [VPN contract](../../Mcp/VPN.md)
+and [validation/remaining visual checks](tasks/2026-11-11-vpn-page-integration.md).
+Debug x64, isolated behavior/permission tests and native helper/catalog checks
+passed. Actual UI, Narrator speech and full-app AOT publication were not tested.
+
 ## Correlated deep-link responses and taskbar loading — 2026-11-11
 
 The existing `mizon` protocol now declares `ReturnResults="optional"`. Native

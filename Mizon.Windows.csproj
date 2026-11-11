@@ -9,6 +9,7 @@
 		<Content Include="Assets\Mizon.ico" CopyToOutputDirectory="PreserveNewest" />
 		<Content Include="Assets\AppIcon\**\*" CopyToOutputDirectory="PreserveNewest" />
 		<Content Include="Controls\FlipSide.LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
+		<Content Include="Controls\Particles\LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
 		<Content Include="Assets\JumpList\**\*" CopyToOutputDirectory="PreserveNewest" />
 		<None Remove="Assets\AppActions\registration.json" />
 		<Content Include="Assets\AppActions\registration.json" CopyToOutputDirectory="PreserveNewest" />

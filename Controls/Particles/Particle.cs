@@ -239,7 +239,9 @@ public sealed partial class Particle : Control, IDisposable
 
     private void ViewportChanged(FrameworkElement sender, EffectiveViewportChangedEventArgs args)
     {
-        var visible = args.EffectiveViewport.Width > 0 && args.EffectiveViewport.Height > 0;
+        var viewport = args.EffectiveViewport;
+        var visible = viewport.Width > 0 && viewport.Height > 0 && viewport.Right > 0 && viewport.Bottom > 0
+            && viewport.Left < ActualWidth && viewport.Top < ActualHeight;
         if (_inViewport == visible) return;
         _inViewport = visible;
         ApplyPlayback();

@@ -253,7 +253,11 @@ public partial class App : Application
                     ? navigationService.CurrentInternalPage as IMcpMusicHomePage : null,
                 () => !string.IsNullOrWhiteSpace(localStorageService.GetJwtToken())),
             presence: new McpPresenceService(Services.GetRequiredService<ProfilePresenceService>()),
-            windowPresentation: new McpWindowPresentationService(() => MainMizonWindow as IWindowPresentationHost));
+            windowPresentation: new McpWindowPresentationService(() => MainMizonWindow as IWindowPresentationHost),
+            vpn: new McpVpnService(
+                () => navigationService.CurrentMainPage is Pages.HomePage { ViewModel.IsSigningOut: false }
+                    ? navigationService.CurrentInternalPage as IMcpVpnPage : null,
+                () => !string.IsNullOrWhiteSpace(localStorageService.GetJwtToken())));
         MainMizonWindow.Closed += MainWindow_Closed;
         if (_pendingResultActivation is { } pendingResult)
         {

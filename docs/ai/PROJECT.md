@@ -17,6 +17,12 @@ The current developer checkout places this project at `D:/source/repos/Mizon.Win
 
 ## Runtime and build configuration
 
+VPN page implementation: `Pages/VPNPage`, `ViewModels/VPNPageViewModel` and
+`Services/WindowsVpnPageEnvironment` share lifecycle-bound OS network state
+with the separately consented [VPN MCP adapter](../../Mcp/VPN.md). Local
+`Controls/Particles` replaces DevWinUI only on this page. No VPN transport
+has been implemented; opening Windows settings is not a tunnel connection.
+
 - Main project: `Mizon.Windows.csproj`, target `net11.0-windows10.0.26100.0`, minimum Windows target `10.0.19041.0`.
 - `global.json` selects .NET SDK 11.0.100 with patch-only roll-forward. All companion
   and verification projects target .NET 11; the OS target/minimum versions are independent.
