@@ -64,6 +64,9 @@ internal static class MizonAuthSchemas
                     var description = Description(property.Name);
                     if (description is not null) definition["description"] = description;
                     if (property.Name == "completionStage") definition["enum"] = new JsonArray("opened", "completed");
+                    if (property.Name == "lastErrorCode") definition["enum"] = new JsonArray(null,
+                        "preference_save_failed", "environment_unavailable", "settings_timeout",
+                        "settings_unavailable", "settings_failed", "operation_failed");
                 }
                 return definition;
             }
@@ -133,6 +136,7 @@ internal static class MizonAuthSchemas
             "networkStatus" => "Current network availability category: internet, local, offline or unknown. Not a VPN connectivity guarantee or proof of Internet access.",
             "particlesEnabled" => "User preference for decorative VPN-page particles. Rendering also respects motionAllowed and page/window lifecycle.",
             "motionAllowed" => "Whether Windows currently permits UI animations.",
+            "lastErrorCode" => "Optional sanitized VPN page error: preference_save_failed, environment_unavailable, settings_timeout, settings_unavailable, settings_failed or operation_failed. No exception messages or private OS details. Null means no current error.",
             "allowWindowRead" => "Independent permission to read main-window availability, fullscreen and control visibility. Existing appearance/music/navigation grants do not authorize it.",
             "allowWindowControl" => "Independent permission to enter or exit main-window fullscreen. Does not grant other window operations, state reads, theme changes or page data.",
             "window" => "Optional bounded main-window presentation snapshot, returned only with separate window read permission. Control-only requests never disclose this state.",
@@ -168,7 +172,7 @@ internal static class MizonAuthSchemas
             "positionSeconds" => "Playback position in seconds for this player or story.",
             "durationSeconds" => "Known duration in seconds, zero or absent when unavailable.",
             "volume" => "Featured-player volume from 0 to 1, independent of mute.",
-            "isLoading" => "Whether this section or player currently awaits data/media.",
+            "isLoading" => "Whether this section/player awaits data/media, or the VPN page is still reading initial network availability. False with networkStatus=unknown means unavailable information, not ongoing loading.",
             "isFullscreen" => "Whether the featured player is currently in its full-screen presentation.",
             "canSeek" => "Whether the featured player has seekable media and a known duration.",
             "isBusy" => "Whether the reported feature has an operation in progress.",

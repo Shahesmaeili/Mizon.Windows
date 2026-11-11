@@ -42,10 +42,14 @@ internal sealed class McpVpnService(Func<IMcpVpnPage?> getActivePage, Func<bool>
             var state = page.GetState();
             linked.Token.ThrowIfCancellationRequested();
             if (_disposed || !hasSession() || !page.IsActive || !ReferenceEquals(page, getActivePage())) return Unavailable();
+            // Only documented page codes cross the protocol boundary, never native error text.
+            state = state with { LastErrorCode = SanitizeErrorCode(state.LastErrorCode) };
+            var appliedNotSaved = request.Operation == "set_vpn_particles" && !state.IsPreferenceSaved;
             return new()
             {
-                Success = opened, Code = opened ? "ok" : "launch_failed",
-                Message = opened ? "The VPN page operation completed." : "Windows VPN settings could not be opened.",
+                Success = opened, Code = appliedNotSaved ? "applied_not_saved" : opened ? "ok" : "launch_failed",
+                Message = appliedNotSaved ? "The particle preference was applied for this session but could not be saved on this device."
+                    : opened ? "The VPN page operation completed." : "Windows VPN settings could not be opened.",
                 Vpn = state
             };
         }
@@ -55,6 +59,14 @@ internal sealed class McpVpnService(Func<IMcpVpnPage?> getActivePage, Func<bool>
     }
 
     private static McpResponse Unavailable() => new() { Code = "page_unavailable", Message = "Open the VPN page in Mizon first." };
+
+    private static string? SanitizeErrorCode(string? code) => code switch
+    {
+        null or "" => null,
+        "preference_save_failed" or "environment_unavailable" or "settings_timeout"
+            or "settings_unavailable" or "settings_failed" or "operation_failed" => code,
+        _ => "operation_failed"
+    };
 
     public void Dispose()
     {

@@ -24,13 +24,15 @@ internal static class VpnTests
             Check.That(!scoped.AllowVpnRead && !scoped.AllowVpnControl && !scoped.CanExecute("open_vpn_settings"), "Permission reset retained VPN access.");
         }
         using var stream = new MemoryStream();
-        var expected = new McpVpnState { IsAvailable = true, NetworkStatus = "local", ParticlesEnabled = true, MotionAllowed = false };
+        var expected = new McpVpnState { IsAvailable = true, NetworkStatus = "local", ParticlesEnabled = true, MotionAllowed = false,
+            IsLoading = true, IsPreferenceSaved = false, LastErrorCode = "preference_save_failed" };
         await McpPipeProtocol.WriteAsync(stream, new McpResponse { Success = true, Vpn = expected }, McpJsonContext.Default.McpResponse, default);
         stream.Position = 0;
         Check.That((await McpPipeProtocol.ReadAsync(stream, McpJsonContext.Default.McpResponse, default))?.Vpn == expected,
             "Source-generated framing changed VPN state.");
         Check.That(McpJsonContext.Default.McpVpnState.Properties.Select(p => p.Name).Order(StringComparer.Ordinal)
-            .SequenceEqual(new[] { "isAvailable", "isBusy", "isConfigured", "isConnected", "motionAllowed", "networkStatus", "particlesEnabled" }),
+            .SequenceEqual(new[] { "isAvailable", "isBusy", "isConfigured", "isConnected", "isLoading", "isPreferenceSaved", "lastErrorCode",
+                "motionAllowed", "networkStatus", "particlesEnabled" }),
             "VPN snapshot exposed undeclared data.");
         var old = JsonSerializer.Deserialize("""{"allowAppearanceRead":true,"allowAppearanceControl":true}""", McpJsonContext.Default.McpConnectionStatus);
         Check.That(old is { AllowVpnRead: false, AllowVpnControl: false }, "Old permissions implicitly authorized VPN.");

@@ -17,6 +17,11 @@ internal static partial class ConnectionLifecycleTests
             && command.Annotations is { ReadOnlyHint: false, IdempotentHint: true }, "VPN particles must use an explicit typed boolean.");
         Check.That(command.OutputSchema!.Value.GetProperty("properties").GetProperty("vpn").GetProperty("properties")
             .TryGetProperty("networkStatus", out _), "VPN status is missing from discovery.");
+        var vpnOutput = command.OutputSchema!.Value.GetProperty("properties").GetProperty("vpn").GetProperty("properties");
+        Check.That(vpnOutput.TryGetProperty("isLoading", out _) && vpnOutput.TryGetProperty("isPreferenceSaved", out _)
+            && vpnOutput.GetProperty("lastErrorCode").GetProperty("enum").EnumerateArray().Select(p => p.GetString())
+                .SequenceEqual(new string?[] { null, "preference_save_failed", "environment_unavailable", "settings_timeout",
+                    "settings_unavailable", "settings_failed", "operation_failed" }), "VPN loading, persistence and bounded errors are missing from discovery.");
         Check.That(tools.Single(tool => tool.Name == "mizon_open_vpn_settings").ProtocolTool.Annotations
             is { IdempotentHint: false, OpenWorldHint: true }, "Settings launch must not be marked safe to replay.");
         foreach (var json in new[] { "{}", "{\"enabled\":null}", "{\"enabled\":\"true\"}", "{\"enabled\":1}", "{\"enabled\":true,\"uri\":\"ms-settings:privacy\"}" })

@@ -17,10 +17,20 @@ Only the user can approve them inside Mizon. Control-only calls return an outcom
 without VPN state; redaction also covers responses accidentally carrying VPN
 data from another adapter. A successful settings launch only means Windows
 accepted the launch, not that the user connected or configured a tunnel.
+For particle changes, success with `code=applied_not_saved` means the preference
+was applied for this session but could not be persisted. Even control-only clients
+receive that action outcome. Do not claim it will survive restart. With read
+consent, `isPreferenceSaved` describes persistence independently of live state.
 
 The snapshot contains only `isAvailable`, `isConfigured`, `isConnected`, `isBusy`,
-`networkStatus` (`internet`, `local`, `offline`, `unknown`), `particlesEnabled` and
-`motionAllowed`. It never exposes adapter identifiers, SSIDs, IP addresses,
+`isLoading`, `isPreferenceSaved`, `lastErrorCode`, `networkStatus` (`internet`,
+`local`, `offline`, `unknown`), `particlesEnabled` and `motionAllowed`.
+`isLoading=false` with unknown network status means unavailable information,
+not an ongoing check. The nullable error code permits only `preference_save_failed`,
+`environment_unavailable`, `settings_timeout`, `settings_unavailable`,
+`settings_failed` and `operation_failed`. Undeclared errors are reduced to the
+generic `operation_failed`; exception text is never returned.
+The snapshot never exposes adapter identifiers, SSIDs, IP addresses,
 credentials, paths or server configuration. The generated JSON model supplies the
 discovery output schema without runtime reflection. Tool inputs reject missing,
 mistyped and extra fields before contacting the application.

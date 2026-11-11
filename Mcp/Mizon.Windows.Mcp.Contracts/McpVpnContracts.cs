@@ -7,6 +7,9 @@ public sealed record McpVpnState
     public bool IsConfigured { get; init; }
     public bool IsConnected { get; init; }
     public bool IsBusy { get; init; }
+    public bool IsLoading { get; init; }
+    public bool IsPreferenceSaved { get; init; }
+    public string? LastErrorCode { get; init; }
     public string NetworkStatus { get; init; } = "unknown";
     public bool ParticlesEnabled { get; init; }
     public bool MotionAllowed { get; init; }

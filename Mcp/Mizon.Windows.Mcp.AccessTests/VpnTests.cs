@@ -29,11 +29,37 @@ internal static partial class Program
             "Control changes the live page and returns no protected snapshot");
         Assert((await peer.Call("open_vpn_settings")) is { Success: true, Vpn: null } && host.VpnPage.Launches == 1,
             "Control invokes the existing fixed settings operation once");
+        host.VpnPage.PreferenceSaved = false;
+        host.VpnPage.ErrorCode = "preference_save_failed";
+        Assert((await peer.Call(VpnParticles(true))) is { Success: true, Code: "applied_not_saved", Vpn: null },
+            "Control-only preference save failure reports the action outcome without leaking read state");
+        host.VpnPage.PreferenceSaved = true;
+        host.VpnPage.ErrorCode = null;
         Assert(!(await peer.Call("get_vpn_state")).Success && !(await peer.Call("get_state")).Success
             && !(await peer.Call("open_destination")).Success, "VPN control implies no read or unrelated control");
         await host.Ui(() => host.Service.RevokeAsync(host.Item(id)));
         await host.Approve(id, false, false, false, vpnRead: true, vpnControl: true);
         Assert((await peer.Call(VpnParticles(true))).Vpn is { ParticlesEnabled: true }, "Combined scopes give current shared-page readback");
+        host.VpnPage.PreferenceSaved = false;
+        host.VpnPage.ErrorCode = "preference_save_failed";
+        Assert((await peer.Call(VpnParticles(true))) is { Success: true, Code: "applied_not_saved",
+            Vpn: { ParticlesEnabled: true, IsPreferenceSaved: false, LastErrorCode: "preference_save_failed" } },
+            "Failed persistence is explicitly session-only in outcome and authorized snapshot");
+        host.VpnPage.Loading = true;
+        Assert((await peer.Call("get_vpn_state")).Vpn is { IsLoading: true }, "Reader distinguishes initial loading from unknown availability");
+        host.VpnPage.Loading = false;
+        foreach (var code in new[] { "preference_save_failed", "environment_unavailable", "settings_timeout", "settings_unavailable", "settings_failed", "operation_failed" })
+        {
+            host.VpnPage.ErrorCode = code;
+            Assert((await peer.Call("get_vpn_state")).Vpn?.LastErrorCode == code, "Documented sanitized page error survives authorized reads");
+        }
+        host.VpnPage.ErrorCode = "private-ssid-path-credential";
+        var sanitized = await peer.Call("get_vpn_state");
+        Assert(sanitized.Vpn?.LastErrorCode == "operation_failed", "Undeclared page error text never crosses the VPN boundary");
+        host.VpnPage.PreferenceSaved = true;
+        host.VpnPage.ErrorCode = null;
+        Assert((await peer.Call(VpnParticles(true))) is { Code: "ok", Vpn: { IsLoading: false, IsPreferenceSaved: true, LastErrorCode: null } },
+            "A successful retry reports durable preference without stale error/loading");
         var launches = host.VpnPage.Launches;
         foreach (var invalid in new McpRequest[]
         {
@@ -133,13 +159,17 @@ internal static partial class Program
         public bool IsActive { get; set; } = true;
         public bool Particles { get; private set; } = true;
         public bool Busy { get; set; }
+        public bool Loading { get; set; }
+        public bool PreferenceSaved { get; set; } = true;
+        public string? ErrorCode { get; set; }
         public int Launches { get; private set; }
         public Action? OnRead { get; set; }
         public Func<CancellationToken, Task<bool>>? LaunchHandler { get; set; }
         public McpVpnState GetState()
         {
             OnRead?.Invoke();
-            return new() { IsAvailable = IsActive, IsBusy = Busy, ParticlesEnabled = Particles, MotionAllowed = true, NetworkStatus = "internet" };
+            return new() { IsAvailable = IsActive, IsBusy = Busy, IsLoading = Loading, IsPreferenceSaved = PreferenceSaved,
+                LastErrorCode = ErrorCode, ParticlesEnabled = Particles, MotionAllowed = true, NetworkStatus = "internet" };
         }
         public void SetParticlesEnabled(bool enabled) => Particles = enabled;
         public Task<bool> OpenWindowsSettingsAsync(CancellationToken token) { Launches++; return LaunchHandler?.Invoke(token) ?? Task.FromResult(true); }
