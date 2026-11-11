@@ -106,6 +106,7 @@ async Task DispatchResult(AppNavigationOutcome outcome, bool expectedSuccess, st
     await dispatcher.DispatchAsync(music, response);
     Check(received?.Success == expectedSuccess && received.Code == expectedCode, "real navigation outcome must be reported");
     Check(navigation.Calls == 1, "one navigation per request");
+    Check(dispatcher.PendingUri is null, "completed destination must not remain pending");
     dispatcher.Dispose();
     Check(!navigation.Disposed, "dispatcher must not dispose the shared MCP navigation service");
 }
@@ -140,25 +141,34 @@ async Task DispatchException(Exception exception, string expectedCode)
         received.Enqueue(result); reported.TrySetResult();
     }, TimeSpan.FromMilliseconds(20));
     var dispatch = dispatcher.DispatchAsync(music, response);
+    Check(dispatcher.PendingUri == music.ToUri(), "waiting operation exposes only its canonical pending URI");
     await reported.Task.WaitAsync(TimeSpan.FromSeconds(5));
     Check(!dispatch.IsCompleted && received.Single().Code == "timed_out", "timeout must report while an uncooperative operation is still blocked");
+    Check(dispatcher.PendingUri is null, "timed-out operation is not pending while its task unwinds");
     blocked.SetResult(opened);
     await dispatch.WaitAsync(TimeSpan.FromSeconds(5));
     Check(received.Count == 1, "uncooperative late success must not report again");
 }
 {
     var blocked = new TaskCompletionSource<AppNavigationOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
-    using var navigation = new FakeNavigation((request, _) => request.Destination == "login" ? Task.FromResult(opened) : blocked.Task);
+    var nextBlocked = new TaskCompletionSource<AppNavigationOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+    using var navigation = new FakeNavigation((request, _) => request.Destination == "login" ? nextBlocked.Task : blocked.Task);
     using var dispatcher = new AppDeepLinkResultDispatcher(navigation);
     var previous = new List<AppDeepLinkResult>();
     var next = new List<AppDeepLinkResult>();
     var first = dispatcher.DispatchAsync(music, new(Guid.NewGuid(), previous.Add));
-    await dispatcher.DispatchAsync(new(Destination: "login"), new(Guid.NewGuid(), next.Add));
+    Check(dispatcher.PendingUri == music.ToUri(), "first request is pending before replacement");
+    var second = dispatcher.DispatchAsync(new(Destination: "login"), new(Guid.NewGuid(), next.Add));
     Check(previous.Count == 1 && previous[0].Code == "superseded", "new request reports previous cancellation immediately");
-    Check(next.Count == 1 && next[0].Success, "new request gets its own independent success");
+    Check(dispatcher.PendingUri == "mizon://login", "pending URI follows the replacing request");
     blocked.SetResult(opened);
     await first.WaitAsync(TimeSpan.FromSeconds(5));
     Check(previous.Count == 1, "previous operation cannot publish after supersession");
+    Check(dispatcher.PendingUri == "mizon://login", "previous unwind cannot clear the replacing URI");
+    nextBlocked.SetResult(opened);
+    await second.WaitAsync(TimeSpan.FromSeconds(5));
+    Check(next.Count == 1 && next[0].Success, "new request gets its own independent success");
+    Check(dispatcher.PendingUri is null, "replacement completion clears pending state");
 }
 {
     var blocked = new TaskCompletionSource<AppNavigationOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -171,6 +181,7 @@ async Task DispatchException(Exception exception, string expectedCode)
     Check(navigation.Calls == 1 && results.Count == 0, "duplicate envelope must not start or cancel another operation");
     dispatcher.Dispose();
     Check(results.Count == 1 && results[0].Code == "app_closed", "app shutdown reports to the active caller");
+    Check(dispatcher.PendingUri is null, "disposed dispatcher exposes no pending URI");
     var denied = new List<AppDeepLinkResult>();
     await dispatcher.DispatchAsync(music, new(Guid.NewGuid(), denied.Add));
     Check(denied.Count == 1 && denied[0].Code == "app_closed" && navigation.Calls == 1, "closed dispatcher cannot reopen a destination");
@@ -187,6 +198,7 @@ async Task DispatchException(Exception exception, string expectedCode)
     var dispatch = dispatcher.DispatchAsync(music, response);
     dispatcher.CancelActive();
     Check(response.Token.IsCancellationRequested && results.Single().Code == "superseded", "ordinary deep link cancels a pending result navigation");
+    Check(dispatcher.PendingUri is null && !dispatch.IsCompleted, "cancelled operation clears pending state before its task unwinds");
     blocked.SetResult(opened);
     await dispatch.WaitAsync(TimeSpan.FromSeconds(5));
     Check(results.Count == 1, "ordinary replacement does not permit a second report");
@@ -199,6 +211,7 @@ async Task DispatchException(Exception exception, string expectedCode)
     response.Cancel("cancelled", "Cancelled during app startup.");
     await dispatcher.DispatchAsync(music, response);
     Check(navigation.Calls == 0 && results.Count == 1, "expired startup envelope cannot navigate later");
+    Check(dispatcher.PendingUri is null, "expired startup envelope does not expose a pending destination");
 }
 
 Console.WriteLine($"Passed {checks} deep-link response lifecycle assertions.");

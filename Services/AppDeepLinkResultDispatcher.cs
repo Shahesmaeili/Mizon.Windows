@@ -10,12 +10,24 @@ internal sealed class AppDeepLinkResultDispatcher : IDisposable
     private readonly object _gate = new();
     private readonly IAppDeepLinkNavigation _navigation;
     private AppDeepLinkResponseSession? _active;
+    private string? _pendingUri;
     private bool _disposed;
 
     internal AppDeepLinkResultDispatcher(IAppDeepLinkNavigation navigation)
     {
         ArgumentNullException.ThrowIfNull(navigation);
         _navigation = navigation;
+    }
+
+    // Reuse the existing permission-gated navigation read state. An operation
+    // still unwinding after its deadline is no longer pending for its caller.
+    internal string? PendingUri
+    {
+        get
+        {
+            lock (_gate)
+                return !_disposed && _active is { IsCompleted: false } ? _pendingUri : null;
+        }
     }
 
     internal async Task DispatchAsync(AppActivationRequest request, AppDeepLinkResponseSession response)
@@ -29,7 +41,11 @@ internal sealed class AppDeepLinkResultDispatcher : IDisposable
             // first operation or dispose its still-active cancellation source.
             if (ReferenceEquals(_active, response)) return;
             previous = _active;
-            if (!_disposed) _active = response;
+            if (!_disposed)
+            {
+                _active = response;
+                _pendingUri = request.ToUri();
+            }
         }
         previous?.Cancel("superseded", "A newer navigation request replaced this request.");
         try
@@ -66,7 +82,11 @@ internal sealed class AppDeepLinkResultDispatcher : IDisposable
         {
             lock (_gate)
             {
-                if (ReferenceEquals(_active, response)) _active = null;
+                if (ReferenceEquals(_active, response))
+                {
+                    _active = null;
+                    _pendingUri = null;
+                }
             }
             response.Dispose();
         }
@@ -79,6 +99,7 @@ internal sealed class AppDeepLinkResultDispatcher : IDisposable
         {
             active = _active;
             _active = null;
+            _pendingUri = null;
         }
         active?.Cancel(code, message);
         // The owner of DispatchAsync disposes after its navigation call unwinds.

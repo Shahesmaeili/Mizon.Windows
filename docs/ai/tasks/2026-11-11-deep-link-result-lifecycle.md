@@ -29,6 +29,10 @@ NativeAOT.
   ignores cancellation. The awaited operation still owns disposal until it unwinds,
   and cannot subsequently report success.
 - Response messages are fixed and sanitized; raw exceptions are never returned.
+- The dispatcher exposes a bounded canonical `PendingUri` for the existing scoped
+  navigation read-state adapter. It follows only the current request and clears
+  immediately on timeout/cancellation/closure, even when an uncooperative async
+  operation has not yet unwound. No new tool or permission is introduced.
 - Main/native receiver wiring and the taskbar's transport/loading UI are owned by
   the parent and sibling agents, not implemented by these pure helpers.
 
@@ -36,8 +40,8 @@ NativeAOT.
 
 | Command / environment | Result | Limits |
 | --- | --- | --- |
-| `dotnet run --project WindowsSearch/Mizon.Windows.DeepLinkResults.Tests -c Release` | 40 assertions passed | Synthetic destinations, no account writes or UI |
-| `dotnet publish ... -c Release -r win-x64 -p:PublishAot=true`, then native executable | 40 assertions passed | Proves these production helpers/shared generated JSON, not the full WinUI app |
+| `dotnet run --project WindowsSearch/Mizon.Windows.DeepLinkResults.Tests -c Release` | 51 assertions passed | Synthetic destinations, no account writes or UI |
+| `dotnet publish ... -c Release -r win-x64 -p:PublishAot=true`, then native executable | 51 assertions passed | Proves these production helpers/shared generated JSON, not the full WinUI app |
 | `git diff --check` | Passed | Source whitespace check |
 
 The suite covers actual outcome/metadata forwarding, invalid routes, cancellation,
