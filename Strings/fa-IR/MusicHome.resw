@@ -172,10 +172,4 @@
   <data name="ArtistGenreOne" xml:space="preserve"><value>پاپ · الکترونیک</value></data>
   <data name="ArtistGenreTwo" xml:space="preserve"><value>پاپ · جاز</value></data>
   <data name="ArtistGenreThree" xml:space="preserve"><value>الکترونیک · هیپ‌هاپ</value></data>
-  <data name="OrbitVoiceTitle" xml:space="preserve"><value>صداهای تازه</value></data>
-  <data name="OrbitVoiceCaption" xml:space="preserve"><value>صدایی که ارزش کشف کردن دارد</value></data>
-  <data name="OrbitRhythmTitle" xml:space="preserve"><value>ریتمِ تو</value></data>
-  <data name="OrbitRhythmCaption" xml:space="preserve"><value>ضرب‌آهنگ امروزت را پیدا کن</value></data>
-  <data name="OrbitMomentTitle" xml:space="preserve"><value>حسِ این لحظه</value></data>
-  <data name="OrbitMomentCaption" xml:space="preserve"><value>بعضی آهنگ‌ها با تو می‌مانند</value></data>
 </root>

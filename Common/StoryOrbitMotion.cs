@@ -32,7 +32,7 @@ internal sealed class StoryOrbitMotion : IDisposable
     }
 
     /// <summary>Add each independently moving surface before Start; dimensions may be explicit or measured.</summary>
-    public void Add(FrameworkElement element, Vector3 excursion, double durationSeconds, float rotationDegrees = 0)
+    public void Add(FrameworkElement element, Vector3 excursion, double durationSeconds, float rotationDegrees = 0, float phaseDegrees = 0)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(element);
@@ -42,9 +42,10 @@ internal sealed class StoryOrbitMotion : IDisposable
         if (!double.IsFinite(durationSeconds) || durationSeconds <= 0)
             throw new ArgumentOutOfRangeException(nameof(durationSeconds));
         if (!float.IsFinite(rotationDegrees)) throw new ArgumentOutOfRangeException(nameof(rotationDegrees));
+        if (!float.IsFinite(phaseDegrees)) throw new ArgumentOutOfRangeException(nameof(phaseDegrees));
         foreach (var orbit in _orbits)
             if (ReferenceEquals(orbit.Element, element)) throw new ArgumentException("The surface is already registered.", nameof(element));
-        _orbits.Add(new Orbit(element, excursion, durationSeconds, rotationDegrees));
+        _orbits.Add(new Orbit(element, excursion, durationSeconds, rotationDegrees, phaseDegrees));
     }
 
     /// <summary>Call from the owner's Loaded handler. Dispose on departure; create a new helper on return.</summary>
@@ -205,7 +206,7 @@ internal sealed class StoryOrbitMotion : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private sealed class Orbit(FrameworkElement element, Vector3 excursion, double durationSeconds, float rotationDegrees)
+    private sealed class Orbit(FrameworkElement element, Vector3 excursion, double durationSeconds, float rotationDegrees, float phaseDegrees)
     {
         public FrameworkElement Element { get; } = element;
         private Visual? _visual;
@@ -229,33 +230,39 @@ internal sealed class StoryOrbitMotion : IDisposable
             Center();
             var compositor = _visual.Compositor;
             _phase = compositor.CreatePropertySet();
-            _horizontal = StartPhase("Horizontal", durationSeconds);
-            _vertical = StartPhase("Vertical", durationSeconds * 1.25);
+            var seed = phaseDegrees * MathF.PI / 180;
+            var origin = new Vector3(MathF.Sin(seed), MathF.Sin(seed + 1.1f), MathF.Sin(seed + 2.3f));
+            _horizontal = StartPhase("Horizontal", durationSeconds, seed);
+            _vertical = StartPhase("Vertical", durationSeconds * 1.31, seed + 1.1f);
             _translation = compositor.CreateExpressionAnimation(
-                "rest + Vector3(Sin(phase.Horizontal) * excursion.X, Sin(phase.Vertical) * excursion.Y, Sin(phase.Horizontal) * excursion.Z)");
+                "rest + Vector3((Sin(phase.Horizontal) - origin.X) * excursion.X, (Sin(phase.Vertical) - origin.Y) * excursion.Y, (Sin(phase.Horizontal) - origin.X) * excursion.Z) * 0.5");
             _translation.SetReferenceParameter("phase", _phase);
             _translation.SetVector3Parameter("rest", _restTranslation);
             _translation.SetVector3Parameter("excursion", excursion);
+            // Subtract the initial phase so every layer starts at its authored
+            // pose without a jump. Half amplitude keeps all excursions bounded.
+            _translation.SetVector3Parameter("origin", origin);
             _visual.Properties.StartAnimation("Translation", _translation);
             if (rotationDegrees != 0)
             {
-                _tilt = StartPhase("Tilt", durationSeconds * 1.5);
-                _rotation = compositor.CreateExpressionAnimation("rest + Sin(phase.Tilt) * amplitude");
+                _tilt = StartPhase("Tilt", durationSeconds * 1.73, seed + 2.3f);
+                _rotation = compositor.CreateExpressionAnimation("rest + (Sin(phase.Tilt) - origin) * amplitude * 0.5");
                 _rotation.SetReferenceParameter("phase", _phase);
                 _rotation.SetScalarParameter("rest", _restRotation);
                 _rotation.SetScalarParameter("amplitude", rotationDegrees);
+                _rotation.SetScalarParameter("origin", origin.Z);
                 _visual.StartAnimation("RotationAngleInDegrees", _rotation);
             }
             _paused = false;
         }
 
-        private AnimationController? StartPhase(string property, double seconds)
+        private AnimationController? StartPhase(string property, double seconds, float seed)
         {
-            _phase!.InsertScalar(property, 0);
+            _phase!.InsertScalar(property, seed);
             using var animation = _phase.Compositor.CreateScalarKeyFrameAnimation();
             using var linear = _phase.Compositor.CreateLinearEasingFunction();
-            animation.InsertKeyFrame(0, 0);
-            animation.InsertKeyFrame(1, MathF.Tau, linear);
+            animation.InsertKeyFrame(0, seed);
+            animation.InsertKeyFrame(1, seed + MathF.Tau, linear);
             animation.Duration = TimeSpan.FromSeconds(seconds);
             animation.IterationBehavior = AnimationIterationBehavior.Forever;
             _phase.StartAnimation(property, animation);

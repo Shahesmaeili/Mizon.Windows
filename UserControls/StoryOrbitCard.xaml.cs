@@ -9,7 +9,6 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Mizon.Windows.Common;
 using Mizon.Windows.Services;
 using System;
-using System.ComponentModel;
 using System.Numerics;
 using Windows.Foundation;
 using Windows.UI;
@@ -21,12 +20,9 @@ public sealed partial class StoryOrbitCard : UserControl
 {
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(
         nameof(Title), typeof(string), typeof(StoryOrbitCard), new PropertyMetadata(string.Empty));
-    public static readonly DependencyProperty CaptionProperty = DependencyProperty.Register(
-        nameof(Caption), typeof(string), typeof(StoryOrbitCard), new PropertyMetadata(string.Empty));
 
     public string Title { get => (string)GetValue(TitleProperty); set => SetValue(TitleProperty, value); }
-    public string Caption { get => (string)GetValue(CaptionProperty); set => SetValue(CaptionProperty, value); }
-    // Three fixed local illustrations, selected once by the parent XAML.
+    // Three fixed local editorial images, selected once by the parent XAML.
     public int Variant { get; set; }
 
     private StoryOrbitMotion? _motion;
@@ -37,6 +33,8 @@ public sealed partial class StoryOrbitCard : UserControl
     private SpriteVisual? _shadowVisual;
     private DropShadow? _shadow;
     private CompositionBrush? _shadowBrush;
+    private SpriteVisual? _titleShadowVisual;
+    private DropShadow? _titleShadow;
     private bool _loaded;
 
     public StoryOrbitCard() => InitializeComponent();
@@ -46,22 +44,20 @@ public sealed partial class StoryOrbitCard : UserControl
         if (_loaded || !IsLoaded) return;
         _loaded = true;
         Bindings.Update();
-        LocalizationService.Current.PropertyChanged += LanguageChanged;
-        ApplyLanguage();
         try
         {
             CreateArtwork();
             var variant = Math.Clamp(Variant, 0, 2);
             var direction = variant == 1 ? -1 : 1;
+            var phase = variant * 113f;
             _motion = new StoryOrbitMotion(this);
-            _motion.Add(Artwork, new Vector3(5 * direction, -6, 0), 13 + variant * 2.3, 1.8f * direction);
-            _motion.Add(Portrait, new Vector3(-3 * direction, 4, 0), 17 + variant * 1.7);
-            _motion.Add(Contour, new Vector3(-6 * direction, 5, 0), 19 + variant * 2.5, -2.4f * direction);
-            _motion.Add(EchoContour, new Vector3(4 * direction, -5, 0), 23 + variant * 1.9, 2.8f * direction);
-            _motion.Add(Edition, new Vector3(-3, 5 * direction, 0), 16 + variant * 1.3, -1.4f);
-            _motion.Add(Badge, new Vector3(4 * direction, -7, 0), 11 + variant * 2.1, 5 * direction);
-            _motion.Add(Headline, new Vector3(-2 * direction, 3, 0), 14 + variant * 1.8);
-            _motion.Add(Signature, new Vector3(2 * direction, -2, 0), 21 + variant * 1.4);
+            _motion.Add(Artwork, new Vector3(6 * direction, -6, 0), 19 + variant * 2.3, 1.2f * direction, phase);
+            _motion.Add(Portrait, new Vector3(-4 * direction, 4, 0), 23 + variant * 1.7, phaseDegrees: phase + 137);
+            _motion.Add(Contour, new Vector3(-7 * direction, 5, 0), 27 + variant * 2.5, -1.8f * direction, phase + 71);
+            _motion.Add(EchoContour, new Vector3(4 * direction, -5, 0), 31 + variant * 1.9, 2 * direction, phase + 219);
+            _motion.Add(Edition, new Vector3(-4, 5 * direction, 0), 22 + variant * 1.3, -1.2f, phase + 43);
+            _motion.Add(Badge, new Vector3(5 * direction, -6, 0), 17 + variant * 2.1, 3 * direction, phase + 173);
+            _motion.Add(Headline, new Vector3(-3 * direction, 3, 0), 21 + variant * 1.8, .6f * direction, phase + 283);
             _motion.Start();
         }
         catch (Exception error)
@@ -71,7 +67,7 @@ public sealed partial class StoryOrbitCard : UserControl
             _motion = null;
             ReleaseComposition();
             PictureFrame.CornerRadius = new CornerRadius(56, 76, 62, 42);
-            PictureFrame.Clip = new RectangleGeometry { Rect = new Rect(0, 0, 260, 230) };
+            PictureFrame.Clip = new RectangleGeometry { Rect = new Rect(0, 0, PictureFrame.Width, PictureFrame.Height) };
             AppLog.Error("Story editorial artwork could not initialize composition.", error);
         }
     }
@@ -81,37 +77,25 @@ public sealed partial class StoryOrbitCard : UserControl
         var variant = Math.Clamp(Variant, 0, 2);
         var accent = variant switch
         {
-            0 => Color.FromArgb(255, 173, 191, 160),
-            1 => Color.FromArgb(255, 85, 133, 255),
-            _ => Color.FromArgb(255, 239, 193, 112)
+            0 => Color.FromArgb(255, 163, 170, 148),
+            1 => Color.FromArgb(255, 0, 88, 245),
+            _ => Color.FromArgb(255, 244, 194, 64)
         };
-        ColorStart.Color = accent;
-        ColorEnd.Color = variant switch
-        {
-            0 => Color.FromArgb(255, 56, 83, 72),
-            1 => Color.FromArgb(255, 19, 63, 200),
-            _ => Color.FromArgb(255, 156, 91, 56)
-        };
+        ArtworkColor.Color = accent;
         var ink = new SolidColorBrush(accent);
-        Outline.Stroke = EchoOutline.Stroke = Edition.Foreground = SignatureLine.Fill = ink;
-        Edition.Text = (variant + 1).ToString("00", System.Globalization.CultureInfo.InvariantCulture);
-        BadgeIcon.Symbol = variant switch
-        {
-            0 => FluentIcons.Common.Symbol.Headphones,
-            1 => FluentIcons.Common.Symbol.MusicNote1,
-            _ => FluentIcons.Common.Symbol.Sparkle
-        };
-        var asset = variant switch
-        {
-            0 => "spotlight-performer-02.png",
-            1 => "featured-performer.png",
-            _ => "spotlight-performer-03.png"
-        };
-        // A bounded decode of the existing original cutouts; no network, extra
-        // full-size image copy, browser or per-frame bitmap rendering.
+        Outline.Stroke = EchoOutline.Stroke = ink;
+        Edition.Foreground = variant == 2 ? new SolidColorBrush(Color.FromArgb(255, 106, 66, 44)) : ink;
+        Edition.Text = (variant + 22).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        RatingText.Text = variant switch { 0 => "5,0", 1 => "4,5", _ => "4,8" };
+        ApplyReferenceLayout(variant);
+        var artworkHeight = variant == 2 ? 260 : 230;
+        Artwork.Height = PictureFrame.Height = Contour.Height = EchoContour.Height = artworkHeight;
+        var asset = variant switch { 0 => "orbit-models.png", 1 => "orbit-illustration.jpg", _ => "orbit-team.jpg" };
+        // Packaged images: a user-approved similar fictional model and the
+        // original Illustration/Team artwork. Cropping stays in the native view.
         Portrait.Source = new BitmapImage
         {
-            DecodePixelWidth = 560,
+            DecodePixelWidth = variant == 1 ? 1024 : 800,
             UriSource = new Uri($"ms-appx:///Assets/Discovery/{asset}")
         };
 
@@ -145,51 +129,100 @@ public sealed partial class StoryOrbitCard : UserControl
         _shadow = compositor.CreateDropShadow();
         _shadow.Mask = _shadowBrush;
         _shadow.Color = accent;
-        _shadow.Opacity = 0.22f;
-        _shadow.BlurRadius = 28;
-        _shadow.Offset = new Vector3(0, 8, 0);
+        _shadow.Opacity = 0.16f;
+        _shadow.BlurRadius = 32;
+        _shadow.Offset = new Vector3(0, 14, 0);
         _shadowVisual = compositor.CreateSpriteVisual();
-        _shadowVisual.Size = new Vector2(260, 230);
+        _shadowVisual.Size = new Vector2(260, artworkHeight);
         _shadowVisual.Shadow = _shadow;
         ElementCompositionPreview.SetElementChildVisual(ShadowHost, _shadowVisual);
+
+        _titleShadow = compositor.CreateDropShadow();
+        _titleShadow.Mask = TitleText.GetAlphaMask();
+        _titleShadow.Color = Color.FromArgb(255, 20, 24, 32);
+        _titleShadow.BlurRadius = 9;
+        _titleShadow.Offset = new Vector3(0, 2, 0);
+        _titleShadow.Opacity = 0.35f;
+        _titleShadowVisual = compositor.CreateSpriteVisual();
+        _titleShadowVisual.RelativeSizeAdjustment = Vector2.One;
+        _titleShadowVisual.Shadow = _titleShadow;
+        ElementCompositionPreview.SetElementChildVisual(TitleShadowHost, _titleShadowVisual);
+    }
+
+    private void ApplyReferenceLayout(int variant)
+    {
+        // Author the three different silhouettes/anchors in one design space,
+        // matching the reference's lower middle card and scooped right portrait.
+        var artwork = variant switch { 0 => new Point(31, 60), 1 => new Point(25, 127), _ => new Point(30, 59) };
+        Place(Artwork, artwork.X, artwork.Y);
+        Place(Contour, artwork.X - 2, artwork.Y + 5);
+        Place(EchoContour, artwork.X - 2, artwork.Y + 5);
+        Contour.RenderTransform = new CompositeTransform { ScaleX = 1.065, ScaleY = 1.065, Rotation = variant == 2 ? -3 : 0 };
+        EchoContour.RenderTransform = new CompositeTransform { ScaleX = 1.11, ScaleY = 1.11, Rotation = variant == 2 ? -4 : -1 };
+        switch (variant)
+        {
+            case 0:
+                Place(Edition, 196, 0); Edition.RenderTransform = new RotateTransform { Angle = 8 };
+                Place(Badge, 58, 64); Badge.RenderTransform = new RotateTransform { Angle = -13 };
+                Place(Headline, 26, 213); Headline.RenderTransform = new RotateTransform { Angle = -10 };
+                TitleText.FontSize = 76;
+                Portrait.Width = 286; Portrait.Height = 286; Place(Portrait, -20, -12);
+                break;
+            case 1:
+                Place(Edition, 26, 74); Edition.RenderTransform = new RotateTransform { Angle = -13 };
+                Place(Badge, 221, 103); Badge.RenderTransform = new RotateTransform { Angle = 15 };
+                Place(Headline, 37, 236); Headline.RenderTransform = new RotateTransform();
+                TitleText.FontSize = 52;
+                Portrait.Width = 720; Portrait.Height = 1029; Place(Portrait, -196, -82);
+                break;
+            default:
+                Place(Edition, 247, 75); Edition.RenderTransform = new RotateTransform { Angle = 84 };
+                Place(Badge, 263, 177); Badge.RenderTransform = new RotateTransform { Angle = -10 };
+                Place(Headline, 38, 219); Headline.RenderTransform = new RotateTransform();
+                TitleText.FontSize = 76;
+                Portrait.Width = 252; Portrait.Height = 330; Place(Portrait, 10, -4);
+                break;
+        }
+    }
+
+    private static void Place(FrameworkElement element, double x, double y)
+    {
+        Canvas.SetLeft(element, x);
+        Canvas.SetTop(element, y);
     }
 
     private static Point PointAt(Vector2 point) => new(point.X, point.Y);
 
     // One source for the XAML outlines, shadow and GPU clip. No runtime XAML parsing.
-    private static Vector2[] GetShape(int variant) => variant switch
+    private static Vector2[] GetShape(int variant)
     {
-        0 => [new(35, 32), new(78, 12), new(183, -8), new(215, 16),
-              new(237, 42), new(237, 118), new(248, 166), new(263, 217), new(220, 224), new(160, 211),
-              new(116, 207), new(65, 218), new(26, 193), new(-3, 174), new(21, 135), new(14, 99),
-              new(7, 65), new(5, 46), new(35, 32)],
-        1 => [new(34, 27), new(69, 4), new(152, 15), new(205, 41),
-              new(246, 60), new(278, 88), new(247, 119), new(221, 145), new(151, 159), new(115, 188),
-              new(65, 226), new(16, 224), new(12, 183), new(10, 150), new(2, 59), new(34, 27)],
-        _ => [new(70, 16), new(118, -8), new(188, -5), new(217, 36),
-              new(247, 73), new(246, 161), new(212, 200), new(186, 229), new(110, 233), new(71, 201),
-              new(30, 171), new(-6, 79), new(25, 43), new(38, 28), new(52, 23), new(70, 16)]
-    };
-
-    private void LanguageChanged(object? sender, PropertyChangedEventArgs args)
-    {
-        if (_loaded && args.PropertyName == nameof(LocalizationService.Revision)) ApplyLanguage();
-    }
-
-    private void ApplyLanguage()
-    {
-        var language = LocalizationService.Current;
-        TitleText.FontFamily = CaptionText.FontFamily = language.TextFontFamily;
-        Headline.FlowDirection = language.FlowDirection;
-        TitleText.TextAlignment = CaptionText.TextAlignment = language.TextAlignment;
-        Language = language.LanguageTag;
+        Vector2[] points = variant switch
+        {
+            0 => [new(30, 45), new(68, 22), new(158, -3), new(197, 7),
+                  new(223, 14), new(233, 65), new(246, 119), new(261, 177), new(259, 220), new(227, 221),
+                  new(196, 221), new(151, 199), new(111, 202), new(73, 206), new(29, 209), new(11, 193),
+                  new(-3, 180), new(31, 164), new(24, 134), new(16, 98), new(0, 65), new(30, 45)],
+            1 => [new(28, 9), new(67, -2), new(144, 2), new(191, 23),
+                  new(231, 40), new(266, 66), new(257, 90), new(249, 118), new(183, 131), new(145, 151),
+                  new(104, 174), new(49, 198), new(18, 180), new(-1, 169), new(8, 141), new(8, 112),
+                  new(10, 71), new(0, 24), new(28, 9)],
+            _ => [new(35, 66), new(61, 20), new(133, -2), new(166, 12),
+                  new(193, 23), new(173, 78), new(188, 108), new(198, 132), new(220, 142), new(248, 144),
+                  new(232, 195), new(193, 225), new(140, 225), new(85, 225), new(57, 207), new(43, 176),
+                  new(25, 136), new(14, 100), new(35, 66)]
+        };
+        // The right silhouette is taller than the left, not a circular avatar.
+        // Match its portrait proportions without stretching the original image.
+        if (variant == 2)
+            for (var index = 0; index < points.Length; index++)
+                points[index] = new Vector2(140 + (points[index].X - 140) * .95f, points[index].Y * 1.1f);
+        return points;
     }
 
     private void Card_Unloaded(object sender, RoutedEventArgs args)
     {
         if (IsLoaded || !_loaded) return;
         _loaded = false;
-        LocalizationService.Current.PropertyChanged -= LanguageChanged;
         Bindings.StopTracking();
         _motion?.Dispose();
         _motion = null;
@@ -201,6 +234,11 @@ public sealed partial class StoryOrbitCard : UserControl
     {
         ElementCompositionPreview.GetElementVisual(PictureFrame).Clip = null;
         ElementCompositionPreview.SetElementChildVisual(ShadowHost, null);
+        ElementCompositionPreview.SetElementChildVisual(TitleShadowHost, null);
+        if (_titleShadowVisual is not null) _titleShadowVisual.Shadow = null;
+        _titleShadowVisual?.Dispose(); _titleShadowVisual = null;
+        if (_titleShadow is not null) _titleShadow.Mask = null;
+        _titleShadow?.Dispose(); _titleShadow = null;
         if (_shadowVisual is not null) _shadowVisual.Shadow = null;
         _shadowVisual?.Dispose(); _shadowVisual = null;
         if (_shadow is not null) _shadow.Mask = null;

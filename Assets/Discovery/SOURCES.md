@@ -34,14 +34,33 @@ Prompt: "Create a premium editorial music app hero asset, a photorealistic cutou
 
 ### Floating story editorial strip (2026-11-11)
 
-`StoryOrbitShowcase` reuses `featured-performer.png` and
-`spotlight-performer-02.png` / `spotlight-performer-03.png`, the existing original
-fictional cutouts documented here and in [SPOTLIGHT-PERFORMERS.md](SPOTLIGHT-PERFORMERS.md).
-These are decorative illustrations, not profiles of actual artists or API data.
-The organic portrait frames are implemented as native vector paths and clips;
-the PNG files themselves are unchanged. The user's
-[Dribbble layout reference](https://cdn.dribbble.com/userupload/36919937/file/original-e77a90b91a73746153dd33367d85943c.png)
-is not distributed in the application.
+`StoryOrbitShowcase` follows [Zummedy Store Blog Design — Manuel Rovira](https://dribbble.com/shots/10996724-Zummedy-Store-Blog-Design),
+specifically the user's [three-collage reference](https://cdn.dribbble.com/userupload/36919937/file/original-e77a90b91a73746153dd33367d85943c.png).
+The user requested the original English labels `Models`, `Illustration`, `Team`,
+and approved a similar replacement when the independent left portrait could not
+be located. These are decorative editorial samples, not artist/profile API data.
+The reference screenshot itself is not shipped. Crops, silhouettes, typography,
+numbers and badges are native XAML/Composition layers, not flattened screenshots.
+
+| Asset | Source / credit | Provenance |
+| --- | --- | --- |
+| `orbit-models.png` | Original fictional adult portrait generated using built-in imagegen, 2026-11-11 | User-approved similar replacement for the left image; not a photograph of Sasha Belyaeva or a reconstruction of the exact original. Final prompt below. |
+| `orbit-illustration.jpg` | Leslie Rosique — Modern Kabuki Theatre Origami Witch; [artist project](https://www.behance.net/gallery/79712277/Character-Design-Challenge-Kabuki-Theatre), [Character Design Challenge credit/gallery](https://character-design.squarespace.com/winners5/winners-of-the-kabuki-challenge) | [Original JPEG hosted by the challenge gallery](https://images.squarespace-cdn.com/content/v1/54fc8146e4b02a22841f4df7/1557075017355-28KK3R578A3DTHX9STI8/18b.jpg). Visually matched to the reference. Copyright remains with the artist; no open commercial redistribution license verified. |
+| `orbit-team.jpg` | Lena Smirnova / Lena & Artem Studio — [Portraits for platfor.ma](https://www.behance.net/gallery/60929763/Portraits-for-platforma) | [Photographer portfolio image](https://i-p.rmcdn.net/5a5f902ddf66014b7c0f35e5/5088082/image-dcea0662-fd5b-4317-89e6-6f8dd007a41c.jpg?cH=2497&cW=1906&cX=50&cY=0&w=804). Visually matched; original downloaded JPEG unchanged. The Behance module displays attribution/non-commercial/no-derivatives terms; not a freely licensed commercial asset. |
+
+Third-party image rights are separate from the application code license. These
+user-requested reference images are design samples, not evidence of acquired
+production redistribution rights. The native UI crops their unmodified bytes.
+
+The editorial lettering uses [Bodoni Moda](https://github.com/google/fonts/tree/main/ofl/bodonimoda),
+an open font selected for the reference's high-contrast serif look. The exact
+font used by the reference author was not identified. `Assets/Fonts/BodoniModa.ttf`
+is the unmodified upstream variable font; `BodoniModa-OFL.txt` ships its SIL OFL 1.1
+license and copyright notice.
+
+Final built-in imagegen prompt for `orbit-models.png`:
+
+> Use case: photorealistic-natural. Asset type: original square editorial photograph for the left organic portrait collage of a native music app. Create one high-quality realistic fashion portrait of a fictional adult woman (not a named real person), front-facing with a calm serious expression. Straight short chin-length turquoise/aqua blue bob with dark roots and a center part, pale natural skin, subtle makeup. She wears an oversized dark olive-green military-style trench coat, and holds a modest bouquet of pink/lilac and purple flowers across her lower torso. Background is a plain warm sage/olive gray-green studio backdrop, subtly darker at left, no scenery. Soft directional editorial photography lighting, tactile cloth, natural skin texture, subdued sage and dark forest greens contrasted with vivid turquoise hair. Square 1024 by 1024 composition: upper-body portrait, entire head comfortably inside frame; head centered horizontally around 57% of canvas width, top of hair at about 13% of canvas height, face centered near 36% height; shoulders and green coat span the lower half, bouquet chiefly at lower-left. Clean visual likeness of a premium 2019 fashion editorial, not a cartoon or 3D render. This image will be clipped into an asymmetric soft frame by code, so fill the ENTIRE square with the photograph. No frame, no cutout shape, no titles, no numbers, no stars, no logos, no watermark, no UI, no typography.
 
 ### Existing discovery sections
 

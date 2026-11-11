@@ -1,7 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Mizon.Windows.Services;
 using System;
 using Windows.UI.ViewManagement;
 
@@ -9,7 +8,6 @@ namespace Mizon.Windows.UserControls;
 
 public sealed partial class StoryOrbitShowcase : UserControl
 {
-    public LocalizationService Localization => LocalizationService.Current;
     private readonly UISettings _settings = new();
     private long _lastWheel;
     private double _wheelTarget;
@@ -18,14 +16,12 @@ public sealed partial class StoryOrbitShowcase : UserControl
 
     private void Showcase_Loaded(object sender, RoutedEventArgs args)
     {
-        Bindings.Update();
         UpdateLayoutWidth();
     }
 
     private void Showcase_Unloaded(object sender, RoutedEventArgs args)
     {
         if (IsLoaded) return;
-        Bindings.StopTracking();
         _lastWheel = 0;
     }
 

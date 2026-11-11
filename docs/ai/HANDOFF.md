@@ -6,11 +6,15 @@ Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion 
 
 MusicPage now places three decorative organic portrait collages immediately
 above MusicStories. Native Composition animates portrait, contours, badge and
-typography independently; existing local fictional performer assets are reused.
-The strip is responsive, localized, skips decorative Narrator output and stops
+typography independently. The reference-match follow-up uses the original
+Illustration/Team images and a similar generated left portrait approved by the
+user when its original could not be found. The English reference labels and
+22/23/24 editions are intentional; these decorative labels no longer localize.
+The strip is responsive, skips decorative Narrator output and stops
 its animation/resource work with the page lifecycle and Windows motion setting.
 No new API, MCP action or package is added. See
-[implementation and verification](tasks/2026-11-11-story-orbit-showcase.md).
+[initial implementation](tasks/2026-11-11-story-orbit-showcase.md) and
+[reference alignment, source credits and verification](tasks/2026-11-11-story-orbit-reference-match.md).
 Live visual validation was not performed; existing music-home MCP checks and
 Debug x64 compilation passed.
 

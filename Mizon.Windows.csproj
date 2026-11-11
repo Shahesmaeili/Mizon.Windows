@@ -178,6 +178,9 @@
 		<Content Update="Assets\Discovery\*.jpg;Assets\Discovery\*.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+		<Content Update="Assets\Fonts\BodoniModa.ttf" CopyToOutputDirectory="PreserveNewest" />
+		<None Remove="Assets\Fonts\BodoniModa-OFL.txt" />
+		<Content Include="Assets\Fonts\BodoniModa-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
 		<None Remove="Assets\Discovery\Models\**\*" />
 		<Content Include="Assets\Discovery\Models\**\*" CopyToOutputDirectory="PreserveNewest" />
 		<None Remove="Assets\Cursors\*.cur" />

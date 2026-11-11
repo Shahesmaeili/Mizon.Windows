@@ -4,66 +4,58 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:icon="using:FluentIcons.WinUI"
     Loaded="Card_Loaded" Unloaded="Card_Unloaded"
-    IsHitTestVisible="False" IsTabStop="False" FlowDirection="LeftToRight"
+    IsHitTestVisible="False" IsTabStop="False" FlowDirection="LeftToRight" Language="en-US"
     AutomationProperties.AccessibilityView="Raw">
     <!-- A fixed design coordinate space keeps the clip and portrait aligned at
          every DPI/width. Only the surrounding Viewbox participates in resizing. -->
     <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
         <Canvas Width="330" Height="350" AutomationProperties.AccessibilityView="Raw">
             <TextBlock x:Name="Edition" Canvas.Left="231" Canvas.Top="8"
-                       FontFamily="Georgia" FontStyle="Italic" FontSize="53" Opacity="0.8"/>
+                       FontFamily="/Assets/Fonts/BodoniModa.ttf#Bodoni Moda" FontSize="64" TextLineBounds="Tight"
+                       RenderTransformOrigin="0.5,0.5"/>
             <Grid x:Name="Contour" Canvas.Left="27" Canvas.Top="48" Width="260" Height="230"
                   RenderTransformOrigin="0.5,0.5">
                 <Grid.RenderTransform><CompositeTransform ScaleX="1.055" ScaleY="1.055" Rotation="-6"/></Grid.RenderTransform>
-                <Path x:Name="Outline" StrokeThickness="0.85" Opacity="0.65"/>
+                <Path x:Name="Outline" StrokeThickness="1.1" Opacity="0.45"/>
             </Grid>
             <Grid x:Name="EchoContour" Canvas.Left="35" Canvas.Top="43" Width="260" Height="230"
                   RenderTransformOrigin="0.5,0.5">
                 <Grid.RenderTransform><CompositeTransform ScaleX="1.1" ScaleY="1.1" Rotation="3"/></Grid.RenderTransform>
-                <Path x:Name="EchoOutline" StrokeThickness="0.65" Opacity="0.2"/>
+                <Path x:Name="EchoOutline" StrokeThickness="0.6" Opacity="0.1"/>
             </Grid>
             <Grid x:Name="Artwork" Canvas.Left="32" Canvas.Top="45" Width="260" Height="230">
                 <Grid x:Name="ShadowHost"/>
                 <Path x:Name="ShadowMask" Fill="Black"/>
                 <Grid x:Name="PictureFrame" Width="260" Height="230">
-                    <Grid.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop x:Name="ColorStart" Offset="0"/>
-                            <GradientStop x:Name="ColorEnd" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Grid.Background>
+                    <Grid.Background><SolidColorBrush x:Name="ArtworkColor"/></Grid.Background>
                     <Canvas>
                         <Image x:Name="Portrait" Canvas.Left="-10" Canvas.Top="-14"
-                               Width="280" Height="420" Stretch="Uniform"/>
+                               Width="280" Height="420" Stretch="UniformToFill"/>
                     </Canvas>
-                    <Grid IsHitTestVisible="False">
-                        <Grid.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#0007131F" Offset="0.35"/>
-                                <GradientStop Color="#1807131F" Offset="0.6"/>
-                                <GradientStop Color="#B007131F" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Grid.Background>
-                    </Grid>
                 </Grid>
             </Grid>
-            <Border x:Name="Badge" Canvas.Left="47" Canvas.Top="49" Width="32" Height="32"
-                    CornerRadius="16" Background="#EB171B23" BorderBrush="#70FFFFFF" BorderThickness="1">
-                <icon:SymbolIcon x:Name="BadgeIcon" Symbol="Headphones" FontSize="14"
-                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Border>
-            <StackPanel x:Name="Headline" Canvas.Left="41" Canvas.Top="244" Width="250" Spacing="2">
-                <TextBlock x:Name="TitleText" Text="{x:Bind Title, Mode=OneWay}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
-                           FontSize="28" FontWeight="SemiBold" TextWrapping="NoWrap" LineHeight="48" LineStackingStrategy="BlockLineHeight"
-                           TextTrimming="CharacterEllipsis"/>
-                <TextBlock x:Name="CaptionText" Text="{x:Bind Caption, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                           FontSize="11" Opacity="0.8" LineHeight="20" LineStackingStrategy="BlockLineHeight" TextTrimming="CharacterEllipsis"/>
+            <StackPanel x:Name="Badge" Canvas.Left="47" Canvas.Top="49" Width="32" Spacing="3"
+                        RenderTransformOrigin="0.5,0.5">
+                <TextBlock x:Name="RatingText" FontSize="9" FontFamily="Segoe UI Variable" HorizontalAlignment="Center"
+                           Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+                <Border Width="32" Height="32" CornerRadius="16" Background="Black">
+                    <icon:SymbolIcon Symbol="Star" IconVariant="Filled" FontSize="13"
+                                     Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
             </StackPanel>
-            <StackPanel x:Name="Signature" Canvas.Left="45" Canvas.Top="335" Orientation="Horizontal" Spacing="9">
-                <Rectangle x:Name="SignatureLine" Width="25" Height="1" VerticalAlignment="Center"/>
-                <TextBlock Text="MIZON / SELECTS" FontSize="8" CharacterSpacing="180" Opacity="0.55"
-                           Foreground="{ThemeResource TextFillColorPrimaryBrush}" FontFamily="Segoe UI Variable"/>
-            </StackPanel>
+            <!-- The title is a separate foreground layer, never part of the
+                 image clip. Its native alpha shadow stays readable over glass. -->
+            <Grid x:Name="Headline" Canvas.Left="20" Canvas.Top="183" Width="294" Height="92"
+                  RenderTransformOrigin="0.5,0.5">
+                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
+                    <Grid>
+                        <Grid x:Name="TitleShadowHost"/>
+                        <TextBlock x:Name="TitleText" Text="{x:Bind Title, Mode=OneWay}" Foreground="White"
+                                   FontFamily="/Assets/Fonts/BodoniModa.ttf#Bodoni Moda" FontSize="74" FontWeight="Normal" TextLineBounds="Tight"
+                                   TextWrapping="NoWrap" TextTrimming="None"/>
+                    </Grid>
+                </Viewbox>
+            </Grid>
         </Canvas>
     </Viewbox>
 </UserControl>
