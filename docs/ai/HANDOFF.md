@@ -4,6 +4,13 @@ Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion 
 
 ## Floating story editorial strip — 2026-11-11
 
+Stutter follow-up (2026-11-12): native pointer-position expressions replace
+per-mouse-sample dispatcher callbacks and eight keyframe restarts. Only
+enter/exit transitions run finite animations, sampling the current pose;
+ordinary motion keeps the compositor connection. The recovery-only move
+handler re-arms hover after resize or deactivation. See
+[smooth-motion changes and validation](tasks/2026-11-12-story-orbit-smooth-motion.md).
+
 Pointer-motion follow-up (2026-11-12): each collage now uses a stationary input
 canvas and independent mouse responses for photo, frame, shadows, headline,
 edition and star. Composition combines those offsets with the existing idle

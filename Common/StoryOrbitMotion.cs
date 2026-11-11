@@ -1,5 +1,5 @@
 using Microsoft.UI.Composition;
-using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -11,7 +11,6 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Microsoft.UI.Input;
 using Windows.Foundation;
 using Windows.UI.ViewManagement;
 
@@ -30,15 +29,14 @@ internal sealed partial class StoryOrbitMotion : IDisposable
     private bool _started, _disposed, _inViewport, _visibleInTree;
     private FrameworkElement? _pointerSurface;
     private Vector2 _pointerCenter, _pointerRadius;
-    private Vector3 _pointerTarget;
-    private bool _pointerInside, _pointerQueued, _windowActive = true;
-    private readonly DispatcherQueueHandler _pointerCallback;
+    private CompositionPropertySet? _pointerPosition, _pointerState;
+    private ExpressionAnimation? _pointerExpression;
+    private bool _pointerInside, _windowActive = true;
 
     public StoryOrbitMotion(FrameworkElement owner)
     {
         ArgumentNullException.ThrowIfNull(owner);
         _owner = owner;
-        _pointerCallback = ApplyPendingPointer;
     }
 
     // Coordinates belong to the stationary input surface, not to moving artwork.
@@ -102,8 +100,10 @@ internal sealed partial class StoryOrbitMotion : IDisposable
         }
         if (_pointerSurface is not null)
         {
-            _pointerSurface.PointerEntered += PointerChanged;
-            _pointerSurface.PointerMoved += PointerChanged;
+            _pointerSurface.PointerEntered += PointerEntered;
+            // Recovery only: normal moves return at the first bool check.
+            // Re-arm if resize/deactivation reset hover without a boundary exit.
+            _pointerSurface.PointerMoved += PointerEntered;
             _pointerSurface.PointerExited += PointerLeft;
             _pointerSurface.PointerCanceled += PointerLeft;
             _pointerSurface.PointerCaptureLost += PointerLeft;
@@ -131,13 +131,15 @@ internal sealed partial class StoryOrbitMotion : IDisposable
             {
                 ResetPointer(immediate: true);
                 foreach (var orbit in _orbits) orbit.Stop();
+                ReleasePointerSource();
                 return;
             }
             var active = CanAnimate;
             if (!active) ResetPointer(immediate: true);
+            else EnsurePointerSource();
             foreach (var orbit in _orbits)
             {
-                if (active) orbit.Start();
+                if (active) orbit.Start(_pointerState);
                 orbit.SetPaused(!active);
             }
         }
@@ -150,31 +152,32 @@ internal sealed partial class StoryOrbitMotion : IDisposable
         }
     }
 
-    private void PointerChanged(object sender, PointerRoutedEventArgs args)
+    private void EnsurePointerSource()
     {
-        if (!CanAnimate || _pointerSurface is null || args.Pointer.PointerDeviceType != PointerDeviceType.Mouse) return;
-        // Ancestor Viewbox scaling is resolved by WinUI; never use window pixels.
-        var point = args.GetCurrentPoint(_pointerSurface).Position;
-        if (!double.IsFinite(point.X) || !double.IsFinite(point.Y)) return;
-        _pointerInside = true;
-        _pointerTarget = new Vector3(
-            Math.Clamp(((float)point.X - _pointerCenter.X) / _pointerRadius.X, -1, 1),
-            Math.Clamp(((float)point.Y - _pointerCenter.Y) / _pointerRadius.Y, -1, 1), 1);
-        if (_pointerQueued) return;
-        _pointerQueued = true;
-        // Coalesce mouse samples; retarget preallocated compositor animations,
-        // without changing layout or allocating a timer/animation per event.
-        if (!_owner.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, _pointerCallback))
-            _pointerQueued = false;
+        if (_pointerSurface is null || _pointerState is not null) return;
+        // XAML updates this source on the compositor. Retain the borrowed set;
+        // do not dispose it, poll it, or restart animations on PointerMoved.
+        _pointerPosition = ElementCompositionPreview.GetPointerPositionPropertySet(_pointerSurface);
+        _pointerState = _pointerPosition.Compositor.CreatePropertySet();
+        _pointerState.InsertVector2("Position", Vector2.Zero);
+        // The native source can report zero when no pointer is tracked. Keep
+        // its last direction until the transition captures the displayed pose.
+        _pointerExpression = _pointerPosition.Compositor.CreateExpressionAnimation(
+            "mouse.Position == Vector3(0, 0, 0) ? this.CurrentValue : Vector2(Clamp((mouse.Position.X - center.X) / radius.X, -1, 1), Clamp((mouse.Position.Y - center.Y) / radius.Y, -1, 1))");
+        _pointerExpression.SetReferenceParameter("mouse", _pointerPosition);
+        _pointerExpression.SetVector2Parameter("center", _pointerCenter);
+        _pointerExpression.SetVector2Parameter("radius", _pointerRadius);
+        _pointerState.StartAnimation("Position", _pointerExpression);
     }
 
-    private void ApplyPendingPointer()
+    private void PointerEntered(object sender, PointerRoutedEventArgs args)
     {
-        _pointerQueued = false;
-        if (_disposed || !_pointerInside || !CanAnimate) return;
+        if (_pointerInside || !CanAnimate || _pointerState is null
+            || args.Pointer.PointerDeviceType != PointerDeviceType.Mouse) return;
         try
         {
-            foreach (var orbit in _orbits) orbit.SetPointer(_pointerTarget);
+            _pointerInside = true;
+            foreach (var orbit in _orbits) orbit.SetHovered(true);
         }
         catch (Exception error)
         {
@@ -185,22 +188,37 @@ internal sealed partial class StoryOrbitMotion : IDisposable
 
     private void PointerLeft(object sender, PointerRoutedEventArgs args)
     {
-        if (args.Pointer.PointerDeviceType == PointerDeviceType.Mouse) ResetPointer(!CanAnimate);
+        if (!_pointerInside || args.Pointer.PointerDeviceType != PointerDeviceType.Mouse) return;
+        ResetPointer(immediate: !CanAnimate);
     }
 
     private void ResetPointer(bool immediate)
     {
         _pointerInside = false;
-        _pointerTarget = Vector3.Zero;
         if (_disposed) return;
         try
         {
-            foreach (var orbit in _orbits) orbit.SetPointer(Vector3.Zero, immediate);
+            foreach (var orbit in _orbits) orbit.SetHovered(false, immediate);
         }
         catch (Exception error)
         {
             AppLog.Error("Story collage pointer reset could not finish.", error);
             Dispose();
+        }
+    }
+
+    private void ReleasePointerSource()
+    {
+        var state = _pointerState;
+        var expression = _pointerExpression;
+        _pointerState = null;
+        _pointerExpression = null;
+        _pointerPosition = null; // Borrowed XAML property set, never Close/Dispose.
+        try { state?.StopAnimation("Position"); }
+        finally
+        {
+            try { expression?.Dispose(); }
+            finally { state?.Dispose(); }
         }
     }
 
@@ -307,15 +325,14 @@ internal sealed partial class StoryOrbitMotion : IDisposable
             _visibilityObservers.Clear();
             if (_pointerSurface is not null)
             {
-                _pointerSurface.PointerEntered -= PointerChanged;
-                _pointerSurface.PointerMoved -= PointerChanged;
+                _pointerSurface.PointerEntered -= PointerEntered;
+                _pointerSurface.PointerMoved -= PointerEntered;
                 _pointerSurface.PointerExited -= PointerLeft;
                 _pointerSurface.PointerCanceled -= PointerLeft;
                 _pointerSurface.PointerCaptureLost -= PointerLeft;
             }
         }
-        _pointerInside = _pointerQueued = false;
-        _pointerTarget = Vector3.Zero;
+        _pointerInside = false;
         _pointerSurface = null;
         _root = null;
         _window = null;
@@ -326,6 +343,8 @@ internal sealed partial class StoryOrbitMotion : IDisposable
             catch (Exception exception) { AppLog.Error("Story collage motion cleanup could not finish.", exception); }
         }
         _orbits.Clear();
+        try { ReleasePointerSource(); }
+        catch (Exception exception) { AppLog.Error("Story collage pointer source cleanup could not finish.", exception); }
         GC.SuppressFinalize(this);
     }
 
@@ -335,15 +354,17 @@ internal sealed partial class StoryOrbitMotion : IDisposable
         public FrameworkElement Element { get; } = element;
         private Visual? _visual;
         private CompositionPropertySet? _phase;
-        private ExpressionAnimation? _translation, _rotation, _scale;
-        private Vector3KeyFrameAnimation? _pointerAnimation;
+        private ExpressionAnimation? _translation, _rotation, _scale, _pointer;
+        private ScalarKeyFrameAnimation? _entryAnimation;
+        private Vector3KeyFrameAnimation? _exitAnimation;
         private CubicBezierEasingFunction? _pointerEasing;
         private AnimationController? _horizontal, _vertical, _tilt;
-        private Vector3 _restTranslation, _restCenter, _restScale, _lastPointer;
+        private Vector3 _restTranslation, _restCenter, _restScale;
+        private bool _hovered;
         private float _restRotation;
         private bool _paused;
 
-        public void Start()
+        public void Start(CompositionPropertySet? pointerInput)
         {
             if (_visual is not null) return;
             ElementCompositionPreview.SetIsTranslationEnabled(Element, true);
@@ -358,6 +379,7 @@ internal sealed partial class StoryOrbitMotion : IDisposable
             var compositor = _visual.Compositor;
             _phase = compositor.CreatePropertySet();
             _phase.InsertVector3("Pointer", Vector3.Zero);
+            _phase.InsertScalar("Blend", 0);
             var seed = phaseDegrees * MathF.PI / 180;
             var origin = new Vector3(MathF.Sin(seed), MathF.Sin(seed + 1.1f), MathF.Sin(seed + 2.3f));
             _phase.InsertScalar("Horizontal", seed);
@@ -390,12 +412,25 @@ internal sealed partial class StoryOrbitMotion : IDisposable
                 _rotation.SetScalarParameter("pointerRotation", pointer.Rotation);
                 _visual.StartAnimation("RotationAngleInDegrees", _rotation);
             }
-            if (pointer != default)
+            if (pointer != default && pointerInput is not null)
             {
+                // Enter from the actual animated pose (including an unfinished
+                // exit), then continuously follow the compositor's live input.
+                _pointer = compositor.CreateExpressionAnimation(
+                    "Lerp(this.StartingValue, Vector3(input.Position.X, input.Position.Y, 1), phase.Blend)");
+                _pointer.SetReferenceParameter("input", pointerInput);
+                _pointer.SetReferenceParameter("phase", _phase);
                 _pointerEasing = compositor.CreateCubicBezierEasingFunction(new Vector2(.18f, .7f), new Vector2(.2f, 1));
-                _pointerAnimation = compositor.CreateVector3KeyFrameAnimation();
-                _pointerAnimation.Duration = TimeSpan.FromMilliseconds(pointer.ResponseMilliseconds);
-                _pointerAnimation.InsertExpressionKeyFrame(0, "this.StartingValue");
+                _entryAnimation = compositor.CreateScalarKeyFrameAnimation();
+                _entryAnimation.Duration = TimeSpan.FromMilliseconds(pointer.ResponseMilliseconds);
+                _entryAnimation.StopBehavior = AnimationStopBehavior.LeaveCurrentValue;
+                _entryAnimation.InsertKeyFrame(0, 0);
+                _entryAnimation.InsertKeyFrame(1, 1, _pointerEasing);
+                _exitAnimation = compositor.CreateVector3KeyFrameAnimation();
+                _exitAnimation.Duration = _entryAnimation.Duration;
+                _exitAnimation.StopBehavior = AnimationStopBehavior.LeaveCurrentValue;
+                _exitAnimation.InsertExpressionKeyFrame(0, "this.StartingValue");
+                _exitAnimation.InsertKeyFrame(1, Vector3.Zero, _pointerEasing);
                 if (pointer.Zoom != 0)
                 {
                     _scale = compositor.CreateExpressionAnimation("rest * (1 + phase.Pointer.Z * zoom)");
@@ -408,23 +443,35 @@ internal sealed partial class StoryOrbitMotion : IDisposable
             _paused = false;
         }
 
-        public void SetPointer(Vector3 target, bool immediate = false)
+        public void SetHovered(bool hovered, bool immediate = false)
         {
-            if (_phase is null || _pointerAnimation is null) return;
+            if (_phase is null || _pointer is null || _entryAnimation is null || _exitAnimation is null) return;
             if (immediate)
             {
                 _phase.StopAnimation("Pointer");
-                _phase.InsertVector3("Pointer", target);
+                _phase.StopAnimation("Blend");
+                _phase.InsertVector3("Pointer", Vector3.Zero);
+                _phase.InsertScalar("Blend", hovered ? 1 : 0);
+                if (hovered) _phase.StartAnimation("Pointer", _pointer);
             }
             else
             {
-                if (Vector3.DistanceSquared(target, _lastPointer) < .000004f) return;
-                _pointerAnimation.InsertKeyFrame(1, target, _pointerEasing!);
-                // StartingValue samples the current animated pose on retarget,
-                // including rapid enter/exit/re-entry; no reset to the old target.
-                _phase.StartAnimation("Pointer", _pointerAnimation);
+                if (_hovered == hovered) return;
+                _phase.StopAnimation("Blend");
+                if (hovered)
+                {
+                    _phase.InsertScalar("Blend", 0);
+                    _phase.StartAnimation("Pointer", _pointer);
+                    _phase.StartAnimation("Blend", _entryAnimation);
+                }
+                else
+                {
+                    // Capture the displayed pose on the compositor, rather
+                    // than reading an already-invalid native mouse position.
+                    _phase.StartAnimation("Pointer", _exitAnimation);
+                }
             }
-            _lastPointer = target;
+            _hovered = hovered;
         }
 
         private AnimationController? StartPhase(string property, double seconds, float seed)
@@ -478,6 +525,7 @@ internal sealed partial class StoryOrbitMotion : IDisposable
                 if (_rotation is not null) _visual.StopAnimation("RotationAngleInDegrees");
                 if (_scale is not null) _visual.StopAnimation("Scale");
                 _phase?.StopAnimation("Pointer");
+                _phase?.StopAnimation("Blend");
                 _phase?.StopAnimation("Horizontal");
                 _phase?.StopAnimation("Vertical");
                 if (rotationDegrees != 0) _phase?.StopAnimation("Tilt");
@@ -496,14 +544,18 @@ internal sealed partial class StoryOrbitMotion : IDisposable
                 var rotation = _rotation;
                 var phase = _phase;
                 var scale = _scale;
-                var pointerAnimation = _pointerAnimation;
+                var pointerExpression = _pointer;
+                var entryAnimation = _entryAnimation;
+                var exitAnimation = _exitAnimation;
                 var pointerEasing = _pointerEasing;
                 _translation = _rotation = null;
                 _scale = null;
-                _pointerAnimation = null;
+                _pointer = null;
+                _entryAnimation = null;
+                _exitAnimation = null;
                 _pointerEasing = null;
                 _phase = null;
-                _lastPointer = Vector3.Zero;
+                _hovered = false;
                 _paused = false;
                 try { translation?.Dispose(); }
                 finally
@@ -514,11 +566,19 @@ internal sealed partial class StoryOrbitMotion : IDisposable
                         try { scale?.Dispose(); }
                         finally
                         {
-                            try { pointerAnimation?.Dispose(); }
+                            try { pointerExpression?.Dispose(); }
                             finally
                             {
-                                try { pointerEasing?.Dispose(); }
-                                finally { phase?.Dispose(); }
+                                try { entryAnimation?.Dispose(); }
+                                finally
+                                {
+                                    try { exitAnimation?.Dispose(); }
+                                    finally
+                                    {
+                                        try { pointerEasing?.Dispose(); }
+                                        finally { phase?.Dispose(); }
+                                    }
+                                }
                             }
                         }
                     }
