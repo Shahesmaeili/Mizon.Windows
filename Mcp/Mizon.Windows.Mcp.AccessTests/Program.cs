@@ -33,6 +33,7 @@ internal static partial class Program
             await PresenceLifetimeAndRestoration();
             await WindowScopesAndState();
             await WindowLifetimeAndRestoration();
+            WindowPresentationTransitions();
             Console.WriteLine($"PASS {_checks} service assertions; production service/VM, synthetic consent, isolated pipes/store. No real app, UI or account accessed.");
         }
         finally
