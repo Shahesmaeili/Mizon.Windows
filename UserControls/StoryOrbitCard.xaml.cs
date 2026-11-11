@@ -58,12 +58,25 @@ public sealed partial class StoryOrbitCard : UserControl
             var direction = variant == 1 ? -1 : 1;
             var phase = variant * 113f;
             _motion = new StoryOrbitMotion(this);
-            _motion.Add(Artwork, new Vector3(4 * direction, -4, 0), 23 + variant * 2.3, .45f * direction, phase);
-            _motion.Add(Portrait, new Vector3(-3 * direction, 3, 0), 27 + variant * 1.7, phaseDegrees: phase + 137);
-            _motion.Add(Contour, new Vector3(-3 * direction, 3, 0), 31 + variant * 2.5, -.4f * direction, phase + 71);
-            _motion.Add(Edition, new Vector3(-5, 5 * direction, 0), 26 + variant * 1.3, -1.2f, phase + 43);
-            _motion.Add(Badge, new Vector3(5 * direction, -5, 0), 21 + variant * 2.1, 2 * direction, phase + 173);
-            _motion.Add(Headline, new Vector3(-3 * direction, 3, 0), 25 + variant * 1.8, .5f * direction, phase + 283);
+            var center = variant switch { 0 => new Vector2(220, 225), 1 => new Vector2(255, 302), _ => new Vector2(260, 248) };
+            _motion.EnablePointerInput(PointerSurface, center, new Vector2(210, 210));
+            _motion.Add(Artwork, new Vector3(4 * direction, -4, 0), 23 + variant * 2.3, .45f * direction, phase,
+                new(new Vector2(10, 7), Lift: -4, Rotation: 1.1f, Zoom: .018f, ResponseMilliseconds: 180));
+            // Counter-motion stays within the original image's overscan margin.
+            _motion.Add(Portrait, new Vector3(-3 * direction, 3, 0), 27 + variant * 1.7, phaseDegrees: phase + 137,
+                pointer: new(new Vector2(-4, -3), Zoom: .008f, ResponseMilliseconds: 260));
+            _motion.Add(Contour, new Vector3(-3 * direction, 3, 0), 31 + variant * 2.5, -.4f * direction, phase + 71,
+                new(new Vector2(-4, -3), Lift: 2, Rotation: -.8f, Zoom: .01f, ResponseMilliseconds: 300));
+            _motion.Add(AmbientShadowHost, Vector3.Zero, 30,
+                pointer: new(new Vector2(-12, -9), Lift: 8, Zoom: .04f, ResponseMilliseconds: 360));
+            _motion.Add(ContactShadowHost, Vector3.Zero, 30,
+                pointer: new(new Vector2(-5, -4), Lift: 5, Zoom: .025f, ResponseMilliseconds: 240));
+            _motion.Add(Edition, new Vector3(-5, 5 * direction, 0), 26 + variant * 1.3, -1.2f, phase + 43,
+                new(new Vector2(-14, -10), Lift: -2, Rotation: -4, Zoom: .03f, ResponseMilliseconds: 320));
+            _motion.Add(Badge, new Vector3(5 * direction, -5, 0), 21 + variant * 2.1, 2 * direction, phase + 173,
+                new(new Vector2(18, -12), Lift: -4, Rotation: 7, Zoom: .05f, ResponseMilliseconds: 160));
+            _motion.Add(Headline, new Vector3(-3 * direction, 3, 0), 25 + variant * 1.8, .5f * direction, phase + 283,
+                new(new Vector2(12, 6), Lift: -3, Rotation: -1.5f, Zoom: .018f, ResponseMilliseconds: 220));
             _motion.Start();
         }
         catch (Exception error)

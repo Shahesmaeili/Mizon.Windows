@@ -4,46 +4,51 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:icon="using:FluentIcons.WinUI"
     Loaded="Card_Loaded" Unloaded="Card_Unloaded"
-    IsHitTestVisible="False" IsTabStop="False" FlowDirection="LeftToRight" Language="en-US"
+    IsTabStop="False" FlowDirection="LeftToRight" Language="en-US"
     AutomationProperties.AccessibilityView="Raw">
     <!-- All three collages share the reference's coordinate scale. The parent
          scales the complete arrangement once, including typography and gaps. -->
-    <Canvas Width="480" Height="520" AutomationProperties.AccessibilityView="Raw">
-        <TextBlock x:Name="Edition" FontFamily="/Assets/Fonts/BodoniModa.ttf#Bodoni Moda"
-                   FontSize="88" TextLineBounds="Tight" RenderTransformOrigin="0,0"/>
-        <!-- The outer paper edge is traced independently of the photograph.
-             Its translucent fill retains the window material between the edges. -->
-        <Grid x:Name="Contour" Width="480" Height="520">
-            <Grid x:Name="AmbientShadowHost"/>
-            <Grid x:Name="ContactShadowHost"/>
-            <Grid Opacity="0.07">
-                <Path x:Name="MatteShape" Stretch="None"/>
+    <Canvas x:Name="PointerSurface" Width="480" Height="520" Background="Transparent"
+            AutomationProperties.AccessibilityView="Raw">
+        <!-- Keep the input surface still. None of the floating children may
+             become a new hover target as they move underneath the pointer. -->
+        <Canvas Width="480" Height="520" IsHitTestVisible="False">
+            <TextBlock x:Name="Edition" FontFamily="/Assets/Fonts/BodoniModa.ttf#Bodoni Moda"
+                       FontSize="88" TextLineBounds="Tight" RenderTransformOrigin="0,0"/>
+            <!-- The outer paper edge is traced independently of the photograph.
+                 Its translucent fill retains the window material between the edges. -->
+            <Grid x:Name="Contour" Width="480" Height="520">
+                <Grid x:Name="AmbientShadowHost"/>
+                <Grid x:Name="ContactShadowHost"/>
+                <Grid Opacity="0.07">
+                    <Path x:Name="MatteShape" Stretch="None"/>
+                </Grid>
+                <Path x:Name="Outline" Stretch="None" StrokeThickness="1.6" Opacity="0.55"/>
             </Grid>
-            <Path x:Name="Outline" Stretch="None" StrokeThickness="1.6" Opacity="0.55"/>
-        </Grid>
-        <Grid x:Name="Artwork" Width="480" Height="520">
-            <Grid x:Name="PictureFrame" Width="480" Height="520">
-                <Grid.Background><SolidColorBrush x:Name="ArtworkColor"/></Grid.Background>
-                <Canvas>
-                    <Image x:Name="Portrait" Stretch="UniformToFill"/>
-                </Canvas>
+            <Grid x:Name="Artwork" Width="480" Height="520">
+                <Grid x:Name="PictureFrame" Width="480" Height="520">
+                    <Grid.Background><SolidColorBrush x:Name="ArtworkColor"/></Grid.Background>
+                    <Canvas>
+                        <Image x:Name="Portrait" Stretch="UniformToFill"/>
+                    </Canvas>
+                </Grid>
             </Grid>
-        </Grid>
-        <Canvas x:Name="Badge" Width="58" Height="70" RenderTransformOrigin="0.5,0.7">
-            <TextBlock x:Name="RatingText" Width="58" FontSize="12" FontFamily="Segoe UI Variable"
-                       TextAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-            <Border Canvas.Left="9" Canvas.Top="28" Width="40" Height="40" CornerRadius="20" Background="Black">
-                <icon:SymbolIcon Symbol="Star" IconVariant="Filled" FontSize="16"
-                                 Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Border>
+            <Canvas x:Name="Badge" Width="58" Height="70" RenderTransformOrigin="0.5,0.7">
+                <TextBlock x:Name="RatingText" Width="58" FontSize="12" FontFamily="Segoe UI Variable"
+                           TextAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+                <Border Canvas.Left="9" Canvas.Top="28" Width="40" Height="40" CornerRadius="20" Background="Black">
+                    <icon:SymbolIcon Symbol="Star" IconVariant="Filled" FontSize="16"
+                                     Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+            </Canvas>
+            <!-- Lettering deliberately overlaps the silhouette and sits outside
+                 its clipping geometry, as in the reference. -->
+            <Grid x:Name="Headline" RenderTransformOrigin="0,0">
+                <Grid x:Name="TitleShadowHost"/>
+                <TextBlock x:Name="TitleText" Text="{x:Bind Title, Mode=OneWay}" Foreground="White"
+                           FontFamily="/Assets/Fonts/BodoniModa.ttf#Bodoni Moda" FontSize="102"
+                           FontWeight="Normal" TextLineBounds="Tight" TextWrapping="NoWrap" TextTrimming="None"/>
+            </Grid>
         </Canvas>
-        <!-- Lettering deliberately overlaps the silhouette and sits outside
-             its clipping geometry, as in the reference. -->
-        <Grid x:Name="Headline" RenderTransformOrigin="0,0">
-            <Grid x:Name="TitleShadowHost"/>
-            <TextBlock x:Name="TitleText" Text="{x:Bind Title, Mode=OneWay}" Foreground="White"
-                       FontFamily="/Assets/Fonts/BodoniModa.ttf#Bodoni Moda" FontSize="102"
-                       FontWeight="Normal" TextLineBounds="Tight" TextWrapping="NoWrap" TextTrimming="None"/>
-        </Grid>
     </Canvas>
 </UserControl>

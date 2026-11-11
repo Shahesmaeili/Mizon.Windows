@@ -4,6 +4,13 @@ Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion 
 
 ## Floating story editorial strip — 2026-11-11
 
+Pointer-motion follow-up (2026-11-12): each collage now uses a stationary input
+canvas and independent mouse responses for photo, frame, shadows, headline,
+edition and star. Composition combines those offsets with the existing idle
+motion, retargets without resetting and restores the pose on lifecycle exit.
+The reference-derived shapes, images and typography remain unchanged. See
+[motion implementation and validation](tasks/2026-11-12-story-orbit-pointer-motion.md).
+
 Image-loading fix (2026-11-12): the packaged app log showed all three cards
 failing in `Path.set_Data`: the outline and matte reused one parent-owned XAML
 PathGeometry. Each now owns a separate geometry tree. Optional decoration/motion
