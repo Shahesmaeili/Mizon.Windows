@@ -23,8 +23,12 @@ public sealed partial class MainWindow : IWindowPresentationHost
     private DispatcherQueueTimer? _fullScreenHideTimer;
     private CompositionScopedBatch? _fullScreenMotion;
     private Visual? _fullScreenVisual;
+    private WindowPresentationTransition? _windowPresentationTransition;
+    private PointerEventHandler? _fullScreenPointerMoved;
     private bool _windowPresentationClosed, _fullScreenControlsShown, _pointerInFullScreenControls;
     private bool _fullScreenPointerAttached;
+    private bool _windowPresenterChanging, _windowPresentationUpdateQueued;
+    private bool _windowPresentationActive;
 
     public bool IsAvailable => !_windowPresentationClosed;
     public bool IsFullScreen => !_windowPresentationClosed && AppWindow.Presenter.Kind == AppWindowPresenterKind.FullScreen;
@@ -32,6 +36,11 @@ public sealed partial class MainWindow : IWindowPresentationHost
 
     private void InitializeWindowPresentation()
     {
+        _windowPresentationTransition = new(
+            callback => DispatcherQueue.TryEnqueue(() => callback()),
+            () => IsFullScreen, ApplyFullScreen,
+            exception => AppLog.Error("Window presentation request failed; no automatic retry.", exception));
+        _fullScreenPointerMoved = FullScreenRoot_PointerMoved;
         _windowedPresenter = AppWindow.Presenter as OverlappedPresenter;
         _fullScreenHideTimer = DispatcherQueue.CreateTimer();
         _fullScreenHideTimer.Interval = TimeSpan.FromMilliseconds(650);
@@ -46,22 +55,83 @@ public sealed partial class MainWindow : IWindowPresentationHost
     public void SetFullScreen(bool enabled)
     {
         ObjectDisposedException.ThrowIf(_windowPresentationClosed, this);
+        // MCP already dispatches to the UI thread and needs the actual new state
+        // before returning. UI input instead uses RequestFullScreen below.
+        _windowPresentationTransition!.Set(enabled);
+    }
+
+    private void RequestFullScreen(bool? enabled = null)
+    {
+        if (_windowPresentationClosed) return;
+        // Do not replace the HWND presenter inside a routed input/thumbnail
+        // WndProc callback. Rapid toggles are coalesced before the next UI turn.
+        _windowPresentationTransition?.Request(enabled);
+    }
+
+    private void ApplyFullScreen(bool enabled)
+    {
+        ObjectDisposedException.ThrowIf(_windowPresentationClosed, this);
         if (enabled == IsFullScreen) return;
-        if (enabled)
+        var previous = AppWindow.Presenter.Kind;
+        AppLog.Information($"Window presentation: begin {previous} -> fullscreen={enabled}.");
+        var phase = "hide controls";
+        try
         {
-            _windowedPresenter = AppWindow.Presenter as OverlappedPresenter ?? _windowedPresenter;
-            AppWindow.SetPresenter(AppWindowPresenterKind.FullScreen);
+            // Retire the current Composition batch before replacing the presenter;
+            // its completion must not update XAML in a nested native message loop.
+            SetFullScreenControlsVisible(false, animate: false);
+            _windowPresenterChanging = true;
+            phase = "replace presenter";
+            // SetPresenter can synchronously raise Changed/Activated and resize
+            // notifications. Reconcile XAML only after it finishes.
+            if (enabled)
+            {
+                _windowedPresenter = AppWindow.Presenter as OverlappedPresenter ?? _windowedPresenter;
+                AppWindow.SetPresenter(AppWindowPresenterKind.FullScreen);
+            }
+            else if (_windowedPresenter is { } presenter)
+                AppWindow.SetPresenter(presenter);
+            else
+                AppWindow.SetPresenter(AppWindowPresenterKind.Default);
+            AppLog.Information($"Window presentation: applied {AppWindow.Presenter.Kind}.");
         }
-        else if (_windowedPresenter is { } presenter)
-            AppWindow.SetPresenter(presenter);
-        else
-            AppWindow.SetPresenter(AppWindowPresenterKind.Default);
-        UpdateWindowPresentation();
+        catch (Exception exception)
+        {
+            AppLog.Error($"Window presentation: failed during {phase}, from {previous}, target fullscreen={enabled}, HRESULT=0x{exception.HResult:X8}.", exception);
+            throw;
+        }
+        finally
+        {
+            _windowPresenterChanging = false;
+            QueueWindowPresentationUpdate();
+        }
     }
 
     private void WindowPresentation_Changed(AppWindow sender, AppWindowChangedEventArgs args)
     {
-        if (args.DidPresenterChange) UpdateWindowPresentation();
+        if (args.DidPresenterChange) QueueWindowPresentationUpdate();
+    }
+
+    private void QueueWindowPresentationUpdate()
+    {
+        if (_windowPresentationClosed || _windowPresenterChanging || _windowPresentationUpdateQueued) return;
+        _windowPresentationUpdateQueued = DispatcherQueue.TryEnqueue(() =>
+        {
+            _windowPresentationUpdateQueued = false;
+            if (_windowPresentationClosed || _windowPresenterChanging) return;
+            try
+            {
+                UpdateWindowPresentation();
+                // Deactivation may have occurred inside SetPresenter.
+                if (!_fullScreenControlsShown || !IsFullScreen)
+                    SetFullScreenControlsVisible(false, animate: false);
+                AppLog.Information($"Window presentation: chrome settled; presenter={AppWindow.Presenter.Kind}, controls={_fullScreenControlsShown}.");
+            }
+            catch (Exception exception) when (exception is COMException or ArgumentException or InvalidOperationException)
+            {
+                AppLog.Error($"Window presentation: chrome refresh failed, HRESULT=0x{exception.HResult:X8}.", exception);
+            }
+        });
     }
 
     private void UpdateWindowPresentation()
@@ -71,7 +141,7 @@ public sealed partial class MainWindow : IWindowPresentationHost
         FullScreenEdge.Visibility = fullScreen ? Visibility.Visible : Visibility.Collapsed;
         if (fullScreen && !_fullScreenPointerAttached)
         {
-            RootGrid.AddHandler(UIElement.PointerMovedEvent, new PointerEventHandler(FullScreenRoot_PointerMoved), true);
+            RootGrid.AddHandler(UIElement.PointerMovedEvent, _fullScreenPointerMoved!, true);
             _fullScreenPointerAttached = true;
         }
         else if (!fullScreen)
@@ -84,21 +154,27 @@ public sealed partial class MainWindow : IWindowPresentationHost
 
     private void WindowPresentation_Activated(object sender, WindowActivatedEventArgs args)
     {
+        if (_windowPresentationClosed) return;
+        _windowPresentationActive = args.WindowActivationState != WindowActivationState.Deactivated;
         if (args.WindowActivationState == WindowActivationState.Deactivated)
-            SetFullScreenControlsVisible(false, animate: false);
+        {
+            _fullScreenControlsShown = false;
+            _pointerInFullScreenControls = false;
+            QueueWindowPresentationUpdate();
+        }
     }
 
     private void FullScreenShortcut_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        SetFullScreen(!IsFullScreen);
         args.Handled = true;
+        RequestFullScreen();
     }
 
     private void FullScreenEdge_PointerEntered(object sender, PointerRoutedEventArgs args) => SetFullScreenControlsVisible(true);
 
     private void FullScreenRoot_PointerMoved(object sender, PointerRoutedEventArgs args)
     {
-        if (!IsFullScreen) return;
+        if (_windowPresentationClosed || _windowPresenterChanging || !IsFullScreen) return;
         var position = args.GetCurrentPoint(RootGrid).Position;
         if (position.Y <= FullScreenEdge.Height) SetFullScreenControlsVisible(true);
         else if (position.Y > FullScreenControls.ActualHeight + FullScreenControls.Margin.Top + 8)
@@ -121,13 +197,14 @@ public sealed partial class MainWindow : IWindowPresentationHost
 
     private void ScheduleFullScreenControlsHide()
     {
+        if (_windowPresentationClosed || _windowPresenterChanging) return;
         if (_fullScreenControlsShown && !_pointerInFullScreenControls && _fullScreenHideTimer?.IsRunning == false)
             _fullScreenHideTimer.Start();
     }
 
     private void FullScreenHideTimer_Tick(DispatcherQueueTimer sender, object args)
     {
-        if (_pointerInFullScreenControls) return;
+        if (_windowPresentationClosed || _windowPresenterChanging || _pointerInFullScreenControls) return;
         var focused = RootGrid.XamlRoot is { } root ? FocusManager.GetFocusedElement(root) as DependencyObject : null;
         for (var current = focused; current is not null; current = VisualTreeHelper.GetParent(current))
             if (ReferenceEquals(current, FullScreenControls)) return;
@@ -136,7 +213,8 @@ public sealed partial class MainWindow : IWindowPresentationHost
 
     private void SetFullScreenControlsVisible(bool visible, bool animate = true)
     {
-        if (visible && !IsFullScreen) return;
+        if (_windowPresentationClosed || _windowPresenterChanging) return;
+        if (visible && (!_windowPresentationActive || !IsFullScreen)) return;
         _fullScreenHideTimer?.Stop();
         if (_fullScreenControlsShown == visible && (animate || FullScreenControls.Visibility == Visibility.Collapsed)) return;
         _fullScreenControlsShown = visible;
@@ -178,7 +256,7 @@ public sealed partial class MainWindow : IWindowPresentationHost
 
     private void FullScreenMotion_Completed(object sender, CompositionBatchCompletedEventArgs args)
     {
-        if (!ReferenceEquals(sender, _fullScreenMotion)) return;
+        if (_windowPresentationClosed || !ReferenceEquals(sender, _fullScreenMotion)) return;
         StopFullScreenMotion();
         if (_fullScreenVisual is { } visual)
         {
@@ -200,7 +278,7 @@ public sealed partial class MainWindow : IWindowPresentationHost
         _fullScreenVisual?.Properties.StopAnimation("Translation");
     }
 
-    private void ExitFullScreen_Click(object sender, RoutedEventArgs args) => SetFullScreen(false);
+    private void ExitFullScreen_Click(object sender, RoutedEventArgs args) => RequestFullScreen(false);
     private void MinimizeWindow_Click(object sender, RoutedEventArgs args)
     {
         SetFullScreenControlsVisible(false, animate: false);
@@ -239,13 +317,16 @@ public sealed partial class MainWindow : IWindowPresentationHost
     private void DetachFullScreenPointer()
     {
         if (!_fullScreenPointerAttached) return;
-        RootGrid.RemoveHandler(UIElement.PointerMovedEvent, new PointerEventHandler(FullScreenRoot_PointerMoved));
+        RootGrid.RemoveHandler(UIElement.PointerMovedEvent, _fullScreenPointerMoved!);
         _fullScreenPointerAttached = false;
     }
 
     private void DisposeWindowPresentation()
     {
+        if (_windowPresentationClosed) return;
         _windowPresentationClosed = true;
+        _windowPresentationTransition?.Dispose();
+        _windowPresentationTransition = null;
         AppWindow.Changed -= WindowPresentation_Changed;
         Activated -= WindowPresentation_Activated;
         DetachFullScreenPointer();
@@ -258,5 +339,6 @@ public sealed partial class MainWindow : IWindowPresentationHost
         StopFullScreenMotion();
         _fullScreenVisual = null;
         _windowedPresenter = null;
+        _fullScreenPointerMoved = null;
     }
 }

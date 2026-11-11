@@ -4,6 +4,15 @@ Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion 
 
 ## Fullscreen header and window controls — 2026-11-11
 
+Crash follow-up: native thumbnail/F11/button presenter mutations are deferred and
+coalesced outside input callbacks; chrome updates follow presenter completion,
+toolbar motion is stopped before replacing the presenter, and native header
+regions wait for the new inset layout. Late/disposed callbacks are guarded.
+Debug x64 build and 215 access/transition assertions passed. The reported
+CoreMessagingXP stowed exception lacked its inner exception/dump: these checks
+do not prove the original live crash resolved. New phase/region diagnostics are
+available for the user's next run. See [crash evidence and remaining live check](tasks/2026-11-11-fullscreen-crash.md).
+
 Home's hardcoded 148-DIP caption margin is replaced by the actual Windows
 RightInset converted through the current XAML scale; fullscreen reserves zero
 caption space and clears stale native passthrough regions. A top-edge WinUI

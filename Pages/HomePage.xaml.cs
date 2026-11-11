@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Geolocation;
@@ -37,6 +38,9 @@ namespace Mizon.Windows.Pages
         private AppWindow? _titleBarWindow;
         private RectInt32[] _titleBarInteractiveRects = [];
         private bool _titleBarRegionUpdateQueued;
+        private bool _titleBarRegionFailureLogged;
+        private AppWindowPresenterKind? _lastTitleBarPresenter;
+        private int _titleBarGeneration;
         private ConnectedAnimation? _profileConnectedAnimation;
         private bool _internalFrameInitialized;
         private bool _synchronizingNavigationSelection;
@@ -128,7 +132,7 @@ namespace Mizon.Windows.Pages
         private async void HomePage_Loaded(object sender, RoutedEventArgs e)
         {
             InitializeTitleBarPointerRegions();
-            DispatcherQueue.TryEnqueue(UpdateTitleBarPointerRegions);
+            QueueTitleBarRegionUpdate();
 
             StartProfileConnectedAnimation();
 
@@ -261,7 +265,7 @@ namespace Mizon.Windows.Pages
             _titleBarWindow.Changed += TitleBarWindow_Changed;
             if (_titleBarRoot is not null) _titleBarRoot.Changed += TitleBarRoot_Changed;
             DragAreaOverlayGrid.LayoutUpdated += TitleBar_LayoutUpdated;
-            UpdateTitleBarPointerRegions();
+            QueueTitleBarRegionUpdate();
         }
 
         private void TitleBarRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args) => QueueTitleBarRegionUpdate();
@@ -274,8 +278,12 @@ namespace Mizon.Windows.Pages
         private void QueueTitleBarRegionUpdate()
         {
             if (_titleBarRegionUpdateQueued || _titleBarPointerSource is null || !IsLoaded) return;
+            var generation = _titleBarGeneration;
             _titleBarRegionUpdateQueued = DispatcherQueue.TryEnqueue(() =>
             {
+                // A cached page may unload and attach to the window again before
+                // this callback runs. The old lifetime must not update new regions.
+                if (generation != _titleBarGeneration) return;
                 _titleBarRegionUpdateQueued = false;
                 UpdateTitleBarPointerRegions();
             });
@@ -283,16 +291,43 @@ namespace Mizon.Windows.Pages
 
         private void UpdateTitleBarPointerRegions()
         {
+            try
+            {
+                UpdateTitleBarPointerRegionsCore();
+                _titleBarRegionFailureLogged = false;
+            }
+            catch (Exception exception) when (exception is COMException or ArgumentException or InvalidOperationException)
+            {
+                // WinRT dispatch can otherwise turn an escaping callback exception
+                // into a stowed CoreMessaging failure without the original stack.
+                if (!_titleBarRegionFailureLogged)
+                    AppLog.Error($"Title-bar native regions failed, HRESULT=0x{exception.HResult:X8}.", exception);
+                _titleBarRegionFailureLogged = true;
+            }
+        }
+
+        private void UpdateTitleBarPointerRegionsCore()
+        {
             if (_titleBarPointerSource is null || !IsLoaded || App.MainMizonWindow is null)
                 return;
+            if (App.MainMizonWindow is MainWindow { IsAvailable: false }) return;
 
             var window = App.MainMizonWindow.AppWindow;
             var titleBar = window.TitleBar;
-            var fullScreen = window.Presenter.Kind == AppWindowPresenterKind.FullScreen;
+            var presenter = window.Presenter.Kind;
+            var fullScreen = presenter == AppWindowPresenterKind.FullScreen;
             var scale = XamlRoot?.RasterizationScale ?? 1;
+            if (!double.IsFinite(scale) || scale <= 0) return;
             var rightInset = fullScreen ? 0 : titleBar.RightInset / scale;
+            if (_lastTitleBarPresenter != presenter)
+                AppLog.Information($"Title-bar native regions: presenter={presenter}, leftInset={titleBar.LeftInset}, rightInset={titleBar.RightInset}, scale={scale}, previousRegions={_titleBarInteractiveRects.Length}.");
             if (Math.Abs(RightCaptionInset.Width.Value - rightInset) > .01)
+            {
                 RightCaptionInset.Width = new GridLength(rightInset);
+                // Wait for the new header layout before publishing its transformed
+                // bounds. Old control bounds no longer match the native caption.
+                if (!fullScreen) return;
+            }
 
             // Fullscreen has no native caption region. Let all header controls and
             // the window's top-edge reveal surface receive normal client input.
@@ -300,9 +335,10 @@ namespace Mizon.Windows.Pages
             {
                 if (_titleBarInteractiveRects.Length != 0)
                 {
-                    _titleBarPointerSource.SetRegionRects(NonClientRegionKind.Passthrough, []);
+                    _titleBarPointerSource.ClearRegionRects(NonClientRegionKind.Passthrough);
                     _titleBarInteractiveRects = [];
                 }
+                RecordTitleBarPresenter(presenter);
                 return;
             }
 
@@ -321,6 +357,14 @@ namespace Mizon.Windows.Pages
                 _titleBarPointerSource.SetRegionRects(NonClientRegionKind.Passthrough, interactiveRects);
                 _titleBarInteractiveRects = interactiveRects;
             }
+            RecordTitleBarPresenter(presenter);
+        }
+
+        private void RecordTitleBarPresenter(AppWindowPresenterKind presenter)
+        {
+            if (_lastTitleBarPresenter == presenter) return;
+            _lastTitleBarPresenter = presenter;
+            AppLog.Information($"Title-bar native regions: applied presenter={presenter}, regions={_titleBarInteractiveRects.Length}.");
         }
 
         private void HomePage_Unloaded(object sender, RoutedEventArgs e)
@@ -358,13 +402,17 @@ namespace Mizon.Windows.Pages
             }
             if (_titleBarRoot is not null) _titleBarRoot.Changed -= TitleBarRoot_Changed;
             _titleBarRoot = null;
+            _titleBarGeneration++;
             _titleBarRegionUpdateQueued = false;
             // Window teardown can close the native pointer source before Page.Unloaded.
             // Clearing the live window's hit-test regions is useful on navigation only.
-            try { _titleBarPointerSource?.SetRegionRects(NonClientRegionKind.Passthrough, []); }
+            try { _titleBarPointerSource?.ClearRegionRects(NonClientRegionKind.Passthrough); }
             catch (ObjectDisposedException) { }
+            catch (COMException exception) { AppLog.Error("Title-bar native regions were unavailable during unload.", exception); }
             _titleBarPointerSource = null;
             _titleBarInteractiveRects = [];
+            _lastTitleBarPresenter = null;
+            _titleBarRegionFailureLogged = false;
         }
 
         private void Geolocator_PositionChanged(Geolocator sender, PositionChangedEventArgs args)

@@ -210,7 +210,7 @@ public sealed partial class MainWindow : Window
 
     private void TaskbarService_FullScreenRequested(object? sender, EventArgs eventArgs)
     {
-        SetFullScreen(!IsFullScreen);
+        RequestFullScreen();
     }
 
 
