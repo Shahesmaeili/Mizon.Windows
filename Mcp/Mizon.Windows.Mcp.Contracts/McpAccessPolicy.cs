@@ -19,10 +19,13 @@ public sealed class McpAccessPolicy
     public bool AllowMusicHomeControl { get; private set; }
     public bool AllowMusicHomeSubmit { get; private set; }
     public bool AllowPresenceRead { get; private set; }
+    public bool AllowWindowRead { get; private set; }
+    public bool AllowWindowControl { get; private set; }
 
     public void Approve(bool read, bool control, bool submit, bool appearanceRead = false, bool appearanceControl = false,
         bool navigationRead = false, bool navigationControl = false, bool taskbarRead = false, bool taskbarControl = false,
-        bool musicHomeRead = false, bool musicHomeControl = false, bool musicHomeSubmit = false, bool presenceRead = false)
+        bool musicHomeRead = false, bool musicHomeControl = false, bool musicHomeSubmit = false, bool presenceRead = false,
+        bool windowRead = false, bool windowControl = false)
     {
         if (Status == "disconnected") return;
         AllowRead = read;
@@ -38,6 +41,8 @@ public sealed class McpAccessPolicy
         AllowMusicHomeControl = musicHomeControl;
         AllowMusicHomeSubmit = musicHomeControl && musicHomeSubmit;
         AllowPresenceRead = presenceRead;
+        AllowWindowRead = windowRead;
+        AllowWindowControl = windowControl;
         Status = "approved";
     }
 
@@ -60,6 +65,8 @@ public sealed class McpAccessPolicy
         "request_taskbar_pin" => Status == "approved" && AllowTaskbarControl,
         "get_music_home" => Status == "approved" && AllowMusicHomeRead,
         "get_presence_state" => Status == "approved" && AllowPresenceRead,
+        "get_window_state" => Status == "approved" && AllowWindowRead,
+        "set_fullscreen" => Status == "approved" && AllowWindowControl,
         "refresh_music_home" or "music_home_action" => Status == "approved" && AllowMusicHomeControl,
         "music_home_submit" => Status == "approved" && AllowMusicHomeControl && AllowMusicHomeSubmit,
         _ => false
@@ -75,5 +82,6 @@ public sealed class McpAccessPolicy
         AllowTaskbarRead = AllowTaskbarControl = false;
         AllowMusicHomeRead = AllowMusicHomeControl = AllowMusicHomeSubmit = false;
         AllowPresenceRead = false;
+        AllowWindowRead = AllowWindowControl = false;
     }
 }

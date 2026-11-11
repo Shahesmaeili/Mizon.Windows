@@ -16,6 +16,7 @@ public sealed record McpRequest
     public McpAppearancePreferences? Appearance { get; init; }
     public McpNavigationRequest? Navigation { get; init; }
     public McpMusicHomeRequest? MusicHome { get; init; }
+    public bool? FullScreen { get; init; }
 }
 
 // Input only. Never include this object in a response, diagnostic or exception log.
@@ -41,6 +42,7 @@ public sealed record McpResponse
     public McpTaskbarPinState? TaskbarPin { get; init; }
     public McpMusicHomeState? MusicHome { get; init; }
     public McpPresenceState? Presence { get; init; }
+    public McpWindowPresentationState? Window { get; init; }
     public McpConnectionStatus? Connection { get; init; }
 }
 
@@ -62,6 +64,8 @@ public sealed record McpConnectionStatus
     public bool AllowMusicHomeControl { get; init; }
     public bool AllowMusicHomeSubmit { get; init; }
     public bool AllowPresenceRead { get; init; }
+    public bool AllowWindowRead { get; init; }
+    public bool AllowWindowControl { get; init; }
     public bool IsRemembered { get; init; }
     public bool IsConnected { get; init; }
 }

@@ -19,6 +19,7 @@ internal static class MizonAuthSchemas
             Describe(properties, "page", "Authentication page only. login and register identify the exact visible form; welcome is supported only by open_auth_page. Other application pages are outside this MCP scope.");
             Describe(properties, "language", "Live application language: fa-IR is Persian and en-US is English. This also updates the saved language preference.");
             Describe(properties, "theme", "Saved theme preference: system follows Windows; light or dark overrides the app theme immediately. Omit to keep the existing preference.");
+            Describe(properties, "fullScreen", "Required desired presentation of the main application window. true enters fullscreen; false restores windowed presentation. This does not toggle or alter a video player's fullscreen state.");
             Describe(properties, "backdrop", "Saved main-window material: acrylic uses the default Acrylic style; acrylicBase and acrylicThin select its variants; mica and micaAlt select Mica styles. Unsupported or accessibility-disabled materials use a solid fallback. Omit to keep the preference.");
             Describe(properties, "destination", "An allowlisted page or popup, never a raw URL. Opening a music detail does not automatically play it. Content destinations require a signed-in shell; login and register are account destinations. Welcome is an internal session-validation page and has no deep link.");
             Describe(properties, "publicId", "Nonempty public UUID in dashed D format. Required only for playlist, music-details, music-comment, client and story. For music-comment this identifies the music.");
@@ -66,7 +67,7 @@ internal static class MizonAuthSchemas
                 return definition;
             }
         }).AsObject();
-        schema["description"] = "Result of a scoped Mizon tool. Always inspect success and code. connection describes only this MCP connection. Authentication, appearance, navigation, taskbar, music-home and presence state each require their own read permission. Passwords, tokens and cookies are never included. A pending, denied or revoked connection cannot bypass consent using another tool.";
+        schema["description"] = "Result of a scoped Mizon tool. Always inspect success and code. connection describes only this MCP connection. Authentication, appearance, navigation, taskbar, music-home, presence and main-window state each require their own read permission. Passwords, tokens and cookies are never included. A pending, denied or revoked connection cannot bypass consent using another tool.";
         schema["required"] = new JsonArray("success", "code", "message");
         return ToElement(schema);
     }
@@ -121,6 +122,11 @@ internal static class MizonAuthSchemas
             "allowTaskbarRead" => "Independent permission to read Mizon's taskbar pin status.",
             "allowTaskbarControl" => "Independent permission to request Windows pin confirmation, never to approve it or unpin.",
             "allowPresenceRead" => "Independent user-approved permission to read your current online presence only. It cannot change presence or activate the app window.",
+            "allowWindowRead" => "Independent permission to read main-window availability, fullscreen and control visibility. Existing appearance/music/navigation grants do not authorize it.",
+            "allowWindowControl" => "Independent permission to enter or exit main-window fullscreen. Does not grant other window operations, state reads, theme changes or page data.",
+            "window" => "Optional bounded main-window presentation snapshot, returned only with separate window read permission. Control-only requests never disclose this state.",
+            "fullScreen" => "Whether the main application window currently uses fullscreen presentation. Meaningful only when isAvailable is true.",
+            "controlsVisible" => "Whether the main window's fullscreen controls are currently shown. No pointer simulation or toolbar-hover action is exposed.",
             "presence" => "Optional current-user presence snapshot shared with the header/taskbar. Returned only with presence read permission. No identifiers, activity history or other users. Check hasConfirmedState before treating isOnline as server-confirmed.",
             "isWindowActive" => "Whether the main Mizon window is currently active. Reading does not activate it.",
             "isOnline" => "The current online indicator from the shared presence service; it is server-confirmed only when hasConfirmedState is true.",
@@ -133,7 +139,7 @@ internal static class MizonAuthSchemas
             "source" => "Data provenance: api for real service data, demo for local sample content, mixed when both occur. Demo contents and actions are never presented as persisted backend data.",
             "items" => "Only the bounded items currently represented by this home section. IDs are inputs for supported item actions; hasMore indicates remaining results.",
             "actions" => "Currently supported action names for this item, section or player. The live page revalidates availability and item identity before executing; stale state is not authorization.",
-            "isAvailable" => "Whether the live page or item is currently available for the described action; authentication and consent are separate prerequisites.",
+            "isAvailable" => "Whether the live window, page or item is currently available for the described action; authentication and consent are separate prerequisites.",
             "layout" => "Current responsive music-home layout, or unavailable if it is not attached.",
             "isDemo" => "True for sample data whose actions do not represent a real backend entity.",
             "canOpen" => "Whether this current card has a supported open action. Display-only and demo cards may be unavailable.",

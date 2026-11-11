@@ -101,4 +101,12 @@
   <data name="PermissionPresenceRead" xml:space="preserve"><value>خواندن وضعیت آنلاین</value></data>
   <data name="PermissionPresenceReadHint" xml:space="preserve"><value>اجازهٔ مشاهدهٔ فعال بودن پنجرهٔ میزون، اتصال و وضعیت آنلاین تأییدشده.</value></data>
   <data name="ReadPresence" xml:space="preserve"><value>خواندن وضعیت آنلاین</value></data>
+  <data name="WindowGroup" xml:space="preserve"><value>پنجرهٔ اصلی</value></data>
+  <data name="WindowGroupHint" xml:space="preserve"><value>مجوز مستقل برای حالت تمام‌صفحهٔ پنجرهٔ اصلی. تأیید قبلی ظاهر، مسیریابی یا موسیقی این دسترسی را نمی‌دهد.</value></data>
+  <data name="PermissionWindowRead" xml:space="preserve"><value>خواندن وضعیت پنجره</value></data>
+  <data name="PermissionWindowReadHint" xml:space="preserve"><value>خواندن در دسترس بودن پنجره، حالت تمام‌صفحه و نمایش کنترل‌های آن؛ بدون محتوای صفحه یا پنجره‌های دیگر.</value></data>
+  <data name="PermissionWindowControl" xml:space="preserve"><value>ورود به تمام‌صفحه یا خروج از آن</value></data>
+  <data name="PermissionWindowControlHint" xml:space="preserve"><value>فقط حالت تمام‌صفحهٔ پنجرهٔ اصلی میزون را تغییر می‌دهد؛ مجوز بستن، کوچک‌کردن، جابه‌جایی پنجره یا تغییر تنظیمات ظاهر نیست.</value></data>
+  <data name="ReadWindow" xml:space="preserve"><value>در حال خواندن وضعیت پنجره</value></data>
+  <data name="ChangeWindow" xml:space="preserve"><value>در حال تغییر حالت تمام‌صفحه</value></data>
 </root>

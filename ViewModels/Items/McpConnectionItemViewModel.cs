@@ -23,6 +23,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
     private bool _allowMusicHomeControl;
     private bool _allowMusicHomeSubmit;
     private bool _allowPresenceRead;
+    private bool _allowWindowRead;
+    private bool _allowWindowControl;
     private bool _isBusy;
     private string _currentOperation = string.Empty;
     private DateTimeOffset? _lastActivity;
@@ -75,6 +77,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         "open_destination" => Text("OpenDestination"), "get_taskbar_pin_state" => Text("ReadTaskbarPin"),
         "request_taskbar_pin" => Text("RequestTaskbarPin"),
         "get_presence_state" => Text("ReadPresence"),
+        "get_window_state" => Text("ReadWindow"),
+        "set_fullscreen" => Text("ChangeWindow"),
         "get_music_home" => Text("ReadMusicHome"), "refresh_music_home" => Text("RefreshMusicHome"),
         "music_home_action" => Text("ControlMusicHome"), "music_home_submit" => Text("SubmitMusicHome"), _ => string.Empty
     };
@@ -100,6 +104,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
     public bool AllowTaskbarRead { get => _allowTaskbarRead; set { if (CanApprove) SetField(ref _allowTaskbarRead, value); } }
     public bool AllowTaskbarControl { get => _allowTaskbarControl; set { if (CanApprove) SetField(ref _allowTaskbarControl, value); } }
     public bool AllowPresenceRead { get => _allowPresenceRead; set { if (CanApprove) SetField(ref _allowPresenceRead, value); } }
+    public bool AllowWindowRead { get => _allowWindowRead; set { if (CanApprove) SetField(ref _allowWindowRead, value); } }
+    public bool AllowWindowControl { get => _allowWindowControl; set { if (CanApprove) SetField(ref _allowWindowControl, value); } }
     public bool AllowMusicHomeRead { get => _allowMusicHomeRead; set { if (CanApprove) SetField(ref _allowMusicHomeRead, value); } }
     public bool AllowMusicHomeControl
     {
@@ -147,7 +153,7 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         RenewAuthorization();
         _policy.Approve(AllowRead, AllowControl, AllowSubmit, AllowAppearanceRead, AllowAppearanceControl,
             AllowNavigationRead, AllowNavigationControl, AllowTaskbarRead, AllowTaskbarControl,
-            AllowMusicHomeRead, AllowMusicHomeControl, AllowMusicHomeSubmit, AllowPresenceRead);
+            AllowMusicHomeRead, AllowMusicHomeControl, AllowMusicHomeSubmit, AllowPresenceRead, AllowWindowRead, AllowWindowControl);
         NotifyStatus();
     }
 
@@ -165,6 +171,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         SetField(ref _allowTaskbarControl, grant.AllowTaskbarControl, nameof(AllowTaskbarControl));
         SetField(ref _allowMusicHomeRead, grant.AllowMusicHomeRead, nameof(AllowMusicHomeRead));
         SetField(ref _allowPresenceRead, grant.AllowPresenceRead, nameof(AllowPresenceRead));
+        SetField(ref _allowWindowRead, grant.AllowWindowRead, nameof(AllowWindowRead));
+        SetField(ref _allowWindowControl, grant.AllowWindowControl, nameof(AllowWindowControl));
         SetField(ref _allowMusicHomeControl, grant.AllowMusicHomeControl, nameof(AllowMusicHomeControl));
         SetField(ref _allowMusicHomeSubmit, grant.AllowMusicHomeControl && grant.AllowMusicHomeSubmit, nameof(AllowMusicHomeSubmit));
         _isRemembered = true;
@@ -214,7 +222,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         AllowTaskbarRead = _policy.AllowTaskbarRead, AllowTaskbarControl = _policy.AllowTaskbarControl,
         AllowMusicHomeRead = _policy.AllowMusicHomeRead, AllowMusicHomeControl = _policy.AllowMusicHomeControl,
         AllowMusicHomeSubmit = _policy.AllowMusicHomeSubmit,
-        AllowPresenceRead = _policy.AllowPresenceRead
+        AllowPresenceRead = _policy.AllowPresenceRead,
+        AllowWindowRead = _policy.AllowWindowRead, AllowWindowControl = _policy.AllowWindowControl
     };
 
     internal void RefreshLocalization()

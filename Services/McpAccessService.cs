@@ -39,6 +39,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
     private IMcpTaskbarPinService? _taskbar;
     private IMcpMusicHomeService? _musicHome;
     private IMcpPresenceService? _presence;
+    private IMcpWindowPresentationService? _windowPresentation;
     private volatile bool _enabled = true;
     private volatile bool _disposed;
     private string? _pipeName;
@@ -80,7 +81,8 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
 
     internal void Start(DispatcherQueue dispatcher, McpAuthenticationService authentication, IMcpAppearanceService? appearance = null,
         IMcpNavigationService? navigation = null, IMcpTaskbarPinService? taskbar = null,
-        IMcpMusicHomeService? musicHome = null, IMcpPresenceService? presence = null)
+        IMcpMusicHomeService? musicHome = null, IMcpPresenceService? presence = null,
+        IMcpWindowPresentationService? windowPresentation = null)
     {
         if (_dispatcher is not null || _disposed) return;
         _dispatcher = dispatcher;
@@ -90,6 +92,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         _taskbar = taskbar;
         _musicHome = musicHome;
         _presence = presence;
+        _windowPresentation = windowPresentation;
         try
         {
             _enabled = ApplicationData.GetDefault().LocalSettings.Values.TryGetValue("Mcp.Enabled", out var saved)
@@ -129,7 +132,8 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
             AllowTaskbarRead = item.AllowTaskbarRead, AllowTaskbarControl = item.AllowTaskbarControl,
             AllowMusicHomeRead = item.AllowMusicHomeRead, AllowMusicHomeControl = item.AllowMusicHomeControl,
             AllowMusicHomeSubmit = item.AllowMusicHomeControl && item.AllowMusicHomeSubmit,
-            AllowPresenceRead = item.AllowPresenceRead
+            AllowPresenceRead = item.AllowPresenceRead,
+            AllowWindowRead = item.AllowWindowRead, AllowWindowControl = item.AllowWindowControl
         } : null;
         item.BeginSaving();
         var entered = false;
@@ -417,7 +421,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
             if (request.Operation == "connection_status") return Status(connection);
             if (!_enabled || !connection.CanExecute(request.Operation)) return Denied(connection);
             using var authorized = CancellationTokenSource.CreateLinkedTokenSource(token, connection.AuthorizationToken);
-            var mutation = request.Operation is not ("get_state" or "get_appearance" or "get_navigation" or "get_taskbar_pin_state" or "get_music_home" or "get_presence_state");
+            var mutation = request.Operation is not ("get_state" or "get_appearance" or "get_navigation" or "get_taskbar_pin_state" or "get_music_home" or "get_presence_state" or "get_window_state");
             var enteredGate = false;
             var started = false;
             try
@@ -446,6 +450,9 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                     "get_presence_state" => _presence is not null
                         ? await _presence.ExecuteAsync(request, authorized.Token)
                         : new McpResponse { Code = "unavailable", Message = "The presence service is unavailable." },
+                    "get_window_state" or "set_fullscreen" => _windowPresentation is not null
+                        ? await _windowPresentation.ExecuteAsync(request, authorized.Token)
+                        : new McpResponse { Code = "unavailable", Message = "The main-window service is unavailable." },
                     "get_music_home" or "refresh_music_home" or "music_home_action" or "music_home_submit" => _musicHome is not null
                         ? await _musicHome.ExecuteAsync(request, authorized.Token)
                         : new McpResponse { Code = "unavailable", Message = "The music home service is unavailable." },
@@ -463,6 +470,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                     TaskbarPin = connection.CanExecute("get_taskbar_pin_state") ? result.TaskbarPin : null,
                     MusicHome = connection.CanExecute("get_music_home") ? result.MusicHome : null,
                     Presence = connection.CanExecute("get_presence_state") ? result.Presence : null,
+                    Window = connection.CanExecute("get_window_state") ? result.Window : null,
                     Connection = connection.Snapshot()
                 };
             }
@@ -590,6 +598,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         (_taskbar as IDisposable)?.Dispose();
         (_musicHome as IDisposable)?.Dispose();
         (_presence as IDisposable)?.Dispose();
+        (_windowPresentation as IDisposable)?.Dispose();
         // No synchronous UI-thread wait: active operations need that dispatcher
         // for their cancellation/finally blocks before shared resources can close.
         _shutdownTask = CompleteDisposalAsync();

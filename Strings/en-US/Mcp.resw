@@ -101,4 +101,12 @@
   <data name="PermissionPresenceRead" xml:space="preserve"><value>Read online status</value></data>
   <data name="PermissionPresenceReadHint" xml:space="preserve"><value>Allows reading Mizon window activity, connection and confirmed online status.</value></data>
   <data name="ReadPresence" xml:space="preserve"><value>Reading online status</value></data>
+  <data name="WindowGroup" xml:space="preserve"><value>Main window</value></data>
+  <data name="WindowGroupHint" xml:space="preserve"><value>Separate permission for the main window's fullscreen presentation. Prior appearance, navigation and music approvals do not include this access.</value></data>
+  <data name="PermissionWindowRead" xml:space="preserve"><value>Read window presentation</value></data>
+  <data name="PermissionWindowReadHint" xml:space="preserve"><value>Read availability, fullscreen mode and fullscreen-control visibility. No page contents or other windows.</value></data>
+  <data name="PermissionWindowControl" xml:space="preserve"><value>Enter or exit fullscreen</value></data>
+  <data name="PermissionWindowControlHint" xml:space="preserve"><value>Change only the main Mizon window's fullscreen mode. Does not grant closing, minimizing, moving windows or changing appearance preferences.</value></data>
+  <data name="ReadWindow" xml:space="preserve"><value>Reading window presentation</value></data>
+  <data name="ChangeWindow" xml:space="preserve"><value>Changing fullscreen mode</value></data>
 </root>

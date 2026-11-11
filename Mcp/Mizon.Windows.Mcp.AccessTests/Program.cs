@@ -31,6 +31,8 @@ internal static partial class Program
             await MusicHomeLifetimeAndRestoration();
             await PresenceScopesAndState();
             await PresenceLifetimeAndRestoration();
+            await WindowScopesAndState();
+            await WindowLifetimeAndRestoration();
             Console.WriteLine($"PASS {_checks} service assertions; production service/VM, synthetic consent, isolated pipes/store. No real app, UI or account accessed.");
         }
         finally
@@ -193,6 +195,8 @@ internal static partial class Program
         public McpMusicHomeService MusicHome { get; }
         public SyntheticPresence PresenceBackend { get; } = new();
         public McpPresenceService Presence { get; }
+        public SyntheticWindow WindowBackend { get; } = new();
+        public McpWindowPresentationService Window { get; }
         private readonly string _pipe;
         private Host(string path)
         {
@@ -204,17 +208,19 @@ internal static partial class Program
             Taskbar = new(TaskbarBackend);
             MusicHome = new(() => MusicPage.IsActive ? MusicPage : null, () => MusicSession);
             Presence = new(PresenceBackend);
+            Window = new(() => WindowBackend);
         }
         public static async Task<Host> StartAsync(string path)
         {
             var host = new Host(path);
-            await host.Ui(() => host.Service.Start(host._ui, host.Auth, host.Appearance, host.Navigation, host.Taskbar, host.MusicHome, host.Presence));
+            await host.Ui(() => host.Service.Start(host._ui, host.Auth, host.Appearance, host.Navigation, host.Taskbar, host.MusicHome, host.Presence, host.Window));
             return host;
         }
         public McpConnectionItemViewModel Item(string id) => Service.Connections.Single(item => item.Id == id);
         public Task Approve(string id, bool read, bool control, bool submit, bool appearanceRead = false, bool appearanceControl = false,
             bool navigationRead = false, bool navigationControl = false, bool taskbarRead = false, bool taskbarControl = false,
-            bool musicRead = false, bool musicControl = false, bool musicSubmit = false, bool presenceRead = false) => Ui(async () =>
+            bool musicRead = false, bool musicControl = false, bool musicSubmit = false, bool presenceRead = false,
+            bool windowRead = false, bool windowControl = false) => Ui(async () =>
         {
             var item = Item(id); item.AllowRead = read; item.AllowControl = control; item.AllowSubmit = submit;
             item.AllowAppearanceRead = appearanceRead; item.AllowAppearanceControl = appearanceControl;
@@ -222,6 +228,7 @@ internal static partial class Program
             item.AllowTaskbarRead = taskbarRead; item.AllowTaskbarControl = taskbarControl;
             item.AllowMusicHomeRead = musicRead; item.AllowMusicHomeControl = musicControl; item.AllowMusicHomeSubmit = musicSubmit;
             item.AllowPresenceRead = presenceRead;
+            item.AllowWindowRead = windowRead; item.AllowWindowControl = windowControl;
             await Service.ApproveAsync(item);
         });
         public async Task<Peer> ConnectAsync(string? proof)
