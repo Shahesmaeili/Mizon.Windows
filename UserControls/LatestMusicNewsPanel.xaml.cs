@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Symbol = FluentIcons.Common.Symbol;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -18,6 +19,12 @@ namespace Mizon.Windows.UserControls;
 
 public sealed partial class LatestMusicNewsPanel : UserControl
 {
+    public LocalizationService Localization => LocalizationService.Current;
+    public FluentIcons.Common.Symbol ForwardSymbol(bool isPersian) =>
+        isPersian ? FluentIcons.Common.Symbol.ArrowLeft : FluentIcons.Common.Symbol.ArrowRight;
+
+    public Symbol NextSymbol(bool isPersian) => isPersian ? Symbol.ChevronLeft : Symbol.ChevronRight;
+    public Symbol PreviousSymbol(bool isPersian) => isPersian ? Symbol.ChevronRight : Symbol.ChevronLeft;
     private readonly UISettings _settings = new();
     private readonly RectangleGeometry _clip = new();
     private MusicNewsItemViewModel[] _items = [];
@@ -26,6 +33,8 @@ public sealed partial class LatestMusicNewsPanel : UserControl
     private DispatcherQueueTimer? _rotation;
     private Storyboard? _transition;
     private ContentDialog? _dialog;
+    private MusicNewsItemViewModel? _dialogArticle;
+    private TextBlock? _dialogCategory, _dialogBody, _dialogTitle;
     private XamlRoot? _root;
     private int _selectedIndex, _requestedIndex, _requestedDirection;
     private bool _loaded, _pointerInside, _focusInside, _inViewport, _hostVisible, _paused;
@@ -44,11 +53,14 @@ public sealed partial class LatestMusicNewsPanel : UserControl
     {
         if (!IsLoaded || _loaded) return;
         _loaded = true;
+        Localization.PropertyChanged += LanguageChanged;
         if (_items.Length == 0) _items = MusicNewsItemViewModel.CreateSamples();
         _requestedIndex = _selectedIndex = Math.Clamp(_selectedIndex, 0, _items.Length - 1);
+        foreach (var article in _items) article.RefreshLocalization();
         _active.Content = _items[_selectedIndex];
         _active.Visibility = Visibility.Visible;
         if (Indicators.Children.Count == 0) BuildIndicators();
+        RefreshIndicatorLabels();
         SetIndicatorHandlersAttached(true);
         UpdateSelection();
         _rotation = DispatcherQueue.CreateTimer();
@@ -67,6 +79,7 @@ public sealed partial class LatestMusicNewsPanel : UserControl
     {
         if (IsLoaded || !_loaded) return;
         _loaded = false;
+        Localization.PropertyChanged -= LanguageChanged;
         _pointerInside = _focusInside = _inViewport = _hostVisible = false;
         _settings.AnimationsEnabledChanged -= AnimationsChanged;
         if (_root is not null) _root.Changed -= Root_Changed;
@@ -82,6 +95,47 @@ public sealed partial class LatestMusicNewsPanel : UserControl
         SetIndicatorHandlersAttached(false);
         // The page can move this same control between rails during resize. Retain
         // owned content/decoded thumbnails, but detach every external subscription.
+    }
+
+    private void LanguageChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName != nameof(LocalizationService.Revision) || !_loaded) return;
+        foreach (var item in _items) item.RefreshLocalization();
+        RefreshIndicatorLabels();
+        UpdateSelection();
+        UpdateRotationButton();
+        RefreshDialogLanguage();
+    }
+
+    private void RefreshIndicatorLabels()
+    {
+        Grid.SetColumn(NextNewsButton, Localization.IsPersian ? 0 : 2);
+        Grid.SetColumn(PreviousNewsButton, Localization.IsPersian ? 2 : 0);
+        for (var index = 0; index < Indicators.Children.Count; index++)
+        {
+            var button = (Button)Indicators.Children[index];
+            AutomationProperties.SetName(button, Localization.Format("MusicWidgets/NewsIndicator", index + 1, _items[index].Title));
+            AutomationProperties.SetHelpText(button, Localization.GetString("MusicWidgets/NewsIndicatorHelp"));
+            Grid.SetColumn(button, Localization.IsPersian ? _items.Length - 1 - index : index);
+        }
+    }
+
+    private void RefreshDialogLanguage()
+    {
+        if (_dialog is not { } dialog || _dialogArticle is not { } item) return;
+        dialog.FlowDirection = Localization.FlowDirection;
+        dialog.FontFamily = Localization.TextFontFamily;
+        dialog.CloseButtonText = Localization.GetString("MusicWidgets/Close");
+        if (_dialogTitle is { } title) title.Text = item.Title;
+        if (_dialogCategory is { } category) category.Text = Localization.Format("MusicWidgets/NewsPreviewCategory", item.Category);
+        if (_dialogBody is { } body) body.Text = item.Body;
+        foreach (var block in new[] { _dialogTitle, _dialogCategory, _dialogBody })
+        {
+            if (block is null) continue;
+            block.FlowDirection = Localization.FlowDirection;
+            block.TextAlignment = Localization.TextAlignment;
+            block.FontFamily = Localization.TextFontFamily;
+        }
     }
 
     private void BuildIndicators()
@@ -102,12 +156,12 @@ public sealed partial class LatestMusicNewsPanel : UserControl
                     OpacityTransition = new ScalarTransition { Duration = TimeSpan.FromMilliseconds(140) }
                 }
             };
-            AutomationProperties.SetName(button, $"خبر {index + 1}: {_items[index].Title}");
+            AutomationProperties.SetName(button, Localization.Format("MusicWidgets/NewsIndicator", index + 1, _items[index].Title));
             AutomationProperties.SetPositionInSet(button, index + 1);
             AutomationProperties.SetSizeOfSet(button, _items.Length);
-            AutomationProperties.SetHelpText(button, "نمایش این خبر؛ گردش خودکار هنگام کار با صفحه‌کلید متوقف است");
+            AutomationProperties.SetHelpText(button, Localization.GetString("MusicWidgets/NewsIndicatorHelp"));
             // First story starts on the right, matching Persian reading order.
-            Grid.SetColumn(button, _items.Length - 1 - index);
+            Grid.SetColumn(button, Localization.IsPersian ? _items.Length - 1 - index : index);
             Indicators.ColumnDefinitions.Add(new ColumnDefinition());
             Indicators.Children.Add(button);
         }
@@ -165,7 +219,7 @@ public sealed partial class LatestMusicNewsPanel : UserControl
             return;
         }
 
-        var distance = Math.Min(48, Math.Max(20, SlideViewport.ActualWidth * .14)) * (forward ? -1 : 1);
+        var distance = Math.Min(48, Math.Max(20, SlideViewport.ActualWidth * .14)) * (forward ? -1 : 1) * (Localization.IsPersian ? 1 : -1);
         var storyboard = _transition = new Storyboard();
         Animate(storyboard, (TranslateTransform)incoming.RenderTransform, "X", distance, 0);
         Animate(storyboard, incoming, "Opacity", 0, 1);
@@ -217,14 +271,14 @@ public sealed partial class LatestMusicNewsPanel : UserControl
     private void UpdateSelection()
     {
         SlideCounter.Text = $"{_selectedIndex + 1:00} / {_items.Length:00}";
-        AutomationProperties.SetName(SlideCounter, $"خبر {_selectedIndex + 1} از {_items.Length}");
+        AutomationProperties.SetName(SlideCounter, Localization.Format("MusicWidgets/NewsCounter", _selectedIndex + 1, _items.Length));
         for (var index = 0; index < Indicators.Children.Count; index++)
         {
             var button = (Button)Indicators.Children[index];
             ((Border)button.Content).Opacity = index == _selectedIndex ? 1 : .2;
-            AutomationProperties.SetItemStatus(button, index == _selectedIndex ? "خبر فعلی" : string.Empty);
+            AutomationProperties.SetItemStatus(button, index == _selectedIndex ? Localization.GetString("MusicWidgets/NewsCurrent") : string.Empty);
         }
-        AutomationProperties.SetName(ReadButton, $"خواندن خبر نمونه: {_items[_selectedIndex].Title}");
+        AutomationProperties.SetName(ReadButton, Localization.Format("MusicWidgets/NewsReadTitle", _items[_selectedIndex].Title));
     }
 
     private void Rotation_Tick(DispatcherQueueTimer sender, object args)
@@ -254,10 +308,10 @@ public sealed partial class LatestMusicNewsPanel : UserControl
         var motion = _settings.AnimationsEnabled;
         RotationIcon.Symbol = _paused || !motion ? Symbol.Play : Symbol.Pause;
         RotationButton.IsEnabled = motion;
-        var label = !motion ? "گردش خودکار با تنظیم کاهش حرکت ویندوز متوقف است"
-            : _paused ? "ادامهٔ گردش خودکار اخبار" : "توقف گردش خودکار اخبار";
+        var label = !motion ? Localization.GetString("MusicWidgets/NewsMotionOff")
+            : _paused ? Localization.GetString("MusicWidgets/NewsResume") : Localization.GetString("MusicWidgets/NewsPause");
         AutomationProperties.SetName(RotationButton, label);
-        AutomationProperties.SetItemStatus(RotationButton, _paused || !motion ? "گردش خودکار متوقف است" : "گردش خودکار فعال است");
+        AutomationProperties.SetItemStatus(RotationButton, _paused || !motion ? Localization.GetString("MusicWidgets/NewsPaused") : Localization.GetString("MusicWidgets/NewsRotating"));
         ToolTipService.SetToolTip(RotationButton, label);
     }
 
@@ -323,8 +377,8 @@ public sealed partial class LatestMusicNewsPanel : UserControl
     private void Panel_KeyDown(object sender, KeyRoutedEventArgs args)
     {
         if (args.Handled) return;
-        if (args.Key == VirtualKey.Left) SelectRelative(1);
-        else if (args.Key == VirtualKey.Right) SelectRelative(-1);
+        if (args.Key == VirtualKey.Left) SelectRelative(Localization.IsPersian ? 1 : -1);
+        else if (args.Key == VirtualKey.Right) SelectRelative(Localization.IsPersian ? -1 : 1);
         else if (args.Key == VirtualKey.Home) Select(0, true);
         else if (args.Key == VirtualKey.End) Select(_items.Length - 1, true);
         else return;
@@ -375,18 +429,18 @@ public sealed partial class LatestMusicNewsPanel : UserControl
         if (!_loaded || _items.Length == 0 || _dialog is not null || XamlRoot is null) return;
         _requestedIndex = _selectedIndex;
         FinishTransition();
-        var item = _items[_selectedIndex];
+        var item = _dialogArticle = _items[_selectedIndex];
         var content = new StackPanel { Spacing = 16, MaxWidth = 500 };
         content.Children.Add(new Border
         {
             CornerRadius = new CornerRadius(12), Child = new Image { Source = item.Image, Height = 190, Stretch = Stretch.UniformToFill }
         });
-        content.Children.Add(new TextBlock
+        content.Children.Add(_dialogCategory = new TextBlock
         {
-            Text = "پیش‌نمایش خبر نمونه · " + item.Category, Style = (Style)Application.Current.Resources["DiscoveryWidgetCaption"],
+            Text = Localization.Format("MusicWidgets/NewsPreviewCategory", item.Category), Style = (Style)Application.Current.Resources["DiscoveryWidgetCaption"],
             Foreground = (Brush)Resources["NewsAccent"]
         });
-        content.Children.Add(new TextBlock
+        content.Children.Add(_dialogBody = new TextBlock
         {
             Text = item.Body, Style = (Style)Application.Current.Resources["DiscoveryWidgetCaption"],
             FontSize = 13, Opacity = .9, LineHeight = 27, IsTextSelectionEnabled = true
@@ -394,15 +448,16 @@ public sealed partial class LatestMusicNewsPanel : UserControl
         var dialog = _dialog = new ContentDialog
         {
             XamlRoot = XamlRoot, RequestedTheme = ActualTheme,
-            Title = new TextBlock
+            Title = _dialogTitle = new TextBlock
             {
                 Text = item.Title, Style = (Style)Application.Current.Resources["DiscoveryWidgetCaption"],
                 FontSize = 20, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Opacity = 1
             },
-            FontFamily = new FontFamily("/Assets/Fonts/IRANSANS.TTF#IRANSans"),
-            FlowDirection = FlowDirection.RightToLeft, CloseButtonText = "بستن", DefaultButton = ContentDialogButton.Close,
+            FontFamily = Localization.TextFontFamily,
+            FlowDirection = Localization.FlowDirection, CloseButtonText = Localization.GetString("MusicWidgets/Close"), DefaultButton = ContentDialogButton.Close,
             Content = new ScrollViewer { Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, MaxHeight = 500 }
         };
+        RefreshDialogLanguage();
         ScheduleRotation();
         try { await dialog.ShowAsync(); }
         catch (Exception exception) { AppLog.Error("News preview could not be opened.", exception); }
@@ -410,7 +465,12 @@ public sealed partial class LatestMusicNewsPanel : UserControl
         {
             dialog.Content = null;
             dialog.Title = null;
-            if (ReferenceEquals(_dialog, dialog)) _dialog = null;
+            if (ReferenceEquals(_dialog, dialog))
+            {
+                _dialog = null;
+                _dialogArticle = null;
+                _dialogCategory = _dialogBody = _dialogTitle = null;
+            }
             ScheduleRotation();
         }
     }

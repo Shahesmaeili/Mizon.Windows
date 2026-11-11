@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -14,6 +15,10 @@ namespace Mizon.Windows.UserControls;
 
 public sealed partial class FriendMusicActivityPanel : UserControl
 {
+    public LocalizationService Localization => LocalizationService.Current;
+    public FluentIcons.Common.Symbol ForwardSymbol(bool isPersian) =>
+        isPersian ? FluentIcons.Common.Symbol.ArrowLeft : FluentIcons.Common.Symbol.ArrowRight;
+
     public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
         nameof(ViewModel), typeof(FollowingActivitiesViewModel), typeof(FriendMusicActivityPanel),
         new PropertyMetadata(null, ItemsChanged));
@@ -58,6 +63,8 @@ public sealed partial class FriendMusicActivityPanel : UserControl
     {
         if (_loaded) return;
         _loaded = true;
+        Localization.PropertyChanged += LanguageChanged;
+        ViewModel?.RefreshLocalization();
         AttachSource();
         RefreshItems();
         UpdateColumns(ActualWidth);
@@ -67,7 +74,16 @@ public sealed partial class FriendMusicActivityPanel : UserControl
     {
         if (IsLoaded) return;
         _loaded = false;
+        Localization.PropertyChanged -= LanguageChanged;
         DetachSource();
+    }
+
+    private void LanguageChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName != nameof(LocalizationService.Revision) || !_loaded) return;
+        ViewModel?.RefreshLocalization();
+        CountText.Text = _items.Length.ToString("00", CultureInfo.GetCultureInfo(Localization.LanguageTag));
+        UpdateColumns(ActualWidth, force: true);
     }
 
     private void AttachSource()
@@ -102,7 +118,7 @@ public sealed partial class FriendMusicActivityPanel : UserControl
         var source = ViewModel?.Items;
         var count = Math.Min(source?.Count ?? 0, 4);
         if (CountText.Text.Length == 0 || _items.Length != count)
-            CountText.Text = count.ToString("00", CultureInfo.InvariantCulture);
+            CountText.Text = count.ToString("00", CultureInfo.GetCultureInfo(Localization.LanguageTag));
         var changed = _items.Length != count;
         for (var index = 0; !changed && index < count; index++)
             changed = !ReferenceEquals(_items[index], source![index]);
@@ -165,7 +181,7 @@ public sealed partial class FriendMusicActivityPanel : UserControl
         {
             var presenter = (ContentControl)ActivityItemsHost.Children[index];
             var row = index / columns;
-            var column = columns == 2 ? 1 - index % columns : 0;
+            var column = columns == 2 ? (Localization.IsPersian ? 1 - index % columns : index % columns) : 0;
             if (Grid.GetRow(presenter) != row) Grid.SetRow(presenter, row);
             if (Grid.GetColumn(presenter) != column) Grid.SetColumn(presenter, column);
         }

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="LibraryTitle" xml:space="preserve"><value>Your library</value></data>
+  <data name="LibrarySubtitle" xml:space="preserve"><value>Your personal playlists</value></data>
+  <data name="LibraryPlaylistHelp" xml:space="preserve"><value>Select to view tracks; right-click to play or copy the link.</value></data>
+  <data name="LibraryPersonal" xml:space="preserve"><value>Personal playlists</value></data>
+  <data name="LibraryUpdates" xml:space="preserve"><value>Latest updates</value></data>
+  <data name="LibraryEmpty" xml:space="preserve"><value>No playlists yet</value></data>
+  <data name="LibraryRetry" xml:space="preserve"><value>Reload your playlists</value></data>
+  <data name="Retry" xml:space="preserve"><value>Try again</value></data>
+  <data name="LibraryRecentHelp" xml:space="preserve"><value>Go to recently played tracks</value></data>
+  <data name="LibraryRecent" xml:space="preserve"><value>Recently played</value></data>
+  <data name="LibraryFooter" xml:space="preserve"><value>Your latest library updates</value></data>
+  <data name="LibraryCount" xml:space="preserve"><value>{0:N0} personal playlists</value></data>
+  <data name="LibraryCountPending" xml:space="preserve"><value>Playlist count is not available yet</value></data>
+  <data name="LibrarySummaryPending" xml:space="preserve"><value>A collection that feels like you</value></data>
+  <data name="LibrarySummaryEmpty" xml:space="preserve"><value>A home for your favorite tracks</value></data>
+  <data name="LibrarySummary" xml:space="preserve"><value>{0:N0} tracks in your playlists</value></data>
+  <data name="LibraryError" xml:space="preserve"><value>Your library could not be loaded. Try again.</value></data>
+  <data name="LibraryCreateHint" xml:space="preserve"><value>Create your first playlist from any track page.</value></data>
+  <data name="LibraryMore" xml:space="preserve"><value>View all playlists ({0:N0})</value></data>
+  <data name="TracksCount" xml:space="preserve"><value>{0:N0} tracks</value></data>
+  <data name="PlaylistUpdated" xml:space="preserve"><value>Updated: {0}</value></data>
+  <data name="PlaylistPlaying" xml:space="preserve"><value>Preparing playback…</value></data>
+  <data name="PlaylistUnavailable" xml:space="preserve"><value>This playlist has no playable tracks or could not be loaded.</value></data>
+  <data name="PlaylistPlay" xml:space="preserve"><value>Play</value></data>
+  <data name="PlaylistOpen" xml:space="preserve"><value>View tracks</value></data>
+  <data name="PlaylistCopy" xml:space="preserve"><value>Copy playlist link</value></data>
+  <data name="PlaylistCopied" xml:space="preserve"><value>Playlist link copied.</value></data>
+  <data name="PlaylistActionError" xml:space="preserve"><value>This action could not be completed. Try again.</value></data>
+  <data name="RhythmTitle" xml:space="preserve"><value>Your weekly rhythm</value></data>
+  <data name="RhythmSubtitle" xml:space="preserve"><value>A look at this week’s listening</value></data>
+  <data name="RhythmHours" xml:space="preserve"><value>Hours of music and video</value></data>
+  <data name="Music" xml:space="preserve"><value>Music</value></data>
+  <data name="MusicVideo" xml:space="preserve"><value>Music video</value></data>
+  <data name="RhythmDays" xml:space="preserve"><value>Daily listening this week</value></data>
+  <data name="RhythmDemo" xml:space="preserve"><value>Design preview · select a day for details</value></data>
+  <data name="RhythmDayHelp" xml:space="preserve"><value>Press Space or Enter to show this day’s details</value></data>
+  <data name="RhythmDayTooltip" xml:space="preserve"><value>{0}; total {1}, music {2}, music video {3}</value></data>
+  <data name="RhythmTotal" xml:space="preserve"><value>{0} hours and {1} minutes of music and music video over seven days</value></data>
+  <data name="RhythmComparison" xml:space="preserve"><value>More than last week</value></data>
+  <data name="RhythmPeak" xml:space="preserve"><value>{0}; your busiest listening day</value></data>
+  <data name="RhythmPercent" xml:space="preserve"><value>+{0:0}%</value></data>
+  <data name="NewsTitle" xml:space="preserve"><value>Latest news</value></data>
+  <data name="Demo" xml:space="preserve"><value>Preview</value></data>
+  <data name="NewsSubtitle" xml:space="preserve"><value>On stage and behind the scenes</value></data>
+  <data name="NewsChoose" xml:space="preserve"><value>Choose a story</value></data>
+  <data name="NewsNext" xml:space="preserve"><value>Next story</value></data>
+  <data name="NewsPrevious" xml:space="preserve"><value>Previous story</value></data>
+  <data name="NewsPause" xml:space="preserve"><value>Pause automatic news rotation</value></data>
+  <data name="NewsResume" xml:space="preserve"><value>Resume automatic news rotation</value></data>
+  <data name="NewsReadDemo" xml:space="preserve"><value>Read preview story</value></data>
+  <data name="NewsRead" xml:space="preserve"><value>Read story</value></data>
+  <data name="NewsFooter" xml:space="preserve"><value>Design preview · sample stories</value></data>
+  <data name="NewsIndicator" xml:space="preserve"><value>Story {0}: {1}</value></data>
+  <data name="NewsIndicatorHelp" xml:space="preserve"><value>Show this story; automatic rotation pauses during keyboard use</value></data>
+  <data name="NewsCounter" xml:space="preserve"><value>Story {0} of {1}</value></data>
+  <data name="NewsCurrent" xml:space="preserve"><value>Current story</value></data>
+  <data name="NewsReadTitle" xml:space="preserve"><value>Read preview story: {0}</value></data>
+  <data name="NewsMotionOff" xml:space="preserve"><value>Automatic rotation is paused by Windows reduced-motion settings</value></data>
+  <data name="NewsPaused" xml:space="preserve"><value>Automatic rotation is paused</value></data>
+  <data name="NewsRotating" xml:space="preserve"><value>Automatic rotation is on</value></data>
+  <data name="NewsPreviewCategory" xml:space="preserve"><value>Sample story preview · {0}</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="NewsAutomation" xml:space="preserve"><value>Sample story; {0}; {1}; {2}; {3}</value></data>
+  <data name="NewsEdition" xml:space="preserve"><value>Edition {0:00}</value></data>
+  <data name="NewsMinutes" xml:space="preserve"><value>{0} min read</value></data>
+  <data name="TrendingTitle" xml:space="preserve"><value>On the rise</value></data>
+  <data name="TrendingSubtitle" xml:space="preserve"><value>Most popular picks</value></data>
+  <data name="TrendingTop" xml:space="preserve"><value>Chart leader</value></data>
+  <data name="TrendingFooter" xml:space="preserve"><value>Ranked by likes</value></data>
+  <data name="MusicOpenHelp" xml:space="preserve"><value>Select to view track details.</value></data>
+  <data name="FollowingTitle" xml:space="preserve"><value>What are friends listening to?</value></data>
+  <data name="FollowingSubtitle" xml:space="preserve"><value>Your friends’ music moments</value></data>
+  <data name="FollowingRetry" xml:space="preserve"><value>Reload friends’ activity</value></data>
+  <data name="FollowingFooter" xml:space="preserve"><value>The latest music moments</value></data>
+  <data name="FollowingMoreHelp" xml:space="preserve"><value>View all activity from people you follow</value></data>
+  <data name="FollowingMore" xml:space="preserve"><value>All activity</value></data>
+  <data name="FollowingEmptyTitle" xml:space="preserve"><value>No activity from friends yet</value></data>
+  <data name="FollowingNoFriendsTitle" xml:space="preserve"><value>Bring this space to life with friends</value></data>
+  <data name="FollowingNoFriendsDescription" xml:space="preserve"><value>Follow a few people first; their activity will appear here.</value></data>
+  <data name="FollowingEmptyMusicDescription" xml:space="preserve"><value>People you follow have not shared music activity yet. Their plays, comments, likes, playlists and stories tagging tracks will appear here.</value></data>
+  <data name="FollowingEmptyDescription" xml:space="preserve"><value>People you follow have not shared any activity yet. You will see their new activity here.</value></data>
+  <data name="FollowingError" xml:space="preserve"><value>Activity could not be loaded. Try again.</value></data>
+  <data name="ActivityCommentHelp" xml:space="preserve"><value>Open the track and jump to this comment</value></data>
+  <data name="ActivityStoryHelp" xml:space="preserve"><value>Open this story</value></data>
+  <data name="ActivityPlaylistHelp" xml:space="preserve"><value>View tracks in this playlist</value></data>
+  <data name="ActivityMusicHelp" xml:space="preserve"><value>View this track’s details</value></data>
+  <data name="ActivityUnavailable" xml:space="preserve"><value>This activity’s destination is unavailable</value></data>
+  <data name="MizonUser" xml:space="preserve"><value>Mizon user</value></data>
+  <data name="Story" xml:space="preserve"><value>Story</value></data>
+  <data name="Playlist" xml:space="preserve"><value>Playlist</value></data>
+  <data name="Track" xml:space="preserve"><value>Track</value></data>
+  <data name="StoryNew" xml:space="preserve"><value>New story</value></data>
+  <data name="ActivityComment" xml:space="preserve"><value>commented</value></data>
+  <data name="ActivityLike" xml:space="preserve"><value>liked</value></data>
+  <data name="ActivityReaction" xml:space="preserve"><value>reacted</value></data>
+  <data name="ActivityPlay" xml:space="preserve"><value>listened</value></data>
+  <data name="ActivityWatch" xml:space="preserve"><value>watched</value></data>
+  <data name="ActivityPlaylist" xml:space="preserve"><value>created a playlist</value></data>
+  <data name="ActivityStory" xml:space="preserve"><value>posted a story</value></data>
+  <data name="ActivityNew" xml:space="preserve"><value>shared an update</value></data>
+  <data name="ActivityReactionFallback" xml:space="preserve"><value>Reaction to music</value></data>
+  <data name="ActivityStorySummary" xml:space="preserve"><value>{0:N0} tagged tracks · {1}</value></data>
+  <data name="Viewed" xml:space="preserve"><value>Viewed</value></data>
+  <data name="New" xml:space="preserve"><value>New</value></data>
+  <data name="JustNow" xml:space="preserve"><value>Just now</value></data>
+  <data name="MinutesAgo" xml:space="preserve"><value>{0} min ago</value></data>
+  <data name="HoursAgo" xml:space="preserve"><value>{0} hr ago</value></data>
+  <data name="DaysAgo" xml:space="preserve"><value>{0} days ago</value></data>
+  <data name="Day0" xml:space="preserve"><value>Saturday</value></data>
+  <data name="Day0Short" xml:space="preserve"><value>Sat</value></data>
+  <data name="Day1" xml:space="preserve"><value>Sunday</value></data>
+  <data name="Day1Short" xml:space="preserve"><value>Sun</value></data>
+  <data name="Day2" xml:space="preserve"><value>Monday</value></data>
+  <data name="Day2Short" xml:space="preserve"><value>Mon</value></data>
+  <data name="Day3" xml:space="preserve"><value>Tuesday</value></data>
+  <data name="Day3Short" xml:space="preserve"><value>Tue</value></data>
+  <data name="Day4" xml:space="preserve"><value>Wednesday</value></data>
+  <data name="Day4Short" xml:space="preserve"><value>Wed</value></data>
+  <data name="Day5" xml:space="preserve"><value>Thursday</value></data>
+  <data name="Day5Short" xml:space="preserve"><value>Thu</value></data>
+  <data name="Day6" xml:space="preserve"><value>Friday</value></data>
+  <data name="Day6Short" xml:space="preserve"><value>Fri</value></data>
+  <data name="News0Title" xml:space="preserve"><value>The night the stage comes alive</value></data>
+  <data name="News0Summary" xml:space="preserve"><value>A visual story of the moments before a show, where light, sound and the audience’s anticipation meet.</value></data>
+  <data name="News0Body" xml:space="preserve"><value>In this sample story, the house lights slowly fade and the first note breaks the silence. Blue light moves across the stage as every instrument adds to the evening’s story. The visuals seem to take part in the performance rather than simply accompany it.
+
+This article was written for Mizon’s news design preview. It does not report a real concert. Imagine following photos, performance stories and updates from your favorite artists here in the future.</value></data>
+  <data name="News0Category" xml:space="preserve"><value>On stage</value></data>
+  <data name="News1Title" xml:space="preserve"><value>From the first rehearsal to the final applause</value></data>
+  <data name="News1Summary" xml:space="preserve"><value>The details behind a live show: setting the stage, rehearsing as a band and preparing for the opening moment.</value></data>
+  <data name="News1Body" xml:space="preserve"><value>Hours of rehearsal and coordination lie behind this imagined performance. The sound crew checks instruments, lighting follows the rhythm and musicians review final changes. The audience has not arrived yet, but the show is already taking shape.
+
+This sample article demonstrates the news section. It looks at details the audience rarely sees. From the first rehearsal to the final applause, every moment has a story worth hearing.</value></data>
+  <data name="News1Category" xml:space="preserve"><value>Backstage</value></data>
+  <data name="News2Title" xml:space="preserve"><value>When a music video becomes a short film</value></data>
+  <data name="News2Summary" xml:space="preserve"><value>City lights, cinematic frames and a compact story make the visuals an extension of the music.</value></data>
+  <data name="News2Body" xml:space="preserve"><value>This imagined music video follows a short journey through the city at night. Street lights, camera movement and the main character’s pauses follow the rise and fall of the music. Every frame reveals a little of the story without explaining everything in words.
+
+This is a design sample, not a report about a released work. Its idea is to show stories that connect music and cinema and invite the audience to discover something new.</value></data>
+  <data name="News2Category" xml:space="preserve"><value>Music video</value></data>
+  <data name="News3Title" xml:space="preserve"><value>A quieter wave: sounds for a pause</value></data>
+  <data name="News3Summary" xml:space="preserve"><value>Rain and gentle melodies offer space to discover music that gives a busy day room to breathe.</value></data>
+  <data name="News3Body" xml:space="preserve"><value>This sample story imagines a brief pause: a window facing the rain, a quiet piano and a few minutes away from the rush of the day. The tracks in this scene have space to breathe. The silence between notes matters as much as the melody.
+
+This text was written to preview the news section and does not introduce a real collection. Stories like this could sit alongside release updates and listening suggestions, making music discovery a calm, personal experience.</value></data>
+  <data name="News3Category" xml:space="preserve"><value>Listening experience</value></data>
+</root>

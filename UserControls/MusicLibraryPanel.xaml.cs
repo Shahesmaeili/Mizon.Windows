@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -13,6 +14,10 @@ namespace Mizon.Windows.UserControls;
 
 public sealed partial class MusicLibraryPanel : UserControl
 {
+    public LocalizationService Localization => LocalizationService.Current;
+    public FluentIcons.Common.Symbol ForwardSymbol(bool isPersian) =>
+        isPersian ? FluentIcons.Common.Symbol.ArrowLeft : FluentIcons.Common.Symbol.ArrowRight;
+
     public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
         nameof(ViewModel), typeof(MusicLibraryViewModel), typeof(MusicLibraryPanel),
         new PropertyMetadata(null, ViewModelChanged));
@@ -21,6 +26,8 @@ public sealed partial class MusicLibraryPanel : UserControl
     private bool? _wide;
     private MenuFlyout? _playlistMenu;
     private bool _starting;
+    private bool _localizationAttached;
+    private string? _statusResourceKey;
 
     public MusicLibraryPanel()
     {
@@ -43,7 +50,24 @@ public sealed partial class MusicLibraryPanel : UserControl
         if (panel._initialized) panel.Bindings.Update();
     }
 
-    private void Panel_Loaded(object sender, RoutedEventArgs args) => UpdateLayout(ActualWidth);
+    private void Panel_Loaded(object sender, RoutedEventArgs args)
+    {
+        if (!IsLoaded) return;
+        if (!_localizationAttached)
+        {
+            _localizationAttached = true;
+            Localization.PropertyChanged += LanguageChanged;
+        }
+        ViewModel?.RefreshLocalization();
+        UpdateLayout(ActualWidth);
+    }
+
+    private void LanguageChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName != nameof(LocalizationService.Revision) || !IsLoaded) return;
+        ViewModel?.RefreshLocalization();
+        if (_statusResourceKey is { } key) ActionStatus.Text = Localization.GetString(key);
+    }
 
     private void Panel_SizeChanged(object sender, SizeChangedEventArgs args)
     {
@@ -92,9 +116,9 @@ public sealed partial class MusicLibraryPanel : UserControl
         _starting = true;
         try
         {
-            ShowStatus("در حال آماده‌سازی پخش…");
+            ShowStatus(Localization.GetString("MusicWidgets/PlaylistPlaying"));
             var player = ((App)Application.Current).Services.GetRequiredService<MusicPlaylistPlaybackService>();
-            if (!await player.StartAsync(id)) ShowStatus("پلی‌لیست آهنگ قابل پخشی ندارد یا دریافت آن ناموفق بود.");
+            if (!await player.StartAsync(id)) ShowStatus(Localization.GetString("MusicWidgets/PlaylistUnavailable"));
         }
         finally { _starting = false; }
     }
@@ -102,6 +126,10 @@ public sealed partial class MusicLibraryPanel : UserControl
     private void ShowStatus(string text)
     {
         if (!IsLoaded) return;
+        _statusResourceKey = null;
+        foreach (var key in new[] { "MusicWidgets/PlaylistPlaying", "MusicWidgets/PlaylistUnavailable",
+            "MusicWidgets/PlaylistCopied", "MusicWidgets/PlaylistActionError" })
+            if (Localization.GetString(key) == text) { _statusResourceKey = key; break; }
         ActionStatus.Text = text;
         ActionStatus.Visibility = Visibility.Visible;
         AccessibilityAnnouncements.Announce(this, text, "playlist-action");
@@ -110,6 +138,9 @@ public sealed partial class MusicLibraryPanel : UserControl
     private void Panel_Unloaded(object sender, RoutedEventArgs args)
     {
         if (IsLoaded) return;
+        Localization.PropertyChanged -= LanguageChanged;
+        _localizationAttached = false;
+        _statusResourceKey = null;
         _playlistMenu?.Hide();
         _playlistMenu = null;
         ActionStatus.Text = string.Empty;

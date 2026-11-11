@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <IsAotCompatible>true</IsAotCompatible>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <MizonApiSourceRoot Condition="'$(MizonApiSourceRoot)' == ''">$(MSBuildThisFileDirectory)..\..\..\..\Mizon.API</MizonApiSourceRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\ViewModels\ViewModelBase.cs" Link="Production\ViewModelBase.cs" />
+    <Compile Include="..\..\ViewModels\WeeklyRhythmViewModel.cs" Link="Production\WeeklyRhythmViewModel.cs" />
+    <Compile Include="..\..\ViewModels\Items\WeeklyRhythmDayItemViewModel.cs" Link="Production\WeeklyRhythmDayItemViewModel.cs" />
+    <Compile Include="..\..\ViewModels\Items\MusicNewsItemViewModel.cs" Link="Production\MusicNewsItemViewModel.cs" />
+    <Compile Include="..\..\ViewModels\Items\MusicLibraryPlaylistItemViewModel.cs" Link="Production\MusicLibraryPlaylistItemViewModel.cs" />
+    <Compile Include="..\..\ViewModels\Items\FriendMusicActivityItemViewModel.cs" Link="Production\FriendMusicActivityItemViewModel.cs" />
+    <Compile Include="..\..\ViewModels\Items\FollowingActivityTargetKind.cs" Link="Production\FollowingActivityTargetKind.cs" />
+    <Compile Include="$(MizonApiSourceRoot)\Mizon.API.Client\Responses\Clients\FollowingActivitiesResponse.cs" Link="Production\FollowingActivitiesResponse.cs" />
+    <Compile Include="$(MizonApiSourceRoot)\Mizon.API\IApiResponse.cs" Link="Production\IApiResponse.cs" />
+    <Content Include="..\..\Strings\fa-IR\MusicWidgets.resw" Link="Resources\fa-IR.resw" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\Strings\en-US\MusicWidgets.resw" Link="Resources\en-US.resw" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -67,7 +67,7 @@
                             </Border.Background>
                         </Border>
                     </StackPanel>
-                    <TextBlock Grid.Row="1" Text="{x:Bind ShortName}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="9" TextAlignment="Center" TextTrimming="CharacterEllipsis" Opacity="0.7" AutomationProperties.AccessibilityView="Raw" />
+                    <TextBlock Grid.Row="1" Text="{x:Bind ShortName, Mode=OneWay}"  FontSize="9" TextAlignment="Center" TextTrimming="CharacterEllipsis" Opacity="0.7" AutomationProperties.AccessibilityView="Raw" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                 </Grid>
         </DataTemplate>
     </UserControl.Resources>
@@ -75,23 +75,23 @@
         <Grid RowSpacing="12" FlowDirection="LeftToRight">
             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
             <StackPanel Style="{StaticResource DiscoveryWidgetHeader}">
-                <uc:DiscoverySectionHeader Title="ریتم هفتهٔ تو" Icon="ArrowTrending" AccentColor="#91DEC5" IsCompact="True" />
-                <TextBlock Text="مرور شنیدن‌های این هفته" Style="{StaticResource RhythmCaption}" />
+                <uc:DiscoverySectionHeader Title="{x:Bind Localization.GetString('MusicWidgets/RhythmTitle', Localization.Revision), Mode=OneWay}" Icon="ArrowTrending" AccentColor="#91DEC5" IsCompact="True" />
+                <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/RhythmSubtitle', Localization.Revision), Mode=OneWay}" Style="{StaticResource RhythmCaption}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
             </StackPanel>
             <Grid x:Name="RhythmBody" Grid.Row="1" RowSpacing="8">
                 <Grid.ColumnDefinitions><ColumnDefinition x:Name="ChartColumn" Width="*" /><ColumnDefinition x:Name="SummaryColumn" Width="0" /></Grid.ColumnDefinitions>
                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                 <StackPanel x:Name="SummaryArea" Spacing="6">
                     <StackPanel Spacing="1" HorizontalAlignment="Right">
-                        <TextBlock Text="{x:Bind Summary.TotalDurationText, Mode=OneWay}" AutomationProperties.Name="{x:Bind Summary.TotalAccessibleText, Mode=OneWay}" FontSize="32" FontWeight="Light" CharacterSpacing="-50" HorizontalAlignment="Right" FlowDirection="LeftToRight" />
-                        <TextBlock Text="ساعت همراه موسیقی و تصویر" Style="{StaticResource RhythmCaption}" />
+                        <TextBlock Text="{x:Bind Summary.TotalDurationText, Mode=OneWay}" AutomationProperties.Name="{x:Bind Summary.TotalAccessibleText, Mode=OneWay}" FontSize="32" FontWeight="Light" CharacterSpacing="-50" HorizontalAlignment="Right" FlowDirection="LeftToRight" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" />
+                        <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/RhythmHours', Localization.Revision), Mode=OneWay}" Style="{StaticResource RhythmCaption}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </StackPanel>
                     <Grid ColumnSpacing="7">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <Border CornerRadius="7" Padding="6,3" Background="#1391DEC5" BorderBrush="#2491DEC5" BorderThickness="1" VerticalAlignment="Center">
-                            <TextBlock Text="{x:Bind Summary.ComparisonText, Mode=OneWay}" FontSize="11" Foreground="{StaticResource MusicAccent}" FontWeight="SemiBold" FlowDirection="LeftToRight" />
+                            <TextBlock Text="{x:Bind Summary.ComparisonText, Mode=OneWay}" FontSize="11" Foreground="{StaticResource MusicAccent}" FontWeight="SemiBold" FlowDirection="LeftToRight" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" />
                         </Border>
-                        <TextBlock Grid.Column="1" Text="{x:Bind Summary.ComparisonDescription, Mode=OneWay}" Style="{StaticResource RhythmCaption}" FontSize="8" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind Summary.ComparisonDescription, Mode=OneWay}" Style="{StaticResource RhythmCaption}" FontSize="8" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </Grid>
                     <Grid ColumnSpacing="7">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
@@ -99,20 +99,20 @@
                             <StackPanel Spacing="2">
                                 <Grid ColumnSpacing="4">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="4" /></Grid.ColumnDefinitions>
-                                    <TextBlock Text="موسیقی" Style="{StaticResource RhythmCaption}" FontSize="8" />
+                                    <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/Music', Localization.Revision), Mode=OneWay}" Style="{StaticResource RhythmCaption}" FontSize="8" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                                     <Border Grid.Column="1" Width="4" Height="4" CornerRadius="2" Background="{StaticResource MusicAccent}" VerticalAlignment="Center" />
                                 </Grid>
-                                <TextBlock Text="{x:Bind Summary.MusicDurationText, Mode=OneWay}" FontSize="12" Foreground="{StaticResource MusicAccent}" HorizontalAlignment="Right" />
+                                <TextBlock Text="{x:Bind Summary.MusicDurationText, Mode=OneWay}" FontSize="12" Foreground="{StaticResource MusicAccent}" HorizontalAlignment="Right" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                             </StackPanel>
                         </Border>
                         <Border Padding="2,0">
                             <StackPanel Spacing="2">
                                 <Grid ColumnSpacing="4">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="4" /></Grid.ColumnDefinitions>
-                                    <TextBlock Text="موزیک‌ویدیو" Style="{StaticResource RhythmCaption}" FontSize="8" />
+                                    <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/MusicVideo', Localization.Revision), Mode=OneWay}" Style="{StaticResource RhythmCaption}" FontSize="8" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                                     <Border Grid.Column="1" Width="4" Height="4" CornerRadius="2" Background="{StaticResource VideoAccent}" VerticalAlignment="Center" />
                                 </Grid>
-                                <TextBlock Text="{x:Bind Summary.VideoDurationText, Mode=OneWay}" FontSize="12" Foreground="{StaticResource VideoAccent}" HorizontalAlignment="Right" />
+                                <TextBlock Text="{x:Bind Summary.VideoDurationText, Mode=OneWay}" FontSize="12" Foreground="{StaticResource VideoAccent}" HorizontalAlignment="Right" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -126,13 +126,13 @@
                             <Border Grid.Row="1" Height="1" VerticalAlignment="Bottom" Background="#0EFFFFFF" />
                             <Border Grid.Row="2" Height="1" VerticalAlignment="Bottom" Background="#20FFFFFF" />
                         </Grid>
-                        <Grid x:Name="DayColumnsHost" ColumnSpacing="3" AutomationProperties.Name="شنیدن روزهای هفته" />
+                        <Grid x:Name="DayColumnsHost" ColumnSpacing="3" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/RhythmDays', Localization.Revision), Mode=OneWay}" />
                     </Grid>
                     <Border x:Name="SelectedDayDetail" Grid.Row="1" Padding="8,4" CornerRadius="8" Background="#0791DEC5" BorderBrush="#1691DEC5" BorderThickness="1">
                             <Grid ColumnSpacing="6">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                <TextBlock x:Name="SelectedDayDuration" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource MusicAccent}" VerticalAlignment="Center" />
-                                <TextBlock x:Name="SelectedDayName" Grid.Column="1" Style="{StaticResource RhythmCaption}" FontSize="10" Opacity="0.9" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                                <TextBlock x:Name="SelectedDayDuration" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource MusicAccent}" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                                <TextBlock x:Name="SelectedDayName" Grid.Column="1" Style="{StaticResource RhythmCaption}" FontSize="10" Opacity="0.9" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                             </Grid>
                     </Border>
                 </Grid>
@@ -141,7 +141,7 @@
                 <Grid ColumnSpacing="7">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <Border Height="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" VerticalAlignment="Center" />
-                    <TextBlock Grid.Column="1" Text="نمونهٔ طراحی · جزئیات با انتخاب روز" Style="{StaticResource DiscoveryWidgetFooterCaption}" />
+                    <TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('MusicWidgets/RhythmDemo', Localization.Revision), Mode=OneWay}" Style="{StaticResource DiscoveryWidgetFooterCaption}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                 </Grid>
             </StackPanel>
         </Grid>

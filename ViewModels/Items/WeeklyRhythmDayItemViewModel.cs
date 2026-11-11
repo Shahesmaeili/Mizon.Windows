@@ -1,12 +1,14 @@
+using Mizon.Windows.Services;
 using System.Globalization;
 
 namespace Mizon.Windows.ViewModels.Items;
 
-public sealed class WeeklyRhythmDayItemViewModel
+public sealed partial class WeeklyRhythmDayItemViewModel : ViewModelBase
 {
+    public LocalizationService Localization => LocalizationService.Current;
     public int Index { get; }
-    public string ShortName { get; }
-    public string DayName { get; }
+    public string ShortName => Localization.GetString($"MusicWidgets/Day{Index}Short");
+    public string DayName => Localization.GetString($"MusicWidgets/Day{Index}");
     public int MusicMinutes { get; }
     public int VideoMinutes { get; }
     public int TotalMinutes => MusicMinutes + VideoMinutes;
@@ -16,14 +18,11 @@ public sealed class WeeklyRhythmDayItemViewModel
     public string TotalDurationText { get; }
     public string MusicDurationText { get; }
     public string VideoDurationText { get; }
-    public string TooltipText { get; }
+    public string TooltipText => Localization.Format("MusicWidgets/RhythmDayTooltip", DayName, TotalDurationText, MusicDurationText, VideoDurationText);
 
-    internal WeeklyRhythmDayItemViewModel(int index, string shortName, string dayName,
-        int musicMinutes, int videoMinutes, int maximumMinutes)
+    internal WeeklyRhythmDayItemViewModel(int index, int musicMinutes, int videoMinutes, int maximumMinutes)
     {
         Index = index;
-        ShortName = shortName;
-        DayName = dayName;
         MusicMinutes = musicMinutes;
         VideoMinutes = videoMinutes;
         IsPeak = TotalMinutes == maximumMinutes && maximumMinutes > 0;
@@ -32,7 +31,13 @@ public sealed class WeeklyRhythmDayItemViewModel
         TotalDurationText = FormatDuration(TotalMinutes);
         MusicDurationText = FormatDuration(musicMinutes);
         VideoDurationText = FormatDuration(videoMinutes);
-        TooltipText = $"{dayName}؛ مجموع {TotalDurationText}، موسیقی {MusicDurationText}، موزیک‌ویدیو {VideoDurationText}";
+    }
+
+    public void RefreshLocalization()
+    {
+        OnPropertyChanged(nameof(ShortName));
+        OnPropertyChanged(nameof(DayName));
+        OnPropertyChanged(nameof(TooltipText));
     }
 
     internal static string FormatDuration(int minutes, bool padHours = false) =>

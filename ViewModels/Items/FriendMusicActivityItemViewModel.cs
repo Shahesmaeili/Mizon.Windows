@@ -1,3 +1,5 @@
+using Mizon.Windows.Services;
+using System.Globalization;
 using Symbol = FluentIcons.Common.Symbol;
 using Microsoft.UI.Xaml.Media;
 using Mizon.API.Client.Responses.Clients;
@@ -9,6 +11,8 @@ namespace Mizon.Windows.ViewModels.Items;
 
 public sealed partial class FriendMusicActivityItemViewModel : ViewModelBase
 {
+    public LocalizationService Localization => LocalizationService.Current;
+    private FollowingActivityItemResponse? _activity;
     public string Id { get; private set; } = string.Empty;
     public Guid ActorPublicId { get; private set; }
     public Guid? MusicPublicId { get; private set; }
@@ -20,11 +24,11 @@ public sealed partial class FriendMusicActivityItemViewModel : ViewModelBase
     public bool CanOpen => TargetKind != FollowingActivityTargetKind.Unknown;
     public string NavigationHelpText => TargetKind switch
     {
-        FollowingActivityTargetKind.MusicComment => "باز کردن آهنگ و رفتن به همین نظر",
-        FollowingActivityTargetKind.Story => "باز کردن همین استوری",
-        FollowingActivityTargetKind.MusicPlaylist => "نمایش آهنگ‌های همین پلی‌لیست",
-        FollowingActivityTargetKind.Music => "نمایش جزئیات همین آهنگ",
-        _ => "مقصد این فعالیت در دسترس نیست"
+        FollowingActivityTargetKind.MusicComment => Localization.GetString("MusicWidgets/ActivityCommentHelp"),
+        FollowingActivityTargetKind.Story => Localization.GetString("MusicWidgets/ActivityStoryHelp"),
+        FollowingActivityTargetKind.MusicPlaylist => Localization.GetString("MusicWidgets/ActivityPlaylistHelp"),
+        FollowingActivityTargetKind.Music => Localization.GetString("MusicWidgets/ActivityMusicHelp"),
+        _ => Localization.GetString("MusicWidgets/ActivityUnavailable")
     };
     public Guid? ProfileMediaPublicId { get; private set; }
     public Guid? CoverMediaPublicId { get; private set; }
@@ -38,7 +42,7 @@ public sealed partial class FriendMusicActivityItemViewModel : ViewModelBase
     public string ContentTitle { get; private set; } = string.Empty;
     public string Subtitle { get; private set; } = string.Empty;
     public string TimeText => FormatTime(OccurredAt);
-    public string DateText => OccurredAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm");
+    public string DateText => OccurredAt.ToLocalTime().ToString("g", CultureInfo.GetCultureInfo(Localization.LanguageTag));
     public string AutomationName => $"{ActivityText}، {ContentTitle}، {Subtitle}، {TimeText}";
     public Symbol ActionSymbol { get; private set; }
     public Color AccentColor { get; private set; }
@@ -47,6 +51,7 @@ public sealed partial class FriendMusicActivityItemViewModel : ViewModelBase
 
     internal void Update(FollowingActivityItemResponse activity)
     {
+        _activity = activity;
         Id = activity.ActivityId;
         ActorPublicId = activity.ClientPublicId;
         MusicPublicId = activity.MusicPublicId;
@@ -60,35 +65,36 @@ public sealed partial class FriendMusicActivityItemViewModel : ViewModelBase
         OccurredAt = activity.CreateDateTime;
         var fullName = $"{activity.FirstName} {activity.LastName}".Trim();
         DisplayName = !string.IsNullOrWhiteSpace(activity.NickName) ? activity.NickName
-            : fullName.Length > 0 ? fullName : activity.Username ?? "کاربر میزون";
-        ContentTitle = !string.IsNullOrWhiteSpace(activity.PersianTitle) ? activity.PersianTitle : activity.Title;
+            : fullName.Length > 0 ? fullName : activity.Username ?? Localization.GetString("MusicWidgets/MizonUser");
+        ContentTitle = Localization.IsPersian && !string.IsNullOrWhiteSpace(activity.PersianTitle)
+            ? activity.PersianTitle : !string.IsNullOrWhiteSpace(activity.Title) ? activity.Title : activity.PersianTitle ?? string.Empty;
         ContentKindTitle = TargetKind switch
         {
-            FollowingActivityTargetKind.Story => "استوری",
-            FollowingActivityTargetKind.MusicPlaylist => "پلی‌لیست",
-            _ => activity.Domain == "music-video" ? "موزیک‌ویدیو" : "آهنگ"
+            FollowingActivityTargetKind.Story => Localization.GetString("MusicWidgets/Story"),
+            FollowingActivityTargetKind.MusicPlaylist => Localization.GetString("MusicWidgets/Playlist"),
+            _ => activity.Domain == "music-video" ? Localization.GetString("MusicWidgets/MusicVideo") : Localization.GetString("MusicWidgets/Track")
         };
         if (TargetKind == FollowingActivityTargetKind.Story && string.IsNullOrWhiteSpace(ContentTitle))
-            ContentTitle = "استوری تازه";
+            ContentTitle = Localization.GetString("MusicWidgets/StoryNew");
         (ActionText, ActionSymbol, AccentColor) = activity.ActivityType switch
         {
-            "comment" => ("نظر گذاشت", Symbol.Comment, Color.FromArgb(255, 141, 190, 242)),
-            "like" => ("پسندید", Symbol.Heart, Color.FromArgb(255, 238, 166, 190)),
-            "reaction" => ("واکنش نشان داد", Symbol.Emoji, Color.FromArgb(255, 241, 205, 134)),
-            "play" => ("گوش داد", Symbol.Headphones, Color.FromArgb(255, 157, 206, 196)),
-            "playlist-created" => ("پلی‌لیست ساخت", Symbol.MusicNote2, Color.FromArgb(255, 195, 169, 239)),
-            "story-posted" => ("استوری گذاشت", Symbol.Image, Color.FromArgb(255, 174, 185, 246)),
-            _ => ("فعالیت تازه‌ای داشت", Symbol.People, Color.FromArgb(255, 157, 206, 196))
+            "comment" => (Localization.GetString("MusicWidgets/ActivityComment"), Symbol.Comment, Color.FromArgb(255, 141, 190, 242)),
+            "like" => (Localization.GetString("MusicWidgets/ActivityLike"), Symbol.Heart, Color.FromArgb(255, 238, 166, 190)),
+            "reaction" => (Localization.GetString("MusicWidgets/ActivityReaction"), Symbol.Emoji, Color.FromArgb(255, 241, 205, 134)),
+            "play" => (Localization.GetString("MusicWidgets/ActivityPlay"), Symbol.Headphones, Color.FromArgb(255, 157, 206, 196)),
+            "playlist-created" => (Localization.GetString("MusicWidgets/ActivityPlaylist"), Symbol.MusicNote2, Color.FromArgb(255, 195, 169, 239)),
+            "story-posted" => (Localization.GetString("MusicWidgets/ActivityStory"), Symbol.Image, Color.FromArgb(255, 174, 185, 246)),
+            _ => (Localization.GetString("MusicWidgets/ActivityNew"), Symbol.People, Color.FromArgb(255, 157, 206, 196))
         };
-        if (activity.ActivityType == "play" && activity.Domain == "music-video") ActionText = "تماشا کرد";
+        if (activity.ActivityType == "play" && activity.Domain == "music-video") ActionText = Localization.GetString("MusicWidgets/ActivityWatch");
         Subtitle = activity.ActivityType switch
         {
             "comment" => activity.CommentText ?? string.Empty,
-            "reaction" => activity.ReactionEmoji ?? "واکنش به موسیقی",
-            "playlist-created" => $"{activity.PlaylistMusicsCount ?? 0:N0} آهنگ",
+            "reaction" => activity.ReactionEmoji ?? Localization.GetString("MusicWidgets/ActivityReactionFallback"),
+            "playlist-created" => Localization.Format("MusicWidgets/TracksCount", activity.PlaylistMusicsCount ?? 0),
             "story-posted" => activity.TaggedMusicsCount > 0
-                ? $"{activity.TaggedMusicsCount:N0} آهنگ تگ‌شده · {(activity.StoryViewedByMe ? "دیده‌شده" : "جدید")}" : "استوری تازه",
-            _ => !string.IsNullOrWhiteSpace(activity.PersianTitle) ? activity.Title : ContentKindTitle
+                ? Localization.Format("MusicWidgets/ActivityStorySummary", activity.TaggedMusicsCount, Localization.GetString(activity.StoryViewedByMe ? "MusicWidgets/Viewed" : "MusicWidgets/New")) : Localization.GetString("MusicWidgets/StoryNew"),
+            _ => Localization.IsPersian && !string.IsNullOrWhiteSpace(activity.PersianTitle) ? activity.Title : ContentKindTitle
         };
         if (ProfileMediaPublicId != activity.ProfileMediaPublicId)
         {
@@ -125,15 +131,21 @@ public sealed partial class FriendMusicActivityItemViewModel : ViewModelBase
         static bool Valid(Guid? id) => id.HasValue && id.Value != Guid.Empty;
     }
 
+    public void RefreshLocalization()
+    {
+        // Recompute presentation only; IDs, cached images and the collection remain intact.
+        if (_activity is { } activity) Update(activity);
+    }
+
     internal void SetProfile(string path) => ProfileImage = ImageSourceFactory.Create(path, 96);
     internal void SetCover(string path) => CoverImage = ImageSourceFactory.Create(path, 160);
 
-    private static string FormatTime(DateTimeOffset date)
+    private string FormatTime(DateTimeOffset date)
     {
         var age = DateTimeOffset.UtcNow - date;
-        return age.TotalMinutes < 1 ? "همین حالا"
-            : age.TotalHours < 1 ? $"{Math.Max(1, (int)age.TotalMinutes)} دقیقه پیش"
-            : age.TotalDays < 1 ? $"{(int)age.TotalHours} ساعت پیش"
-            : age.TotalDays < 7 ? $"{(int)age.TotalDays} روز پیش" : date.ToLocalTime().ToString("yyyy/MM/dd");
+        return age.TotalMinutes < 1 ? Localization.GetString("MusicWidgets/JustNow")
+            : age.TotalHours < 1 ? Localization.Format("MusicWidgets/MinutesAgo", Math.Max(1, (int)age.TotalMinutes))
+            : age.TotalDays < 1 ? Localization.Format("MusicWidgets/HoursAgo", (int)age.TotalHours)
+            : age.TotalDays < 7 ? Localization.Format("MusicWidgets/DaysAgo", (int)age.TotalDays) : date.ToLocalTime().ToString("d", CultureInfo.GetCultureInfo(Localization.LanguageTag));
     }
 }

@@ -16,6 +16,7 @@ namespace Mizon.Windows.ViewModels;
 public sealed partial class FollowingActivitiesViewModel(MizonApi api, MediaDownloader downloader,
     string scope = "all", int pageSize = 20) : ViewModelBase, IDisposable
 {
+    public LocalizationService Localization => LocalizationService.Current;
     private CancellationTokenSource? _loadCancellation;
     private string? _ownerToken, _nextCursor;
     private int _version;
@@ -29,13 +30,13 @@ public sealed partial class FollowingActivitiesViewModel(MizonApi api, MediaDown
     public bool IsInitialLoading => IsLoading && !HasLoaded;
     public bool IsEmpty => HasLoaded && !HasError && Items.Count == 0;
     public bool CanLoadMore => HasMore && !IsLoading;
-    public string CountText => Items.Count.ToString("N0");
-    public string EmptyTitle => HasFollowings ? "هنوز خبری از دوستانت نیست" : "اینجا با دوستانت زنده می‌شود";
+    public string CountText => Items.Count.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo(Localization.LanguageTag));
+    public string EmptyTitle => HasFollowings ? Localization.GetString("MusicWidgets/FollowingEmptyTitle") : Localization.GetString("MusicWidgets/FollowingNoFriendsTitle");
     public string EmptyDescription => !HasFollowings
-        ? "اول چند نفر را فالو کن؛ فعالیت‌هایشان را اینجا می‌بینی."
-        : scope == "music" ? "هنوز فعالیت موسیقی از کسانی که دنبال می‌کنی ثبت نشده؛ پخش، نظر، پسند، پلی‌لیست و استوری‌های دارای تگ آهنگشان اینجا می‌آید."
-        : "کسانی که دنبال می‌کنی هنوز فعالیتی ثبت نکرده‌اند. فعالیت تازه‌شان را اینجا می‌بینی.";
-    public string StatusText => "دریافت فعالیت‌ها انجام نشد. دوباره امتحان کن.";
+        ? Localization.GetString("MusicWidgets/FollowingNoFriendsDescription")
+        : scope == "music" ? Localization.GetString("MusicWidgets/FollowingEmptyMusicDescription")
+        : Localization.GetString("MusicWidgets/FollowingEmptyDescription");
+    public string StatusText => Localization.GetString("MusicWidgets/FollowingError");
     public Visibility EmptyVisibility => IsEmpty && !IsLoading ? Visibility.Visible : Visibility.Collapsed;
     public Visibility ErrorVisibility => HasError ? Visibility.Visible : Visibility.Collapsed;
     public Visibility ItemsVisibility => Items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -166,6 +167,12 @@ public sealed partial class FollowingActivitiesViewModel(MizonApi api, MediaDown
             nameof(CountText), nameof(EmptyTitle), nameof(EmptyDescription), nameof(StatusText),
             nameof(EmptyVisibility), nameof(ErrorVisibility), nameof(ItemsVisibility), nameof(MoreVisibility) }) OnPropertyChanged(property);
     }
+    public void RefreshLocalization()
+    {
+        NotifyPresentation();
+        foreach (var item in Items) item.RefreshLocalization();
+    }
+
     public void Dispose()
     {
         if (_disposed) return;

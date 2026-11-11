@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="LibraryTitle" xml:space="preserve"><value>کتابخانهٔ تو</value></data>
+  <data name="LibrarySubtitle" xml:space="preserve"><value>پلی‌لیست‌های شخصی تو</value></data>
+  <data name="LibraryPlaylistHelp" xml:space="preserve"><value>برای نمایش آهنگ‌ها انتخاب کن؛ منوی راست‌کلیک شامل پخش و کپی لینک است.</value></data>
+  <data name="LibraryPersonal" xml:space="preserve"><value>پلی‌لیست شخصی</value></data>
+  <data name="LibraryUpdates" xml:space="preserve"><value>آخرین به‌روزرسانی‌ها</value></data>
+  <data name="LibraryEmpty" xml:space="preserve"><value>هنوز پلی‌لیستی نداری</value></data>
+  <data name="LibraryRetry" xml:space="preserve"><value>دریافت دوبارهٔ پلی‌لیست‌ها</value></data>
+  <data name="Retry" xml:space="preserve"><value>تلاش دوباره</value></data>
+  <data name="LibraryRecentHelp" xml:space="preserve"><value>رفتن به آهنگ‌های اخیراً پخش‌شده</value></data>
+  <data name="LibraryRecent" xml:space="preserve"><value>اخیراً گوش دادی</value></data>
+  <data name="LibraryFooter" xml:space="preserve"><value>جدیدترین تغییرهای کتابخانه</value></data>
+  <data name="LibraryCount" xml:space="preserve"><value>{0:N0} پلی‌لیست شخصی</value></data>
+  <data name="LibraryCountPending" xml:space="preserve"><value>تعداد پلی‌لیست‌ها هنوز دریافت نشده</value></data>
+  <data name="LibrarySummaryPending" xml:space="preserve"><value>مجموعه‌ای با سلیقهٔ خودت</value></data>
+  <data name="LibrarySummaryEmpty" xml:space="preserve"><value>جای آهنگ‌های محبوبت اینجاست</value></data>
+  <data name="LibrarySummary" xml:space="preserve"><value>{0:N0} آهنگ در پلی‌لیست‌ها</value></data>
+  <data name="LibraryError" xml:space="preserve"><value>دریافت کتابخانه انجام نشد. دوباره امتحان کن.</value></data>
+  <data name="LibraryCreateHint" xml:space="preserve"><value>از صفحهٔ هر آهنگ، اولین پلی‌لیستت را بساز.</value></data>
+  <data name="LibraryMore" xml:space="preserve"><value>نمایش همهٔ پلی‌لیست‌ها ({0:N0})</value></data>
+  <data name="TracksCount" xml:space="preserve"><value>{0:N0} آهنگ</value></data>
+  <data name="PlaylistUpdated" xml:space="preserve"><value>به‌روزرسانی: {0}</value></data>
+  <data name="PlaylistPlaying" xml:space="preserve"><value>در حال آماده‌سازی پخش…</value></data>
+  <data name="PlaylistUnavailable" xml:space="preserve"><value>پلی‌لیست آهنگ قابل پخشی ندارد یا دریافت آن ناموفق بود.</value></data>
+  <data name="PlaylistPlay" xml:space="preserve"><value>پخش</value></data>
+  <data name="PlaylistOpen" xml:space="preserve"><value>نمایش آهنگ‌ها</value></data>
+  <data name="PlaylistCopy" xml:space="preserve"><value>کپی کردن لینک پلی‌لیست</value></data>
+  <data name="PlaylistCopied" xml:space="preserve"><value>لینک پلی‌لیست کپی شد.</value></data>
+  <data name="PlaylistActionError" xml:space="preserve"><value>انجام این عملیات ممکن نشد. دوباره امتحان کن.</value></data>
+  <data name="RhythmTitle" xml:space="preserve"><value>ریتم هفتهٔ تو</value></data>
+  <data name="RhythmSubtitle" xml:space="preserve"><value>مرور شنیدن‌های این هفته</value></data>
+  <data name="RhythmHours" xml:space="preserve"><value>ساعت همراه موسیقی و تصویر</value></data>
+  <data name="Music" xml:space="preserve"><value>موسیقی</value></data>
+  <data name="MusicVideo" xml:space="preserve"><value>موزیک‌ویدیو</value></data>
+  <data name="RhythmDays" xml:space="preserve"><value>شنیدن روزهای هفته</value></data>
+  <data name="RhythmDemo" xml:space="preserve"><value>نمونهٔ طراحی · جزئیات با انتخاب روز</value></data>
+  <data name="RhythmDayHelp" xml:space="preserve"><value>برای نمایش جزئیات این روز، فاصله یا اینتر را فشار بده</value></data>
+  <data name="RhythmDayTooltip" xml:space="preserve"><value>{0}؛ مجموع {1}، موسیقی {2}، موزیک‌ویدیو {3}</value></data>
+  <data name="RhythmTotal" xml:space="preserve"><value>{0} ساعت و {1} دقیقه موسیقی و موزیک‌ویدیو در هفت روز</value></data>
+  <data name="RhythmComparison" xml:space="preserve"><value>بیشتر از هفتهٔ قبل</value></data>
+  <data name="RhythmPeak" xml:space="preserve"><value>{0}؛ پرشنیدن‌ترین روز</value></data>
+  <data name="RhythmPercent" xml:space="preserve"><value>+{0:0}٪</value></data>
+  <data name="NewsTitle" xml:space="preserve"><value>آخرین اخبار</value></data>
+  <data name="Demo" xml:space="preserve"><value>نمونه</value></data>
+  <data name="NewsSubtitle" xml:space="preserve"><value>از صحنه تا پشت صحنه</value></data>
+  <data name="NewsChoose" xml:space="preserve"><value>انتخاب خبر</value></data>
+  <data name="NewsNext" xml:space="preserve"><value>خبر بعدی</value></data>
+  <data name="NewsPrevious" xml:space="preserve"><value>خبر قبلی</value></data>
+  <data name="NewsPause" xml:space="preserve"><value>توقف گردش خودکار اخبار</value></data>
+  <data name="NewsResume" xml:space="preserve"><value>ادامهٔ گردش خودکار اخبار</value></data>
+  <data name="NewsReadDemo" xml:space="preserve"><value>خواندن خبر نمونه</value></data>
+  <data name="NewsRead" xml:space="preserve"><value>خواندن خبر</value></data>
+  <data name="NewsFooter" xml:space="preserve"><value>پیش‌نمایش طراحی · خبرها نمونه‌اند</value></data>
+  <data name="NewsIndicator" xml:space="preserve"><value>خبر {0}: {1}</value></data>
+  <data name="NewsIndicatorHelp" xml:space="preserve"><value>نمایش این خبر؛ گردش خودکار هنگام کار با صفحه‌کلید متوقف است</value></data>
+  <data name="NewsCounter" xml:space="preserve"><value>خبر {0} از {1}</value></data>
+  <data name="NewsCurrent" xml:space="preserve"><value>خبر فعلی</value></data>
+  <data name="NewsReadTitle" xml:space="preserve"><value>خواندن خبر نمونه: {0}</value></data>
+  <data name="NewsMotionOff" xml:space="preserve"><value>گردش خودکار با تنظیم کاهش حرکت ویندوز متوقف است</value></data>
+  <data name="NewsPaused" xml:space="preserve"><value>گردش خودکار متوقف است</value></data>
+  <data name="NewsRotating" xml:space="preserve"><value>گردش خودکار فعال است</value></data>
+  <data name="NewsPreviewCategory" xml:space="preserve"><value>پیش‌نمایش خبر نمونه · {0}</value></data>
+  <data name="Close" xml:space="preserve"><value>بستن</value></data>
+  <data name="NewsAutomation" xml:space="preserve"><value>خبر نمونه؛ {0}؛ {1}؛ {2}؛ {3}</value></data>
+  <data name="NewsEdition" xml:space="preserve"><value>پروندهٔ {0:00}</value></data>
+  <data name="NewsMinutes" xml:space="preserve"><value>{0} دقیقه مطالعه</value></data>
+  <data name="TrendingTitle" xml:space="preserve"><value>روی موج</value></data>
+  <data name="TrendingSubtitle" xml:space="preserve"><value>محبوب‌ترین انتخاب‌ها</value></data>
+  <data name="TrendingTop" xml:space="preserve"><value>صدر جدول</value></data>
+  <data name="TrendingFooter" xml:space="preserve"><value>چینش بر اساس پسندها</value></data>
+  <data name="MusicOpenHelp" xml:space="preserve"><value>برای نمایش جزئیات آهنگ انتخاب کن.</value></data>
+  <data name="FollowingTitle" xml:space="preserve"><value>دوستانت چه می‌شنوند؟</value></data>
+  <data name="FollowingSubtitle" xml:space="preserve"><value>ردپای موسیقی دوستانت</value></data>
+  <data name="FollowingRetry" xml:space="preserve"><value>دریافت دوبارهٔ فعالیت دوستان</value></data>
+  <data name="FollowingFooter" xml:space="preserve"><value>جدیدترین لحظه‌های موسیقی</value></data>
+  <data name="FollowingMoreHelp" xml:space="preserve"><value>نمایش همهٔ فعالیت‌های فالوینگ‌ها</value></data>
+  <data name="FollowingMore" xml:space="preserve"><value>همهٔ فعالیت‌ها</value></data>
+  <data name="FollowingEmptyTitle" xml:space="preserve"><value>هنوز خبری از دوستانت نیست</value></data>
+  <data name="FollowingNoFriendsTitle" xml:space="preserve"><value>اینجا با دوستانت زنده می‌شود</value></data>
+  <data name="FollowingNoFriendsDescription" xml:space="preserve"><value>اول چند نفر را فالو کن؛ فعالیت‌هایشان را اینجا می‌بینی.</value></data>
+  <data name="FollowingEmptyMusicDescription" xml:space="preserve"><value>هنوز فعالیت موسیقی از کسانی که دنبال می‌کنی ثبت نشده؛ پخش، نظر، پسند، پلی‌لیست و استوری‌های دارای تگ آهنگشان اینجا می‌آید.</value></data>
+  <data name="FollowingEmptyDescription" xml:space="preserve"><value>کسانی که دنبال می‌کنی هنوز فعالیتی ثبت نکرده‌اند. فعالیت تازه‌شان را اینجا می‌بینی.</value></data>
+  <data name="FollowingError" xml:space="preserve"><value>دریافت فعالیت‌ها انجام نشد. دوباره امتحان کن.</value></data>
+  <data name="ActivityCommentHelp" xml:space="preserve"><value>باز کردن آهنگ و رفتن به همین نظر</value></data>
+  <data name="ActivityStoryHelp" xml:space="preserve"><value>باز کردن همین استوری</value></data>
+  <data name="ActivityPlaylistHelp" xml:space="preserve"><value>نمایش آهنگ‌های همین پلی‌لیست</value></data>
+  <data name="ActivityMusicHelp" xml:space="preserve"><value>نمایش جزئیات همین آهنگ</value></data>
+  <data name="ActivityUnavailable" xml:space="preserve"><value>مقصد این فعالیت در دسترس نیست</value></data>
+  <data name="MizonUser" xml:space="preserve"><value>کاربر میزون</value></data>
+  <data name="Story" xml:space="preserve"><value>استوری</value></data>
+  <data name="Playlist" xml:space="preserve"><value>پلی‌لیست</value></data>
+  <data name="Track" xml:space="preserve"><value>آهنگ</value></data>
+  <data name="StoryNew" xml:space="preserve"><value>استوری تازه</value></data>
+  <data name="ActivityComment" xml:space="preserve"><value>نظر گذاشت</value></data>
+  <data name="ActivityLike" xml:space="preserve"><value>پسندید</value></data>
+  <data name="ActivityReaction" xml:space="preserve"><value>واکنش نشان داد</value></data>
+  <data name="ActivityPlay" xml:space="preserve"><value>گوش داد</value></data>
+  <data name="ActivityWatch" xml:space="preserve"><value>تماشا کرد</value></data>
+  <data name="ActivityPlaylist" xml:space="preserve"><value>پلی‌لیست ساخت</value></data>
+  <data name="ActivityStory" xml:space="preserve"><value>استوری گذاشت</value></data>
+  <data name="ActivityNew" xml:space="preserve"><value>فعالیت تازه‌ای داشت</value></data>
+  <data name="ActivityReactionFallback" xml:space="preserve"><value>واکنش به موسیقی</value></data>
+  <data name="ActivityStorySummary" xml:space="preserve"><value>{0:N0} آهنگ تگ‌شده · {1}</value></data>
+  <data name="Viewed" xml:space="preserve"><value>دیده‌شده</value></data>
+  <data name="New" xml:space="preserve"><value>جدید</value></data>
+  <data name="JustNow" xml:space="preserve"><value>همین حالا</value></data>
+  <data name="MinutesAgo" xml:space="preserve"><value>{0} دقیقه پیش</value></data>
+  <data name="HoursAgo" xml:space="preserve"><value>{0} ساعت پیش</value></data>
+  <data name="DaysAgo" xml:space="preserve"><value>{0} روز پیش</value></data>
+  <data name="Day0" xml:space="preserve"><value>شنبه</value></data>
+  <data name="Day0Short" xml:space="preserve"><value>ش</value></data>
+  <data name="Day1" xml:space="preserve"><value>یکشنبه</value></data>
+  <data name="Day1Short" xml:space="preserve"><value>ی</value></data>
+  <data name="Day2" xml:space="preserve"><value>دوشنبه</value></data>
+  <data name="Day2Short" xml:space="preserve"><value>د</value></data>
+  <data name="Day3" xml:space="preserve"><value>سه‌شنبه</value></data>
+  <data name="Day3Short" xml:space="preserve"><value>س</value></data>
+  <data name="Day4" xml:space="preserve"><value>چهارشنبه</value></data>
+  <data name="Day4Short" xml:space="preserve"><value>چ</value></data>
+  <data name="Day5" xml:space="preserve"><value>پنج‌شنبه</value></data>
+  <data name="Day5Short" xml:space="preserve"><value>پ</value></data>
+  <data name="Day6" xml:space="preserve"><value>جمعه</value></data>
+  <data name="Day6Short" xml:space="preserve"><value>ج</value></data>
+  <data name="News0Title" xml:space="preserve"><value>شبی که صحنه با نور و موسیقی جان می‌گیرد</value></data>
+  <data name="News0Summary" xml:space="preserve"><value>روایتی تصویری از لحظه‌های پیش از اجرا؛ جایی که نور، صدا و هیجان تماشاگران به هم می‌رسند.</value></data>
+  <data name="News0Body" xml:space="preserve"><value>در این روایت نمونه، چراغ‌های سالن آرام خاموش می‌شوند و نخستین نت، سکوت جمعیت را می‌شکند. نور آبی روی صحنه حرکت می‌کند و هر ساز، بخشی از داستان شب را پیش می‌برد. تصویر فقط همراه موسیقی نیست؛ انگار خودش هم در اجرای قطعه سهم دارد.
+
+این مطلب برای پیش‌نمایش طراحی اخبار میزون نوشته شده و گزارش یک کنسرت واقعی نیست. تصور کن بعدها همین‌جا عکس‌ها، روایت اجرا و خبرهای تازهٔ هنرمندان محبوبت را دنبال کنی.</value></data>
+  <data name="News0Category" xml:space="preserve"><value>روی صحنه</value></data>
+  <data name="News1Title" xml:space="preserve"><value>از اولین تمرین تا آخرین تشویق یک اجرای زنده</value></data>
+  <data name="News1Summary" xml:space="preserve"><value>نگاهی به جزئیات کمتر دیده‌شدهٔ یک کنسرت؛ از چیدمان صحنه و تمرین گروه تا لحظهٔ شروع اجرا.</value></data>
+  <data name="News1Body" xml:space="preserve"><value>پشت یک اجرای خیالی، ساعت‌ها تمرین و هماهنگی جریان دارد. گروه صدا سازها را بررسی می‌کند، نورها با ضرب‌آهنگ هماهنگ می‌شوند و نوازنده‌ها آخرین تغییرها را مرور می‌کنند. روی صحنه هنوز خبری از تماشاگر نیست، اما شکل نهایی اجرا کم‌کم پیدا می‌شود.
+
+این متن نمونه برای نمایش بخش اخبار است؛ روایتی از توجه به جزئیاتی که معمولاً از چشم مخاطب دور می‌مانند. از شروع تمرین تا آخرین تشویق، هر لحظه می‌تواند داستانی برای شنیدن داشته باشد.</value></data>
+  <data name="News1Category" xml:space="preserve"><value>پشت صحنه</value></data>
+  <data name="News2Title" xml:space="preserve"><value>وقتی موزیک‌ویدیو به یک فیلم کوتاه تبدیل می‌شود</value></data>
+  <data name="News2Summary" xml:space="preserve"><value>نورهای شهر، قاب‌های سینمایی و یک داستان کوتاه؛ تجربه‌ای که تصویر را به ادامهٔ موسیقی تبدیل می‌کند.</value></data>
+  <data name="News2Body" xml:space="preserve"><value>در موزیک‌ویدیوی خیالی این پرونده، یک سفر کوتاه در خیابان‌های شب روایت می‌شود. رنگ چراغ‌ها، حرکت دوربین و مکث شخصیت اصلی، با فراز و فرود موسیقی همراه‌اند. هر قاب چیزی از داستان را می‌گوید، بدون آنکه لازم باشد همه‌چیز با کلمه توضیح داده شود.
+
+این مطلب یک نمونهٔ طراحی است و به اثر منتشرشده‌ای اشاره ندارد. ایدهٔ آن، نمایش خبرهایی است که میان موسیقی و سینما پل می‌زنند و مخاطب را به دیدن جزئیات تازه دعوت می‌کنند.</value></data>
+  <data name="News2Category" xml:space="preserve"><value>موزیک‌ویدیو</value></data>
+  <data name="News3Title" xml:space="preserve"><value>موج آرامش؛ صداهایی برای فاصله گرفتن از شلوغی</value></data>
+  <data name="News3Summary" xml:space="preserve"><value>در میان صدای باران و ملودی‌های آرام، فرصتی برای کشف موسیقی‌هایی که به روزهای شلوغ فضای نفس‌کشیدن می‌دهند.</value></data>
+  <data name="News3Body" xml:space="preserve"><value>این پروندهٔ نمونه، یک مکث کوتاه را تصویر می‌کند: پنجره‌ای رو به باران، صدای آرام پیانو و چند دقیقه دور از شلوغی روز. قطعه‌ها در این روایت خیالی فرصت دارند نفس بکشند؛ فاصلهٔ میان نت‌ها هم به اندازهٔ خود ملودی شنیده می‌شود.
+
+این متن برای آزمایش ظاهر بخش اخبار نوشته شده و معرفی یک مجموعهٔ واقعی نیست. بعدها می‌توان چنین روایت‌هایی را کنار خبر انتشارها و پیشنهادهای شنیدنی گذاشت تا کشف موسیقی، تجربه‌ای آرام و شخصی باشد.</value></data>
+  <data name="News3Category" xml:space="preserve"><value>تجربهٔ شنیدن</value></data>
+</root>

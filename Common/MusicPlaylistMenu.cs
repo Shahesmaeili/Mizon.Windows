@@ -5,7 +5,10 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Mizon.Windows.Services;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
@@ -39,36 +42,61 @@ internal static class MusicPlaylistMenu
 
     internal static MenuFlyout Create(Guid id, bool canPlay, Func<Task> play, Func<Task> open, Action<string> status)
     {
+        var localization = LocalizationService.Current;
+        var localizedItems = new List<(PlaylistMenuItem Item, string Key)>(3);
         var menu = new MenuFlyout
         {
             SystemBackdrop = new DesktopAcrylicBackdrop(),
             MenuFlyoutPresenterStyle = new Style(typeof(MenuFlyoutPresenter))
             {
-                Setters = { new Setter(FrameworkElement.FlowDirectionProperty, FlowDirection.RightToLeft),
-                    new Setter(Control.FontFamilyProperty, new FontFamily("/Assets/Fonts/IRANSANS.TTF#IRANSans")) }
+                Setters = { new Setter(FrameworkElement.FlowDirectionProperty, localization.FlowDirection),
+                    new Setter(Control.FontFamilyProperty, localization.TextFontFamily) }
             }
         };
-        Add("پخش", Symbol.Play, canPlay, play);
-        Add("نمایش آهنگ‌ها", Symbol.MusicNote1, true, open);
+        Add("PlaylistPlay", Symbol.Play, canPlay, play);
+        Add("PlaylistOpen", Symbol.MusicNote1, true, open);
         menu.Items.Add(new MenuFlyoutSeparator());
-        Add("کپی کردن لینک پلی‌لیست", Symbol.Link, true, () =>
+        Add("PlaylistCopy", Symbol.Link, true, () =>
         {
             var package = new DataPackage();
             package.SetText(Link(id));
             Clipboard.SetContent(package);
             Clipboard.Flush();
-            status("لینک پلی‌لیست کپی شد.");
+            status(localization.GetString("MusicWidgets/PlaylistCopied"));
             return Task.CompletedTask;
         });
+        menu.Opened += (_, _) =>
+        {
+            localization.PropertyChanged -= LanguageChanged;
+            localization.PropertyChanged += LanguageChanged;
+            ApplyLanguage();
+        };
+        menu.Closed += (_, _) => localization.PropertyChanged -= LanguageChanged;
         return menu;
 
-        void Add(string title, Symbol symbol, bool enabled, Func<Task> action)
+        void LanguageChanged(object? sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName == nameof(LocalizationService.Revision)) ApplyLanguage();
+        }
+
+        void ApplyLanguage()
+        {
+            foreach (var (item, key) in localizedItems)
+            {
+                item.Text = localization.GetString("MusicWidgets/" + key);
+                item.FlowDirection = localization.FlowDirection;
+                item.FontFamily = localization.TextFontFamily;
+            }
+        }
+
+        void Add(string key, Symbol symbol, bool enabled, Func<Task> action)
         {
             var item = new PlaylistMenuItem
             {
-                Text = title, IsEnabled = enabled, FlowDirection = FlowDirection.RightToLeft,
+                Text = localization.GetString("MusicWidgets/" + key), IsEnabled = enabled,
+                FlowDirection = localization.FlowDirection,
                 Icon = new FluentIcons.WinUI.SymbolIcon { Symbol = symbol },
-                FontFamily = new FontFamily("/Assets/Fonts/IRANSANS.TTF#IRANSans")
+                FontFamily = localization.TextFontFamily
             };
             item.Click += async (_, _) =>
             {
@@ -77,9 +105,10 @@ internal static class MusicPlaylistMenu
                 catch (Exception exception)
                 {
                     Services.AppLog.Error("Playlist menu action failed.", exception);
-                    status("انجام این عملیات ممکن نشد. دوباره امتحان کن.");
+                    status(localization.GetString("MusicWidgets/PlaylistActionError"));
                 }
             };
+            localizedItems.Add((item, key));
             menu.Items.Add(item);
         }
     }

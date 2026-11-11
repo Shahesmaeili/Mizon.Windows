@@ -1,3 +1,5 @@
+using Mizon.Windows.Services;
+using System.Globalization;
 using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Common;
 using System;
@@ -6,13 +8,14 @@ namespace Mizon.Windows.ViewModels.Items;
 
 public sealed partial class MusicLibraryPlaylistItemViewModel : ViewModelBase
 {
+    public LocalizationService Localization => LocalizationService.Current;
     public Guid PublicId { get; init; }
     public string Title { get; private set; } = string.Empty;
     public int MusicsCount { get; private set; }
-    public string MusicsCountText => $"{MusicsCount:N0} آهنگ";
+    public string MusicsCountText => Localization.Format("MusicWidgets/TracksCount", MusicsCount);
     public string AutomationName => $"{Title}، {MusicsCountText}";
     public DateTimeOffset LastUpdatedAt { get; private set; }
-    public string UpdatedText => $"به‌روزرسانی: {LastUpdatedAt.ToLocalTime():yyyy/MM/dd HH:mm}";
+    public string UpdatedText => Localization.Format("MusicWidgets/PlaylistUpdated", LastUpdatedAt.ToLocalTime().ToString("g", CultureInfo.GetCultureInfo(Localization.LanguageTag)));
     public bool CanPlay => MusicsCount > 0;
     public Guid? CoverMediaPublicId { get; private set; }
     public int CoverDecodeWidth { get; init; } = 144;
@@ -40,6 +43,13 @@ public sealed partial class MusicLibraryPlaylistItemViewModel : ViewModelBase
         if (CoverMediaPublicId == coverMediaPublicId) return;
         CoverMediaPublicId = coverMediaPublicId;
         CoverImage = null;
+    }
+
+    public void RefreshLocalization()
+    {
+        OnPropertyChanged(nameof(MusicsCountText));
+        OnPropertyChanged(nameof(AutomationName));
+        OnPropertyChanged(nameof(UpdatedText));
     }
 
     internal void SetCover(string path) => CoverImage = ImageSourceFactory.Create(path, CoverDecodeWidth);

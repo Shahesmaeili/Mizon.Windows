@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using Mizon.Windows.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -11,6 +13,8 @@ namespace Mizon.Windows.UserControls;
 
 public sealed partial class WeeklyRhythmPanel : UserControl
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
     public static readonly DependencyProperty SummaryProperty = DependencyProperty.Register(
         nameof(Summary), typeof(WeeklyRhythmViewModel), typeof(WeeklyRhythmPanel), new PropertyMetadata(null, SummaryChanged));
 
@@ -46,8 +50,11 @@ public sealed partial class WeeklyRhythmPanel : UserControl
     private void Panel_Loaded(object sender, RoutedEventArgs args)
     {
         if (!IsLoaded) return;
+        if (!_isPanelLoaded) Localization.PropertyChanged += LanguageChanged;
         _isPanelLoaded = true;
+        Summary?.RefreshLocalization();
         RenderSummary();
+        RefreshDayLabels();
         SetDayHandlersAttached(true);
         ShowSelectedDay();
         UpdateLayout(ActualWidth);
@@ -59,9 +66,31 @@ public sealed partial class WeeklyRhythmPanel : UserControl
         // this same instance again by the time the old notification arrives.
         if (IsLoaded) return;
         _isPanelLoaded = false;
+        Localization.PropertyChanged -= LanguageChanged;
         // Keep the seven owned visuals and their selection when the responsive
         // rail is moved. They are released with this control, not rebuilt on resize.
         SetDayHandlersAttached(false);
+    }
+
+    private void LanguageChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName != nameof(LocalizationService.Revision) || !_isPanelLoaded) return;
+        Summary?.RefreshLocalization();
+        RefreshDayLabels();
+        ShowSelectedDay();
+    }
+
+    private void RefreshDayLabels()
+    {
+        var count = _dayButtons.Count;
+        foreach (var button in _dayButtons.Values)
+        {
+            if (button.Tag is not WeeklyRhythmDayItemViewModel day) continue;
+            ToolTipService.SetToolTip(button, day.TooltipText);
+            AutomationProperties.SetName(button, day.TooltipText);
+            AutomationProperties.SetHelpText(button, Localization.GetString("MusicWidgets/RhythmDayHelp"));
+            Grid.SetColumn(button, Localization.IsPersian ? count - 1 - day.Index : day.Index);
+        }
     }
 
     private void SetDayHandlersAttached(bool attached)
@@ -124,12 +153,12 @@ public sealed partial class WeeklyRhythmPanel : UserControl
             };
             ToolTipService.SetToolTip(button, day.TooltipText);
             AutomationProperties.SetName(button, day.TooltipText);
-            AutomationProperties.SetHelpText(button, "برای نمایش جزئیات این روز، فاصله یا اینتر را فشار بده");
+            AutomationProperties.SetHelpText(button, Localization.GetString("MusicWidgets/RhythmDayHelp"));
             AutomationProperties.SetPositionInSet(button, index + 1);
             AutomationProperties.SetSizeOfSet(button, count);
             _dayButtons.Add(day.Index, button);
             // Keep the data in chronological order, with Saturday at the physical right.
-            Grid.SetColumn(button, count - 1 - index);
+            Grid.SetColumn(button, Localization.IsPersian ? count - 1 - index : index);
             DayColumnsHost.Children.Add(button);
         }
         SetDayHandlersAttached(true);

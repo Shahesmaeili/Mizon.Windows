@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using Mizon.Windows.Services;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -13,6 +15,8 @@ namespace Mizon.Windows.UserControls;
 /// <summary>A compact chart with a leading record and shared, already decoded artwork.</summary>
 public sealed partial class TrendingMusicPanel : UserControl
 {
+    public LocalizationService Localization => LocalizationService.Current;
+
     public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(
         nameof(ItemsSource), typeof(IReadOnlyList<DiscoveryMusicItemViewModel>), typeof(TrendingMusicPanel),
         new PropertyMetadata(null, ItemsChanged));
@@ -49,6 +53,7 @@ public sealed partial class TrendingMusicPanel : UserControl
     {
         if (_loaded) return;
         _loaded = true;
+        Localization.PropertyChanged += LanguageChanged;
         AttachSource();
         RefreshItems();
         UpdateLayout(ActualWidth);
@@ -58,7 +63,14 @@ public sealed partial class TrendingMusicPanel : UserControl
     {
         if (IsLoaded) return;
         _loaded = false;
+        Localization.PropertyChanged -= LanguageChanged;
         DetachSource();
+    }
+
+    private void LanguageChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName != nameof(LocalizationService.Revision) || !_loaded) return;
+        if (ItemsSource is { } items) foreach (var item in items) item.RefreshLocalization();
     }
 
     private void AttachSource()

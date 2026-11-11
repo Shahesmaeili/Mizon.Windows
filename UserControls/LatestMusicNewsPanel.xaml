@@ -36,21 +36,21 @@
                         </Border.Background>
                     </Border>
                     <Border Margin="10" Padding="7,4" CornerRadius="6" Background="#A6192638" BorderBrush="#30FFFFFF" BorderThickness="1" VerticalAlignment="Top" HorizontalAlignment="Right">
-                        <TextBlock Text="{x:Bind Category}" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="9" Foreground="White" Opacity="1" />
+                        <TextBlock Text="{x:Bind Category, Mode=OneWay}" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="9" Foreground="White" Opacity="1" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </Border>
                     <Grid Margin="12" VerticalAlignment="Bottom" ColumnSpacing="6">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <icon:SymbolIcon Symbol="News" FontSize="14" Foreground="{StaticResource NewsAccent}" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind EditionLabel}" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="9" Foreground="White" Opacity="0.85" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind EditionLabel, Mode=OneWay}" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="9" Foreground="White" Opacity="0.85" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </Grid>
                 </Grid>
                 <Grid x:Name="NewsCopy" Grid.Row="1" Padding="12" RowSpacing="8" VerticalAlignment="Center">
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                    <TextBlock Text="{x:Bind Title}" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="13" FontWeight="SemiBold" Opacity="1" LineHeight="23" LineStackingStrategy="BlockLineHeight" MinHeight="46" MaxLines="2" AutomationProperties.HeadingLevel="Level3" />
-                    <TextBlock Grid.Row="1" Text="{x:Bind Summary}" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="10" LineHeight="19" LineStackingStrategy="BlockLineHeight" MinHeight="38" MaxLines="2" />
+                    <TextBlock Text="{x:Bind Title, Mode=OneWay}" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="13" FontWeight="SemiBold" Opacity="1" LineHeight="23" LineStackingStrategy="BlockLineHeight" MinHeight="46" MaxLines="2" AutomationProperties.HeadingLevel="Level3" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                    <TextBlock Grid.Row="1" Text="{x:Bind Summary, Mode=OneWay}" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="10" LineHeight="19" LineStackingStrategy="BlockLineHeight" MinHeight="38" MaxLines="2" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     <Grid Grid.Row="2" ColumnSpacing="6" Margin="0,2,0,0">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                        <TextBlock Text="{x:Bind ReadingTimeText}" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="9" Foreground="{StaticResource NewsAccent}" Opacity="0.85" />
+                        <TextBlock Text="{x:Bind ReadingTimeText, Mode=OneWay}" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="9" Foreground="{StaticResource NewsAccent}" Opacity="0.85" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                         <icon:SymbolIcon Grid.Column="1" Symbol="Clock" FontSize="11" Foreground="{StaticResource NewsAccent}" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
                     </Grid>
                 </Grid>
@@ -60,13 +60,13 @@
     <Border Style="{StaticResource DiscoveryWidgetSurface}">
         <StackPanel Spacing="12" FlowDirection="LeftToRight">
             <StackPanel Style="{StaticResource DiscoveryWidgetHeader}">
-                <uc:DiscoverySectionHeader Title="آخرین اخبار" Icon="News" AccentColor="#94C9F5" IsCompact="True" />
+                <uc:DiscoverySectionHeader Title="{x:Bind Localization.GetString('MusicWidgets/NewsTitle', Localization.Revision), Mode=OneWay}" Icon="News" AccentColor="#94C9F5" IsCompact="True" />
                 <Grid ColumnSpacing="8">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                     <Border Padding="6,2" CornerRadius="5" Background="#0E94C9F5" BorderBrush="#1594C9F5" BorderThickness="1">
-                        <TextBlock Text="نمونه" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="9" Foreground="{StaticResource NewsAccent}" Opacity="1" />
+                        <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/Demo', Localization.Revision), Mode=OneWay}" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="9" Foreground="{StaticResource NewsAccent}" Opacity="1" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </Border>
-                    <TextBlock Grid.Column="1" Text="از صحنه تا پشت صحنه" Style="{StaticResource DiscoveryWidgetCaption}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('MusicWidgets/NewsSubtitle', Localization.Revision), Mode=OneWay}" Style="{StaticResource DiscoveryWidgetCaption}" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                 </Grid>
             </StackPanel>
             <Grid x:Name="SlideViewport" CornerRadius="11" SizeChanged="Viewport_SizeChanged" Background="Transparent">
@@ -78,30 +78,30 @@
                 </ContentControl>
             </Grid>
             <StackPanel Style="{StaticResource DiscoveryWidgetFooter}">
-                <Grid x:Name="Indicators" ColumnSpacing="5" AutomationProperties.Name="انتخاب خبر" />
+                <Grid x:Name="Indicators" ColumnSpacing="5" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/NewsChoose', Localization.Revision), Mode=OneWay}" />
                 <Grid ColumnSpacing="6">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                    <Button Style="{StaticResource NewsControlButton}" Click="Next_Click" AutomationProperties.Name="خبر بعدی" ToolTipService.ToolTip="خبر بعدی">
-                        <icon:SymbolIcon Symbol="ChevronLeft" FontSize="14" Foreground="{StaticResource NewsAccent}" AutomationProperties.AccessibilityView="Raw" />
+                    <Button x:Name="NextNewsButton" Style="{StaticResource NewsControlButton}" Click="Next_Click" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/NewsNext', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Localization.GetString('MusicWidgets/NewsNext', Localization.Revision), Mode=OneWay}">
+                        <icon:SymbolIcon Symbol="{x:Bind NextSymbol(Localization.IsPersian), Mode=OneWay}" FontSize="14" Foreground="{StaticResource NewsAccent}" AutomationProperties.AccessibilityView="Raw" />
                     </Button>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock x:Name="SlideCounter" FontSize="10" Foreground="{StaticResource NewsAccent}" VerticalAlignment="Center" />
-                        <Button x:Name="RotationButton" Style="{StaticResource NewsControlButton}" Click="Rotation_Click" AutomationProperties.Name="توقف گردش خودکار اخبار">
+                        <TextBlock x:Name="SlideCounter" FontSize="10" Foreground="{StaticResource NewsAccent}" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                        <Button x:Name="RotationButton" Style="{StaticResource NewsControlButton}" Click="Rotation_Click" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/NewsPause', Localization.Revision), Mode=OneWay}">
                             <icon:SymbolIcon x:Name="RotationIcon" Symbol="Pause" FontSize="12" Foreground="{StaticResource NewsAccent}" AutomationProperties.AccessibilityView="Raw" />
                         </Button>
                     </StackPanel>
-                    <Button Grid.Column="2" Style="{StaticResource NewsControlButton}" Click="Previous_Click" AutomationProperties.Name="خبر قبلی" ToolTipService.ToolTip="خبر قبلی">
-                        <icon:SymbolIcon Symbol="ChevronRight" FontSize="14" Foreground="{StaticResource NewsAccent}" AutomationProperties.AccessibilityView="Raw" />
+                    <Button x:Name="PreviousNewsButton" Grid.Column="2" Style="{StaticResource NewsControlButton}" Click="Previous_Click" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/NewsPrevious', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Localization.GetString('MusicWidgets/NewsPrevious', Localization.Revision), Mode=OneWay}">
+                        <icon:SymbolIcon Symbol="{x:Bind PreviousSymbol(Localization.IsPersian), Mode=OneWay}" FontSize="14" Foreground="{StaticResource NewsAccent}" AutomationProperties.AccessibilityView="Raw" />
                     </Button>
                 </Grid>
-                <Button x:Name="ReadButton" Style="{StaticResource DiscoveryWidgetFooterButton}" Background="#0794C9F5" FocusVisualPrimaryBrush="{StaticResource NewsAccent}" Click="Read_Click" AutomationProperties.Name="خواندن خبر نمونه">
+                <Button x:Name="ReadButton" Style="{StaticResource DiscoveryWidgetFooterButton}" Background="#0794C9F5" FocusVisualPrimaryBrush="{StaticResource NewsAccent}" Click="Read_Click" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/NewsReadDemo', Localization.Revision), Mode=OneWay}">
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <icon:SymbolIcon Symbol="ArrowLeft" FontSize="13" Foreground="{StaticResource NewsAccent}" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
-                        <TextBlock Grid.Column="1" Text="خواندن خبر" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="11" Foreground="{StaticResource NewsAccent}" Opacity="1" VerticalAlignment="Center" />
+                        <icon:SymbolIcon Symbol="{x:Bind ForwardSymbol(Localization.IsPersian), Mode=OneWay}" FontSize="13" Foreground="{StaticResource NewsAccent}" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('MusicWidgets/NewsRead', Localization.Revision), Mode=OneWay}" Style="{StaticResource DiscoveryWidgetCaption}" FontSize="11" Foreground="{StaticResource NewsAccent}" Opacity="1" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </Grid>
                 </Button>
-                <TextBlock Text="پیش‌نمایش طراحی · خبرها نمونه‌اند" Style="{StaticResource DiscoveryWidgetFooterCaption}" />
+                <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/NewsFooter', Localization.Revision), Mode=OneWay}" Style="{StaticResource DiscoveryWidgetFooterCaption}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
             </StackPanel>
         </StackPanel>
     </Border>

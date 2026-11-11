@@ -15,6 +15,7 @@ namespace Mizon.Windows.ViewModels;
 // Each owner keeps one bounded page, never the entire library just to show a count.
 public sealed partial class MusicLibraryViewModel(MizonApi mizonApi, MediaDownloader mediaDownloader) : ViewModelBase, IDisposable
 {
+    public LocalizationService Localization => LocalizationService.Current;
     private CancellationTokenSource? _loadCancellation;
     private string? _ownerToken;
     private int _version;
@@ -30,18 +31,18 @@ public sealed partial class MusicLibraryViewModel(MizonApi mizonApi, MediaDownlo
     public bool HasError => _hasError;
     public bool IsInitialLoading => IsLoading && !_hasLoaded;
     public string? NextCursor => _nextCursor;
-    public string PlaylistCountText => _hasLoaded ? _totalPlaylists.ToString("N0") : "—";
-    public string PlaylistCountAutomationName => _hasLoaded ? $"{_totalPlaylists:N0} پلی‌لیست شخصی" : "تعداد پلی‌لیست‌ها هنوز دریافت نشده";
-    public string SummaryText => !_hasLoaded ? "مجموعه‌ای با سلیقهٔ خودت"
-        : _totalPlaylists == 0 ? "جای آهنگ‌های محبوبت اینجاست" : $"{_totalMusics:N0} آهنگ در پلی‌لیست‌ها";
-    public string StatusText => _hasError ? "دریافت کتابخانه انجام نشد. دوباره امتحان کن."
-        : "از صفحهٔ هر آهنگ، اولین پلی‌لیستت را بساز.";
+    public string PlaylistCountText => _hasLoaded ? _totalPlaylists.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo(Localization.LanguageTag)) : "—";
+    public string PlaylistCountAutomationName => _hasLoaded ? Localization.Format("MusicWidgets/LibraryCount", _totalPlaylists) : Localization.GetString("MusicWidgets/LibraryCountPending");
+    public string SummaryText => !_hasLoaded ? Localization.GetString("MusicWidgets/LibrarySummaryPending")
+        : _totalPlaylists == 0 ? Localization.GetString("MusicWidgets/LibrarySummaryEmpty") : Localization.Format("MusicWidgets/LibrarySummary", _totalMusics);
+    public string StatusText => _hasError ? Localization.GetString("MusicWidgets/LibraryError")
+        : Localization.GetString("MusicWidgets/LibraryCreateHint");
     public Visibility EmptyVisibility => _hasLoaded && !_hasError && !IsLoading && VisiblePlaylists.Count == 0
         ? Visibility.Visible : Visibility.Collapsed;
     public Visibility ErrorVisibility => _hasError ? Visibility.Visible : Visibility.Collapsed;
     public Visibility PlaylistsVisibility => VisiblePlaylists.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     public Visibility MoreVisibility => _totalPlaylists > 0 ? Visibility.Visible : Visibility.Collapsed;
-    public string MoreText => $"نمایش همهٔ پلی‌لیست‌ها ({_totalPlaylists:N0})";
+    public string MoreText => Localization.Format("MusicWidgets/LibraryMore", _totalPlaylists);
 
     public Task RefreshAsync(CancellationToken cancellationToken = default) => LoadPageAsync(null, 5, cancellationToken);
 
@@ -165,6 +166,12 @@ public sealed partial class MusicLibraryViewModel(MizonApi mizonApi, MediaDownlo
         foreach (var property in new[] { nameof(IsLoading), nameof(HasLoaded), nameof(HasError), nameof(IsInitialLoading),
             nameof(NextCursor), nameof(PlaylistCountText), nameof(PlaylistCountAutomationName), nameof(SummaryText), nameof(StatusText), nameof(EmptyVisibility),
             nameof(ErrorVisibility), nameof(PlaylistsVisibility), nameof(MoreVisibility), nameof(MoreText) }) OnPropertyChanged(property);
+    }
+
+    public void RefreshLocalization()
+    {
+        NotifyPresentation();
+        foreach (var item in VisiblePlaylists) item.RefreshLocalization();
     }
 
     public void Dispose()
