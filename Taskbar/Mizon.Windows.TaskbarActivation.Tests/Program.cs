@@ -103,8 +103,13 @@ Check((await activation.OpenAsync()).Code == "disposed", "Disposed owner cannot 
 foreach (var tag in new[] { "fa-IR", "en-US" })
 {
     Check(!string.IsNullOrWhiteSpace(TaskbarActivationText.Status(tag, true, null)), "Localized loading exists");
-    foreach (var code in new[] { "timeout", "app_unavailable", "protocol_unavailable", "invalid_response", "not_found", "authentication_required", "unexpected" })
+    foreach (var code in new[] { "timeout", "timed_out", "app_unavailable", "protocol_unavailable", "invalid_response", "not_found", "authentication_required",
+        "requires_sign_in", "profile_unavailable", "app_closed", "unavailable", "unexpected" })
         Check(!string.IsNullOrWhiteSpace(TaskbarActivationText.Status(tag, false, new(code))), "Localized error exists");
+    Check(TaskbarActivationText.Status(tag, false, new("requires_sign_in")) == TaskbarActivationText.Status(tag, false, new("authentication_required")),
+        "Actual receiver sign-in code retains the specific localized guidance");
+    Check(TaskbarActivationText.Status(tag, false, new("timed_out")) == TaskbarActivationText.Status(tag, false, new("timeout")),
+        "Receiver and local deadlines share specific localized timeout guidance");
     Check(TaskbarActivationText.Status(tag, false, new("canceled")) is null, "Lifecycle cancellation is not announced as a user error");
 }
 Check(TaskbarActivationText.Status("en-US", false, new("private exception text")) == TaskbarActivationText.Status("en-US", false, new("unexpected")),
@@ -114,6 +119,49 @@ Check(JsonSerializer.Deserialize(snapshotJson, TaskbarJsonContext.Default.Profil
     "Version-one source-generated IPC preserves target package identity");
 Check(JsonSerializer.Deserialize("{\"version\":1,\"isAuthenticated\":true}", TaskbarJsonContext.Default.ProfileSnapshot)?.PackageFamilyName is null,
     "Legacy snapshots remain readable and cannot invent a target package");
+
+var boundaryTransport = new FakeTransport();
+var boundaryClock = new ManualClock();
+using var boundary = new TaskbarProfileActivation(boundaryTransport, boundaryClock);
+var observedChanges = 0;
+boundary.Changed += (_, _) => throw new ArgumentException("Synthetic disconnected UI observer");
+boundary.Changed += (_, _) => ++observedChanges;
+boundary.ApplyProfile(profile);
+var observed = boundary.OpenAsync();
+Check(boundary.IsBusy && observedChanges == 1, "A throwing presentation observer does not prevent native launch or other observers");
+boundaryTransport.Completions[^1].SetResult(new(TaskbarLaunchStatus.Success, Reply(boundaryTransport.Requests[^1])));
+Check((await observed).Success && !boundary.IsBusy && observedChanges == 2, "Throwing completion observer cannot retain a disposed CTS or busy state");
+boundary.ApplyProfile(profile with { PackageFamilyName = null });
+Check((await boundary.OpenAsync()).Code == "app_unavailable" && !boundary.IsBusy, "Invalid-target notification cannot fault the public async operation");
+boundary.ApplyProfile(profile);
+var callbackCount = 0;
+boundaryTransport.Handler = _ =>
+{
+    boundaryTransport.Tokens[^1].Register(() => { ++callbackCount; throw new InvalidOperationException("Synthetic native cancellation failure"); });
+    return boundaryTransport.Completions[^1].Task;
+};
+var explicitCancellation = boundary.OpenAsync();
+boundary.Cancel();
+Check((await explicitCancellation).Code == "canceled" && !boundary.IsBusy && callbackCount == 1, "Throwing native cancellation callback cannot break explicit cleanup");
+var throwingDeadline = boundary.OpenAsync();
+boundaryClock.Timers[^1].Fire();
+Check((await throwingDeadline).Code == "timeout" && !boundary.IsBusy && callbackCount == 2, "Throwing native cancellation callback cannot escape the deadline timer");
+var finallyCancellation = boundary.OpenAsync();
+boundaryTransport.Completions[^1].SetResult(new(TaskbarLaunchStatus.Success, Reply(boundaryTransport.Requests[^1])));
+Check((await finallyCancellation).Success && !boundary.IsBusy && callbackCount == 3, "Throwing cancellation callback in finally still releases successful request ownership");
+var throwingDisposal = boundary.OpenAsync();
+boundary.Dispose();
+Check((await throwingDisposal).Code == "canceled" && !boundary.IsBusy && callbackCount == 4, "Throwing cancellation callback cannot interrupt disposal");
+Check(boundaryClock.Timers.All(timer => timer.Disposed), "Every exceptional-boundary request releases its deadline timer");
+var disposalTransport = new FakeTransport();
+using var observerDisposal = new TaskbarProfileActivation(disposalTransport, new ManualClock());
+var lateNotifications = 0;
+observerDisposal.Changed += (_, _) => observerDisposal.Dispose();
+observerDisposal.Changed += (_, _) => ++lateNotifications;
+observerDisposal.ApplyProfile(profile);
+Check((await observerDisposal.OpenAsync()).Code == "canceled" && !observerDisposal.IsBusy && disposalTransport.Requests.Count == 0,
+    "Disposal during the first presentation notification prevents native launch");
+Check(lateNotifications == 0, "An observer disposing the owner prevents later observers from touching released UI");
 Console.WriteLine($"PASS {count} taskbar activation lifecycle, strict response, deadline, localization and IPC assertions.");
 
 internal sealed class FakeTransport : ITaskbarDeepLinkTransport

@@ -34,7 +34,7 @@ cannot invoke a result request without that target identity.
 
 - Companion `dotnet build ... -c Debug -p:Platform=x64`: passed; eight existing
   `CsWinRT1032` warnings remain in the unrelated layout checks.
-- New `Mizon.Windows.TaskbarActivation.Tests`: 58 assertions passed, managed and
+- New `Mizon.Windows.TaskbarActivation.Tests`: 82 assertions passed, managed and
   published NativeAOT win-x64 execution. Uses fake native transport and manual time.
 - Existing `Mizon.Windows.ProfilePresence.Tests`: 40 assertions passed, including
   package identity publication/refresh without losing account/presence.
@@ -42,6 +42,14 @@ cannot invoke a result request without that target identity.
 - No UI automation, native activation, installation, taskbar manipulation or live
   account/API calls. Ring rendering, real launch result delivery, foreground
   handoff, high-DPI appearance and Narrator speech require separate live checks.
+
+Review follow-up: request ownership now clears in guaranteed finally cleanup;
+throwing presentation observers and native cancellation callbacks cannot retain a
+disposed CTS or escape the deadline timer. The async-void click boundary contains
+remaining errors. Synthetic checks include notification, explicit cancellation,
+deadline, successful-finally and disposal failures. Button padding is explicitly
+zero; the custom template's full 36-DIP content area keeps the ring inside its
+existing native hit region without moving the centered 32-DIP photo.
 
 The result caller pattern follows Microsoft MAUI/Windows App SDK camera code:
 `InitializeWithWindow.Initialize(options, ownedHwnd)` before launching. The

@@ -9,9 +9,11 @@ internal static class TaskbarActivationText
         if (outcome is null || outcome.Success || outcome.Code is "canceled" or "disposed") return null;
         return outcome.Code switch
         {
-            "timeout" => english ? "Mizon did not respond. Please try again." : "میزون پاسخ نداد؛ دوباره تلاش کنید.",
-            "app_unavailable" or "protocol_unavailable" => english ? "Mizon is unavailable. Open the app and try again." : "میزون در دسترس نیست؛ برنامه را باز کنید و دوباره تلاش کنید.",
-            "authentication_required" or "not_authenticated" => english ? "Sign in to Mizon to open this profile." : "برای باز کردن پروفایل وارد میزون شوید.",
+            "timeout" or "timed_out" => english ? "Mizon did not respond. Please try again." : "میزون پاسخ نداد؛ دوباره تلاش کنید.",
+            "app_unavailable" or "protocol_unavailable" or "unavailable" => english ? "Mizon is unavailable. Open the app and try again." : "میزون در دسترس نیست؛ برنامه را باز کنید و دوباره تلاش کنید.",
+            "app_closed" => english ? "Mizon closed before responding. Open the app and try again." : "میزون پیش از پاسخ بسته شد؛ برنامه را باز کنید و دوباره تلاش کنید.",
+            "authentication_required" or "not_authenticated" or "requires_sign_in" => english ? "Sign in to Mizon to open this profile." : "برای باز کردن پروفایل وارد میزون شوید.",
+            "profile_unavailable" => english ? "Could not load this profile. Please try again." : "بارگذاری پروفایل انجام نشد؛ دوباره تلاش کنید.",
             "not_found" or "content_not_found" => english ? "This profile could not be found." : "این پروفایل پیدا نشد.",
             _ => english ? "Could not open Mizon. Please try again." : "باز کردن میزون انجام نشد؛ دوباره تلاش کنید."
         };

@@ -200,7 +200,7 @@ internal sealed partial class TaskbarProfileHost : IDisposable
                 _button = new AuthActionButton
                 {
                     Style = Application.Current.Resources["ProfileAvatarButtonStyle"].As<Style>(), HoverScale = 1.06, PressedScale = .91,
-                    Content = avatarContent, Padding = new Thickness(2), MinWidth = 0, MinHeight = 0,
+                    Content = avatarContent, Padding = new Thickness(0), MinWidth = 0, MinHeight = 0,
                     AnimationTarget = _picture.AnimationTarget,
                     CornerRadius = new CornerRadius(100), BorderThickness = new Thickness(0),
                     Background = new SolidColorBrush(Colors.Transparent), HorizontalContentAlignment = HorizontalAlignment.Center,
@@ -450,9 +450,18 @@ internal sealed partial class TaskbarProfileHost : IDisposable
     private async void ProfileClicked(object sender, RoutedEventArgs args)
     {
         if (_disposed || !_profile.IsAuthenticated) return;
-        var outcome = await _activation.OpenAsync();
-        if (!_disposed && outcome.Code is not ("canceled" or "disposed" or "busy"))
-            TaskbarPaths.Log($"Profile activation completed: code={outcome.Code}; success={outcome.Success}.");
+        try
+        {
+            var outcome = await _activation.OpenAsync();
+            if (!_disposed && outcome.Code is not ("canceled" or "disposed" or "busy"))
+                TaskbarPaths.Log($"Profile activation completed: code={outcome.Code}; success={outcome.Success}.");
+        }
+        catch (Exception error)
+        {
+            // Never let a late WinRT/presentation failure escape async-void Click.
+            _activation.Cancel();
+            LogOnce("Profile activation", error);
+        }
     }
 
     private void Activation_Changed(object? sender, EventArgs args)
@@ -464,7 +473,7 @@ internal sealed partial class TaskbarProfileHost : IDisposable
             Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer.FromElement(_button)?
                 .RaiseAutomationEvent(Microsoft.UI.Xaml.Automation.Peers.AutomationEvents.LiveRegionChanged);
         }
-        catch (COMException error) { LogOnce("Profile activation presentation", error); }
+        catch (Exception error) { LogOnce("Profile activation presentation", error); }
     }
 
     private void Source_TakeFocusRequested(DesktopWindowXamlSource sender, DesktopWindowXamlSourceTakeFocusRequestedEventArgs args)
