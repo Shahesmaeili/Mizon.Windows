@@ -96,4 +96,9 @@
   <data name="RefreshMusicHome" xml:space="preserve"><value>در حال به‌روزرسانی صفحهٔ موسیقی</value></data>
   <data name="ControlMusicHome" xml:space="preserve"><value>در حال کنترل صفحهٔ موسیقی</value></data>
   <data name="SubmitMusicHome" xml:space="preserve"><value>در حال تغییر لایک یا دنبال کردن در موسیقی</value></data>
+  <data name="PresenceGroup" xml:space="preserve"><value>وضعیت حضور</value></data>
+  <data name="PresenceGroupHint" xml:space="preserve"><value>مشاهدهٔ وضعیت آنلاین و همگام‌سازی؛ بدون تغییر وضعیت یا فوکوس پنجره.</value></data>
+  <data name="PermissionPresenceRead" xml:space="preserve"><value>خواندن وضعیت آنلاین</value></data>
+  <data name="PermissionPresenceReadHint" xml:space="preserve"><value>اجازهٔ مشاهدهٔ فعال بودن پنجرهٔ میزون، اتصال و وضعیت آنلاین تأییدشده.</value></data>
+  <data name="ReadPresence" xml:space="preserve"><value>خواندن وضعیت آنلاین</value></data>
 </root>

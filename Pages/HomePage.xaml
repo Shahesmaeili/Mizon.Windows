@@ -27,7 +27,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="controls:AuthActionButton">
                         <!-- The hit target stays still; only the photo and highlight animate. -->
-                        <Grid x:Name="ActionSurface" Background="Transparent" CornerRadius="{TemplateBinding CornerRadius}">
+                        <Grid x:Name="ActionSurface" Background="Transparent">
                             <ContentPresenter x:Name="ActionContent" Content="{TemplateBinding Content}"
                                               ContentTemplate="{TemplateBinding ContentTemplate}"
                                               HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
@@ -91,7 +91,8 @@ Color="Transparent" />
 </AnimatedVisualPlayer>-->
 
 
-                    <Grid CornerRadius="8,16,16,8" Grid.Column="3" HorizontalAlignment="Right" Margin="8,0,148,0"  VerticalAlignment="Center" Background="#0FFFFFFF">
+                    <Grid Grid.Column="3" HorizontalAlignment="Right" Margin="8,0,148,0" VerticalAlignment="Center">
+                        <Border CornerRadius="8,16,16,8" Background="#0FFFFFFF" IsHitTestVisible="False"/>
                         <StackPanel Orientation="Horizontal">
 
                             <usercontrols:MoodButton ViewModel="{x:Bind ViewModel}" VerticalAlignment="Center"/>

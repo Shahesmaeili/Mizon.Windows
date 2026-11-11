@@ -96,4 +96,9 @@
   <data name="RefreshMusicHome" xml:space="preserve"><value>Refreshing music home</value></data>
   <data name="ControlMusicHome" xml:space="preserve"><value>Controlling music home</value></data>
   <data name="SubmitMusicHome" xml:space="preserve"><value>Changing a music home like or follow</value></data>
+  <data name="PresenceGroup" xml:space="preserve"><value>Presence</value></data>
+  <data name="PresenceGroupHint" xml:space="preserve"><value>Read your current online status and synchronization; cannot change focus or presence.</value></data>
+  <data name="PermissionPresenceRead" xml:space="preserve"><value>Read online status</value></data>
+  <data name="PermissionPresenceReadHint" xml:space="preserve"><value>Allows reading Mizon window activity, connection and confirmed online status.</value></data>
+  <data name="ReadPresence" xml:space="preserve"><value>Reading online status</value></data>
 </root>

@@ -25,7 +25,7 @@ public partial class HomePageViewModel
     public ImageSource? ProfileImage { get => field; private set => SetField(ref field, value); }
     public string DisplayName { get => field; private set => SetField(ref field, value); } = "حساب من";
     public string UsernameLabel => string.IsNullOrWhiteSpace(Username) ? "بدون نام کاربری" : "@" + Username;
-    public string ProfileButtonLabel => $"منوی حساب {DisplayName}";
+    public string ProfileButtonLabel => $"{LocalizationService.Current.Format("ProfileMenu/AccountMenuFor", DisplayName)} · {ProfilePresenceLabel}";
     public string EmailVerification { get => field; private set => SetField(ref field, value); } = string.Empty;
     public string ProfileStatus { get => field; private set { SetField(ref field, value); OnPropertyChanged(nameof(ProfileStatusVisibility)); } } = string.Empty;
     public Visibility ProfileStatusVisibility => string.IsNullOrEmpty(ProfileStatus) ? Visibility.Collapsed : Visibility.Visible;

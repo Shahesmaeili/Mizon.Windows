@@ -34,12 +34,14 @@ public partial class HomePageViewModel : MainViewModel
     DispatcherQueue dispatcherQueue,
     IAudioPlayerService audioPlayerService,
     MediaDownloader mediaDownloader,
-    MulticastDiscoveryServiceV2 discoveryService)
+    MulticastDiscoveryServiceV2 discoveryService,
+    ProfilePresenceService profilePresence)
     : base(mizonApi, mizonSocket, navigationService, audioPlayerService)
     {
         _dispatcherQueue = dispatcherQueue;
         _mediaDownloader = mediaDownloader;
         _discoveryService = discoveryService;
+        _profilePresence = profilePresence;
 
         NavigationService.MainNavigationChanged += NavigationService_NavigationChanged;
         _localStorageService = localStorageService;
@@ -180,6 +182,7 @@ public partial class HomePageViewModel : MainViewModel
     {
         if (!e.IsEnteringPage && e.FromPageType == typeof(HomePage))
         {
+            StopProfilePresence();
             _profileSession++;
             ClearProfile();
             _shellCancellation?.Cancel();
@@ -198,6 +201,7 @@ public partial class HomePageViewModel : MainViewModel
                 _shellCancellation = new CancellationTokenSource();
                 MizonSocket.HubConnectionStateChanged -= MizonSocket_HubConnectionStateChanged;
                 MizonSocket.HubConnectionStateChanged += MizonSocket_HubConnectionStateChanged;
+                StartProfilePresence();
                 if (!_hasAccount || (_profileMediaPublicId is not null && ProfileImage is null))
                     _ = RefreshProfileAsync(_shellCancellation.Token);
 
@@ -212,6 +216,9 @@ public partial class HomePageViewModel : MainViewModel
         try
         {
             await _socketStopTask.WaitAsync(cancellationToken);
+            // StopAsync clears connection intent. A rapid re-login must restore
+            // current focus after the previous shell's stop has completed.
+            _profilePresence.RefreshSynchronization();
             await MizonSocket.StartAsync(cancellationToken);
             await MizonSocket.RegisterDeviceAsync(cancellationToken);
         }
@@ -252,6 +259,7 @@ public partial class HomePageViewModel : MainViewModel
         if (IsSigningOut) return;
         ProfileStatus = "در حال خروج از حساب…";
         IsSigningOut = true;
+        StopProfilePresence();
         App.CancelPendingNavigation();
         _profileSession++;
         _shellCancellation?.Cancel();

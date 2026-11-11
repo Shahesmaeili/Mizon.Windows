@@ -2,6 +2,20 @@
 
 Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Header/taskbar presence — 2026-11-11
+
+Header and taskbar share a bottom-right online/offline badge with a transparent
+photo cutout. The main window's focus and existing authenticated SignalR connection
+own the state; disconnected, inactive or closed ownership cannot stay green.
+Taskbar process/lease checks preserve the companion's independent lifetime.
+`mizon_get_presence_state` adds a separate read-only Presence consent group.
+
+Verified: integrated Debug x64 build; 38 coordinator/IPC assertions in managed and
+NativeAOT execution; 50 avatar/taskbar checks; 159 MCP access assertions; 38/38 MCP
+protocol groups; native MCP catalog and matching server/SDK SignalR diagnostics.
+No live UI, Narrator speech, self-approval or whole-app NativeAOT publish was tested.
+See [implementation, dependencies and limits](tasks/2026-11-11-profile-presence.md).
+
 ## Music home localization, MCP and artwork — 2026-11-11
 
 The current music home (`MusicPage`, not details `MusicsPage`) now uses live
@@ -93,7 +107,7 @@ The movies/apps destinations use their existing landing implementation. Do not c
 
 ## Important limits and next-task checks
 
-- Full feature-by-feature MCP business coverage remains future work. Current domains are authentication, appearance, declared navigation and Mizon taskbar pinning only. See [the development guide](../../Mcp/DEVELOPMENT.md).
+- Full feature-by-feature MCP business coverage remains future work. Current domains are authentication, appearance, declared navigation, Mizon taskbar pinning, active music home and current-user presence. See [the development guide](../../Mcp/DEVELOPMENT.md).
 - Live consent remains user-owned even though paired grants persist. A tool catalog or configured Codex/Claude server does not imply an active grant for a new domain.
 - Windows App SDK and some Windows integration surfaces are experimental or OS-dependent. Record installed runtime/build information for integration-specific failures rather than assuming every machine supports the same host.
 - Source paths and the backend solution currently reflect this developer's checkout layout. Verify project references when using an independent worktree or a new machine.

@@ -24,6 +24,9 @@ internal static class TaskbarProfileBridge
         => Publisher.PublishProfile(session, displayName, imagePath, clientPublicId);
     internal static void PublishMood(long session, Guid? publicId, string? emoji, string? title, string? animationPath, string? effectPath)
         => Publisher.PublishMood(session, publicId, emoji, title, animationPath, effectPath);
+    internal static void PublishPresence(long session, bool isOnline) => Publisher.PublishPresence(session, isOnline);
+    internal static void SetPresenceLocalization(string languageTag, string online, string offline)
+        => Publisher.SetPresenceLocalization(languageTag, online, offline);
 }
 
 internal sealed class TaskbarProfilePublisher(string directoryPath, string payloadDirectory)
@@ -34,6 +37,10 @@ internal sealed class TaskbarProfilePublisher(string directoryPath, string paylo
     private bool _authenticated, _writing, _launching, _launched;
     private Snapshot? _pending, _current;
     private Task _writeTask = Task.CompletedTask, _launchTask = Task.CompletedTask;
+    private readonly long _mainProcessStartTimeUtcTicks = GetProcessStartTimeUtcTicks();
+    private bool _presenceOnline;
+    private long _presenceUpdatedAtUtcTicks;
+    private string _languageTag = "fa-IR", _onlinePresenceLabel = "آنلاین", _offlinePresenceLabel = "آفلاین";
 
     internal long CurrentSession { get { lock (Gate) return _session; } }
 
@@ -47,6 +54,8 @@ internal sealed class TaskbarProfilePublisher(string directoryPath, string paylo
             if (_session != 0 && string.Equals(_authenticationFingerprint, fingerprint, StringComparison.Ordinal)) return;
             _authenticationFingerprint = fingerprint;
             _authenticated = fingerprint is not null;
+            _presenceOnline = false;
+            _presenceUpdatedAtUtcTicks = DateTime.UtcNow.Ticks;
             _launched = false;
             ++_session;
             // A saved token alone does not expose an old account. Wait for the
@@ -77,9 +86,53 @@ internal sealed class TaskbarProfilePublisher(string directoryPath, string paylo
             // independently prepared mood paths for this same account.
             var snapshot = _current is { IsAuthenticated: true } previous && previous.Session == session && previous.ClientPublicId == clientPublicId
                 ? previous with { Revision = NextRevision(), DisplayName = name, ImagePath = path }
-                : new Snapshot(session, NextRevision(), true, clientPublicId, name, path);
+                : new Snapshot(session, NextRevision(), true, clientPublicId, name, path)
+                {
+                    IsOnline = _presenceOnline, PresenceUpdatedAtUtcTicks = _presenceUpdatedAtUtcTicks,
+                    LanguageTag = _languageTag, OnlinePresenceLabel = _onlinePresenceLabel, OfflinePresenceLabel = _offlinePresenceLabel
+                };
             Queue(snapshot);
         }
+    }
+
+    internal void PublishPresence(long session, bool isOnline)
+    {
+        lock (Gate)
+        {
+            if (!_authenticated || session != _session) return;
+            _presenceOnline = isOnline;
+            _presenceUpdatedAtUtcTicks = DateTime.UtcNow.Ticks;
+            if (_current is { } current)
+                Queue(current with
+                {
+                    Revision = NextRevision(), IsOnline = current.IsAuthenticated && isOnline,
+                    PresenceUpdatedAtUtcTicks = _presenceUpdatedAtUtcTicks,
+                    LanguageTag = _languageTag, OnlinePresenceLabel = _onlinePresenceLabel, OfflinePresenceLabel = _offlinePresenceLabel
+                });
+        }
+    }
+
+    internal void SetPresenceLocalization(string languageTag, string online, string offline)
+    {
+        lock (Gate)
+        {
+            if (_languageTag == languageTag && _onlinePresenceLabel == online && _offlinePresenceLabel == offline) return;
+            _languageTag = languageTag;
+            _onlinePresenceLabel = online;
+            _offlinePresenceLabel = offline;
+            if (_current is { } current)
+                Queue(current with
+                {
+                    Revision = NextRevision(), LanguageTag = languageTag,
+                    OnlinePresenceLabel = online, OfflinePresenceLabel = offline
+                });
+        }
+    }
+
+    private static long GetProcessStartTimeUtcTicks()
+    {
+        using var process = Process.GetCurrentProcess();
+        return process.StartTime.ToUniversalTime().Ticks;
     }
 
     internal void PublishMood(long session, Guid? publicId, string? emoji, string? title, string? animationPath, string? effectPath)
@@ -157,6 +210,13 @@ internal sealed class TaskbarProfilePublisher(string directoryPath, string paylo
                         if (snapshot.MoodPublicId is { } moodId) writer.WriteString("moodPublicId", moodId); else writer.WriteNull("moodPublicId");
                         writer.WriteString("moodEmoji", snapshot.MoodEmoji); writer.WriteString("moodTitle", snapshot.MoodTitle);
                         writer.WriteString("moodAnimationPath", snapshot.MoodAnimationPath); writer.WriteString("moodEffectPath", snapshot.MoodEffectPath);
+                        writer.WriteBoolean("isOnline", snapshot.IsOnline);
+                        writer.WriteNumber("mainProcessId", Environment.ProcessId);
+                        writer.WriteNumber("mainProcessStartTimeUtcTicks", _mainProcessStartTimeUtcTicks);
+                        writer.WriteNumber("presenceUpdatedAtUtcTicks", snapshot.PresenceUpdatedAtUtcTicks);
+                        writer.WriteString("languageTag", snapshot.LanguageTag);
+                        writer.WriteString("onlinePresenceLabel", snapshot.OnlinePresenceLabel);
+                        writer.WriteString("offlinePresenceLabel", snapshot.OfflinePresenceLabel);
                         writer.WriteEndObject(); writer.Flush();
                     }
                     lock (Gate)
@@ -296,5 +356,7 @@ internal sealed class TaskbarProfilePublisher(string directoryPath, string paylo
     }
 
     private sealed record Snapshot(long Session, long Revision, bool IsAuthenticated, Guid? ClientPublicId, string DisplayName, string? ImagePath,
-        Guid? MoodPublicId = null, string? MoodEmoji = null, string? MoodTitle = null, string? MoodAnimationPath = null, string? MoodEffectPath = null);
+        Guid? MoodPublicId = null, string? MoodEmoji = null, string? MoodTitle = null, string? MoodAnimationPath = null, string? MoodEffectPath = null,
+        bool IsOnline = false, long PresenceUpdatedAtUtcTicks = 0, string LanguageTag = "fa-IR",
+        string OnlinePresenceLabel = "آنلاین", string OfflinePresenceLabel = "آفلاین");
 }

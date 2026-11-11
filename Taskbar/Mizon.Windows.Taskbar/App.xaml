@@ -15,7 +15,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="controls:AuthActionButton">
                         <!-- The hit target stays still; only the photo and highlight animate. -->
-                        <Grid x:Name="ActionSurface" Background="Transparent" CornerRadius="{TemplateBinding CornerRadius}">
+                        <Grid x:Name="ActionSurface" Background="Transparent">
                             <ContentPresenter x:Name="ActionContent" Content="{TemplateBinding Content}"
                                               ContentTemplate="{TemplateBinding ContentTemplate}"
                                               HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>

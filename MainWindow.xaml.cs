@@ -21,6 +21,8 @@ namespace Mizon.Windows;
 public sealed partial class MainWindow : Window
 {
     private readonly IDisposable _appearanceAttachment;
+    private readonly ProfilePresenceService _profilePresence;
+    private readonly LocalStorageService _presenceStorage;
 
     internal void ShowWindowOverlay(UIElement overlay)
     {
@@ -43,6 +45,11 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        _profilePresence = ((App)Application.Current).Services.GetRequiredService<ProfilePresenceService>();
+        _presenceStorage = ((App)Application.Current).Services.GetRequiredService<LocalStorageService>();
+        Activated += PresenceWindowActivated;
+        _presenceStorage.AuthenticationChanged += PresenceAuthenticationChanged;
+        UpdatePresenceLanguage();
         InitializeMcpAccess();
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon", "Mizon.ico"));
 
@@ -130,11 +137,36 @@ public sealed partial class MainWindow : Window
 
     private void LocalizationChanged(object? sender, PropertyChangedEventArgs args)
     {
-        if (args.PropertyName == nameof(LocalizationService.Revision)) RefreshTitle();
+        if (args.PropertyName == nameof(LocalizationService.Revision))
+        {
+            RefreshTitle();
+            UpdatePresenceLanguage();
+        }
+    }
+
+    private void PresenceWindowActivated(object sender, WindowActivatedEventArgs args) =>
+        _profilePresence.SetWindowActive(args.WindowActivationState != WindowActivationState.Deactivated);
+
+    private void PresenceAuthenticationChanged(object? sender, bool hasSession)
+    {
+        if (!hasSession) _profilePresence.SetSession(false, TaskbarProfileBridge.CurrentSession);
+        // Becoming authenticated is owned by the validated HomePage lifecycle.
+    }
+
+    private static void UpdatePresenceLanguage()
+    {
+        var localization = LocalizationService.Current;
+        TaskbarProfileBridge.SetPresenceLocalization(localization.LanguageTag,
+            localization.GetString("ProfileMenu/PresenceOnline"), localization.GetString("ProfileMenu/PresenceOffline"));
     }
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
+        Activated -= PresenceWindowActivated;
+        _presenceStorage.AuthenticationChanged -= PresenceAuthenticationChanged;
+        if (((App)Application.Current).Services.GetRequiredService<NavigationService>().CurrentMainPage is HomePage home)
+            home.ViewModel.StopProfilePresence();
+        _profilePresence.Dispose();
         DisposeMcpAccess();
         _appearanceAttachment.Dispose();
         LocalizationService.Current.PropertyChanged -= LocalizationChanged;

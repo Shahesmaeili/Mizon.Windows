@@ -210,7 +210,8 @@ public partial class App : Application
             new McpMusicHomeService(
                 () => navigationService.CurrentMainPage is Pages.HomePage { ViewModel.IsSigningOut: false }
                     ? navigationService.CurrentInternalPage as IMcpMusicHomePage : null,
-                () => !string.IsNullOrWhiteSpace(localStorageService.GetJwtToken())));
+                () => !string.IsNullOrWhiteSpace(localStorageService.GetJwtToken())),
+            presence: new McpPresenceService(Services.GetRequiredService<ProfilePresenceService>()));
         MainMizonWindow.Closed += MainWindow_Closed;
         // The authenticated shell starts the socket after account validation. Login and
         // Welcome do not need SignalR's connection, transport buffers or reconnect loop.
@@ -263,6 +264,11 @@ public partial class App : Application
 );
         services.AddMizonApi();
         services.AddSingleton(sp => new Lazy<MizonSocket>(sp.GetRequiredService<MizonSocket>));
+        services.AddSingleton(sp => new ProfilePresenceService(
+            () => new MizonProfilePresenceTransport(sp.GetRequiredService<Lazy<MizonSocket>>().Value),
+            static (session, state) => TaskbarProfileBridge.PublishPresence(session, state.IsOnline),
+            static error => AppLog.Information($"Profile presence update failed ({error.GetType().Name}).")));
+        services.AddSingleton<IProfilePresenceService>(sp => sp.GetRequiredService<ProfilePresenceService>());
         services.AddSingleton<MulticastDiscoveryServiceV2>(_ => _discoveryService = new());
 
         // Register a shared MediaDownloader

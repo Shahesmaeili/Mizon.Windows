@@ -12,4 +12,7 @@
   <data name="PinNotAllowed" xml:space="preserve"><value>Windows does not currently allow this app to be pinned.</value></data>
   <data name="PinUnavailable" xml:space="preserve"><value>In-app taskbar pinning is unavailable on this version of Windows.</value></data>
   <data name="PinFailed" xml:space="preserve"><value>The pin request could not be completed. Please try again.</value></data>
+  <data name="PresenceOnline" xml:space="preserve"><value>Online</value></data>
+  <data name="PresenceOffline" xml:space="preserve"><value>Offline</value></data>
+  <data name="AccountMenuFor" xml:space="preserve"><value>Account menu for {0}</value></data>
 </root>
