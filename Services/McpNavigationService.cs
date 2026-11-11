@@ -30,7 +30,24 @@ internal sealed class McpNavigationService(IAppDeepLinkNavigation navigation) : 
         {
             var result = await navigation.OpenAsync(destination, token);
             token.ThrowIfCancellationRequested();
-            return Response(result.Success, result.Code, result.Message);
+            if (_disposed) return new() { Code = "unavailable", Message = "The app navigation connection has closed." };
+            var receipt = new AppDeepLinkResult
+            {
+                RequestId = Guid.NewGuid(), Success = result.Success, Code = result.Code,
+                Message = result.Message, Data = result.Data
+            };
+            if (!AppDeepLinkResultProtocol.IsValid(receipt))
+                return new() { Code = "operation_failed", Message = "The destination returned an invalid result." };
+            return Response(result.Success, result.Code, result.Message, new()
+            {
+                Version = receipt.Version, RequestId = receipt.RequestId, Success = receipt.Success,
+                Code = receipt.Code, Message = receipt.Message,
+                Data = receipt.Data is { } data ? new()
+                {
+                    Destination = data.Destination, Uri = data.Uri, CompletionStage = data.CompletionStage,
+                    PublicId = data.PublicId, CommentPublicId = data.CommentPublicId, SettingsSection = data.SettingsSection
+                } : null
+            });
         }
         catch (TimeoutException)
         {
@@ -38,12 +55,12 @@ internal sealed class McpNavigationService(IAppDeepLinkNavigation navigation) : 
         }
     }
 
-    private McpResponse Response(bool success, string code, string message)
+    private McpResponse Response(bool success, string code, string message, McpNavigationResult? result = null)
     {
         var state = navigation.GetState();
         return new()
         {
-            Success = success, Code = code, Message = message,
+            Success = success, Code = code, Message = message, NavigationResult = result,
             Navigation = new()
             {
                 Destination = state.Destination, Uri = state.Uri, PendingUri = state.PendingUri,

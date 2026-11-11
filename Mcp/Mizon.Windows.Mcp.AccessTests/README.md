@@ -38,6 +38,12 @@ gating without deferred work, cancellation, sanitized backend failures, readines
 timeouts, multi-worker revocation, exact persisted scopes, offline revocation and
 adapter disposal. They do not call an external deep link or open a real page.
 
+Invocation-result checks preserve actual route outcome data and its completion
+stage, verify per-invocation correlation and independently redact it without
+navigation read permission. A get-navigation read never replays a previous result.
+Failures, invalid metadata, timeouts, cancellation, revocation and disposal cannot
+leak a successful receipt from an earlier or superseded invocation.
+
 Presence checks link the production read-only adapter and its shared service contract.
 Synthetic snapshots cover active/inactive, disconnected, pending confirmation and
 signed-out states. The actual permission service enforces independent read consent,

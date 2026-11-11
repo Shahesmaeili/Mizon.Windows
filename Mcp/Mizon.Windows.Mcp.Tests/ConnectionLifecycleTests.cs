@@ -218,6 +218,7 @@ internal static partial class ConnectionLifecycleTests
         public int Disconnections => Volatile.Read(ref _disconnections);
         public int MutationAttempts => Volatile.Read(ref _mutationAttempts);
         public McpRequest? LastRequest { get; private set; }
+        public McpResponse? NavigationResponse { get; set; }
 
         public SyntheticApp(TimeSpan helloDelay, TimeSpan requestDelay = default, bool dropFirstHello = false, bool dropMutationReply = false)
         {
@@ -270,7 +271,10 @@ internal static partial class ConnectionLifecycleTests
                         if (_dropMutationReply) return;
                     }
                     if (request.Operation != "connection_status") await Task.Delay(_requestDelay, _lifetime.Token);
-                    await ReplyAsync(pipe, id, request.Operation == "connection_status" ? "pending" : "approval_required");
+                    if (request.Operation == "open_destination" && NavigationResponse is { } navigationResponse)
+                        await McpPipeProtocol.WriteAsync(pipe, navigationResponse, McpJsonContext.Default.McpResponse, _lifetime.Token);
+                    else
+                        await ReplyAsync(pipe, id, request.Operation == "connection_status" ? "pending" : "approval_required");
                 }
             }
             catch (Exception exception) when (exception is OperationCanceledException or ObjectDisposedException or IOException) { }

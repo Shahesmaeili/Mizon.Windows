@@ -25,6 +25,7 @@ internal static partial class Program
             await AppearanceRevocationAndRestart();
             await NavigationScopesAndRoutes();
             await NavigationLifecycle();
+            await NavigationResultBehavior();
             await TaskbarScopesAndPinState();
             await TaskbarCancellationAndRestart();
             await MusicHomeScopesAndBehavior();

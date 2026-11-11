@@ -16,6 +16,8 @@ It is not a general music-detail, profile, database or backend API surface.
 Online presence has an independent read-only scope; see [PRESENCE.md](PRESENCE.md).
 Its shared indicator snapshot cannot change focus, publish presence or inspect other users.
 Navigation itself exposes location state and opening allowlisted pages/popups only.
+Its optional per-invocation result preserves bounded route completion data under
+navigation read consent; see [navigation results](NAVIGATION_RESULTS.md).
 Its approval does not authorize domain data, playback or downloads. Extend
 coverage with the feature being worked on. Do not silently expose unrelated pages,
 all services, all endpoints, or arbitrary code execution.

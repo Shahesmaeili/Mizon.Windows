@@ -36,7 +36,7 @@ internal static partial class Program
         await host.Ui(() => host.Service.RevokeAsync(host.Item(id)));
         await host.Approve(id, false, false, false, navigationControl: true);
         var write = await peer.Call(Navigate("music"));
-        Assert(write is { Success: true, State: null, Appearance: null, Navigation: null }
+        Assert(write is { Success: true, State: null, Appearance: null, Navigation: null, NavigationResult: null }
             && host.NavigationBackend.Last is { Destination: "music" }, "Control-only navigation opens declared page without disclosing state");
         Assert(!(await peer.Call("get_navigation")).Success && !(await peer.Call("set_appearance")).Success
             && !(await peer.Call("submit")).Success, "Navigation control cannot read location, edit appearance or submit credentials");
@@ -48,6 +48,11 @@ internal static partial class Program
         Assert(comment.Success && comment.Navigation?.Uri == $"mizon://music/{musicId:D}/comments/{commentId:D}"
             && host.NavigationBackend.Last is { MusicAction: MusicActivationAction.Details, MusicCommentPublicId: var actualComment }
             && actualComment == commentId, "Comment navigation uses production route builder and never starts playback");
+        Assert(comment.NavigationResult is { Version: 1, Success: true, Code: "opened", Data:
+            { Destination: "music-comment", CompletionStage: "opened" } } receipt
+            && receipt.RequestId != Guid.Empty && receipt.Data.PublicId == musicId && receipt.Data.CommentPublicId == commentId
+            && receipt.Data.Uri == comment.Navigation?.Uri,
+            "Navigation receipt preserves real outcome stage and typed public IDs through the production pipe");
         var query = "آهنگ & + #";
         var search = await peer.Call(Navigate("search", query: query));
         Assert(search.Success && AppActivationRequest.TryParse(search.Navigation?.Uri, out var parsed) && parsed.SearchQuery == query,
@@ -55,6 +60,11 @@ internal static partial class Program
         var settings = await peer.Call(Navigate("settings", section: "ai-connections"));
         Assert(settings.Success && settings.Navigation?.Uri == "mizon://settings/ai-connections",
             "Settings navigation selects a declared section without changing permissions");
+        Assert(settings.NavigationResult?.Data?.SettingsSection == "ai-connections"
+            && settings.NavigationResult.RequestId != comment.NavigationResult!.RequestId,
+            "Receipts carry the selected section and a fresh correlation ID per invocation");
+        Assert((await peer.Call("get_navigation")).NavigationResult is null,
+            "Read-state does not replay a previous navigation invocation's receipt");
 
         var opens = host.NavigationBackend.Opens;
         foreach (var invalid in new[]
@@ -160,7 +170,12 @@ internal static partial class Program
             if (Handler is not null) return Handler(request, token);
             Opens++; Last = request;
             State = new(request.RouteKey!, request.ToUri(), null, true, State.HasSession);
-            return Task.FromResult(new AppNavigationOutcome(true, "opened", "Synthetic destination opened."));
+            return Task.FromResult(new AppNavigationOutcome(true, "opened", "Synthetic destination opened.", new()
+            {
+                Destination = request.RouteKey!, Uri = request.ToUri()!, CompletionStage = "opened",
+                PublicId = request.MusicPublicId ?? request.PlaylistPublicId ?? request.ClientPublicId ?? request.StoryPublicId,
+                CommentPublicId = request.MusicCommentPublicId, SettingsSection = request.SettingsSection
+            }));
         }
         public void Dispose() => Disposed = true;
     }

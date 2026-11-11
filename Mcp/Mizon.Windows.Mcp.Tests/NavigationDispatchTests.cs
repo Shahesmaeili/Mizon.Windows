@@ -1,10 +1,48 @@
 using System.Text.Json;
 using ModelContextProtocol.Protocol;
+using Mizon.Windows.Mcp.Contracts;
 
 namespace Mizon.Windows.Mcp.Tests;
 
 internal static partial class ConnectionLifecycleTests
 {
+    public static async Task NavigationReceiptDispatch()
+    {
+        await using var app = new SyntheticApp(TimeSpan.Zero);
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        await using var client = await CreateFixtureClientAsync(timeout.Token);
+        var tool = (await client.ListToolsAsync(cancellationToken: timeout.Token))
+            .Single(item => item.Name == "mizon_open_destination").ProtocolTool;
+        var publicId = Guid.NewGuid();
+        using var destinationInput = JsonDocument.Parse("\"client\"");
+        using var idInput = JsonDocument.Parse("\"" + publicId.ToString("D") + "\"");
+        foreach (var success in new[] { true, false })
+        {
+            var receipt = new McpNavigationResult
+            {
+                RequestId = Guid.NewGuid(), Success = success, Code = success ? "opened" : "not_found", Message = "Synthetic route result.",
+                Data = success ? new() { Destination = "client", Uri = $"mizon://client/{publicId:D}",
+                    CompletionStage = "opened", PublicId = publicId } : null
+            };
+            app.NavigationResponse = new() { Success = success, Code = receipt.Code, Message = receipt.Message, NavigationResult = receipt };
+            var result = await client.CallToolAsync(new CallToolRequestParams
+            {
+                Name = "mizon_open_destination", Arguments = new Dictionary<string, JsonElement>
+                {
+                    ["destination"] = destinationInput.RootElement.Clone(),
+                    ["publicId"] = idInput.RootElement.Clone()
+                }
+            }, cancellationToken: timeout.Token);
+            var json = result.StructuredContent!.Value;
+            var output = JsonSerializer.Deserialize(json, McpJsonContext.Default.McpResponse);
+            Check.That(output?.NavigationResult == receipt && (result.IsError == true) == !success,
+                "Actual MCP SDK/stdio/pipe dispatch changed the invocation receipt or success status.");
+            SchemaAssertions.Conforms(json, tool.OutputSchema!.Value);
+            Check.That(result.Content.OfType<TextContentBlock>().Single().Text == json.GetRawText(),
+                "The text tool result differs from the structured navigation receipt.");
+        }
+    }
+
     public static async Task NavigationTypedDispatch()
     {
         await using var app = new SyntheticApp(TimeSpan.Zero);

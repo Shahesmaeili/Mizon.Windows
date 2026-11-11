@@ -39,6 +39,7 @@ public sealed record McpResponse
     public McpAuthState? State { get; init; }
     public McpAppearanceState? Appearance { get; init; }
     public McpNavigationState? Navigation { get; init; }
+    public McpNavigationResult? NavigationResult { get; init; }
     public McpTaskbarPinState? TaskbarPin { get; init; }
     public McpMusicHomeState? MusicHome { get; init; }
     public McpPresenceState? Presence { get; init; }

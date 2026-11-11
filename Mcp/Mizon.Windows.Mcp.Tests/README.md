@@ -1,5 +1,11 @@
 # MCP protocol checks
 
+Navigation result checks compile-link the same pure deep-link result contract as
+the app/taskbar. They validate version/correlation, required fields, duplicate and
+unknown properties, UTF-8 size limits and opened/completed semantics. The generated
+MCP receipt is checked through real framing and SDK/stdio/pipe dispatch with
+synthetic successful and failed outcomes. No external deep link is launched.
+
 These console checks need no test framework. The default verification command uses isolated current-user named pipes and the official MCP SDK. It exercises the production tool/catalog/transport source, shared permission policy and framing without contacting the running Mizon app.
 
 ```powershell

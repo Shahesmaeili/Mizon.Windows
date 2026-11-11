@@ -63,6 +63,7 @@ internal static class MizonAuthSchemas
                 {
                     var description = Description(property.Name);
                     if (description is not null) definition["description"] = description;
+                    if (property.Name == "completionStage") definition["enum"] = new JsonArray("opened", "completed");
                 }
                 return definition;
             }
@@ -93,6 +94,9 @@ internal static class MizonAuthSchemas
             "allowNavigationRead" => "User-approved permission to read the current app destination and pending deep link, including public IDs or search text in those links. Independent of authentication and appearance permissions.",
             "allowNavigationControl" => "User-approved permission to open declared pages/popups. Does not authorize forms, playback/download actions, editing settings or reading page contents.",
             "navigation" => "Optional navigation state, returned only with navigation read permission. Control-only permission receives an outcome without this state.",
+            "navigationResult" => "Optional receipt for this completed navigation invocation, returned only with navigation read permission. Not retained by get_navigation. Distinguishes opening a destination from completing its requested operation; it contains no arbitrary backend data or local paths.",
+            "requestId" => "Unique UUID correlating this invocation's result. Do not reuse a previous receipt as proof that a new navigation completed.",
+            "completionStage" => "opened means the destination is open and content may still be loading. completed means the route's declared operation finished. Neither stage grants access to other page data or actions.",
             "destination" => "Current declared destination key, or unavailable when no supported page is attached.",
             "uri" => "Canonical mizon deep link for the current destination, when available. Never an external URL or local file path.",
             "pendingUri" => "Optional external deep link waiting for the authenticated shell. MCP content navigation is never deferred across a later sign-in.",

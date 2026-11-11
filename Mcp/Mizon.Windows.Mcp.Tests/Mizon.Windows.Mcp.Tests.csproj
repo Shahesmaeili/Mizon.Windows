@@ -15,5 +15,6 @@
     <Compile Include="..\Mizon.Windows.Mcp\MizonAuthTools.cs" Link="TransportUnderTest\MizonAuthTools.cs" />
     <Compile Include="..\Mizon.Windows.Mcp\MizonMusicHomeTools.cs" Link="TransportUnderTest\MizonMusicHomeTools.cs" />
     <Compile Include="..\Mizon.Windows.Mcp\MizonAuthSchemas.cs" Link="TransportUnderTest\MizonAuthSchemas.cs" />
+    <Compile Include="..\..\Services\AppDeepLinkResult.cs" Link="Production\AppDeepLinkResult.cs" />
   </ItemGroup>
 </Project>

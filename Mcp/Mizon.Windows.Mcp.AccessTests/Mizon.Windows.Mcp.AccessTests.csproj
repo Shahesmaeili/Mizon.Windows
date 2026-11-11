@@ -25,6 +25,7 @@
     <Compile Include="..\..\Services\TaskbarPinContracts.cs" Link="Production\TaskbarPinContracts.cs" />
     <Compile Include="..\..\Services\McpNavigationService.cs" Link="Production\McpNavigationService.cs" />
     <Compile Include="..\..\Services\AppDeepLinkNavigationContracts.cs" Link="Production\AppDeepLinkNavigationContracts.cs" />
+    <Compile Include="..\..\Services\AppDeepLinkResult.cs" Link="Production\AppDeepLinkResult.cs" />
     <Compile Include="..\..\Services\AppActivationRoute.cs" Link="Production\AppActivationRoute.cs" />
     <Compile Include="..\..\Services\AppDeepLinkCatalog.cs" Link="Production\AppDeepLinkCatalog.cs" />
     <Compile Include="..\..\Services\McpAppearanceService.cs" Link="Production\McpAppearanceService.cs" />

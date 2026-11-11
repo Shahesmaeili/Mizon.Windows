@@ -467,6 +467,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                     State = connection.CanExecute("get_state") ? result.State : null,
                     Appearance = connection.CanExecute("get_appearance") ? result.Appearance : null,
                     Navigation = connection.CanExecute("get_navigation") ? result.Navigation : null,
+                    NavigationResult = connection.CanExecute("get_navigation") ? result.NavigationResult : null,
                     TaskbarPin = connection.CanExecute("get_taskbar_pin_state") ? result.TaskbarPin : null,
                     MusicHome = connection.CanExecute("get_music_home") ? result.MusicHome : null,
                     Presence = connection.CanExecute("get_presence_state") ? result.Presence : null,
