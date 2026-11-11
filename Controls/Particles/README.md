@@ -47,6 +47,9 @@ Local changes:
   `Dispose()` is idempotent final teardown on the UI thread.
 - Retain theme-resource colors, exclude decorative particles from Narrator and
   keyboard focus, and guard late settings callbacks by attachment generation.
+- Keep the drawing surface left-to-right and measure pointer positions relative
+  to the actual Win2D canvas. The hosting page may remain right-to-left; its
+  text direction must not mirror the particle attraction coordinates.
 - Use typed code, value-type math and `Random.Shared`; no reflection, dynamic
   XAML loading, source generator substitutes or added packages.
 

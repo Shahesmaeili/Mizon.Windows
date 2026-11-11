@@ -48,6 +48,8 @@ public sealed partial class Particle : Control, IDisposable
     public Particle()
     {
         DefaultStyleKey = typeof(Particle);
+        // A particle surface has physical drawing coordinates, not a text reading order.
+        FlowDirection = FlowDirection.LeftToRight;
         IsTabStop = false;
         AutomationProperties.SetAccessibilityView(this, AccessibilityView.Raw);
         _timer = DispatcherQueue.CreateTimer();
@@ -101,6 +103,9 @@ public sealed partial class Particle : Control, IDisposable
     private void AttachCanvas()
     {
         if (_canvas is null) return;
+        // Win2D's internal Image is not mirrored with inherited RTL. Keep input
+        // and drawing in this same LTR space, including canvases recreated on load.
+        _canvas.FlowDirection = FlowDirection.LeftToRight;
         _canvas.ClearColor = Colors.Transparent;
         _canvas.Draw += CanvasDraw;
         _canvas.Visibility = Paused ? Visibility.Collapsed : Visibility.Visible;
@@ -181,8 +186,8 @@ public sealed partial class Particle : Control, IDisposable
 
     private void ControlPointerMoved(object sender, PointerRoutedEventArgs args)
     {
-        if (!CanAnimate) return;
-        var position = args.GetCurrentPoint(this).Position;
+        if (!CanAnimate || _canvas is not { } canvas) return;
+        var position = args.GetCurrentPoint(canvas).Position;
         _pointerPosition = new Vector2((float)position.X, (float)position.Y);
         _pointerDrawCount = 0;
         _pointerIn = true;

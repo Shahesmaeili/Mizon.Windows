@@ -138,8 +138,8 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">
-            <StackPanel x:Name="PageContent" MaxWidth="1420" Padding="28,24,28,28" Spacing="18" HorizontalAlignment="Stretch">
+        <ScrollViewer x:Name="PageScroller" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center">
+            <StackPanel x:Name="PageContent" Width="{x:Bind PageScroller.ViewportWidth, Mode=OneWay}" MaxWidth="1420" Padding="28,24,28,28" Spacing="18" HorizontalAlignment="Center">
                 <Grid ColumnSpacing="14">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                     <Border Width="48" Height="48" CornerRadius="14" Background="{ThemeResource VpnWash}">

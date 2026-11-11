@@ -4,6 +4,12 @@ Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion 
 
 ## VPN page and local Particle — 2026-11-11
 
+Follow-up: constrained page content now explicitly centers within the viewport,
+and the particle canvas uses LTR physical coordinates even in Persian. Pointer
+positions are read from that canvas rather than the RTL parent. See
+[centering/input fix](tasks/2026-11-11-vpn-centering-pointer.md); live mouse/resize
+verification remains separate from successful build and headless checks.
+
 VPNPage now uses its own upstream-derived Particle control, retaining the effect
 with bounded work and explicit Win2D/observer cleanup. DevWinUI remains installed
 for other pages, per the user's scope. The page has responsive translucent
