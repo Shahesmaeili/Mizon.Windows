@@ -3,6 +3,7 @@
 		<DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
 		<ApplicationIcon>Assets\AppIcon\Mizon.ico</ApplicationIcon>
 		<DefaultLanguage>fa-IR</DefaultLanguage>
+		<DefaultItemExcludes>$(DefaultItemExcludes);Mcp\**\*.resw</DefaultItemExcludes>
 	</PropertyGroup>
 	<ItemGroup>
 		<Content Include="Assets\Mizon.ico" CopyToOutputDirectory="PreserveNewest" />
@@ -17,6 +18,11 @@
 		     compiled into the WinUI application. -->
 		<Compile Remove="WindowsSearch\**\*.cs" />
 		<Compile Remove="Mcp\**\*.cs" />
+		<!-- Headless localization fixtures/output belong to their test executable,
+		     not to MRT's automatic recursive .resw discovery for the application. -->
+		<PRIResource Remove="Mcp\**\*" />
+		<EmbeddedResource Remove="Mcp\**\*" />
+		<Resource Remove="Mcp\**\*" />
 		<Content Remove="Mcp\**\*" />
 		<None Remove="Mcp\**\*" />
 		<Content Include="Assets\Mcp\**\*" CopyToOutputDirectory="PreserveNewest" />

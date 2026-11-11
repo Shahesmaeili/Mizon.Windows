@@ -323,11 +323,11 @@
             </controls:WidgetLoadHost>
             <controls:WidgetLoadHost WidgetName="{x:Bind Localization.GetString('MusicHome/WeeklyRhythm', Localization.Revision), Mode=OneWay}" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingWeeklyRhythm', Localization.Revision), Mode=OneWay}"
                                      ReadyText="{x:Bind Localization.GetString('MusicHome/WeeklyRhythmReady', Localization.Revision), Mode=OneWay}">
-              <uc:WeeklyRhythmPanel Summary="{x:Bind Discovery.WeeklyRhythm}" />
+              <uc:WeeklyRhythmPanel x:Name="WeeklyRhythm" Summary="{x:Bind Discovery.WeeklyRhythm}" />
             </controls:WidgetLoadHost>
             <controls:WidgetLoadHost WidgetName="{x:Bind Localization.GetString('MusicHome/LatestNews', Localization.Revision), Mode=OneWay}" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingNews', Localization.Revision), Mode=OneWay}"
                                      ReadyText="{x:Bind Localization.GetString('MusicHome/NewsReady', Localization.Revision), Mode=OneWay}">
-              <uc:LatestMusicNewsPanel />
+              <uc:LatestMusicNewsPanel x:Name="LatestNews" />
             </controls:WidgetLoadHost>
           </StackPanel>
         </ScrollViewer>

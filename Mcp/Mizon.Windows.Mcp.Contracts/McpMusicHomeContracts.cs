@@ -1,4 +1,4 @@
-namespace Mizon.Windows.Mcp.Contracts;
+﻿namespace Mizon.Windows.Mcp.Contracts;
 
 /// <summary>Inputs for the live music discovery page, never an arbitrary service invocation.</summary>
 public sealed record McpMusicHomeRequest
@@ -88,6 +88,8 @@ public sealed record McpMusicHomeHeroState
 
 public sealed record McpMusicHomeStoryState
 {
+    public bool HasError { get; init; }
+    public string? ErrorCode { get; init; }
     public string? Id { get; init; }
     public int Index { get; init; }
     public int Count { get; init; }

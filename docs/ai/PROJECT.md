@@ -66,7 +66,7 @@ The supported catalog is [DeepLinks.md](../../DeepLinks.md), backed by `Services
 
 See [Mcp/DEVELOPMENT.md](../../Mcp/DEVELOPMENT.md) for the authoritative contract and consent requirements.
 
-Implemented domains are authentication pages, appearance, declared destination navigation, and pinning the Mizon application to the taskbar. Appearance, navigation and taskbar pinning each have separate read/control grants. Existing grants never imply permission for a new domain.
+Implemented domains are authentication pages, appearance, declared destination navigation, pinning the Mizon application to the taskbar, and the active music home page. Music home has separate read/control/submit grants; see [MUSIC_HOME.md](../../Mcp/MUSIC_HOME.md). Its coverage is not a general music-detail/profile/backend API. Appearance, navigation and taskbar pinning each have separate read/control grants. Existing grants never imply permission for a new domain.
 
 Opening a music/profile/settings page through navigation is not permission to read all its business data, change settings, play music or submit a form. Full feature-by-feature business MCP coverage has **not** been implemented. Extend narrowly when adding new behavior, and use the same underlying service/operation as the UI.
 

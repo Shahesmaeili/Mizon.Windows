@@ -31,16 +31,17 @@ var options = new McpServerOptions
     ServerInfo = new Implementation
     {
         Name = "Mizon.Authentication",
-        Title = "Mizon — Authentication, appearance and navigation",
+        Title = "Mizon — Authentication, appearance, navigation and music home",
         Version = "1.0.0"
     },
-    ServerInstructions = "This server exposes Mizon's welcome, sign-in and registration pages, main-window appearance preferences and declared app destinations. "
+    ServerInstructions = "This server exposes Mizon's welcome, sign-in and registration pages, main-window appearance preferences, declared app destinations and the active music home page. "
         + "Mizon requires the user to approve a client identity inside the app before any account state or operation is accessible. "
         + "Approved permissions survive app/client restarts until the user revokes them in Settings; a client name alone never authorizes access. "
         + "Use mizon_get_connection to inspect this connection's approval status; pending approval cannot be bypassed by a tool. "
         + "Appearance read and control require their own explicit permissions; authentication approval grants neither. "
         + "Use mizon_get_appearance and mizon_set_appearance for the listed theme and backdrop choices only. "
-        + "Navigation requires separate read/control permissions. Use mizon_get_navigation and mizon_open_destination only for declared pages/popups; no arbitrary URI, playback or download execution is exposed. "
+        + "Navigation requires separate read/control permissions. Use mizon_get_navigation and mizon_open_destination only for declared pages/popups; those navigation tools do not authorize playback or downloads. "
+        + "Music home requires independent read/control/submit grants. Use its typed tools on the active signed-in home page only; snapshots identify API and demo sections. Like/follow additionally require submit permission. Opening stories and playback can record normal activity. Native save pickers remain user-owned. No raw paths, arbitrary URI, SQL or backend invocation is exposed. "
         + "A signed-out content navigation returns requires_sign_in without queueing the action for later. Navigation grants do not grant access to page contents or edits. "
         + "Taskbar pin status and requesting pinning require independent taskbar read/control grants. Request pinning only at the user's request while Mizon is foreground; Windows confirmation belongs to the user and cannot be automated. Never retry interrupted pin requests automatically. "
         + "Open an authentication page only when requested. Credentials are write-only: never request password values back, "

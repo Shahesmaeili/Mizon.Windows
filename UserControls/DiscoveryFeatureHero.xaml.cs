@@ -1,4 +1,4 @@
-using Symbol = FluentIcons.Common.Symbol;
+﻿using Symbol = FluentIcons.Common.Symbol;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
@@ -605,9 +605,10 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         if (_selected?.IsVideo == true) Select(_index, false);
         else Refresh_Click(sender, args);
     }
-    private void CopyLink_Click(object sender, RoutedEventArgs args)
+    private void CopyLink_Click(object sender, RoutedEventArgs args) => TryCopyCurrentLink();
+    private bool TryCopyCurrentLink()
     {
-        if (_selected is not { } item) return;
+        if (_selected is not { } item) return false;
         try
         {
             var data = new DataPackage();
@@ -615,8 +616,9 @@ public sealed partial class DiscoveryFeatureHero : UserControl
             Clipboard.SetContent(data);
             ShowLocalizedStatus("MusicHome/LinkCopied");
             AccessibilityAnnouncements.Announce(StatusText, StatusText.Text, "hero-copy");
+            return true;
         }
-        catch (Exception exception) { AppLog.Error("Featured music link could not be copied.", exception); ShowLocalizedStatus("MusicHome/CopyFailed"); }
+        catch (Exception exception) { AppLog.Error("Featured music link could not be copied.", exception); ShowLocalizedStatus("MusicHome/CopyFailed"); return false; }
     }
     private async void Save_Click(object sender, RoutedEventArgs args)
     {
@@ -625,10 +627,10 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         catch (Exception exception) { AppLog.Error("Featured media export failed.", exception); }
     }
 
-    private async Task SaveCurrentAsync(CancellationToken cancellationToken = default)
+    private async Task<string> SaveCurrentAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (_saving || _selected is not { } item || ViewModel is not { } model) return;
+        if (_saving || _selected is not { } item || ViewModel is not { } model) return "unavailable";
         _saving = true;
         var version = _selectionVersion;
         using var request = CancellationTokenSource.CreateLinkedTokenSource(
@@ -637,23 +639,25 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         try
         {
             var info = await model.GetMediaAsync(item, token);
-            if (info is null || !Uri.TryCreate(info.StoragePath, UriKind.Absolute, out var uri)) return;
+            if (info is null || !Uri.TryCreate(info.StoragePath, UriKind.Absolute, out var uri)) return "unavailable";
             var path = await Downloader.DownloadToCacheAsync(info, uri, cancellationToken: token);
             token.ThrowIfCancellationRequested();
-            if (!_loaded || version != _selectionVersion) return;
+            if (!_loaded || version != _selectionVersion) return "unavailable";
             var picker = new FileSavePicker { SuggestedFileName = Path.GetFileNameWithoutExtension(info.FileName) };
             var extension = Path.GetExtension(info.FileName);
             picker.FileTypeChoices.Add(item.IsVideo ? Localization.GetString("MusicHome/Video") : Localization.GetString("MusicHome/Image"), new List<string> { string.IsNullOrEmpty(extension) ? ".bin" : extension });
             WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(App.MainMizonWindow));
             var target = await picker.PickSaveFileAsync().AsTask(token);
             token.ThrowIfCancellationRequested();
-            if (!_loaded || version != _selectionVersion) return;
+            if (!_loaded || version != _selectionVersion) return "unavailable";
             if (target is not null)
             {
                 var source = await StorageFile.GetFileFromPathAsync(path).AsTask(token);
                 await source.CopyAndReplaceAsync(target).AsTask(token);
                 if (_loaded && version == _selectionVersion) ShowLocalizedStatus("MusicHome/Saved");
+                return "saved";
             }
+            return "cancelled";
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
         catch (Exception exception)

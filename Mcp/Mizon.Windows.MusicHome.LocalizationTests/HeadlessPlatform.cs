@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Xml.Linq;
 
 // Only platform/resource boundaries are doubled. The view models and response
@@ -27,7 +27,7 @@ namespace Windows.UI
 
 namespace FluentIcons.Common
 {
-    public enum Symbol { Comment, Heart, Emoji, Headphones, MusicNote2, Image, People }
+    public enum Symbol { Comment, Heart, Emoji, Headphones, MusicNote2, Image, People, Person, Copy }
 }
 
 namespace Mizon.Windows.Common
@@ -50,15 +50,21 @@ namespace Mizon.Windows.Services
         public static LocalizationService Current { get; } = new();
         public string LanguageTag { get; private set; } = "fa-IR";
         public bool IsPersian => LanguageTag == "fa-IR";
-        public static IReadOnlyDictionary<string, string> ReadResources(string language) =>
-            XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Resources", language + ".resw"))
+        public static IReadOnlyDictionary<string, string> ReadResources(string language, string map = "") =>
+            XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Resources", map, language + ".resw"))
                 .Root!.Elements("data").ToDictionary(node => node.Attribute("name")!.Value, node => node.Element("value")!.Value);
         private readonly Dictionary<string, IReadOnlyDictionary<string, string>> _resources = new()
         {
             ["fa-IR"] = ReadResources("fa-IR"), ["en-US"] = ReadResources("en-US")
         };
         public void SetLanguage(string language) => LanguageTag = language;
-        public string GetString(string key) => _resources[LanguageTag][key["MusicWidgets/".Length..]];
+        public string GetString(string key)
+        {
+            var slash = key.IndexOf('/');
+            var map = key[..slash];
+            var resources = map == "MusicWidgets" ? _resources[LanguageTag] : ReadResources(LanguageTag, map);
+            return resources[key[(slash + 1)..]];
+        }
         public string Format(string key, params object?[] arguments) =>
             string.Format(CultureInfo.GetCultureInfo(LanguageTag), GetString(key), arguments);
     }

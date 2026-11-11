@@ -1,3 +1,4 @@
+﻿using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -116,6 +117,7 @@ public sealed partial class MusicPage : Page
         Discovery.RefreshLocalization();
         ViewModel.RefreshHomeLocalization();
         Features?.RefreshLocalization();
+        _refreshPreviewDialog?.Invoke();
     }
 
     private async void Library_RefreshRequested(object? sender, EventArgs e) => await Library.RefreshAsync();
@@ -205,7 +207,12 @@ public sealed partial class MusicPage : Page
     private async void Stories_RefreshRequested(object? sender, EventArgs args) => await ViewModel.RefreshHomeWidgetsAsync();
 
     private async void Stories_AddRequested(object? sender, EventArgs args) => await ShowPreviewDialogAsync(Localization.GetString("MusicHome/NewStory"),
-        new TextBlock { Text = Localization.GetString("MusicHome/StoryPreviewExplanation"), TextWrapping = TextWrapping.Wrap, FlowDirection = Localization.FlowDirection });
+        new TextBlock { Text = Localization.GetString("MusicHome/StoryPreviewExplanation"), TextWrapping = TextWrapping.Wrap, FlowDirection = Localization.FlowDirection },
+        dialog =>
+        {
+            dialog.Title = Localization.GetString("MusicHome/NewStory");
+            if (dialog.Content is TextBlock text) { text.Text = Localization.GetString("MusicHome/StoryPreviewExplanation"); text.FlowDirection = Localization.FlowDirection; }
+        });
 
     private async void Stories_StoryRequested(object? sender, UserControls.StoryRequestedEventArgs args)
     {
@@ -321,12 +328,21 @@ public sealed partial class MusicPage : Page
         panel.Children.Add(new TextBlock { Text = item.Artist, Opacity = 0.65 });
         panel.Children.Add(new TextBlock { Text = Localization.Format("MusicHome/PreviewDurationLikes", item.DurationText, item.LikesCountText), Opacity = 0.6 });
         panel.Children.Add(new TextBlock { Text = Localization.GetString("MusicHome/TrackPreviewExplanation"), TextWrapping = TextWrapping.Wrap, FontSize = 11, Opacity = 0.55, FlowDirection = Localization.FlowDirection });
-        await ShowPreviewDialogAsync(item.Title, panel);
+        await ShowPreviewDialogAsync(item.DisplayTitle, panel, dialog =>
+        {
+            dialog.Title = item.DisplayTitle;
+            ((TextBlock)panel.Children[1]).Text = item.DisplayTitle;
+            ((TextBlock)panel.Children[3]).Text = Localization.Format("MusicHome/PreviewDurationLikes", item.DurationText, item.LikesCountText);
+            var description = (TextBlock)panel.Children[4];
+            description.Text = Localization.GetString("MusicHome/TrackPreviewExplanation");
+            description.FlowDirection = Localization.FlowDirection;
+        });
     }
 
-    private async Task ShowPreviewDialogAsync(string title, UIElement content)
+    private Action? _refreshPreviewDialog;
+    private async Task ShowPreviewDialogAsync(string title, UIElement content, Action<ContentDialog>? refresh = null)
     {
-        if (_dialogOpen || XamlRoot is null) return;
+        if (_dialogOpen || LatestNews.McpDialogOpen || XamlRoot is null) return;
         _dialogOpen = true;
         try
         {
@@ -337,9 +353,19 @@ public sealed partial class MusicPage : Page
                 Title = title, Content = content, CloseButtonText = Localization.GetString("MusicHome/Close")
             };
             _mcpPreviewDialog = dialog;
+            _refreshPreviewDialog = () =>
+            {
+                dialog.FlowDirection = Localization.FlowDirection;
+                dialog.FontFamily = Localization.TextFontFamily;
+                dialog.Language = Localization.LanguageTag;
+                dialog.CloseButtonText = Localization.GetString("MusicHome/Close");
+                refresh?.Invoke(dialog);
+            };
+            _refreshPreviewDialog();
             await dialog.ShowAsync();
         }
-        finally { _mcpPreviewDialog = null; _dialogOpen = false; }
+        catch (Exception exception) { AppLog.Error("Home preview could not be opened.", exception); }
+        finally { _refreshPreviewDialog = null; _mcpPreviewDialog = null; _dialogOpen = false; }
     }
 
     private async void TopArtist_ProfileRequested(object? sender, TopArtistItemViewModel artist)
@@ -357,7 +383,8 @@ public sealed partial class MusicPage : Page
             FlowDirection = Localization.FlowDirection, TextWrapping = TextWrapping.Wrap, FontSize = 12
         });
         panel.Children.Add(new TextBlock { Text = Localization.GetString("MusicHome/ArtistTracks"), FlowDirection = Localization.FlowDirection, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-        foreach (var music in Discovery.GetArtistMusics(artist))
+        var tracks = Discovery.GetArtistMusics(artist).ToArray();
+        foreach (var music in tracks)
         {
             var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
             row.Children.Add(new Grid
@@ -373,7 +400,21 @@ public sealed partial class MusicPage : Page
             Text = Localization.GetString("MusicHome/ArtistPreviewExplanation"),
             TextWrapping = TextWrapping.Wrap, FlowDirection = Localization.FlowDirection, FontSize = 10, Opacity = 0.55
         });
-        await ShowPreviewDialogAsync(artist.DisplayName, panel);
+        await ShowPreviewDialogAsync(artist.DisplayName, panel, dialog =>
+        {
+            ((TextBlock)panel.Children[1]).Text = artist.GenreTitle;
+            var counts = (TextBlock)panel.Children[2];
+            counts.Text = artist.FollowersFullText + "  ·  " + artist.MonthlyListenersFullText;
+            counts.FlowDirection = Localization.FlowDirection;
+            var heading = (TextBlock)panel.Children[3];
+            heading.Text = Localization.GetString("MusicHome/ArtistTracks");
+            heading.FlowDirection = Localization.FlowDirection;
+            for (var index = 0; index < tracks.Length; index++)
+                ((TextBlock)((StackPanel)panel.Children[4 + index]).Children[1]).Text = tracks[index].DisplayTitle;
+            var description = (TextBlock)panel.Children[panel.Children.Count - 1];
+            description.Text = Localization.GetString("MusicHome/ArtistPreviewExplanation");
+            description.FlowDirection = Localization.FlowDirection;
+        });
     }
 
     private void TopArtistsScroll_Loaded(object sender, RoutedEventArgs e)

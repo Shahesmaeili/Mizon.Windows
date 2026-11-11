@@ -122,4 +122,30 @@ activity.Update(response);
 Check(!activity.CanOpen && activity.NavigationHelpText.Contains("unavailable"), "Unknown activity destinations stay unavailable.");
 Check(CultureInfo.CurrentCulture.Name == cultureBefore, "Presentation language never changes the process data culture.");
 
+foreach (var map in new[] { "MusicHome", "MusicSurface" })
+{
+    var persian = LocalizationService.ReadResources("fa-IR", map);
+    var english = LocalizationService.ReadResources("en-US", map);
+    Check(persian.Keys.Order().SequenceEqual(english.Keys.Order()), map + " has both languages for every key.");
+    foreach (var (key, value) in persian)
+    {
+        Check(!string.IsNullOrWhiteSpace(value) && !string.IsNullOrWhiteSpace(english[key]), map + "/" + key + " is not empty.");
+        Check(CompositeFormat.Parse(value).MinimumArgumentCount == CompositeFormat.Parse(english[key]).MinimumArgumentCount,
+            map + "/" + key + " retains the same format arguments.");
+    }
+}
+var preview = new ProfilePreviewViewModel
+{
+    DisplayName = "Untranslated artist", SubtitleResourceKey = "MusicSurface/Artist",
+    DetailResourceKey = "MusicHome/InTrack", DetailArgument = "English track", PersianDetailArgument = "نام فارسی",
+    FooterResourceKey = "MusicSurface/Demo", PrimaryActionResourceKey = "MusicSurface/OpenMusic", Avatar = avatar
+};
+localization.SetLanguage("en-US");
+var englishFooter = preview.DisplayFooterText;
+Check(preview.DisplayDetail.Contains("English track") && preview.DisplayPrimaryActionText == "View music",
+    "An existing generic profile preview resolves its English detail and action.");
+localization.SetLanguage("fa-IR");
+Check(preview.DisplayDetail.Contains("نام فارسی") && preview.DisplayFooterText != englishFooter
+    && ReferenceEquals(preview.Avatar, avatar) && preview.DisplayName == "Untranslated artist",
+    "An open preview changes labels and preferred track title without replacing images or user content.");
 Console.WriteLine($"PASS: {checks} music-home localization checks. No Windows UI, account writes, API calls or application consent.");

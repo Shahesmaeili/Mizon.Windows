@@ -5,8 +5,8 @@
     xmlns:icon="using:FluentIcons.WinUI"
     xmlns:controls="using:Mizon.Windows.Controls"
     IsTabStop="True" TabFocusNavigation="Cycle" KeyDown="Viewer_KeyDown" Loaded="Viewer_Loaded" Unloaded="Viewer_Unloaded"
-    AutomationProperties.Name="نمایش استوری"
-    AutomationProperties.HelpText="برای حرکت بین دکمه‌ها از Tab، برای مکث یا ادامه از فاصله و برای بستن از Escape استفاده کنید. کلیدهای جهت‌نما استوری قبلی و بعدی را نشان می‌دهند.">
+    AutomationProperties.Name="{x:Bind Localization.GetString('MusicSurface/StoryViewer', Localization.Revision), Mode=OneWay}"
+    AutomationProperties.HelpText="{x:Bind Localization.GetString('MusicSurface/StoryHelp', Localization.Revision), Mode=OneWay}">
     <Grid x:Name="ViewerRoot">
         <Border x:Name="Backdrop" Background="#E00A101B" PointerPressed="Backdrop_PointerPressed" AutomationProperties.AccessibilityView="Raw"/>
         <Grid x:Name="ViewerCard" Margin="20" MaxWidth="460" MaxHeight="820" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
@@ -24,13 +24,13 @@
                         <PersonPicture x:Name="CreatorPicture" Width="38" Height="38" AutomationProperties.AccessibilityView="Raw"/>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
                             <TextBlock x:Name="CreatorName" Foreground="White" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
-                                FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FlowDirection="RightToLeft" TextReadingOrder="DetectFromContent" TextAlignment="Start"/>
+                                FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextReadingOrder="DetectFromContent" TextAlignment="Start"/>
                             <TextBlock x:Name="PositionText" Foreground="#99FFFFFF" FontSize="10"/>
                         </StackPanel>
-                        <controls:StoryActionButton x:Name="PauseButton" Grid.Column="2" Click="Pause_Click" Background="Transparent" BorderThickness="0" Width="32" Height="32" Padding="0" CornerRadius="8" ToolTipService.ToolTip="مکث / ادامه" AutomationProperties.Name="مکث استوری">
+                        <controls:StoryActionButton x:Name="PauseButton" Grid.Column="2" Click="Pause_Click" Background="Transparent" BorderThickness="0" Width="32" Height="32" Padding="0" CornerRadius="8" ToolTipService.ToolTip="{x:Bind Localization.GetString('MusicSurface/PauseResume', Localization.Revision), Mode=OneWay}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicSurface/PauseStory', Localization.Revision), Mode=OneWay}">
                             <icon:SymbolIcon x:Name="PauseIcon" Symbol="Pause" Foreground="White" FontSize="16" AutomationProperties.AccessibilityView="Raw"/>
                         </controls:StoryActionButton>
-                        <controls:StoryActionButton x:Name="CloseButton" Grid.Column="3" Click="Close_Click" Background="Transparent" BorderThickness="0" Width="32" Height="32" Padding="0" CornerRadius="8" AutomationProperties.Name="بستن استوری">
+                        <controls:StoryActionButton x:Name="CloseButton" Grid.Column="3" Click="Close_Click" Background="Transparent" BorderThickness="0" Width="32" Height="32" Padding="0" CornerRadius="8" AutomationProperties.Name="{x:Bind Localization.GetString('MusicSurface/CloseStory', Localization.Revision), Mode=OneWay}">
                             <icon:SymbolIcon Symbol="Dismiss" Foreground="White" FontSize="16" AutomationProperties.AccessibilityView="Raw"/>
                         </controls:StoryActionButton>
                     </Grid>
@@ -43,20 +43,20 @@
                         <Image x:Name="TransitionImage" Visibility="Collapsed" Stretch="Uniform" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw"/>
                         <StackPanel x:Name="LoadingPanel" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
                             <ProgressRing x:Name="LoadingRing" IsActive="True" Width="32" Height="32" Foreground="White" AutomationProperties.AccessibilityView="Raw"/>
-                            <TextBlock Text="در حال آماده‌سازی استوری…" Foreground="#BFFFFFFF" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="11" FlowDirection="RightToLeft" TextReadingOrder="DetectFromContent"/>
+                            <TextBlock Text="{x:Bind Localization.GetString('MusicSurface/PreparingStory', Localization.Revision), Mode=OneWay}" Foreground="#BFFFFFFF" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FontSize="11" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextReadingOrder="DetectFromContent"/>
                         </StackPanel>
                         <StackPanel x:Name="ErrorPanel" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Margin="24">
                             <icon:SymbolIcon Symbol="Warning" Foreground="White" FontSize="28" HorizontalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
-                            <TextBlock x:Name="ErrorText" Foreground="White" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FlowDirection="RightToLeft" TextReadingOrder="DetectFromContent"/>
-                            <controls:StoryActionButton Content="تلاش دوباره" Click="Retry_Click" HorizontalAlignment="Center" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" AutomationProperties.Name="دریافت دوبارهٔ استوری"/>
+                            <TextBlock x:Name="ErrorText" Foreground="White" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextReadingOrder="DetectFromContent"/>
+                            <controls:StoryActionButton Content="{x:Bind Localization.GetString('MusicSurface/Retry', Localization.Revision), Mode=OneWay}" Click="Retry_Click" HorizontalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicSurface/RetryStory', Localization.Revision), Mode=OneWay}"/>
                         </StackPanel>
                     </Grid>
                     <Grid Grid.Row="3" Margin="14,12">
                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                        <TextBlock x:Name="StoryTitle" Foreground="White" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FontSize="12" TextWrapping="Wrap" MaxLines="2" Margin="0,0,0,12" FlowDirection="RightToLeft" TextReadingOrder="DetectFromContent" TextAlignment="Start"/>
+                        <TextBlock x:Name="StoryTitle" Foreground="White" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FontSize="12" TextWrapping="Wrap" MaxLines="2" Margin="0,0,0,12" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextReadingOrder="DetectFromContent" TextAlignment="Start"/>
                         <Grid Grid.Row="1" ColumnSpacing="8">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <controls:StoryActionButton x:Name="LikeButton" Click="Like_Click" CornerRadius="8" Background="#12FFFFFF" BorderBrush="#18FFFFFF" Padding="10,6" AutomationProperties.Name="لایک استوری">
+                            <controls:StoryActionButton x:Name="LikeButton" Click="Like_Click" CornerRadius="8" Background="#12FFFFFF" BorderBrush="#18FFFFFF" Padding="10,6" AutomationProperties.Name="{x:Bind Localization.GetString('MusicSurface/LikeStory', Localization.Revision), Mode=OneWay}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <icon:SymbolIcon x:Name="LikeIcon" Symbol="Heart" Foreground="White" FontSize="17" AutomationProperties.AccessibilityView="Raw"/>
                                     <TextBlock x:Name="LikesText" Foreground="White" FontSize="11" VerticalAlignment="Center"/>
@@ -64,10 +64,10 @@
                             </controls:StoryActionButton>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" Margin="4,0">
                                 <icon:SymbolIcon Symbol="Eye" Foreground="#99FFFFFF" FontSize="15" AutomationProperties.AccessibilityView="Raw"/>
-                                <TextBlock x:Name="ViewsText" Foreground="#99FFFFFF" FontSize="11" AutomationProperties.HelpText="تعداد بازدیدهای استوری"/>
+                                <TextBlock x:Name="ViewsText" Foreground="#99FFFFFF" FontSize="11" AutomationProperties.HelpText="{x:Bind Localization.GetString('MusicSurface/StoryViews', Localization.Revision), Mode=OneWay}"/>
                             </StackPanel>
-                            <controls:StoryActionButton x:Name="PreviousButton" Grid.Column="2" Click="Previous_Click" Width="32" Height="32" Padding="0" CornerRadius="8" AutomationProperties.Name="استوری قبلی"><icon:SymbolIcon Symbol="ChevronLeft" Foreground="White" FontSize="14" AutomationProperties.AccessibilityView="Raw"/></controls:StoryActionButton>
-                            <controls:StoryActionButton x:Name="NextButton" Grid.Column="3" Click="Next_Click" Width="32" Height="32" Padding="0" CornerRadius="8" AutomationProperties.Name="استوری بعدی"><icon:SymbolIcon Symbol="ChevronRight" Foreground="White" FontSize="14" AutomationProperties.AccessibilityView="Raw"/></controls:StoryActionButton>
+                            <controls:StoryActionButton x:Name="PreviousButton" Grid.Column="2" Click="Previous_Click" Width="32" Height="32" Padding="0" CornerRadius="8" AutomationProperties.Name="{x:Bind Localization.GetString('MusicSurface/PreviousStory', Localization.Revision), Mode=OneWay}"><icon:SymbolIcon Symbol="ChevronLeft" Foreground="White" FontSize="14" AutomationProperties.AccessibilityView="Raw"/></controls:StoryActionButton>
+                            <controls:StoryActionButton x:Name="NextButton" Grid.Column="3" Click="Next_Click" Width="32" Height="32" Padding="0" CornerRadius="8" AutomationProperties.Name="{x:Bind Localization.GetString('MusicSurface/NextStory', Localization.Revision), Mode=OneWay}"><icon:SymbolIcon Symbol="ChevronRight" Foreground="White" FontSize="14" AutomationProperties.AccessibilityView="Raw"/></controls:StoryActionButton>
                         </Grid>
                     </Grid>
                 </Grid>

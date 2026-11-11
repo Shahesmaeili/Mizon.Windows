@@ -1,4 +1,4 @@
-using Microsoft.UI;
+﻿using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -150,13 +150,13 @@ public sealed partial class StoryViewer : UserControl, IDisposable
         SetTitle(story.Title);
         PositionText.Text = $"{index + 1} / {_stories.Count}";
         PreviousButton.IsEnabled = index > 0;
-        AutomationProperties.SetName(NextButton, index + 1 == _stories.Count ? "پایان استوری‌ها و بستن" : "استوری بعدی");
+        AutomationProperties.SetName(NextButton, index + 1 == _stories.Count ? Text("FinishStories") : Text("NextStory"));
         for (var i = 0; i < _segments.Count; i++) _segments[i].Value = i < index ? 100 : 0;
         try
         {
             var detail = await viewModel.GetStoryDetailsAsync(story, token);
             if (!IsCurrent(request)) return;
-            if (detail is null) { ShowError("این استوری دیگر در دسترس نیست."); return; }
+            if (detail is null) { ShowError("StoryUnavailable"); return; }
             _detail = detail;
             CreatorName.Text = $"{detail.CreatorFirstName} {detail.CreatorLastName}".Trim();
             CreatorPicture.DisplayName = CreatorName.Text;
@@ -170,7 +170,7 @@ public sealed partial class StoryViewer : UserControl, IDisposable
             LikeButton.IsEnabled = true;
             var path = await viewModel.PrepareStoryPlaybackAsync(detail.ContentMediaPublicId, token);
             if (!IsCurrent(request)) return;
-            if (!Uri.TryCreate(path, UriKind.Absolute, out var uri)) { ShowError("دریافت فایل استوری انجام نشد."); return; }
+            if (!Uri.TryCreate(path, UriKind.Absolute, out var uri)) { ShowError("StoryDownloadFailed"); return; }
             BuildWidgets(detail);
             if (string.Equals(detail.StoryContentTypeTitle, "Video", StringComparison.OrdinalIgnoreCase))
             {
@@ -197,7 +197,7 @@ public sealed partial class StoryViewer : UserControl, IDisposable
         {
             if (!IsCurrent(request)) return;
             AppLog.Error("Story viewer could not open the story.", exception);
-            ShowError("استوری باز نشد؛ دوباره تلاش کن.");
+            ShowError("StoryOpenFailed");
         }
     }
 
@@ -299,10 +299,10 @@ public sealed partial class StoryViewer : UserControl, IDisposable
     }
 
     private void Playback_Opened(object? sender, EventArgs args) { if (ReferenceEquals(sender, _playback)) ContentReady(); }
-    private void Playback_Failed(object? sender, string message) { if (ReferenceEquals(sender, _playback)) ShowError("پخش ویدیو امکان‌پذیر نیست."); }
+    private void Playback_Failed(object? sender, string message) { if (ReferenceEquals(sender, _playback)) ShowError("VideoFailed"); }
     private void Playback_Ended(object? sender, EventArgs args) { if (ReferenceEquals(sender, _playback)) _ = AdvanceAsync(); }
     private void Image_Opened(object sender, RoutedEventArgs args) { if (ReferenceEquals(sender, _image)) ContentReady(); }
-    private void Image_Failed(object sender, ExceptionRoutedEventArgs args) { if (ReferenceEquals(sender, _image)) ShowError("نمایش عکس امکان‌پذیر نیست."); }
+    private void Image_Failed(object sender, ExceptionRoutedEventArgs args) { if (ReferenceEquals(sender, _image)) ShowError("ImageFailed"); }
 
     private void ClearImage()
     {
@@ -340,7 +340,7 @@ public sealed partial class StoryViewer : UserControl, IDisposable
         if (presented && !_marked && _request is { } request && _viewModel is { } model)
         {
             _marked = true;
-            var description = $"استوری {_index + 1} از {_stories.Count}، {CreatorName.Text}، {StoryTitle.Text}";
+            var description = Localization.Format("MusicSurface/StoryAnnouncement", _index + 1, _stories.Count, CreatorName.Text, StoryTitle.Text);
             AutomationProperties.SetName(this, description);
             AccessibilityAnnouncements.Announce(this, description, "story-ready");
             _ = MarkViewedAsync(model, _stories[_index], request);
@@ -366,8 +366,8 @@ public sealed partial class StoryViewer : UserControl, IDisposable
 
     private void UpdateViews(int count)
     {
-        ViewsText.Text = count.ToString("N0");
-        AutomationProperties.SetName(ViewsText, $"{count:N0} بازدید");
+        ViewsText.Text = count.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo(Localization.LanguageTag));
+        AutomationProperties.SetName(ViewsText, Localization.Format("MusicSurface/ViewsCount", count));
     }
 
     private void Timer_Tick(object? sender, object args)
@@ -397,41 +397,30 @@ public sealed partial class StoryViewer : UserControl, IDisposable
         _paused = !_paused;
         UpdatePause();
         UpdatePlaybackState();
-        AccessibilityAnnouncements.Announce(this, _paused ? "استوری متوقف شد" : "پخش استوری ادامه دارد", "story-playback");
+        AccessibilityAnnouncements.Announce(this, _paused ? Text("StoryPaused") : Text("StoryResumed"), "story-playback");
     }
 
     private void UpdatePause()
     {
         PauseIcon.Symbol = _paused ? FluentSymbol.Play : FluentSymbol.Pause;
-        AutomationProperties.SetName(PauseButton, _paused ? "ادامهٔ پخش استوری" : "مکث استوری");
-        ToolTipService.SetToolTip(PauseButton, _paused ? "ادامه" : "مکث");
+        AutomationProperties.SetName(PauseButton, _paused ? Text("ResumeStory") : Text("PauseStory"));
+        ToolTipService.SetToolTip(PauseButton, _paused ? Text("Resume") : Text("Pause"));
     }
 
     private async void Like_Click(object sender, RoutedEventArgs args)
     {
-        if (_closing || _closed || !LikeButton.IsEnabled || _detail is not { } detail || _viewModel is not { } model || _request is not { } request) return;
-        LikeButton.IsEnabled = false;
-        try
-        {
-            using var lease = request.Retain();
-            var response = await model.SetStoryLikedAsync(detail.PublicId, !detail.LikedByMe, request.Token);
-            if (!IsCurrent(request) || response is null) return;
-            detail.LikedByMe = response.LikedByMe;
-            detail.LikesCount = response.LikesCount;
-            UpdateLike();
-            AccessibilityAnnouncements.Announce(this, detail.LikedByMe ? "استوری پسندیده شد" : "پسند برداشته شد", "story-like");
-        }
-        catch (OperationCanceledException) when (request.Token.IsCancellationRequested) { }
+        if (_detail is not { } detail) return;
+        try { await SetLikedAsync(!detail.LikedByMe); }
+        catch (OperationCanceledException) { }
         catch (Exception exception) { AppLog.Error("Story like could not be updated.", exception); }
-        finally { if (IsCurrent(request)) LikeButton.IsEnabled = true; }
     }
 
     private void UpdateLike()
     {
         if (_detail is null) return;
         LikeIcon.Foreground = new SolidColorBrush(_detail.LikedByMe ? Color.FromArgb(255, 244, 97, 133) : Colors.White);
-        LikesText.Text = _detail.LikesCount.ToString("N0");
-        AutomationProperties.SetName(LikeButton, (_detail.LikedByMe ? "برداشتن پسند" : "پسندیدن استوری") + $"، {_detail.LikesCount:N0} پسند");
+        LikesText.Text = _detail.LikesCount.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo(Localization.LanguageTag));
+        AutomationProperties.SetName(LikeButton, (_detail.LikedByMe ? Text("Unlike") : Text("LikeStoryAction")) + ", " + Localization.Format("MusicSurface/LikesCount", _detail.LikesCount));
     }
 
     private void ClearWidgets()
@@ -452,11 +441,11 @@ public sealed partial class StoryViewer : UserControl, IDisposable
                 Content = (widget.Music is null ? "@ " : "♫ ") + title, Tag = widget,
                 CornerRadius = new CornerRadius(8), Padding = new Thickness(8, 4, 8, 4),
                 Background = new SolidColorBrush(Color.FromArgb(220, 24, 32, 48)), Foreground = new SolidColorBrush(Colors.White), FontSize = 12,
-                FontFamily = new FontFamily("/Assets/Fonts/IRANSANS.TTF#IRANSans"),
+                FontFamily = Localization.TextFontFamily, FlowDirection = Localization.FlowDirection, Language = Localization.LanguageTag,
                 RenderTransformOrigin = new global::Windows.Foundation.Point(.5, .5),
                 RenderTransform = new RotateTransform { Angle = double.IsFinite(widget.Rotation) ? widget.Rotation : 0 }
             };
-            AutomationProperties.SetName(button, (widget.Music is null ? "نمایش پروفایل " : "باز کردن آهنگ ") + title);
+            AutomationProperties.SetName(button, (widget.Music is null ? Text("OpenProfilePrefix") : Text("OpenMusicPrefix")) + title);
             button.Click += Widget_Click;
             Canvas.SetZIndex(button, widget.ZIndex);
             WidgetCanvas.Children.Add(button);
@@ -498,30 +487,50 @@ public sealed partial class StoryViewer : UserControl, IDisposable
 
     private async void Widget_Click(object sender, RoutedEventArgs args)
     {
-        if (_closing || _closed || (sender as Button)?.Tag is not StoryWidgetResponse widget || _clientDialog is not null) return;
+        if ((sender as Button)?.Tag is not StoryWidgetResponse widget) return;
+        try { await OpenWidgetAsync(widget, CancellationToken.None); }
+        catch (OperationCanceledException) { }
+        catch (Exception exception) { AppLog.Error("Story tag could not be opened.", exception); }
+    }
+
+    // Shared by pointer/keyboard and MCP. Navigation is awaited through closing,
+    // then checks consent before handing ownership to the destination page.
+    private async Task<bool> OpenWidgetAsync(StoryWidgetResponse widget, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        if (_closing || _closed || _clientDialog is not null) return false;
         if (widget.Music is { } music && _viewModel is not null)
         {
             var navigation = _viewModel.NavigationService;
             await CloseAsync();
+            token.ThrowIfCancellationRequested();
             navigation.InternalNavigate(typeof(MusicsPage), new() { [PageConstants.MUSIC_ID] = music.MusicPublicId });
+            return true;
         }
-        else if (widget.Client is { } client && XamlRoot is not null)
+        if (widget.Client is not { } client || XamlRoot is null) return false;
+        var dialog = _clientDialog = new ContentDialog
         {
-            var request = _request;
-            var dialog = _clientDialog = new ContentDialog
-            {
-                XamlRoot = XamlRoot, Title = $"{client.FirstName} {client.LastName}".Trim(),
-                Content = client.Username ?? string.Empty, CloseButtonText = "بستن", FlowDirection = FlowDirection.RightToLeft,
-                FontFamily = new FontFamily("/Assets/Fonts/IRANSANS.TTF#IRANSans")
-            };
-            UpdatePlaybackState();
-            try { await dialog.ShowAsync(); }
-            catch (Exception exception) { if (!_closed) AppLog.Error("Story profile could not be shown.", exception); }
-            finally
-            {
-                if (ReferenceEquals(_clientDialog, dialog)) _clientDialog = null;
-                if (request is not null && IsCurrent(request)) UpdatePlaybackState();
-            }
+            XamlRoot = XamlRoot, Title = $"{client.FirstName} {client.LastName}".Trim(),
+            Content = client.Username ?? string.Empty, CloseButtonText = Text("Close"),
+            FlowDirection = Localization.FlowDirection, FontFamily = Localization.TextFontFamily,
+            Language = Localization.LanguageTag
+        };
+        UpdatePlaybackState();
+        // The observed task owns the modal until dismissal, without holding an MCP
+        // request open for as long as a person reads the preview.
+        _ = ObserveClientDialogAsync(dialog, _request);
+        return ReferenceEquals(_clientDialog, dialog);
+    }
+
+    private async Task ObserveClientDialogAsync(ContentDialog dialog, StoryRequest? request)
+    {
+        try { await dialog.ShowAsync(); }
+        catch (Exception exception) { if (!_closed) AppLog.Error("Story profile could not be shown.", exception); }
+        finally
+        {
+            dialog.Content = null;
+            if (ReferenceEquals(_clientDialog, dialog)) _clientDialog = null;
+            if (request is not null && IsCurrent(request)) UpdatePlaybackState();
         }
     }
 
@@ -535,9 +544,10 @@ public sealed partial class StoryViewer : UserControl, IDisposable
         LoadingPanel.Visibility = Visibility.Collapsed;
         LoadingRing.IsActive = false;
         PauseButton.IsEnabled = false;
-        ErrorText.Text = message;
+        _errorResourceKey = message;
+        ErrorText.Text = Text(message);
         ErrorPanel.Visibility = Visibility.Visible;
-        AccessibilityAnnouncements.Announce(this, message, "story-error", important: true);
+        AccessibilityAnnouncements.Announce(this, ErrorText.Text, "story-error", important: true);
     }
 
     private void StopPlayback()
@@ -585,6 +595,7 @@ public sealed partial class StoryViewer : UserControl, IDisposable
 
     public void Close()
     {
+        DetachLocalization();
         if (_closed) return;
         BeginClosing();
         _closed = true;
@@ -623,6 +634,7 @@ public sealed partial class StoryViewer : UserControl, IDisposable
     private void Viewer_Loaded(object sender, RoutedEventArgs args)
     {
         if (_closed) return;
+        AttachLocalization();
         if (!ReferenceEquals(_root, XamlRoot))
         {
             if (_root is not null) _root.Changed -= Root_Changed;

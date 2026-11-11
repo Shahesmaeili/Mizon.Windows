@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+<resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+<resheader name="version"><value>2.0</value></resheader>
+<resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+<resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Section_featured" xml:space="preserve"><value>Featured on Mizon</value></data>
+  <data name="Section_spotlight" xml:space="preserve"><value>Artist spotlight</value></data>
+  <data name="Section_stories" xml:space="preserve"><value>Stories</value></data>
+  <data name="Section_genres" xml:space="preserve"><value>Music genres</value></data>
+  <data name="Section_artists" xml:space="preserve"><value>Top artists</value></data>
+  <data name="Section_recommended" xml:space="preserve"><value>Your next discovery</value></data>
+  <data name="Section_recent" xml:space="preserve"><value>Find that feeling again</value></data>
+  <data name="Section_library" xml:space="preserve"><value>Your library</value></data>
+  <data name="Section_weekly" xml:space="preserve"><value>Your weekly rhythm</value></data>
+  <data name="Section_news" xml:space="preserve"><value>Latest news</value></data>
+  <data name="Section_trending" xml:space="preserve"><value>On the rise</value></data>
+  <data name="Section_following" xml:space="preserve"><value>What are your friends listening to?</value></data>
+  <data name="Artist" xml:space="preserve"><value>Artist</value></data>
+  <data name="Demo" xml:space="preserve"><value>Design preview</value></data>
+  <data name="OpenMusic" xml:space="preserve"><value>View music</value></data>
+  <data name="StoryViewer" xml:space="preserve"><value>Story viewer</value></data>
+  <data name="StoryHelp" xml:space="preserve"><value>Use Tab to move between controls, Space to pause or resume, Escape to close, and arrow keys for the previous or next story.</value></data>
+  <data name="PauseResume" xml:space="preserve"><value>Pause / resume</value></data>
+  <data name="PauseStory" xml:space="preserve"><value>Pause story</value></data>
+  <data name="CloseStory" xml:space="preserve"><value>Close story</value></data>
+  <data name="PreparingStory" xml:space="preserve"><value>Preparing story…</value></data>
+  <data name="Retry" xml:space="preserve"><value>Try again</value></data>
+  <data name="RetryStory" xml:space="preserve"><value>Reload story</value></data>
+  <data name="LikeStory" xml:space="preserve"><value>Like story</value></data>
+  <data name="StoryViews" xml:space="preserve"><value>Story view count</value></data>
+  <data name="PreviousStory" xml:space="preserve"><value>Previous story</value></data>
+  <data name="NextStory" xml:space="preserve"><value>Next story</value></data>
+  <data name="FinishStories" xml:space="preserve"><value>Finish stories and close</value></data>
+  <data name="StoryUnavailable" xml:space="preserve"><value>This story is no longer available.</value></data>
+  <data name="StoryDownloadFailed" xml:space="preserve"><value>The story could not be downloaded.</value></data>
+  <data name="StoryOpenFailed" xml:space="preserve"><value>The story could not open. Try again.</value></data>
+  <data name="VideoFailed" xml:space="preserve"><value>The video could not be played.</value></data>
+  <data name="ImageFailed" xml:space="preserve"><value>The image could not be displayed.</value></data>
+  <data name="StoryPaused" xml:space="preserve"><value>Story paused</value></data>
+  <data name="StoryResumed" xml:space="preserve"><value>Story resumed</value></data>
+  <data name="ResumeStory" xml:space="preserve"><value>Resume story</value></data>
+  <data name="Resume" xml:space="preserve"><value>Resume</value></data>
+  <data name="Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="StoryLiked" xml:space="preserve"><value>Story liked</value></data>
+  <data name="LikeRemoved" xml:space="preserve"><value>Like removed</value></data>
+  <data name="Unlike" xml:space="preserve"><value>Remove like</value></data>
+  <data name="LikeStoryAction" xml:space="preserve"><value>Like story</value></data>
+  <data name="OpenProfilePrefix" xml:space="preserve"><value>View profile: </value></data>
+  <data name="OpenMusicPrefix" xml:space="preserve"><value>Open music: </value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="ViewsCount" xml:space="preserve"><value>{0:N0} views</value></data>
+  <data name="LikesCount" xml:space="preserve"><value>{0:N0} likes</value></data>
+  <data name="StoryAnnouncement" xml:space="preserve"><value>Story {0} of {1}, {2}, {3}</value></data>
+  <data name="ProfilePreview" xml:space="preserve"><value>Profile preview</value></data>
+  <data name="Profile" xml:space="preserve"><value>Profile</value></data>
+  <data name="ProfileNamed" xml:space="preserve"><value>Profile: {0}</value></data>
+  <data name="CloseProfile" xml:space="preserve"><value>Close profile</value></data>
+  <data name="CloseProfilePreview" xml:space="preserve"><value>Close profile preview</value></data>
+  <data name="WidgetLoading" xml:space="preserve"><value>Loading content</value></data>
+  <data name="WidgetLoadFailed" xml:space="preserve"><value>Content could not be loaded. Try again.</value></data>
+</root>

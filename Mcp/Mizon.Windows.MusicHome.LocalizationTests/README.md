@@ -1,8 +1,8 @@
 # Music home localization checks
 
 This headless executable links production weekly-rhythm, news, playlist and
-following-activity models, the shared following response DTO and both widget
-resource files. It tests translation/format parity, Persian-English round trips,
+following-activity and shared profile-preview models, the shared following response
+DTO and all paired MusicHome/MusicWidgets/MusicSurface resource files. It tests translation/format parity, Persian-English round trips,
 meaningful labels and Narrator text, preserved IDs/content/selection identities,
 and no thumbnail recreation on language changes. WinUI image primitives and MRT
 resource lookup are replaced at the platform boundary; this does not prove final

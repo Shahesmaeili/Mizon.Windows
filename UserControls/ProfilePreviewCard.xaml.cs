@@ -1,4 +1,4 @@
-using Microsoft.UI.Input;
+﻿using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -37,6 +37,7 @@ public sealed partial class ProfilePreviewCard : UserControl
     {
         if (_keyboardAttached) return;
         _keyboardAttached = true;
+        Localization.PropertyChanged += LanguageChanged;
         KeyDown += Card_KeyDown;
     }
 
@@ -44,6 +45,7 @@ public sealed partial class ProfilePreviewCard : UserControl
     {
         if (!_keyboardAttached || IsLoaded) return;
         _keyboardAttached = false;
+        Localization.PropertyChanged -= LanguageChanged;
         KeyDown -= Card_KeyDown;
     }
 
@@ -81,19 +83,19 @@ public sealed partial class ProfilePreviewCard : UserControl
     public void SetProfile(ProfilePreviewViewModel? profile)
     {
         _profile = profile;
-        var name = string.IsNullOrWhiteSpace(profile?.DisplayName) ? "پروفایل" : profile.DisplayName;
+        var name = string.IsNullOrWhiteSpace(profile?.DisplayName) ? Localization.GetString("MusicSurface/Profile") : profile.DisplayName;
         NameText.Text = profile is null ? string.Empty : name;
         AvatarPicture.DisplayName = NameText.Text;
         AvatarPicture.ProfilePicture = profile?.Avatar;
         BannerImage.Source = profile?.Banner;
-        SetText(SubtitleText, profile?.Subtitle);
+        SetText(SubtitleText, profile?.DisplaySubtitle);
         SetText(UsernameText, string.IsNullOrWhiteSpace(profile?.Username) ? string.Empty : "@" + profile.Username.TrimStart('@'));
         SetText(BioText, profile?.Bio);
-        SetText(DetailText, profile?.Detail);
+        SetText(DetailText, profile?.DisplayDetail);
         DetailPanel.Visibility = DetailText.Visibility;
-        SetText(FooterText, profile?.FooterText);
-        SetText(PrimaryText, profile?.PrimaryActionText);
-        SetText(SecondaryText, profile?.SecondaryActionText);
+        SetText(FooterText, profile?.DisplayFooterText);
+        SetText(PrimaryText, profile?.DisplayPrimaryActionText);
+        SetText(SecondaryText, profile?.DisplaySecondaryActionText);
         PrimaryButton.Visibility = PrimaryText.Visibility;
         SecondaryButton.Visibility = SecondaryText.Visibility;
         UpdateActionLayout(ActualWidth);
@@ -102,7 +104,7 @@ public sealed partial class ProfilePreviewCard : UserControl
             PrimaryIcon.Symbol = profile.PrimaryActionSymbol;
             SecondaryIcon.Symbol = profile.SecondaryActionSymbol;
         }
-        AutomationProperties.SetName(this, profile is null ? "پیش‌نمایش پروفایل" : $"پروفایل {name}");
+        AutomationProperties.SetName(this, profile is null ? Localization.GetString("MusicSurface/ProfilePreview") : Localization.Format("MusicSurface/ProfileNamed", name));
         AutomationProperties.SetName(PrimaryButton, PrimaryText.Text);
         AutomationProperties.SetName(SecondaryButton, SecondaryText.Text);
     }

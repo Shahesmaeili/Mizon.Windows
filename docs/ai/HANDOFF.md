@@ -1,6 +1,36 @@
 # Windows handoff
 
-Updated: 2026-11-10. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
+Updated: 2026-11-11. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
+
+## Music home localization, MCP and artwork — 2026-11-11
+
+The current music home (`MusicPage`, not details `MusicsPage`) now uses live
+Persian/English resources for center cards, five widgets, story viewer and profile/
+demo previews, with language-specific direction/fonts and Narrator labels.
+Language changes preserve decoded images, models, card identity and selection.
+
+Three typed MCP tools expose bounded active-page state, refresh and allowlisted
+actions through the actual page/controls. Music read/control/submit consent is
+independent from all prior grants. Cached offscreen pages cannot be read. Playback
+handoff, cancellation, revocation, redaction and remembered scopes are covered.
+See [MCP music home](../../Mcp/MUSIC_HOME.md) and
+[the task evidence](tasks/2026-11-11-music-home-mcp-localization.md).
+
+Verified: WinUI Debug x64 build; 134 production access-service assertions; 35/35
+SDK/protocol groups; published NativeAOT MCP discovery 1/1; 750 presentation and
+resource checks in both managed and NativeAOT execution. Test `.resw` outputs are
+excluded from the main MRT resource scan, including nested test `bin` folders.
+Existing preview/nullability/trim warnings remain; whole-app NativeAOT publishing,
+live permission approval, visual layout/animation and actual Narrator output were
+not tested. No Windows UI automation or real MCP self-approval was performed.
+
+Related server commit `f939cb1ce2a964eef62a62a094c81ce95de42c20` replaced artwork
+for 12 demo stories and 4 featured slides through a narrow .NET Logic operation.
+Dedicated media IDs prevent stale image caches and preserve original avatars/music
+covers. Canonical server App_Data paths, licensing, checksums, idempotency and actual
+read-operation verification are documented in the server task note. No schema or
+SDK upgrade is required. The new home MCP scopes need the user's own in-app grant
+when the updated application/host is launched; older scopes do not inherit them.
 
 ## .NET 11 migration
 

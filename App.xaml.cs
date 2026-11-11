@@ -206,7 +206,11 @@ public partial class App : Application
         McpAccessService.Current.Start(MainMizonWindow!.DispatcherQueue,
             authentication, new McpAppearanceService(AppearanceSettingsService.Current),
             new McpNavigationService(new AppDeepLinkNavigation(navigationService, localStorageService, authentication)),
-            new McpTaskbarPinService(TaskbarPinService.Current));
+            new McpTaskbarPinService(TaskbarPinService.Current),
+            new McpMusicHomeService(
+                () => navigationService.CurrentMainPage is Pages.HomePage { ViewModel.IsSigningOut: false }
+                    ? navigationService.CurrentInternalPage as IMcpMusicHomePage : null,
+                () => !string.IsNullOrWhiteSpace(localStorageService.GetJwtToken())));
         MainMizonWindow.Closed += MainWindow_Closed;
         // The authenticated shell starts the socket after account validation. Login and
         // Welcome do not need SignalR's connection, transport buffers or reconnect loop.

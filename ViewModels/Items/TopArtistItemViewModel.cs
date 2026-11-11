@@ -1,4 +1,4 @@
-using Mizon.Windows.Services;
+﻿using Mizon.Windows.Services;
 using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Common;
 using System;
@@ -33,7 +33,7 @@ public sealed partial class TopArtistItemViewModel : ViewModelBase
     public string FollowersFullText => Localization.Format("MusicHome/FollowersCount", FollowersCount + (IsFollowed ? 1 : 0));
     public string MonthlyListenersFullText => Localization.Format("MusicHome/ListenersCount", MonthlyListenersCount);
     public string FollowButtonText => Localization.GetString(IsFollowed ? "MusicHome/Following" : "MusicHome/Follow");
-    public string ProfileAutomationName => string.Join(" Â· ", Localization.Format("MusicHome/ArtistProfileName", DisplayName), GenreTitle, FollowersFullText, MonthlyListenersFullText);
+    public string ProfileAutomationName => string.Join(" · ", Localization.Format("MusicHome/ArtistProfileName", DisplayName), GenreTitle, FollowersFullText, MonthlyListenersFullText);
     public string FollowAutomationName => IsFollowed ? Localization.Format("MusicHome/DemoUnfollowName", DisplayName) : Localization.Format("MusicHome/DemoFollowName", DisplayName);
     public FluentIcons.Common.Symbol FollowSymbol => IsFollowed ? FluentIcons.Common.Symbol.Checkmark : FluentIcons.Common.Symbol.PersonAdd;
 
