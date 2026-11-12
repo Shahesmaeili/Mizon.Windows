@@ -1,6 +1,6 @@
 # Mizon: shared AI development workflow
 
-Policy revision: **2026-11-10.2**. Applies to Codex, Claude, Copilot and human contributors.
+Policy revision: **2026-11-12.1**. Applies to Codex, Claude, Copilot and human contributors.
 The user's current request takes precedence. Read the repository's AGENTS.md first.
 
 ## Read before editing
@@ -135,6 +135,59 @@ literal text/newlines. Do not interpolate secrets or arbitrary text into shell c
   Support localization, RTL/Persian fonts, Narrator, responsive layout and cleanup.
 - Dispose event subscriptions, timers, media, animations, buffers and native handles.
   Cancel superseded requests and prevent late callbacks from updating a closed page.
+
+## Xbox controller support is part of interactive features
+
+Standing user requirement, recorded 2026-11-12: **every future new or changed
+interactive Mizon feature/page must also support Xbox controller input**.
+Preserve keyboard, mouse, touch and existing native UI behavior. Coordinate the
+Windows implementation when a task supplies only backend, SDK or database changes;
+keep business behavior in the existing shared operations and services.
+
+This is an incremental, feature-scoped completion requirement, not a claim that
+every existing page already supports controllers or permission for an unrelated
+application-wide rewrite. Record the implemented pages/actions and remaining gaps.
+
+- Reuse native WinUI/Windows input and focus patterns and the same commands,
+  validation and navigation as other input methods. Define context-appropriate
+  mappings: directional controls for navigation, A for the focused action and B
+  for back/cancel. Assign other face buttons, bumpers, triggers and stick controls
+  only where they serve a meaningful available action. Do not require every button
+  on every page, intercept system-reserved Xbox/Share actions or invent dummy work.
+- Provide predictable initial/restored focus, a visible accessible focus indicator,
+  directional navigation and scrolling to the focused item. Handle responsive and
+  RTL layouts, dynamically changing lists, loading/disabled controls and empty/error
+  states without trapping focus or focusing decoration.
+- Keep navigation, menus and dialogs consistent: constrain focus to the active
+  surface, restore it on dismissal, make default/primary actions clear and let
+  back/cancel dismiss the nearest appropriate surface. Preserve confirmation and
+  validation for consequential actions; a held button or focus change must not
+  accidentally repeat a submission, dismiss a new dialog or activate another page.
+- Provide a usable controller text-entry path where text is required, including
+  entering/exiting editing, selection/caret behavior and the supported system
+  keyboard or other explicit text-entry UI. Preserve native password privacy,
+  localization, RTL/Persian fonts and Narrator labels/announcements. Do not report
+  a form as controller-complete if its required text cannot be entered this way.
+- Show localized, accessible controller hints for the current context and enabled
+  actions. Keep prompts consistent with actual mappings and input-mode changes.
+  Honor reduced-motion settings and preserve accepted designs and animations.
+- Capture input only for the active foreground window and active page/dialog.
+  Inactive, minimized, offscreen or disposed surfaces must not consume controller
+  input or keep unbounded polling work alive. Reset held/repeat state on ownership
+  changes, disconnect/reconnect, suspend/resume and closure; prevent stale input
+  from reaching a replacement surface. Dispose subscriptions, timers and handles.
+- Apply suitable stick dead zones, directional stability, press/release edges and
+  bounded repeat timing. Handle controller connection changes and competing input
+  methods without duplicated commands or surprising focus jumps.
+- Add meaningful production-path input/state and lifecycle checks for mappings,
+  focus/action eligibility, held-button/repeat/dead-zone behavior, disconnect,
+  inactive ownership, cancellation/errors and cleanup as applicable. Use synthetic
+  input and data for automated writes. Keep feature MCP state/actions appropriately
+  scoped and permissioned; do not expose arbitrary input injection or bypass consent.
+- Report automated checks separately from actual Xbox hardware, visual focus,
+  dialog/text-entry, Narrator and animation validation. Headless input/MCP checks
+  do not prove the physical controller or rendered UI works. Record unverified
+  cases honestly; Windows UI automation still requires the user's explicit request.
 
 ## MCP is a scoped product surface
 
