@@ -20,6 +20,7 @@ internal static class Program
         await FixedLanguagePicker();
         await OtherSurfaces();
         await FeedbackPreference();
+        await FeedbackOutcomeReadback();
         await Lifecycle();
         Console.WriteLine($"PASS {_checks} source-linked production navigator assertions. Synthetic visual tree only; no Windows UI or controller.");
     }
@@ -194,6 +195,39 @@ internal static class Program
         await page.Apply(McpAuthGamepadAction.DisableFeedback);
         Check(!page.Navigator.GetState().IsFeedbackEnabled && !page.Session.FeedbackEnabled,
             "Explicit feedback disable is reflected by the same production state snapshot");
+    }
+
+    private static async Task FeedbackOutcomeReadback()
+    {
+        using var page = new Fixture();
+        Check(page.Navigator.GetState() is { LastFeedback: null, IsFeedbackPlaying: false },
+            "A new auth navigator has no invented feedback outcome");
+        await page.Apply(McpAuthGamepadAction.EnableFeedback);
+        Check(page.Session.FeedbackCalls == 0, "Enabling feedback is a preference and never requests motor playback");
+        foreach (var (outcome, code) in new[] { (AuthGamepadFeedback.Success, "success"),
+            (AuthGamepadFeedback.Error, "error"), (AuthGamepadFeedback.Validation, "validation") })
+        {
+            Check(page.Navigator.PlayFeedback(outcome) && page.Navigator.GetState() is { IsFeedbackPlaying: true } state
+                && state.LastFeedback == code, "Production navigator maps accepted session outcomes to stable MCP codes");
+        }
+        var calls = page.Session.FeedbackCalls;
+        _ = page.Navigator.GetState(); _ = page.Navigator.GetState();
+        Check(page.Session.FeedbackCalls == calls, "Reading an auth snapshot never replays feedback");
+        VisualTreeHelper.OpenPopups.Add(new Popup());
+        Check(!page.Navigator.PlayFeedback(AuthGamepadFeedback.Error) && page.Session.FeedbackCalls == calls,
+            "An external popup prevents auth feedback from taking over its surface");
+        VisualTreeHelper.OpenPopups.Clear();
+        page.Navigator.SetActive(false);
+        Check(!page.Navigator.PlayFeedback(AuthGamepadFeedback.Error) && page.Session.FeedbackCalls == calls
+            && !page.Navigator.GetState().IsFeedbackPlaying, "Inactive auth surface cannot start feedback and reads stopped state");
+        page.Navigator.SetActive(true);
+        var owner = new object();
+        var ticket = page.Navigator.CreateSuccessFeedback(owner);
+        Check(ticket is not null && page.Navigator.ConsumeSuccessFeedback(ticket, owner)
+            && !page.Navigator.ConsumeSuccessFeedback(ticket, owner) && page.Navigator.GetState().LastFeedback == "success",
+            "Navigator passes the scoped success handoff once and exposes the accepted outcome");
+        page.Dispose();
+        Check(!page.Navigator.PlayFeedback(AuthGamepadFeedback.Error), "Disposed navigator rejects later feedback callbacks");
     }
 
     private sealed class Fixture : IDisposable

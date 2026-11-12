@@ -23,4 +23,6 @@ public sealed record McpAuthGamepadState
     public bool IsKeyboardVisible { get; init; }
     public bool IsHelpVisible { get; init; }
     public bool IsFeedbackEnabled { get; init; }
+    public string? LastFeedback { get; init; }
+    public bool IsFeedbackPlaying { get; init; }
 }

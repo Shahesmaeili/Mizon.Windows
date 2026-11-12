@@ -21,7 +21,8 @@ internal static class AuthGamepadTests
         var state = new McpAuthState { Page = "register", HasPassword = true, Gamepad = new()
         {
             IsControllerConnected = true, IsNavigationActive = true, FocusedFieldId = "register-password",
-            IsKeyboardVisible = true, IsHelpVisible = false, IsFeedbackEnabled = true
+            IsKeyboardVisible = true, IsHelpVisible = false, IsFeedbackEnabled = true,
+            LastFeedback = "success", IsFeedbackPlaying = true
         } };
         var response = new McpResponse { Success = true, Code = "state", State = state };
         using var output = new MemoryStream();
@@ -32,6 +33,20 @@ internal static class AuthGamepadTests
         var json = JsonSerializer.SerializeToElement(response, McpJsonContext.Default.McpResponse);
         SchemaAssertions.Conforms(json, MizonAuthSchemas.Output);
         ProtocolTests.AssertNoSecrets(json);
+        foreach (var outcome in new string?[] { null, "success", "error", "validation" })
+        {
+            var snapshot = response with { State = state with { Gamepad = state.Gamepad! with
+            { LastFeedback = outcome, IsFeedbackPlaying = outcome is not null } } };
+            using var feedbackPipe = new MemoryStream();
+            await McpPipeProtocol.WriteAsync(feedbackPipe, snapshot, McpJsonContext.Default.McpResponse, CancellationToken.None);
+            feedbackPipe.Position = 0;
+            var feedback = await McpPipeProtocol.ReadAsync(feedbackPipe, McpJsonContext.Default.McpResponse, CancellationToken.None);
+            Check.That(feedback?.State?.Gamepad == snapshot.State.Gamepad,
+                "Authentication feedback state changed through generated pipe transport.");
+            var feedbackJson = JsonSerializer.SerializeToElement(snapshot, McpJsonContext.Default.McpResponse);
+            SchemaAssertions.Conforms(feedbackJson, MizonAuthSchemas.Output);
+            ProtocolTests.AssertNoSecrets(feedbackJson);
+        }
         foreach (var invalid in new[] { "1", "\"submit\"", "\"accept\"", "\"menu\"", "\"execute_shell\"" })
         {
             await Check.Throws<JsonException>(() => Task.FromResult(JsonSerializer.Deserialize(
@@ -59,7 +74,9 @@ internal static partial class ConnectionLifecycleTests
             .GetProperty("gamepad").GetProperty("properties");
         Check.That(state.GetProperty("focusedFieldId").GetProperty("description").GetString()!.Contains("never its entered text", StringComparison.Ordinal)
             && state.GetProperty("isFeedbackEnabled").GetProperty("description").GetString()!.Contains("does not start vibration", StringComparison.Ordinal)
-            && state.EnumerateObject().Count() == 6, "Controller read-state is not bounded and self-described.");
+            && state.GetProperty("lastFeedback").GetProperty("description").GetString()!.Contains("success, error or validation", StringComparison.Ordinal)
+            && state.GetProperty("isFeedbackPlaying").GetProperty("description").GetString()!.Contains("not proof of physical motor movement", StringComparison.Ordinal)
+            && state.EnumerateObject().Count() == 8, "Controller read-state is not bounded and self-described.");
         foreach (var input in new[] { "{}", "{\"action\":1}", "{\"action\":null}", "{\"action\":\"accept\"}",
             "{\"action\":\"submit\"}", "{\"action\":\"menu\"}", "{\"action\":\"next\",\"page\":\"home\"}",
             "{\"action\":\"next\",\"key\":\"A\"}", "{\"action\":\"enableFeedback\",\"duration\":1000}",

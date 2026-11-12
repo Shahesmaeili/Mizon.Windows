@@ -13,6 +13,7 @@ internal static partial class Program
             var id = peer.Hello.Connection!.Id;
             var focus = "login-identifier";
             var feedback = false;
+            var isFeedbackPlaying = false;
             var calls = 0;
             host.Auth.Handler = (request, token) =>
             {
@@ -22,10 +23,11 @@ internal static partial class Program
                     calls++;
                     if (request.GamepadAction == McpAuthGamepadAction.Next) focus = "login-password";
                     if (request.GamepadAction == McpAuthGamepadAction.EnableFeedback) feedback = true;
-                    if (request.GamepadAction == McpAuthGamepadAction.DisableFeedback) feedback = false;
+                    if (request.GamepadAction == McpAuthGamepadAction.DisableFeedback) { feedback = false; isFeedbackPlaying = false; }
                 }
                 return Task.FromResult(new McpResponse { Success = true, Code = "state", State = new() { Page = "login",
-                    Gamepad = new() { IsNavigationActive = true, IsControllerConnected = true, FocusedFieldId = focus, IsFeedbackEnabled = feedback } } });
+                    Gamepad = new() { IsNavigationActive = true, IsControllerConnected = true, FocusedFieldId = focus,
+                        IsFeedbackEnabled = feedback, LastFeedback = "validation", IsFeedbackPlaying = isFeedbackPlaying } } });
             };
             Assert((await peer.Call(action)).Code == "approval_required" && calls == 0, "Pending controller action cannot reach the page");
             await host.Ui(() => host.Service.Deny(host.Item(id)));
@@ -33,6 +35,8 @@ internal static partial class Program
             await host.Approve(id, read: true, control: false, submit: false);
             Assert((await peer.Call("get_state")).State?.Gamepad?.FocusedFieldId == "login-identifier",
                 "Authentication read returns bounded controller state through the production dispatcher");
+            Assert((await peer.Call("get_state")).State?.Gamepad is { LastFeedback: "validation", IsFeedbackPlaying: false },
+                "Authentication read includes bounded feedback outcome and playing state without requesting vibration");
             Assert(!(await peer.Call(action)).Success && calls == 0, "Authentication read cannot move controller focus");
             Assert(!(await peer.Call(action with { GamepadAction = McpAuthGamepadAction.EnableFeedback })).Success && !feedback,
                 "Authentication read cannot enable optional controller feedback");
@@ -40,7 +44,9 @@ internal static partial class Program
             await host.Approve(id, read: false, control: true, submit: false);
             Assert((await peer.Call(action)) is { Success: true, State: null } && calls == 1,
                 "Control-only controller action reaches the shared auth adapter and redacts every auth state field");
-            Assert(!(await peer.Call("submit")).Success && calls == 1, "Controller control grant does not authorize form submission");
+            Assert((await peer.Call(action with { GamepadAction = McpAuthGamepadAction.EnableFeedback })) is { Success: true, State: null }
+                && feedback, "Control-only feedback changes redact last outcome and active vibration state as well");
+            Assert(!(await peer.Call("submit")).Success && calls == 2, "Controller control grant does not authorize form submission");
             await host.Ui(() => host.Service.RevokeAsync(host.Item(id)));
             await host.Approve(id, read: true, control: true, submit: false);
             Assert((await peer.Call(action)).State?.Gamepad?.FocusedFieldId == "login-password",
@@ -49,8 +55,13 @@ internal static partial class Program
             Assert((await peer.Call(enableFeedback)).State?.Gamepad?.IsFeedbackEnabled == true
                 && (await peer.Call(enableFeedback)).State?.Gamepad?.IsFeedbackEnabled == true,
                 "Explicit feedback enable survives transport without becoming a toggle");
+            isFeedbackPlaying = true; // Synthetic completed authentication; enable itself never starts a pattern.
+            Assert((await peer.Call("get_state")).State?.Gamepad is { LastFeedback: "validation", IsFeedbackPlaying: true },
+                "Readback transports feedback progress through real access dispatch and generated JSON without replaying it");
             Assert((await peer.Call(action with { GamepadAction = McpAuthGamepadAction.DisableFeedback })).State?.Gamepad?.IsFeedbackEnabled == false,
                 "Explicit feedback disable returns the updated session preference under read consent");
+            Assert((await peer.Call("get_state")).State?.Gamepad is { LastFeedback: "validation", IsFeedbackPlaying: false },
+                "Stopping feedback preserves its last outcome but reports no active playback");
 
             host.Auth.Handler = (_, _) => throw new InvalidOperationException("synthetic private controller error");
             var failed = await peer.Call(action);

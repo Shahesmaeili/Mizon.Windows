@@ -4,7 +4,11 @@ The authentication page's controller navigation shares the existing authenticati
 permission group. `mizon_get_auth_state` reports `state.gamepad` only for the active,
 loaded Login, Registration or Welcome page and only with authentication read
 consent. It contains controller-connected/navigation-active flags, the stable
-focused control ID, keyboard/help visibility and `isFeedbackEnabled`. It never contains entered
+focused control ID, keyboard/help visibility, `isFeedbackEnabled`, `lastFeedback`
+and `isFeedbackPlaying`. `lastFeedback` is `success`, `error`, `validation` or
+null before accepted result feedback. Playing state describes the session's
+bounded output, not proof that physical motors moved. Reads never replay feedback.
+It never contains entered
 keyboard text, password contents or length, device identifiers or raw input.
 
 `mizon_auth_gamepad_action` requires authentication control consent and accepts
@@ -12,8 +16,9 @@ exactly one `action`: `next`, `previous`, `up`, `down`, `left`, `right`,
 `openKeyboard`, `closeKeyboard`, `showHelp`, `hideHelp`, `enableFeedback` or
 `disableFeedback`. Feedback actions explicitly set the optional page-session
 feedback preference; they do not toggle it, start vibration or accept raw motor
-values/durations. Feedback is off by default and only accompanies later physical
-controller actions when enabled. The tool delegates to the
+values/durations. Feedback is off by default. When enabled, it accompanies later
+physical controller actions and actual login/registration outcomes on the active
+page with a connected controller. The tool delegates to the
 active page's controller navigation flow. Directions move focus within the page
 or its controller keyboard; they do not activate a key or button. The tool does
 not simulate OS input, accept an arbitrary key, navigate another page, enter text,
@@ -34,6 +39,18 @@ unloading the page invalidates a late result. The existing access dispatcher
 serializes mutations, cancels revoked authorization generations, suppresses stale
 state, sanitizes errors and releases operation ownership.
 
+Submission feedback comes from a completed authentication attempt, never from
+changes to translated error text or property notifications. Repeated backend
+errors each produce one outcome per actual request. Disabled/busy submits and
+cancelled/abandoned requests are silent. Registration validation uses its own
+brief pattern; network/backend failure uses error; a committed token uses success.
+Successful navigation carries an owner-bound, expiring, single-use feedback
+handoff to Welcome so unloading Login does not cut off the new success pattern.
+The handoff does not authorize a new submit or store credentials. Feedback stops
+on disable, deactivation, removal/disposal and is not replayed on reactivation.
+No MCP arbitrary-vibration tool is exposed: form submission still uses the
+separately permitted shared authentication operation.
+
 Headless verification:
 
 ```powershell
@@ -41,6 +58,7 @@ dotnet run --project Mcp/Mizon.Windows.Mcp.Tests -c Release -- --isolated
 dotnet run --project Mcp/Mizon.Windows.Mcp.AccessTests -c Release
 dotnet run --project Mcp/Mizon.Windows.Mcp.AuthTests -c Release
 dotnet run --project Mcp/Mizon.Windows.Gamepad.NavigationTests -c Release
+dotnet run --project Mcp/Mizon.Windows.AuthOutcome.Tests -c Release
 ```
 
 The SDK suite tests public schemas, generated JSON, all bounded actions and
@@ -59,3 +77,12 @@ The navigator suite source-links the production focus/overlay coordinator agains
 minimal visual-tree doubles. It checks hidden/disabled ancestry, modal ownership,
 help/keyboard focus bounds and restoration, stale keyboard targets, explicit
 feedback state, no implicit control activation, cancellation and disposal.
+
+The outcome suite links the production LoginPageViewModel and completion-event
+contract against synthetic API/storage/navigation boundaries. It covers successful
+login/registration and ticket ordering, invalid registrations, repeated identical
+backend errors, network failures, missing success tokens, concurrent-submit
+suppression, pre/in-flight/late cancellation, observer exceptions and no outcome
+on language/credential changes. The same executable is tested as native x64 AOT.
+These tests do not validate physical vibration strength, comfort or controller
+drivers; those remain hardware checks.

@@ -198,6 +198,13 @@ namespace Mizon.Windows.Services
 }
 namespace Mizon.Windows.Services.Gamepad
 {
+    public enum AuthGamepadFeedback { Success, Error, Validation }
+    public sealed class AuthGamepadSuccessFeedback(object owner) : IDisposable
+    {
+        public object Owner { get; } = owner;
+        public bool Consumed { get; set; }
+        public void Dispose() => Consumed = true;
+    }
     public sealed class AuthGamepadSession : IDisposable
     {
         private readonly Action<AuthGamepadAction> _action;
@@ -206,12 +213,27 @@ namespace Mizon.Windows.Services.Gamepad
         public AuthGamepadState State { get; private set; } = new(1, false, false);
         public event EventHandler<AuthGamepadState>? StateChanged;
         public bool FeedbackEnabled { get; set; }
+        public bool IsFeedbackPlaying { get; private set; }
+        public AuthGamepadFeedback? LastFeedback { get; private set; }
+        public int FeedbackCalls { get; private set; }
         public bool Disposed { get; private set; }
-        public void SetActive(bool active) { State = State with { IsActive = active }; StateChanged?.Invoke(this, State); }
+        public bool PlayFeedback(AuthGamepadFeedback feedback)
+        {
+            FeedbackCalls++;
+            if (!State.IsActive || !FeedbackEnabled || Disposed) return false;
+            LastFeedback = feedback; IsFeedbackPlaying = true; return true;
+        }
+        public AuthGamepadSuccessFeedback? CreateSuccessFeedback(object owner) => FeedbackEnabled && State.IsActive ? new(owner) : null;
+        public bool ConsumeSuccessFeedback(AuthGamepadSuccessFeedback ticket, object owner)
+        {
+            if (ticket.Consumed || !ReferenceEquals(ticket.Owner, owner)) return false;
+            ticket.Consumed = true; FeedbackEnabled = true; return PlayFeedback(AuthGamepadFeedback.Success);
+        }
+        public void SetActive(bool active) { State = State with { IsActive = active }; if (!active) IsFeedbackPlaying = false; StateChanged?.Invoke(this, State); }
         public void NotifyPointerOrKeyboardInput() { }
         public void Emit(AuthGamepadAction action) => _action(action);
         public void Disconnect() { State = new(0, false, false); StateChanged?.Invoke(this, State); }
-        public void Dispose() => Disposed = true;
+        public void Dispose() { Disposed = true; IsFeedbackPlaying = false; }
     }
 }
 namespace Mizon.Windows.UserControls
