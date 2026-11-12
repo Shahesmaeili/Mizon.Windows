@@ -1,5 +1,12 @@
 # MCP protocol checks
 
+Authentication controller checks exercise the bounded action enum through the
+actual SDK/stdio/isolated pipe and source-generated JSON. They reject accept,
+menu, submit, raw keys and page targets before creating a connection, describe
+the optional controller snapshot, and preserve the existing read/control/submit
+separation. See [AUTH_GAMEPAD.md](../AUTH_GAMEPAD.md) and the production
+[authentication adapter fixtures](../Mizon.Windows.Mcp.AuthTests/README.md).
+
 Navigation result checks compile-link the same pure deep-link result contract as
 the app/taskbar. They validate version/correlation, required fields, duplicate and
 unknown properties, UTF-8 size limits and opened/completed semantics. The generated

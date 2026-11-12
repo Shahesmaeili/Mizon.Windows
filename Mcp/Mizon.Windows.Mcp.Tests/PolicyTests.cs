@@ -5,7 +5,7 @@ namespace Mizon.Windows.Mcp.Tests;
 internal static class PolicyTests
 {
     private static readonly string[] PrivateOperations =
-        ["get_state", "open_page", "set_form", "clear_form", "retry_welcome", "set_language", "submit"];
+        ["get_state", "open_page", "set_form", "clear_form", "retry_welcome", "set_language", "auth_gamepad_action", "submit"];
 
     public static Task Pending()
     {

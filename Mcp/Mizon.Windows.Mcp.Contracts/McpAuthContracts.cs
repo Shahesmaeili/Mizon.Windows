@@ -13,6 +13,7 @@ public sealed record McpRequest
     public string? Page { get; init; }
     public string? Language { get; init; }
     public McpAuthForm? Form { get; init; }
+    public McpAuthGamepadAction? GamepadAction { get; init; }
     public McpAppearancePreferences? Appearance { get; init; }
     public McpNavigationRequest? Navigation { get; init; }
     public McpMusicHomeRequest? MusicHome { get; init; }
@@ -77,6 +78,7 @@ public sealed record McpConnectionStatus
 
 public sealed record McpAuthState
 {
+    public McpAuthGamepadState? Gamepad { get; init; }
     public string Page { get; init; } = "unavailable";
     public string Language { get; init; } = "fa-IR";
     public bool HasSession { get; init; }

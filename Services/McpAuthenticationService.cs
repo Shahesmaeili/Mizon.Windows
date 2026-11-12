@@ -47,6 +47,7 @@ internal sealed class McpAuthenticationService : IDisposable
                 "clear_form" => ClearForm(request.Page),
                 "retry_welcome" => await RetryWelcomeAsync(cancellationToken),
                 "set_language" => SetLanguage(request.Language),
+                "auth_gamepad_action" => await ApplyGamepadActionAsync(request.GamepadAction, cancellationToken),
                 _ => Failure("unknown_operation", "This operation is not available.")
             };
         }
@@ -197,6 +198,28 @@ internal sealed class McpAuthenticationService : IDisposable
         return failure is null;
     }
 
+    private async Task<McpResponse> ApplyGamepadActionAsync(McpAuthGamepadAction? action, CancellationToken cancellationToken)
+    {
+        if (action is null || !Enum.IsDefined(action.Value))
+            return Failure("invalid_action", "Choose a listed authentication controller action.");
+        var page = _navigation.CurrentMainPage;
+        if (page is not LoginPage { IsLoaded: true } and not WelcomePage { IsLoaded: true })
+            return Failure("page_mismatch", "Welcome, Login or Registration must be the active loaded page.");
+        if (page is LoginPage { ViewModel.ControlsIsEnabled: false }
+            || page is WelcomePage { IsMcpInitializing: true })
+            return Failure("busy", "The authentication page is busy.");
+
+        var applied = page is LoginPage login
+            ? await login.ApplyGamepadActionAsync(action.Value, cancellationToken)
+            : await ((WelcomePage)page).ApplyGamepadActionAsync(action.Value, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!ReferenceEquals(_navigation.CurrentMainPage, page) || !((FrameworkElement)page).IsLoaded)
+            return Failure("page_changed", "The authentication page changed before the action completed.");
+        return applied
+            ? Success("gamepad_action_applied", "The authentication controller action was applied without activating or submitting a control.")
+            : Failure("action_unavailable", "This controller action is not available in the current authentication page state.");
+    }
+
     private static bool HasFields(McpAuthForm form) => form.Identifier is not null || form.Password is not null
         || form.FirstName is not null || form.LastName is not null || form.Username is not null
         || form.Email is not null || form.ConfirmPassword is not null;
@@ -225,6 +248,7 @@ internal sealed class McpAuthenticationService : IDisposable
             return state with
             {
                 Page = model.IsRegistrationMode ? "register" : "login",
+                Gamepad = login.IsLoaded ? login.GetGamepadState() : null,
                 IsBusy = model.ShowProgressBar,
                 CanSubmit = login.IsLoaded && !_hasSession && model.LoginButtonIsEnabled,
                 ControlsEnabled = login.IsLoaded && model.ControlsIsEnabled,
@@ -246,6 +270,7 @@ internal sealed class McpAuthenticationService : IDisposable
             return state with
             {
                 Page = "welcome",
+                Gamepad = welcome.IsLoaded ? welcome.GetGamepadState() : null,
                 IsBusy = welcome.IsMcpInitializing,
                 ControlsEnabled = welcome.IsLoaded && !welcome.IsMcpInitializing,
                 HasError = model.StageCode == "connection_error",

@@ -21,6 +21,7 @@ internal static partial class Program
             await FailedApprovalStaysPending();
             await FailedRevocationStopsLiveAccess();
             await LegacyConnectionDoesNotPersist();
+            await AuthGamepadScopesAndLifetime();
             await AppearanceScopesAndState();
             await AppearanceRevocationAndRestart();
             await NavigationScopesAndRoutes();

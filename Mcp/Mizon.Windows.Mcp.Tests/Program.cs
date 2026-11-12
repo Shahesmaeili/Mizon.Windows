@@ -21,6 +21,7 @@ internal static class Program
         (string Name, Func<Task> Run)[] connectionTests =
         [
             ("SDK discovery in multiple workers creates no app sessions", ConnectionLifecycleTests.DiscoveryCreatesNoConnection),
+            ("SDK authentication controller actions are bounded, typed and consent gated", ConnectionLifecycleTests.AuthGamepadTypedDispatch),
             ("SDK appearance requests preserve typed preferences and require consent", ConnectionLifecycleTests.AppearanceTypedDispatch),
             ("SDK navigation accepts only declared destinations and preserves typed IDs", ConnectionLifecycleTests.NavigationTypedDispatch),
             ("SDK navigation returns invocation receipts and additional data without changing outcomes", ConnectionLifecycleTests.NavigationReceiptDispatch),
@@ -48,6 +49,7 @@ internal static class Program
         [
             ("Pending consent blocks every private operation", PolicyTests.Pending),
             ("Read, control and submit scopes are independent", PolicyTests.Scopes),
+            ("Authentication controller snapshots and enum actions survive generated framing", AuthGamepadTests.RoundTrip),
             ("Deny, revoke and disconnect clear grants", PolicyTests.Revocation),
             ("Music home scopes and consequential submissions are independent", MusicHomeContractTests.Permissions),
             ("Presence consent is independent and source-generated snapshots carry no private IDs", PresenceTests.ScopeAndSnapshot),
