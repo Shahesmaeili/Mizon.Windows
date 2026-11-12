@@ -51,20 +51,6 @@ public sealed partial class AuthGamepadKeyboard : UserControl, IDisposable
             _keyGrid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         for (var row = 0; row < 7; row++)
             _keyGrid.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        for (var index = 0; index < CharacterKeyCount; index++)
-            AddKey(KeyCommand.Character, index / 10, index % 10);
-
-        AddKey(KeyCommand.Language, 5, 0, 2);
-        AddKey(KeyCommand.Layout, 5, 2, 2);
-        AddKey(KeyCommand.Case, 5, 4, 2);
-        AddKey(KeyCommand.Backspace, 5, 6, 2);
-        AddKey(KeyCommand.Done, 5, 8, 2);
-        AddKey(KeyCommand.CaretPrevious, 6, 0);
-        AddKey(KeyCommand.CaretNext, 6, 1);
-        AddKey(KeyCommand.SelectAll, 6, 2, 2);
-        AddKey(KeyCommand.Space, 6, 4, 4);
-        AddKey(KeyCommand.Close, 6, 8, 2);
-
         var content = new StackPanel { Spacing = 8, Padding = new Thickness(12) };
         content.Children.Add(_title);
         content.Children.Add(_help);
@@ -94,6 +80,27 @@ public sealed partial class AuthGamepadKeyboard : UserControl, IDisposable
         Unloaded += OnUnloaded;
     }
 
+    // Authentication startup does not allocate sixty hidden key controls.
+    // Realize them once when controller text entry is actually requested.
+    private void EnsureKeys()
+    {
+        if (_keys.Count != 0) return;
+        for (var index = 0; index < CharacterKeyCount; index++)
+            AddKey(KeyCommand.Character, index / 10, index % 10);
+
+        AddKey(KeyCommand.Language, 5, 0, 2);
+        AddKey(KeyCommand.Layout, 5, 2, 2);
+        AddKey(KeyCommand.Case, 5, 4, 2);
+        AddKey(KeyCommand.Backspace, 5, 6, 2);
+        AddKey(KeyCommand.Done, 5, 8, 2);
+        AddKey(KeyCommand.CaretPrevious, 6, 0);
+        AddKey(KeyCommand.CaretNext, 6, 1);
+        AddKey(KeyCommand.SelectAll, 6, 2, 2);
+        AddKey(KeyCommand.Space, 6, 4, 4);
+        AddKey(KeyCommand.Close, 6, 8, 2);
+
+    }
+
     public bool IsOpen => _target is not null && !_disposed;
     internal Control? EditingTarget => IsOpen ? _target : null;
     public event EventHandler? Closed;
@@ -101,6 +108,7 @@ public sealed partial class AuthGamepadKeyboard : UserControl, IDisposable
     public void Open(Control target)
     {
         if (_disposed || !CanEdit(target)) return;
+        EnsureKeys();
         if (IsOpen) Close(false);
         _target = target;
         if (target is PasswordBox passwordBox) passwordBox.PasswordRevealMode = PasswordRevealMode.Hidden;

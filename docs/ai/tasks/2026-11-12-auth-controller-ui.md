@@ -41,7 +41,8 @@ New/changed interactive work must include meaningful Xbox controller support.
 Existing page design, animated card flip, language selector, form validation and
 scene selection remain. Action/scene buttons share their existing animation paths
 with keyboard focus; actual scene selection uses the same click operation.
-The compact keyboard has equal-width keys and bounded scrolling on short windows.
+Keyboard keys are created lazily on the first edit, so an ordinary sign-in page
+does not allocate sixty hidden buttons. The compact keyboard has equal-width keys and bounded scrolling on short windows.
 Hints, help and accessible key names follow the current fa/en app language and
 font. Theme resources track light/dark/high contrast; motion honors Windows settings.
 
