@@ -106,4 +106,38 @@
   <data name="LanguageChangedAnnouncement" xml:space="preserve"><value>زبان برنامه فارسی شد.</value></data>
   <data name="ClearInputName" xml:space="preserve"><value>پاک کردن متن</value></data>
   <data name="ClearInputHelp" xml:space="preserve"><value>متن این کادر را پاک می‌کند.</value></data>
+  <data name="GamepadHints" xml:space="preserve"><value>A انتخاب / تایپ   B بازگشت   LB/RB ورود و ثبت‌نام   View راهنما</value></data>
+  <data name="GamepadControls" xml:space="preserve"><value>کنترل با دستهٔ ایکس‌باکس</value></data>
+  <data name="GamepadFeedback" xml:space="preserve"><value>لرزش کوتاه هنگام کار با دسته</value></data>
+  <data name="GamepadHelp" xml:space="preserve"><value>جهت‌ها یا استیک چپ: جابه‌جایی انتخاب
+A: انتخاب یا باز کردن صفحه‌کلید • B: بازگشت
+X: پاک کردن ورودی • Y: نمایش یا پنهان کردن گذرواژهٔ انتخاب‌شده
+LB / RB: ورود و ثبت‌نام • LT / RT: ورودی قبلی و بعدی
+Menu: ارسال فرم • View: راهنما
+فشردن استیک چپ: دکمهٔ اصلی • فشردن استیک راست: اولین ورودی
+استیک راست: اسکرول • Xbox و Share: کنترل خود ویندوز</value></data>
+  <data name="GamepadKeyboardTitle" xml:space="preserve"><value>صفحه‌کلید دسته</value></data>
+  <data name="GamepadKeyboardHelp" xml:space="preserve"><value>A تایپ • X حذف • Y حروف بزرگ • LB حروف • RB نمادها • LT/RT مکان‌نما • View زبان • Menu پایان • B بستن</value></data>
+  <data name="GamepadKeyboardPasswordHelp" xml:space="preserve"><value>گذرواژه در همین ورودی محفوظ است؛ ویرایش با دسته از انتهای آن انجام می‌شود.</value></data>
+  <data name="GamepadKeyboardLetters" xml:space="preserve"><value>حروف</value></data>
+  <data name="GamepadKeyboardSymbols" xml:space="preserve"><value>اعداد و نمادها</value></data>
+  <data name="GamepadKeyboardUppercase" xml:space="preserve"><value>حروف بزرگ</value></data>
+  <data name="GamepadKeyboardLowercase" xml:space="preserve"><value>حروف کوچک</value></data>
+  <data name="GamepadKeyboardBackspace" xml:space="preserve"><value>حذف آخرین نویسه</value></data>
+  <data name="GamepadKeyboardSpace" xml:space="preserve"><value>فاصله</value></data>
+  <data name="GamepadKeyboardCaretPrevious" xml:space="preserve"><value>مکان‌نمای قبلی</value></data>
+  <data name="GamepadKeyboardCaretNext" xml:space="preserve"><value>مکان‌نمای بعدی</value></data>
+  <data name="GamepadKeyboardSelectAll" xml:space="preserve"><value>انتخاب همه</value></data>
+  <data name="GamepadKeyboardDone" xml:space="preserve"><value>پایان تایپ</value></data>
+  <data name="GamepadKeyboardClose" xml:space="preserve"><value>بستن صفحه‌کلید</value></data>
+  <data name="GamepadKeyboardLanguageEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="GamepadKeyboardLanguagePersian" xml:space="preserve"><value>فارسی</value></data>
+  <data name="GamepadKeyboardSwitchLanguageHelp" xml:space="preserve"><value>فقط زبان صفحه‌کلید تغییر می‌کند.</value></data>
+  <data name="GamepadWelcomeHints" xml:space="preserve"><value>A انتخاب • B ورود به حساب • Menu تلاش مجدد • View راهنما</value></data>
+  <data name="GamepadWelcomeHelp" xml:space="preserve"><value>جهت‌ها یا استیک چپ: انتخاب کنترل‌ها • A: انتخاب
+B یا LB: ورود به حساب • Menu: تلاش مجدد
+فشردن استیک چپ: دکمهٔ تلاش مجدد • RB یا فشردن استیک راست: دکمهٔ ورود
+LT / RT: کنترل قبلی و بعدی • استیک راست: اسکرول
+View: راهنما • Xbox و Share: کنترل خود ویندوز
+عملیات ورود و تلاش مجدد پس از پایان آماده‌سازی و هنگام نمایش خطا فعال‌اند.</value></data>
 </root>

@@ -4,7 +4,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Windows.Gaming.Input;
-using Windows.System;
+using VirtualKey = Windows.System.VirtualKey;
 using NativeGamepad = Windows.Gaming.Input.Gamepad;
 
 namespace Mizon.Windows.Services.Gamepad;

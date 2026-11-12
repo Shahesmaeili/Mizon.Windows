@@ -28,6 +28,9 @@ public sealed partial class AuthSceneSelector : ToggleButton
         ProtectedCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Hand);
         foreach (var property in new[] { IsPointerOverProperty, IsPressedProperty, IsEnabledProperty, IsCheckedProperty })
             RegisterPropertyChangedCallback(property, (_, _) => UpdateMotion());
+        UseSystemFocusVisuals = true;
+        GotFocus += (_, _) => UpdateMotion();
+        LostFocus += (_, _) => UpdateMotion();
         Loaded += SelectorLoaded;
         Unloaded += SelectorUnloaded;
     }
@@ -69,6 +72,13 @@ public sealed partial class AuthSceneSelector : ToggleButton
     {
         if (IsChecked != true) base.OnToggle();
     }
+
+    internal void InvokeFromGamepad()
+    {
+        if (IsEnabled && IsLoaded) GamepadInvoked?.Invoke(this, EventArgs.Empty);
+    }
+
+    public event EventHandler? GamepadInvoked;
 
     protected override void OnApplyTemplate()
     {
@@ -115,7 +125,7 @@ public sealed partial class AuthSceneSelector : ToggleButton
     private void UpdateMotion(bool animate = true)
     {
         if (_motion is null) return;
-        var over = IsEnabled && IsPointerOver;
+        var over = IsEnabled && (IsPointerOver || FocusState == FocusState.Keyboard);
         var pressed = IsEnabled && IsPressed;
         var selected = IsChecked == true;
         var highContrast = ReadHighContrast();

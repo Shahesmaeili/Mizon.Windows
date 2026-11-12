@@ -8,7 +8,7 @@
       Language="{x:Bind Localization.LanguageTag, Mode=OneWay}"
       AutomationProperties.Name="{x:Bind Localization.GetString('AuthPageName', Localization.Revision), Mode=OneWay}"
       AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthPageHelp', Localization.Revision), Mode=OneWay}">
-    <Grid Background="Transparent">
+    <Grid x:Name="LoginRoot" Background="Transparent" XYFocusKeyboardNavigation="Enabled">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="LoginLayoutStates">
                 <VisualState x:Name="CompactLogin">

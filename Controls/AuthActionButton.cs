@@ -39,6 +39,9 @@ public sealed partial class AuthActionButton : Button
     {
         foreach (var property in new[] { IsPointerOverProperty, IsPressedProperty, IsEnabledProperty })
             RegisterPropertyChangedCallback(property, (_, _) => Animate());
+        UseSystemFocusVisuals = true;
+        GotFocus += (_, _) => Animate();
+        LostFocus += (_, _) => Animate();
         Loaded += (_, _) =>
         {
             if (_loaded) return;
@@ -70,6 +73,24 @@ public sealed partial class AuthActionButton : Button
         ApplyAnimationTarget();
     }
 
+    internal void InvokeFromGamepad()
+    {
+        if (!IsEnabled || !IsLoaded) return;
+        if (_visual is not null && _settings.AnimationsEnabled)
+        {
+            using var press = _visual.Compositor.CreateVector3KeyFrameAnimation();
+            press.InsertExpressionKeyFrame(0, "this.StartingValue");
+            press.InsertKeyFrame(.35f, new Vector3((float)PressedScale, (float)PressedScale, 1));
+            press.InsertKeyFrame(1, new Vector3((float)HoverScale, (float)HoverScale, 1));
+            press.Duration = TimeSpan.FromMilliseconds(180);
+            _visual.StartAnimation("Scale", press);
+        }
+        var peer = Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer.FromElement(this)
+            ?? Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer.CreatePeerForElement(this);
+        if (peer?.GetPattern(Microsoft.UI.Xaml.Automation.Peers.PatternInterface.Invoke)
+            is Microsoft.UI.Xaml.Automation.Provider.IInvokeProvider invoke) invoke.Invoke();
+    }
+
     private void ApplyAnimationTarget()
     {
         if (_surface is not null) _surface.SizeChanged -= SizeChanged;
@@ -95,10 +116,10 @@ public sealed partial class AuthActionButton : Button
     {
         if (_visual is null) return;
         animate &= _loaded && _settings.AnimationsEnabled;
-        var requestedScale = IsEnabled && IsPressed ? PressedScale : IsEnabled && IsPointerOver ? HoverScale : 1;
+        var requestedScale = IsEnabled && IsPressed ? PressedScale : IsEnabled && (IsPointerOver || FocusState == FocusState.Keyboard) ? HoverScale : 1;
         var scale = double.IsFinite(requestedScale) ? (float)Math.Clamp(requestedScale, .8, 1.15) : 1f;
         var opacity = IsEnabled ? 1f : .45f;
-        var light = !IsEnabled ? 0 : IsPressed ? .04f : IsPointerOver ? .16f : 0;
+        var light = !IsEnabled ? 0 : IsPressed ? .04f : (IsPointerOver || FocusState == FocusState.Keyboard) ? .16f : 0;
         if (!animate)
         {
             Stop(); _visual.Scale = new Vector3(scale, scale, 1);

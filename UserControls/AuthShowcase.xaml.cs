@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Services;
+using Mizon.Windows.Controls;
 using System;
 using System.ComponentModel;
 using System.Numerics;
@@ -144,6 +145,11 @@ public sealed partial class AuthShowcase : UserControl
     {
         _rotationTimer.Stop();
         await ChangeSceneAsync((_sceneIndex + 1) % 3);
+    }
+
+    private void Scene_GamepadInvoked(object? sender, EventArgs args)
+    {
+        if (sender is AuthSceneSelector selector) Scene_Click(selector, new RoutedEventArgs());
     }
 
     private async void Scene_Click(object sender, RoutedEventArgs e)

@@ -124,7 +124,7 @@
                     </StackPanel>
                 </StackPanel>
                         <local:AuthErrorCard IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Title="{x:Bind Localization.GetString('AuthLoginErrorTitle', Localization.Revision), Mode=OneWay}" />
-                        <controls:AuthActionButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Click="SubmitButton_Click" Style="{StaticResource AuthPrimaryAction}" IsEnabled="{x:Bind ViewModel.LoginButtonIsEnabled, Mode=OneWay}" AutomationProperties.Name="{x:Bind Localization.GetString('AuthLoginSubmit', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthLoginSubmitHelp', Localization.Revision), Mode=OneWay}">
+                        <controls:AuthActionButton x:Name="LoginSubmitButton" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Click="SubmitButton_Click" Style="{StaticResource AuthPrimaryAction}" IsEnabled="{x:Bind ViewModel.LoginButtonIsEnabled, Mode=OneWay}" AutomationProperties.Name="{x:Bind Localization.GetString('AuthLoginSubmit', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthLoginSubmitHelp', Localization.Revision), Mode=OneWay}">
                             <Grid ColumnSpacing="10" FlowDirection="LeftToRight">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="20" /><ColumnDefinition Width="*" /><ColumnDefinition Width="20" /></Grid.ColumnDefinitions>
                                 <icon:SymbolIcon Symbol="ArrowLeft" FontSize="17" VerticalAlignment="Center" />
@@ -225,7 +225,7 @@
                     </StackPanel>
                 </StackPanel>
                         <local:AuthErrorCard IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Title="{x:Bind Localization.GetString('AuthRegisterErrorTitle', Localization.Revision), Mode=OneWay}" />
-                        <controls:AuthActionButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Click="SubmitButton_Click" Style="{StaticResource AuthPrimaryAction}" IsEnabled="{x:Bind ViewModel.LoginButtonIsEnabled, Mode=OneWay}" AutomationProperties.Name="{x:Bind Localization.GetString('AuthRegisterSubmit', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthRegisterSubmitHelp', Localization.Revision), Mode=OneWay}">
+                        <controls:AuthActionButton x:Name="RegisterSubmitButton" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Click="SubmitButton_Click" Style="{StaticResource AuthPrimaryAction}" IsEnabled="{x:Bind ViewModel.LoginButtonIsEnabled, Mode=OneWay}" AutomationProperties.Name="{x:Bind Localization.GetString('AuthRegisterSubmit', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthRegisterSubmitHelp', Localization.Revision), Mode=OneWay}">
                             <Grid ColumnSpacing="10" FlowDirection="LeftToRight">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="20" /><ColumnDefinition Width="*" /><ColumnDefinition Width="20" /></Grid.ColumnDefinitions>
                                 <icon:SymbolIcon Symbol="ArrowLeft" FontSize="17" VerticalAlignment="Center" />

@@ -106,4 +106,38 @@
   <data name="LanguageChangedAnnouncement" xml:space="preserve"><value>App language changed to English.</value></data>
   <data name="ClearInputName" xml:space="preserve"><value>Clear text</value></data>
   <data name="ClearInputHelp" xml:space="preserve"><value>Clears this field.</value></data>
+  <data name="GamepadHints" xml:space="preserve"><value>A Select / type   B Back   LB/RB Sign in / register   View Help</value></data>
+  <data name="GamepadControls" xml:space="preserve"><value>Xbox controller controls</value></data>
+  <data name="GamepadFeedback" xml:space="preserve"><value>Brief controller vibration</value></data>
+  <data name="GamepadHelp" xml:space="preserve"><value>D-pad / left stick: move focus
+A: select or open keyboard • B: back
+X: clear input • Y: show / hide the focused password
+LB / RB: sign in / register • LT / RT: previous / next field
+Menu: submit form • View: help
+Left stick click: primary action • right stick click: first field
+Right stick: scroll • Xbox / Share: handled by Windows</value></data>
+  <data name="GamepadKeyboardTitle" xml:space="preserve"><value>Controller keyboard</value></data>
+  <data name="GamepadKeyboardHelp" xml:space="preserve"><value>A Type • X Backspace • Y Case • LB Letters • RB Symbols • LT/RT Caret • View Language • Menu Done • B Close</value></data>
+  <data name="GamepadKeyboardPasswordHelp" xml:space="preserve"><value>The password stays in its masked field; controller edits append or delete at the end.</value></data>
+  <data name="GamepadKeyboardLetters" xml:space="preserve"><value>Letters</value></data>
+  <data name="GamepadKeyboardSymbols" xml:space="preserve"><value>Numbers and symbols</value></data>
+  <data name="GamepadKeyboardUppercase" xml:space="preserve"><value>Uppercase</value></data>
+  <data name="GamepadKeyboardLowercase" xml:space="preserve"><value>Lowercase</value></data>
+  <data name="GamepadKeyboardBackspace" xml:space="preserve"><value>Backspace</value></data>
+  <data name="GamepadKeyboardSpace" xml:space="preserve"><value>Space</value></data>
+  <data name="GamepadKeyboardCaretPrevious" xml:space="preserve"><value>Previous caret position</value></data>
+  <data name="GamepadKeyboardCaretNext" xml:space="preserve"><value>Next caret position</value></data>
+  <data name="GamepadKeyboardSelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="GamepadKeyboardDone" xml:space="preserve"><value>Done typing</value></data>
+  <data name="GamepadKeyboardClose" xml:space="preserve"><value>Close keyboard</value></data>
+  <data name="GamepadKeyboardLanguageEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="GamepadKeyboardLanguagePersian" xml:space="preserve"><value>فارسی</value></data>
+  <data name="GamepadKeyboardSwitchLanguageHelp" xml:space="preserve"><value>Changes the keyboard language only.</value></data>
+  <data name="GamepadWelcomeHints" xml:space="preserve"><value>A Select • B Sign in • Menu Retry • View Help</value></data>
+  <data name="GamepadWelcomeHelp" xml:space="preserve"><value>D-pad / left stick: move focus • A: select
+B or LB: sign in • Menu: retry
+Left stick click: retry button • RB or right stick click: sign-in button
+LT / RT: previous / next control • right stick: scroll
+View: help • Xbox / Share: handled by Windows
+Sign in and retry become available after preparation finishes with an error.</value></data>
 </root>

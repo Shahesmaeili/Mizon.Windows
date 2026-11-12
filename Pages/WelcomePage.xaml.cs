@@ -68,6 +68,7 @@ public sealed partial class WelcomePage : Page
             if (_hostAppWindow is not null) _hostAppWindow.Changed += HostWindow_Changed;
         }
         _uiSettings.AnimationsEnabledChanged += MotionPreferenceChanged;
+        InitializeGamepad();
         UpdateMotionActivity();
         PlayEntrance();
         AppLog.MemorySnapshot("Welcome loaded");
@@ -153,17 +154,20 @@ public sealed partial class WelcomePage : Page
     private void HostWindow_Activated(object sender, WindowActivatedEventArgs args)
     {
         _windowActive = args.WindowActivationState != WindowActivationState.Deactivated;
+        UpdateGamepadActivity();
         UpdateMotionActivity();
     }
 
     private void HostWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)
     {
+        if (args.DidPresenterChange || args.DidVisibilityChange) UpdateGamepadActivity();
         if (args.DidPresenterChange || args.DidVisibilityChange) UpdateMotionActivity();
     }
 
     private void HostWindow_Closed(object sender, WindowEventArgs args)
     {
         _windowActive = false;
+        DisposeGamepad();
         Localization.PropertyChanged -= Localization_PropertyChanged;
         Bindings.StopTracking();
         DetachHostWindow();
@@ -248,6 +252,7 @@ public sealed partial class WelcomePage : Page
 
     private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
+        DisposeGamepad();
         Localization.PropertyChanged -= Localization_PropertyChanged;
         Bindings.StopTracking();
         // Home now owns the decoded source; the cached welcome page need not retain it.

@@ -32,7 +32,7 @@
             <Setter Property="UseSystemFocusVisuals" Value="True" />
         </Style>
     </Page.Resources>
-    <Grid Background="Transparent">
+    <Grid x:Name="WelcomeRoot" Background="Transparent" XYFocusKeyboardNavigation="Enabled">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="WelcomeHeightStates">
                 <VisualState x:Name="ComfortableWelcome">
@@ -143,8 +143,8 @@
                         </Grid>
                         <Grid ColumnSpacing="8" Visibility="{x:Bind ViewModel.ErrorVisibility, Mode=OneWay}">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                            <controls:AuthActionButton Grid.Column="0" Style="{StaticResource WelcomeAction}" Click="Login_Click" Content="{x:Bind Localization.GetString('WelcomeLogin', Localization.Revision), Mode=OneWay}" />
-                            <controls:AuthActionButton Grid.Column="1" Style="{StaticResource WelcomeAction}" Click="Retry_Click" Content="{x:Bind Localization.GetString('WelcomeRetry', Localization.Revision), Mode=OneWay}"
+                            <controls:AuthActionButton x:Name="WelcomeLoginButton" Grid.Column="0" Style="{StaticResource WelcomeAction}" Click="Login_Click" Content="{x:Bind Localization.GetString('WelcomeLogin', Localization.Revision), Mode=OneWay}" />
+                            <controls:AuthActionButton x:Name="WelcomeRetryButton" Grid.Column="1" Style="{StaticResource WelcomeAction}" Click="Retry_Click" Content="{x:Bind Localization.GetString('WelcomeRetry', Localization.Revision), Mode=OneWay}"
                                     Background="{ThemeResource AuthAccentWashBrush}" BorderBrush="{ThemeResource AuthAccentBorderBrush}" />
                         </Grid>
                     </StackPanel>

@@ -2,6 +2,31 @@
 
 Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Xbox controller authentication — 2026-11-12
+
+Login/Registration/Welcome now own native controller sessions, bounded focus,
+contextual button help and a Persian/English controller keyboard. Original form
+validation, animated face transitions, accessibility/localization and busy guards
+remain. All standard controls have contextual mappings; Guide/Share remain OS-owned.
+No polling without active foreground ownership and a connected controller; unload,
+window-close and deactivation stop resource work. Modal dialogs retain input ownership.
+
+MCP authentication read/control adds a typed controller snapshot and bounded focus,
+keyboard/help and optional vibration actions. There is no arbitrary input injection,
+Accept/Menu or submission bypass. Other domain permissions do not change. See
+[MCP contract](../../Mcp/AUTH_GAMEPAD.md) and
+[UI mappings, lifecycle and validation](tasks/2026-11-12-auth-controller-ui.md).
+
+Validation: Debug x64 WinUI build; 234 input/session, 34 text-edit, 32 production
+navigator, 46 auth-adapter and 291 permission assertions; 49 isolated MCP protocol
+groups. Input/text-edit NativeAOT executables and companion NativeAOT publication/
+catalog checks passed. The 23 new resource keys match in fa/en. Physical controller,
+actual vibration, visual layout/motion, and Narrator output remain manually unverified;
+no Windows UI automation or real account submission was performed.
+
+The future-controller requirement is now shared policy revision 2026-11-12.1 in
+all four repositories. This does not imply that all pre-existing pages support it.
+
 ## Floating story editorial strip — 2026-11-11
 
 Stutter follow-up (2026-11-12): native pointer-position expressions replace

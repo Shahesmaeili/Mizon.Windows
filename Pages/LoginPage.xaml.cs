@@ -24,6 +24,7 @@ public sealed partial class LoginPage : Page
     private string? _layoutState;
     private bool _entrancePlayed;
     private Window? _hostWindow;
+    private AppWindow? _hostAppWindow;
     private bool _windowActive = true;
     private int? _normalBorderColor;
 
@@ -51,8 +52,11 @@ public sealed partial class LoginPage : Page
         {
             _hostWindow = window;
             window.Activated += HostWindow_Activated;
-            window.AppWindow.Changed += HostWindow_Changed;
+            window.Closed += HostWindow_Closed;
+            _hostAppWindow = window.AppWindow;
+            _hostAppWindow.Changed += HostWindow_Changed;
         }
+        InitializeGamepad();
         UpdateLayout(ActualWidth, ActualHeight);
         UpdateShowcase();
         PlayEntrance();
@@ -103,11 +107,13 @@ public sealed partial class LoginPage : Page
     private void HostWindow_Activated(object sender, WindowActivatedEventArgs args)
     {
         _windowActive = args.WindowActivationState != WindowActivationState.Deactivated;
+        UpdateGamepadActivity();
         UpdateShowcase();
     }
 
     private void HostWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)
     {
+        if (args.DidPresenterChange || args.DidVisibilityChange) UpdateGamepadActivity();
         if (args.DidPresenterChange || args.DidVisibilityChange) UpdateShowcase();
     }
 
@@ -124,6 +130,13 @@ public sealed partial class LoginPage : Page
 
     private void AuthForms_ModeChanged(object? sender, EventArgs args)
     {
+        _gamepadNavigation?.ResetSurface();
+        if (_gamepadNavigation?.IsGamepadMode == true)
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (IsLoaded && _gamepadNavigation?.IsGamepadMode == true)
+                    AuthForms.FocusInitialGamepadField();
+            });
         (App.MainMizonWindow as MainWindow)?.RefreshTitle();
         // Returning from the taller registration form should not leave the login heading offscreen.
         LoginScroller.ChangeView(null, 0, null, !_uiSettings.AnimationsEnabled);
@@ -185,6 +198,7 @@ public sealed partial class LoginPage : Page
 
     private void Page_Unloaded(object sender, RoutedEventArgs args)
     {
+        DisposeGamepad();
         ViewModel.PropertyChanged -= AccountStateChanged;
         Localization.PropertyChanged -= LocalizationChanged;
         Bindings.StopTracking();
@@ -196,7 +210,9 @@ public sealed partial class LoginPage : Page
         if (_hostWindow is not null)
         {
             _hostWindow.Activated -= HostWindow_Activated;
-            _hostWindow.AppWindow.Changed -= HostWindow_Changed;
+            _hostWindow.Closed -= HostWindow_Closed;
+            if (_hostAppWindow is not null) _hostAppWindow.Changed -= HostWindow_Changed;
+            _hostAppWindow = null;
             _hostWindow = null;
         }
         AuthForms.CancelTransitions();
