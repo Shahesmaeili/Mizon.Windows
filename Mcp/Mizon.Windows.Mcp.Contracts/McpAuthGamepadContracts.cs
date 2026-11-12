@@ -8,7 +8,8 @@ namespace Mizon.Windows.Mcp.Contracts;
 [JsonConverter(typeof(McpAuthGamepadActionConverter))]
 public enum McpAuthGamepadAction
 {
-    Next, Previous, Up, Down, Left, Right, OpenKeyboard, CloseKeyboard, ShowHelp, HideHelp
+    Next, Previous, Up, Down, Left, Right, OpenKeyboard, CloseKeyboard, ShowHelp, HideHelp,
+    EnableFeedback, DisableFeedback
 }
 
 public sealed class McpAuthGamepadActionConverter()
@@ -21,4 +22,5 @@ public sealed record McpAuthGamepadState
     public string? FocusedFieldId { get; init; }
     public bool IsKeyboardVisible { get; init; }
     public bool IsHelpVisible { get; init; }
+    public bool IsFeedbackEnabled { get; init; }
 }

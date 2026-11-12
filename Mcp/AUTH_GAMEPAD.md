@@ -4,12 +4,16 @@ The authentication page's controller navigation shares the existing authenticati
 permission group. `mizon_get_auth_state` reports `state.gamepad` only for the active,
 loaded Login, Registration or Welcome page and only with authentication read
 consent. It contains controller-connected/navigation-active flags, the stable
-focused control ID and keyboard/help visibility. It never contains entered
+focused control ID, keyboard/help visibility and `isFeedbackEnabled`. It never contains entered
 keyboard text, password contents or length, device identifiers or raw input.
 
 `mizon_auth_gamepad_action` requires authentication control consent and accepts
 exactly one `action`: `next`, `previous`, `up`, `down`, `left`, `right`,
-`openKeyboard`, `closeKeyboard`, `showHelp` or `hideHelp`. It delegates to the
+`openKeyboard`, `closeKeyboard`, `showHelp`, `hideHelp`, `enableFeedback` or
+`disableFeedback`. Feedback actions explicitly set the optional page-session
+feedback preference; they do not toggle it, start vibration or accept raw motor
+values/durations. Feedback is off by default and only accompanies later physical
+controller actions when enabled. The tool delegates to the
 active page's controller navigation flow. Directions move focus within the page
 or its controller keyboard; they do not activate a key or button. The tool does
 not simulate OS input, accept an arbitrary key, navigate another page, enter text,
@@ -36,6 +40,7 @@ Headless verification:
 dotnet run --project Mcp/Mizon.Windows.Mcp.Tests -c Release -- --isolated
 dotnet run --project Mcp/Mizon.Windows.Mcp.AccessTests -c Release
 dotnet run --project Mcp/Mizon.Windows.Mcp.AuthTests -c Release
+dotnet run --project Mcp/Mizon.Windows.Gamepad.NavigationTests -c Release
 ```
 
 The SDK suite tests public schemas, generated JSON, all bounded actions and
@@ -49,3 +54,8 @@ cancellation and lifecycle subscription cleanup. None of these suites open the
 real application, approve a real connection, enter credentials or submit an
 account. Controller hardware, visual focus, keyboard rendering/animation and
 Narrator behavior require separate manual validation.
+
+The navigator suite source-links the production focus/overlay coordinator against
+minimal visual-tree doubles. It checks hidden/disabled ancestry, modal ownership,
+help/keyboard focus bounds and restoration, stale keyboard targets, explicit
+feedback state, no implicit control activation, cancellation and disposal.

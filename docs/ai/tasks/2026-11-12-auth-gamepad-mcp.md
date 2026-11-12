@@ -17,9 +17,11 @@ Keep reads gated and verify permission, cancellation, failure and page lifetime.
 ## Implementation and decisions
 
 `McpAuthState.Gamepad` reports controller/navigation flags, focused control ID and
-keyboard/help visibility. The active loaded auth page owns the snapshot.
-`mizon_auth_gamepad_action` provides ten allowlisted page-local focus/keyboard/help
-actions under existing authentication control consent. Accept/menu/submit and
+keyboard/help visibility and optional feedback preference. The active loaded auth
+page owns the snapshot. `mizon_auth_gamepad_action` provides twelve allowlisted
+page-local focus/keyboard/help/feedback actions under existing authentication
+control consent. Enable/disable feedback sets an explicit session preference;
+it cannot start vibration or accept raw motor values. Accept/menu/submit and
 text entry are excluded; existing form submit remains separately consented.
 
 The adapter uses the root agent's `GetGamepadState` and
@@ -34,8 +36,9 @@ See [the contract](../../../Mcp/AUTH_GAMEPAD.md).
 | Command / environment | Result | Limits |
 | --- | --- | --- |
 | `dotnet run --project Mcp/Mizon.Windows.Mcp.Tests -c Release --no-restore -- --isolated` | 49/49 groups passed | Synthetic SDK/stdio/pipe only |
-| `dotnet run --project Mcp/Mizon.Windows.Mcp.AccessTests -c Release --no-restore` | 288 assertions passed | Actual permission service with synthetic consent/auth state |
-| `dotnet run --project Mcp/Mizon.Windows.Mcp.AuthTests -c Release --no-restore` | 42 assertions passed | Production auth adapter with synthetic pages |
+| `dotnet run --project Mcp/Mizon.Windows.Mcp.AccessTests -c Release --no-restore` | 291 assertions passed | Actual permission service with synthetic consent/auth state |
+| `dotnet run --project Mcp/Mizon.Windows.Mcp.AuthTests -c Release --no-restore` | 46 assertions passed | Production auth adapter with synthetic pages |
+| `dotnet run --project Mcp/Mizon.Windows.Gamepad.NavigationTests -c Release --no-restore -p:AuthGamepadSourceRoot=<root-integration-worktree>` | 32 assertions passed | Actual navigator source, minimal platform/session/keyboard doubles; no visual/native focus validation |
 | `dotnet publish Mcp/Mizon.Windows.Mcp/Mizon.Windows.Mcp.csproj -c Release -r win-x64 -p:PublishAot=true -p:NuGetAudit=false`; protocol fixture `--catalog` against published exe | NativeAOT publish passed; actual catalog 1/1 passed | Does not validate whole WinUI app |
 | Full WinUI integration build, controller hardware, visuals, animations, Narrator | Root integration/manual checks pending | No Windows UI automation used |
 
@@ -48,6 +51,13 @@ was changed. These runs do not establish a package vulnerability audit.
 Root must integrate the page hooks and controller session, compile the combined
 WinUI app, and update the main handoff. No backend or SDK change is needed.
 No live consent or real account/form was used.
+
+The follow-up source-linked navigator review caught and verified fixes owned by
+root: hidden/disabled focus ancestry, field wrapping, outside/modal focus
+ownership, owned ComboBox popup exception, idempotent help focus restoration,
+keyboard-to-help return focus, stale keyboard editing targets, safe feedback
+actions, cancellation and disposal. Test sources use an optional root-path build
+property for isolated worktree verification; their default resolves this repository.
 
 ## Publication
 

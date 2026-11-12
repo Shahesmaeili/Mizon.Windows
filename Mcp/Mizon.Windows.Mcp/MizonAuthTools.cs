@@ -24,9 +24,9 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
         Define("mizon_get_taskbar_pin_state", "Taskbar pin state", "Refresh whether Mizon is pinned to Windows taskbar, support, policy, busy and request availability. Requires separate taskbar read permission. Does not reveal other pinned apps or change pinning.", EmptySchema, readOnly: true),
         Define("mizon_request_taskbar_pin", "Request pin to taskbar", "Request the native Windows confirmation to pin Mizon to the taskbar, only at the user's request with Mizon in the foreground. Requires separate taskbar control permission. The user must confirm Windows' dialog; this tool cannot approve it, unpin apps or bypass Windows policy. Never automatically retry a cancelled/interrupted request. State is returned only with taskbar read permission.", EmptySchema, idempotent: false, openWorld: true),
         Define("mizon_get_connection", "Connection permission", "Read only this MCP connection's approval status and granted permissions. Available before approval. It cannot approve a connection.", EmptySchema, readOnly: true),
-        Define("mizon_get_auth_state", "Authentication page state", "Read the current Mizon authentication page, busy/validation state, non-secret fields and page-local controller navigation, focus, keyboard and help state. Passwords and session tokens are never returned. Requires authentication read permission in Mizon.", EmptySchema, readOnly: true),
-        Define("mizon_auth_gamepad_action", "Navigate authentication controls", "Move focus or open/close controller keyboard and help on the active Welcome, Login or Registration page using its controller navigation flow. Requires authentication control permission; state readback requires authentication read. Actions never activate buttons, enter text, submit a form, retry Welcome, inject OS input or control another page. Use mizon_submit_auth_form with separate submit permission for authentication. Focus movement is relative: never automatically retry an interrupted action.",
-            """{"type":"object","properties":{"action":{"type":"string","enum":["next","previous","up","down","left","right","openKeyboard","closeKeyboard","showHelp","hideHelp"],"description":"One bounded action on the currently active authentication page. Directions move focus within this page or its on-screen keyboard. No accept, menu, submit or arbitrary key action is supported."}},"required":["action"],"additionalProperties":false}""", idempotent: false),
+        Define("mizon_get_auth_state", "Authentication page state", "Read the current Mizon authentication page, busy/validation state, non-secret fields and page-local controller navigation, focus, keyboard, help and optional feedback state. Passwords and session tokens are never returned. Requires authentication read permission in Mizon.", EmptySchema, readOnly: true),
+        Define("mizon_auth_gamepad_action", "Navigate authentication controls", "Move focus, open/close controller keyboard and help, or explicitly enable/disable optional controller feedback on the active Welcome, Login or Registration page using its controller navigation flow. Requires authentication control permission; state readback requires authentication read. Feedback changes only this page session's opt-in setting; it does not start vibration or accept raw motor values. Actions never activate buttons, enter text, submit a form, retry Welcome, inject OS input or control another page. Use mizon_submit_auth_form with separate submit permission for authentication. Focus movement is relative: never automatically retry an interrupted action.",
+            """{"type":"object","properties":{"action":{"type":"string","enum":["next","previous","up","down","left","right","openKeyboard","closeKeyboard","showHelp","hideHelp","enableFeedback","disableFeedback"],"description":"One bounded action on the currently active authentication page. Directions move focus within this page or its on-screen keyboard. Feedback actions set an explicit preference, never toggle or start vibration. No accept, menu, submit or arbitrary key action is supported."}},"required":["action"],"additionalProperties":false}""", idempotent: false),
         Define("mizon_open_auth_page", "Open authentication page", "Open the login, registration or welcome page. This may launch Mizon when it is closed; the user must still approve this connection in the app. Requires control permission.",
             """{"type":"object","properties":{"page":{"type":"string","enum":["login","register","welcome"]}},"required":["page"],"additionalProperties":false}"""),
         Define("mizon_set_auth_form", "Fill authentication form", "Set supplied fields on the visible login or registration form. Unspecified fields remain unchanged; an empty string clears a field. Credentials are write-only. This does not submit the form. Requires control permission.",
@@ -124,7 +124,7 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
                 return new() { Operation = "get_state" };
             case "mizon_auth_gamepad_action":
                 CheckKeys(args, "action");
-                var gamepadAction = RequiredString(args, "action", 13) switch
+                var gamepadAction = RequiredString(args, "action", 15) switch
                 {
                     "next" => McpAuthGamepadAction.Next,
                     "previous" => McpAuthGamepadAction.Previous,
@@ -136,6 +136,8 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
                     "closeKeyboard" => McpAuthGamepadAction.CloseKeyboard,
                     "showHelp" => McpAuthGamepadAction.ShowHelp,
                     "hideHelp" => McpAuthGamepadAction.HideHelp,
+                    "enableFeedback" => McpAuthGamepadAction.EnableFeedback,
+                    "disableFeedback" => McpAuthGamepadAction.DisableFeedback,
                     _ => throw new ArgumentException()
                 };
                 return new() { Operation = "auth_gamepad_action", GamepadAction = gamepadAction };

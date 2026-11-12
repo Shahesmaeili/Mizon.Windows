@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
+    <AuthGamepadSourceRoot Condition="'$(AuthGamepadSourceRoot)' == ''">$(MSBuildThisFileDirectory)..\..</AuthGamepadSourceRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Mizon.Windows.Mcp.Contracts/Mizon.Windows.Mcp.Contracts.csproj" />
+    <Compile Include="$(AuthGamepadSourceRoot)/Common/AuthGamepadNavigation.cs" Link="Production/AuthGamepadNavigation.cs" />
+    <Compile Include="$(AuthGamepadSourceRoot)/Services/Gamepad/AuthGamepadAction.cs" Link="Production/AuthGamepadAction.cs" />
+  </ItemGroup>
+</Project>
