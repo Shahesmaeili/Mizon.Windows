@@ -21,7 +21,7 @@ internal static class AuthGamepadTests
         var state = new McpAuthState { Page = "register", HasPassword = true, Gamepad = new()
         {
             IsControllerConnected = true, IsNavigationActive = true, FocusedFieldId = "register-password",
-            IsKeyboardVisible = true, IsHelpVisible = false
+            IsKeyboardVisible = true, IsHelpVisible = false, IsFeedbackEnabled = true
         } };
         var response = new McpResponse { Success = true, Code = "state", State = state };
         using var output = new MemoryStream();
@@ -50,7 +50,7 @@ internal static partial class ConnectionLifecycleTests
         await using var client = await CreateFixtureClientAsync(timeout.Token);
         var tools = await client.ListToolsAsync(cancellationToken: timeout.Token);
         var tool = tools.Single(item => item.Name == "mizon_auth_gamepad_action").ProtocolTool;
-        var values = new[] { "next", "previous", "up", "down", "left", "right", "openKeyboard", "closeKeyboard", "showHelp", "hideHelp" };
+        var values = new[] { "next", "previous", "up", "down", "left", "right", "openKeyboard", "closeKeyboard", "showHelp", "hideHelp", "enableFeedback", "disableFeedback" };
         Check.That(tool.InputSchema.GetProperty("properties").GetProperty("action").GetProperty("enum")
             .EnumerateArray().Select(value => value.GetString()).SequenceEqual(values), "Controller discovery differs from bounded actions.");
         Check.That(tool.Annotations is { ReadOnlyHint: false, IdempotentHint: false, OpenWorldHint: false },
@@ -58,10 +58,12 @@ internal static partial class ConnectionLifecycleTests
         var state = tool.OutputSchema!.Value.GetProperty("properties").GetProperty("state").GetProperty("properties")
             .GetProperty("gamepad").GetProperty("properties");
         Check.That(state.GetProperty("focusedFieldId").GetProperty("description").GetString()!.Contains("never its entered text", StringComparison.Ordinal)
-            && state.EnumerateObject().Count() == 5, "Controller read-state is not bounded and self-described.");
+            && state.GetProperty("isFeedbackEnabled").GetProperty("description").GetString()!.Contains("does not start vibration", StringComparison.Ordinal)
+            && state.EnumerateObject().Count() == 6, "Controller read-state is not bounded and self-described.");
         foreach (var input in new[] { "{}", "{\"action\":1}", "{\"action\":null}", "{\"action\":\"accept\"}",
             "{\"action\":\"submit\"}", "{\"action\":\"menu\"}", "{\"action\":\"next\",\"page\":\"home\"}",
-            "{\"action\":\"next\",\"key\":\"A\"}" })
+            "{\"action\":\"next\",\"key\":\"A\"}", "{\"action\":\"enableFeedback\",\"duration\":1000}",
+            "{\"action\":\"enableFeedback\",\"motor\":1}", "{\"action\":\"toggleFeedback\"}" })
         {
             using var arguments = JsonDocument.Parse(input);
             var rejected = await client.CallToolAsync(new CallToolRequestParams { Name = tool.Name,
