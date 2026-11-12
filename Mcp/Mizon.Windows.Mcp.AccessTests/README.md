@@ -1,5 +1,12 @@
 # MCP app permission integration checks
 
+Authentication controller checks cover pending/denied/read-only/control-only
+access through the production listener and dispatcher, resulting focused-control
+state, no submit escalation, state redaction, sanitized errors, cancellation on
+revocation, stale generation suppression, exact-grant restoration and released
+busy ownership. Page behavior itself is exercised by the separate source-linked
+[authentication adapter fixtures](../Mizon.Windows.Mcp.AuthTests/README.md).
+
 ```powershell
 dotnet run --project .\Mcp\Mizon.Windows.Mcp.AccessTests\Mizon.Windows.Mcp.AccessTests.csproj -c Release --no-launch-profile
 ```

@@ -59,7 +59,7 @@ public sealed class McpAccessPolicy
     {
         "connection_status" => true,
         "get_state" => Status == "approved" && AllowRead,
-        "open_page" or "set_form" or "clear_form" or "retry_welcome" or "set_language"
+        "open_page" or "set_form" or "clear_form" or "retry_welcome" or "set_language" or "auth_gamepad_action"
             => Status == "approved" && AllowControl,
         "submit" => Status == "approved" && AllowControl && AllowSubmit,
         "get_appearance" => Status == "approved" && AllowAppearanceRead,

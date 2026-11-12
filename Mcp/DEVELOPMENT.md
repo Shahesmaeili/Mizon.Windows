@@ -13,6 +13,9 @@ There is no tunnel engine or configuration mutation in these tools.
 Main-window read/control permissions are independent from appearance and music;
 see [window presentation](WINDOW_PRESENTATION.md) for its bounded state/actions.
 Appearance, navigation and taskbar pinning have independent read/control permissions; authentication grants never authorize them.
+Authentication also covers bounded controller focus, keyboard and help on its
+active pages; [AUTH_GAMEPAD.md](AUTH_GAMEPAD.md) defines the read state and actions.
+Controller actions cannot activate a button or bypass separate form-submit consent.
 Music home has its own read/control/submit permissions. Its bounded cards, featured
 player, stories and widget actions are documented in [MUSIC_HOME.md](MUSIC_HOME.md).
 It is not a general music-detail, profile, database or backend API surface.
