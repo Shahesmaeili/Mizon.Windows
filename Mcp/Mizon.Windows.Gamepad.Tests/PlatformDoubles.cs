@@ -104,7 +104,7 @@ namespace Windows.Gaming.Input
         public GamepadButtons Buttons;
         public double LeftThumbstickX, LeftThumbstickY, RightThumbstickY, LeftTrigger, RightTrigger;
     }
-    public struct GamepadVibration { public double RightMotor; }
+    public struct GamepadVibration { public double LeftMotor, RightMotor; }
     public sealed class Gamepad
     {
         private static readonly List<Gamepad> Devices = [];
@@ -114,9 +114,21 @@ namespace Windows.Gaming.Input
         public static int EventSubscriberCount => (GamepadAdded?.GetInvocationList().Length ?? 0) + (GamepadRemoved?.GetInvocationList().Length ?? 0);
         public static IReadOnlyList<Gamepad> Gamepads => FailEnumeration ? throw new InvalidOperationException("Synthetic device error") : Devices;
         public bool FailReading;
+        public bool FailVibration;
         public GamepadReading Reading;
         public int ReadCount;
-        public GamepadVibration Vibration { get; set; }
+        private GamepadVibration _vibration;
+        public int VibrationWrites;
+        public GamepadVibration Vibration
+        {
+            get => _vibration;
+            set
+            {
+                VibrationWrites++;
+                if (FailVibration) throw new InvalidOperationException("Synthetic vibration error");
+                _vibration = value;
+            }
+        }
         public GamepadReading GetCurrentReading()
         {
             ReadCount++;

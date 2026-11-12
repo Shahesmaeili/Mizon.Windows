@@ -269,4 +269,5 @@ var allocated = GC.GetAllocatedBytesForCurrentThread();
 for (var i = 0; i < 100000; i++) allocationReducer.TryRead(default, i, out _);
 allocated = GC.GetAllocatedBytesForCurrentThread() - allocated;
 Check(allocated == 0, $"Idle reducer must allocate zero managed bytes; got {allocated}");
+FeedbackTests.Run(Check);
 Console.WriteLine($"PASS: {assertions} gamepad input/session assertions. No Windows UI, real controller or account operation used.");

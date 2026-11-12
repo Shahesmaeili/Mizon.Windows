@@ -22,6 +22,7 @@ public sealed class AuthGamepadSession : IDisposable
     private readonly DispatcherQueueTimer _timer;
     private readonly DispatcherQueueHandler _refreshControllersAction;
     private readonly AuthGamepadInputReducer _input = new();
+    private readonly Func<long> _clock;
     private readonly KeyEventHandler _previewKeyDown;
     private readonly KeyEventHandler _previewKeyUp;
     private readonly PointerEventHandler _pointerPressed;
@@ -33,15 +34,22 @@ public sealed class AuthGamepadSession : IDisposable
     private bool _requestedActive;
     private bool _gamepadMode;
     private bool _feedbackEnabled;
+    private bool _feedbackPreferenceAssigned;
+    private AuthGamepadFeedback? _activeFeedback;
+    private long _resultStartedAt;
     private bool _vibrating;
     private long _feedbackStopAt;
     private long _nextFeedbackAt;
     private volatile bool _disposed;
 
     public AuthGamepadSession(FrameworkElement root, Action<AuthGamepadAction> onAction)
+        : this(root, onAction, static () => Environment.TickCount64) { }
+
+    internal AuthGamepadSession(FrameworkElement root, Action<AuthGamepadAction> onAction, Func<long> clock)
     {
         _root = root ?? throw new ArgumentNullException(nameof(root));
         _onAction = onAction ?? throw new ArgumentNullException(nameof(onAction));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _timer = root.DispatcherQueue.CreateTimer();
         _timer.Interval = TimeSpan.FromMilliseconds(1000d / 60d);
         _timer.IsRepeating = true;
@@ -81,9 +89,57 @@ public sealed class AuthGamepadSession : IDisposable
         set
         {
             if (_disposed) return;
+            _feedbackPreferenceAssigned = true;
             _feedbackEnabled = value;
             if (!value) StopFeedback();
         }
+    }
+
+    internal bool IsFeedbackPlaying => _activeFeedback is not null;
+    internal AuthGamepadFeedback? LastFeedback { get; private set; }
+
+    internal bool PlayFeedback(AuthGamepadFeedback kind)
+    {
+        if (!Enum.IsDefined(kind) || !CanPlayFeedback()) return false;
+        StopFeedback();
+        _activeFeedback = kind;
+        _resultStartedAt = _clock();
+        if (!WriteFeedback(default)) { _activeFeedback = null; return false; }
+        LastFeedback = kind;
+        return true;
+    }
+
+    internal AuthGamepadSuccessFeedback? CreateSuccessFeedback(object owner)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        return CanPlayFeedback() ? new(owner, _controller!, _clock()) : null;
+    }
+
+    internal bool ConsumeSuccessFeedback(AuthGamepadSuccessFeedback ticket, object owner)
+    {
+        ArgumentNullException.ThrowIfNull(ticket);
+        ArgumentNullException.ThrowIfNull(owner);
+        if (!IsActive || _controller is null || !IsControllerConnected()
+            || (_feedbackPreferenceAssigned && !_feedbackEnabled))
+        { ticket.Dispose(); return false; }
+        if (!ticket.TryConsume(owner, _controller, _clock())) return false;
+        // A new Welcome session starts disabled. Restore only the authenticated
+        // source session's enabled intent, never override an explicit later opt-out.
+        FeedbackEnabled = true;
+        return PlayFeedback(AuthGamepadFeedback.Success);
+    }
+
+    private bool CanPlayFeedback() => IsActive && _feedbackEnabled && _controller is not null && IsControllerConnected();
+
+    private bool IsControllerConnected()
+    {
+        try
+        {
+            foreach (var controller in NativeGamepad.Gamepads)
+                if (controller.Equals(_controller)) return true;
+        }
+        catch (Exception) { }
+        return false;
     }
 
     public void SetActive(bool active)
@@ -99,10 +155,13 @@ public sealed class AuthGamepadSession : IDisposable
 
     public void NotifyPointerOrKeyboardInput()
     {
-        if (_disposed || !_gamepadMode) return;
+        if (_disposed) return;
+        // A result may be playing after a mouse/MCP submission, without controller
+        // navigation mode having been entered first. Competing input still cancels it.
+        StopFeedback();
+        if (!_gamepadMode) return;
         _gamepadMode = false;
         _input.Reset();
-        StopFeedback();
         PublishState();
     }
 
@@ -191,8 +250,13 @@ public sealed class AuthGamepadSession : IDisposable
             UpdatePolling();
             return;
         }
-        var now = Environment.TickCount64;
-        if (_vibrating && now >= _feedbackStopAt) StopFeedback();
+        var now = _clock();
+        if (_activeFeedback is { } feedback)
+        {
+            var frame = AuthGamepadFeedbackPattern.Sample(feedback, now - _resultStartedAt);
+            if (frame.IsComplete || !WriteFeedback(new GamepadVibration { LeftMotor = frame.LeftMotor, RightMotor = frame.RightMotor })) StopFeedback();
+        }
+        else if (_vibrating && now >= _feedbackStopAt) StopFeedback();
         GamepadReading reading;
         try { reading = _controller.GetCurrentReading(); }
         catch (Exception)
@@ -240,7 +304,7 @@ public sealed class AuthGamepadSession : IDisposable
 
     private void PulseFeedback(AuthGamepadAction action, long now)
     {
-        if (!_feedbackEnabled || _vibrating || now < _nextFeedbackAt || _controller is null) return;
+        if (!_feedbackEnabled || _activeFeedback is not null || _vibrating || now < _nextFeedbackAt || _controller is null) return;
         if (action is not (AuthGamepadAction.Up or AuthGamepadAction.Down or AuthGamepadAction.Left or
             AuthGamepadAction.Right or AuthGamepadAction.Accept)) return;
         try
@@ -255,10 +319,24 @@ public sealed class AuthGamepadSession : IDisposable
 
     private void StopFeedback()
     {
-        if (!_vibrating) return;
+        var hadFeedback = _vibrating || _activeFeedback is not null;
+        _activeFeedback = null;
         _vibrating = false;
+        if (!hadFeedback) return;
         try { if (_controller is not null) _controller.Vibration = default; }
         catch (Exception) { /* A removed controller cannot acknowledge a stop. */ }
+    }
+
+    private bool WriteFeedback(GamepadVibration vibration)
+    {
+        try
+        {
+            if (_controller is null) return false;
+            _controller.Vibration = vibration;
+            _vibrating = vibration.LeftMotor > 0 || vibration.RightMotor > 0;
+            return true;
+        }
+        catch (Exception) { return false; }
     }
 
     private void PublishState()

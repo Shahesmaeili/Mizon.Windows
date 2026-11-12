@@ -15,6 +15,16 @@ scrolling, native key suppression, foreground/page/device lifetime, connection
 marshaling, unavailable devices, controller switching and reentrant disposal.
 An allocation check covers 100,000 neutral reducer samples after warmup.
 
+Outcome-feedback checks drive the same session with a deterministic monotonic
+clock. They cover distinct finite success/error/validation patterns, soft motor
+envelopes, outcome priority over navigation taps, the default-off opt-in, native
+write failures and immediate cleanup on opt-out, competing input, deactivation,
+unload, controller removal and disposal. Successful navigation uses a single-use,
+two-second handoff to the same window and controller; tests reject expired,
+reused, wrong-window, changed-controller and explicitly opted-out recipients.
+The originating page can be disposed without delaying navigation or losing the
+destination-owned success pattern. No static queue or background timer is used.
+
 No real controller, window, account, consent grant or form submission is used.
 These checks cannot validate WinUI focus visuals, controller drivers, physical
 latency, actual vibration, keyboard entry, Narrator or final page rendering.
