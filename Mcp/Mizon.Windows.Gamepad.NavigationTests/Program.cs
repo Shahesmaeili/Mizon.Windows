@@ -18,7 +18,9 @@ internal static class Program
         await FocusAndKeyboard();
         await HelpScope();
         await FixedLanguagePicker();
+        await WindowButtons();
         await OtherSurfaces();
+        RejectedSubmissionFocus();
         await FeedbackPreference();
         await FeedbackOutcomeReadback();
         await Lifecycle();
@@ -185,8 +187,8 @@ internal static class Program
     {
         using var page = new Fixture();
         page.First.Focus(FocusState.Keyboard);
-        Check(!page.Navigator.GetState().IsFeedbackEnabled && !page.Session.FeedbackEnabled,
-            "Controller feedback starts disabled in each page session");
+        Check(page.Navigator.GetState().IsFeedbackEnabled && page.Session.FeedbackEnabled,
+            "The auth page enables controller feedback without requiring the help checkbox first");
         await page.Apply(McpAuthGamepadAction.EnableFeedback);
         await page.Apply(McpAuthGamepadAction.EnableFeedback);
         Check(page.Navigator.GetState().IsFeedbackEnabled && page.Session.FeedbackEnabled
@@ -195,6 +197,59 @@ internal static class Program
         await page.Apply(McpAuthGamepadAction.DisableFeedback);
         Check(!page.Navigator.GetState().IsFeedbackEnabled && !page.Session.FeedbackEnabled,
             "Explicit feedback disable is reflected by the same production state snapshot");
+    }
+
+    private static async Task WindowButtons()
+    {
+        using var page = new Fixture(withWindowButtons: true);
+        foreach (var (id, action) in new[]
+        {
+            ("windowMinimize", AuthWindowAction.Minimize),
+            ("windowMaximizeRestore", AuthWindowAction.MaximizeOrRestore),
+            ("windowClose", AuthWindowAction.Close)
+        })
+        {
+            page.First.Focus(FocusState.Keyboard);
+            page.Session.Emit(AuthGamepadAction.ToggleHelp);
+            var count = page.WindowActions.Count;
+            for (var i = 0; i < 3 && page.Navigator.GetState().FocusedFieldId != id; i++)
+                await page.Apply(McpAuthGamepadAction.Next);
+            Check(page.Navigator.GetState() is { IsHelpVisible: true } state && state.FocusedFieldId == id
+                && page.WindowActions.Count == count, "Scoped MCP can focus but cannot invoke " + id);
+            page.Session.Emit(AuthGamepadAction.Submit);
+            Check(page.WindowActions.Count == count && page.PageActions == 0, "Menu does not submit or operate the window in help");
+            page.Session.Emit(AuthGamepadAction.Accept);
+            Check(page.WindowActions.Count == count + 1 && page.WindowActions[^1] == action
+                && FocusManager.Current == page.First && !page.Navigator.GetState().IsHelpVisible,
+                "Physical A performs the selected window action and restores page focus");
+        }
+    }
+
+    private static void RejectedSubmissionFocus()
+    {
+        var noticeButton = new Button();
+        var otherButton = new Button();
+        bool IsNotice(DependencyObject element) => ReferenceEquals(element, noticeButton);
+        using var page = new Fixture(isNoticeFocus: IsNotice);
+        noticeButton.Focus(FocusState.Keyboard);
+        Check(page.Navigator.PlayFeedback(AuthGamepadFeedback.Error)
+            && page.Navigator.RestoreFocusAfterError(true) && FocusManager.Current == page.Last,
+            "Login error plays enabled feedback and recovers password focus from the inline AI notice");
+        otherButton.Focus(FocusState.Keyboard);
+        Check(!page.Navigator.RestoreFocusAfterError(true) && FocusManager.Current == otherButton,
+            "Rejection preserves deliberate focus outside the auth form");
+        noticeButton.Focus(FocusState.Keyboard);
+        page.Session.Emit(AuthGamepadAction.Accept);
+        Check(FocusManager.Current == noticeButton && noticeButton.Invocations == 0,
+            "An Accept edge cannot operate the unrelated notice or submit while it owns focus");
+        page.Session.Emit(AuthGamepadAction.Up);
+        Check(FocusManager.Current == page.First && page.PageActions == 0,
+            "A direction can return the controller from the inline notice without invoking anything");
+        noticeButton.Focus(FocusState.Keyboard);
+        VisualTreeHelper.OpenPopups.Add(new Popup { Child = new ContentDialog() });
+        page.Session.Emit(AuthGamepadAction.Up);
+        Check(!page.Navigator.RestoreFocusAfterError(true) && FocusManager.Current == noticeButton,
+            "Rejection does not pull focus away from an open consent dialog");
     }
 
     private static async Task FeedbackOutcomeReadback()
@@ -238,11 +293,12 @@ internal static class Program
         public PasswordBox Last { get; } = new() { Name = "password", Top = 80 };
         public AuthActionButton Submit { get; } = new() { Top = 140 };
         public int PageActions { get; private set; }
+        public List<AuthWindowAction> WindowActions { get; } = [];
         public int InitialChildren { get; }
         public AuthGamepadNavigation Navigator { get; }
         public AuthGamepadSession Session { get; }
         public AuthGamepadKeyboard Keyboard { get; }
-        public Fixture()
+        public Fixture(bool withWindowButtons = false, Func<DependencyObject, bool>? isNoticeFocus = null)
         {
             FocusManager.Current = null; VisualTreeHelper.OpenPopups.Clear();
             Root.Children.Add(First);
@@ -250,7 +306,8 @@ internal static class Program
             var hidden = new Grid { Visibility = Visibility.Collapsed }; hidden.Children.Add(new TextBox()); Root.Children.Add(hidden);
             Root.Children.Add(new TextBox { IsEnabled = false }); Root.Children.Add(Last); Root.Children.Add(Submit);
             InitialChildren = Root.Children.Count;
-            Navigator = new(Root, Scroller, _ => { PageActions++; return Task.CompletedTask; }, () => [First, Last], control => control == First ? "identifier" : control == Last ? "password" : null, () => { });
+            Navigator = new(Root, Scroller, _ => { PageActions++; return Task.CompletedTask; }, () => [First, Last], control => control == First ? "identifier" : control == Last ? "password" : null, () => { },
+                windowAction: withWindowButtons ? WindowActions.Add : null, isExternalNoticeFocus: isNoticeFocus);
             Session = AuthGamepadSession.Latest; Keyboard = AuthGamepadKeyboard.Latest;
             Navigator.SetActive(true);
         }

@@ -20,6 +20,8 @@ using Windows.UI.ViewManagement;
 
 namespace Mizon.Windows.Common;
 
+internal enum AuthWindowAction { Minimize, MaximizeOrRestore, Close }
+
 // Page-scoped controller ownership. This never injects global keyboard input or
 // keeps polling after its page has left the foreground.
 internal sealed partial class AuthGamepadNavigation : IDisposable
@@ -30,6 +32,10 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
     private readonly Func<Control[]> _fields;
     private readonly Func<Control?, string?> _fieldId;
     private readonly Action _hidePasswords;
+    private readonly Action<AuthWindowAction>? _windowAction;
+    private readonly Func<bool>? _canRestoreWindow;
+    private readonly Func<DependencyObject, bool>? _isExternalNoticeFocus;
+    private readonly Button[] _windowButtons;
     private readonly AuthGamepadSession _session;
     private readonly StackPanel _overlay = new() { Spacing = 8, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(12) };
     private readonly TextBlock _hints = new() { FontSize = 11, TextWrapping = TextWrapping.Wrap };
@@ -48,14 +54,20 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
 
     public AuthGamepadNavigation(Grid root, ScrollViewer scroller,
         Func<AuthGamepadAction, Task> pageAction, Func<Control[]> fields,
-        Func<Control?, string?> fieldId, Action hidePasswords, bool welcome = false)
+        Func<Control?, string?> fieldId, Action hidePasswords, bool welcome = false,
+        Action<AuthWindowAction>? windowAction = null, Func<bool>? canRestoreWindow = null,
+        Func<DependencyObject, bool>? isExternalNoticeFocus = null)
     {
         _root = root; _scroller = scroller; _pageAction = pageAction;
         _originalPadding = scroller.Padding;
         _welcome = welcome;
         _fields = fields; _fieldId = fieldId; _hidePasswords = hidePasswords;
+        _windowAction = windowAction;
+        _canRestoreWindow = canRestoreWindow;
+        _isExternalNoticeFocus = isExternalNoticeFocus;
         _help.Children.Add(_helpText);
         _help.Children.Add(_feedback);
+        _windowButtons = windowAction is null ? [] : CreateWindowButtons();
         var content = new StackPanel { Spacing = 8 };
         content.Children.Add(_help);
         content.Children.Add(_hints);
@@ -83,6 +95,7 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
         _overlay.SizeChanged += OverlaySizeChanged;
         _localization.PropertyChanged += LanguageChanged;
         _session = new AuthGamepadSession(root, Dispatch);
+        _feedback.IsChecked = true;
         _session.StateChanged += SessionChanged;
         RefreshText();
         Resize();
@@ -108,11 +121,44 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
     {
         IsControllerConnected = _session.State.IsControllerConnected,
         IsNavigationActive = _active && _session.State.IsActive,
-        FocusedFieldId = _fieldId(_keyboard.IsOpen ? _keyboard.EditingTarget : FocusedControl),
+        FocusedFieldId = GetFocusId(_keyboard.IsOpen ? _keyboard.EditingTarget : FocusedControl),
         IsKeyboardVisible = _keyboard.IsOpen,
         IsHelpVisible = _help.Visibility == Visibility.Visible,
-        IsFeedbackEnabled = _session.FeedbackEnabled
+        IsFeedbackEnabled = _session.FeedbackEnabled,
+        IsFeedbackPlaying = _session.IsFeedbackPlaying,
+        LastFeedback = _session.LastFeedback switch
+        {
+            AuthGamepadFeedback.Success => "success",
+            AuthGamepadFeedback.Error => "error",
+            AuthGamepadFeedback.Validation => "validation",
+            _ => null
+        }
     };
+
+    private bool IsActiveWithoutBlockingPopup => !_disposed && _active && _root.XamlRoot is { } xamlRoot
+        && !HasBlockingPopup(xamlRoot);
+
+    internal bool RestoreFocusAfterError(bool preferPassword) => RestoreFormFocus(preferPassword, allowMissingFocus: true);
+
+    private bool RestoreFormFocus(bool preferPassword, bool allowMissingFocus)
+    {
+        if (!IsActiveWithoutBlockingPopup || _root.XamlRoot is not { } root) return false;
+        var focused = FocusManager.GetFocusedElement(root) as DependencyObject;
+        if (focused is null ? !allowMissingFocus : _isExternalNoticeFocus?.Invoke(focused) != true) return false;
+        var fields = _fields();
+        return fields.Length > 0 && Focus(preferPassword ? fields[^1] : fields[0]);
+    }
+
+    internal bool PlayFeedback(AuthGamepadFeedback feedback) => IsActiveWithoutBlockingPopup && _session.PlayFeedback(feedback);
+    internal AuthGamepadSuccessFeedback? CreateSuccessFeedback(object owner) => IsActiveWithoutBlockingPopup
+        ? _session.CreateSuccessFeedback(owner) : null;
+
+    internal bool ConsumeSuccessFeedback(AuthGamepadSuccessFeedback ticket, object owner)
+    {
+        if (!IsActiveWithoutBlockingPopup || !_session.ConsumeSuccessFeedback(ticket, owner)) return false;
+        _feedback.IsChecked = _session.FeedbackEnabled;
+        return true;
+    }
 
     internal void ResetSurface() { Dismiss(); UpdateVisibility(); }
     internal bool IsGamepadMode => _active && _session.State.IsGamepadMode;
@@ -144,7 +190,14 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
     private async void Dispatch(AuthGamepadAction action)
     {
         if (_disposed || !_active) return;
-        try { await HandleAsync(action); }
+        try
+        {
+            if (_isExternalNoticeFocus is not null &&
+                action is (AuthGamepadAction.Up or AuthGamepadAction.Down or AuthGamepadAction.Left
+                    or AuthGamepadAction.Right or AuthGamepadAction.Back or AuthGamepadAction.ResetFocus) &&
+                RestoreFormFocus(preferPassword: false, allowMissingFocus: false)) return;
+            await HandleAsync(action);
+        }
         catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
         catch (Exception exception) { AppLog.Information($"Authentication controller action unavailable ({exception.GetType().Name})."); }
     }
@@ -324,7 +377,11 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
         if (show) { _helpOrigin = _keyboard.IsOpen ? _keyboard.EditingTarget : FocusedControl; _keyboard.Close(false); }
         _help.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         UpdateVisibility();
-        if (show) _feedback.Focus(FocusState.Keyboard);
+        if (show)
+        {
+            RefreshWindowButtons();
+            _feedback.Focus(FocusState.Keyboard);
+        }
         else
         {
             if (_helpOrigin is { } origin && Available(origin)) origin.Focus(FocusState.Keyboard);
@@ -332,16 +389,21 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
         }
     }
 
-    private bool OwnsInput()
+    private bool HasBlockingPopup(XamlRoot root, bool allowOwnedCombo = false)
     {
-        if (_root.XamlRoot is null) return false;
-        foreach (var popup in VisualTreeHelper.GetOpenPopupsForXamlRoot(_root.XamlRoot))
+        foreach (var popup in VisualTreeHelper.GetOpenPopupsForXamlRoot(root))
         {
             if (popup.Child is ToolTip) continue;
-            if (_openCombo is { IsDropDownOpen: true } && ContainsOwnedComboItem(popup.Child)) continue;
-            return false;
+            if (allowOwnedCombo && _openCombo is { IsDropDownOpen: true } && ContainsOwnedComboItem(popup.Child)) continue;
+            return true;
         }
-        var focused = FocusManager.GetFocusedElement(_root.XamlRoot) as DependencyObject;
+        return false;
+    }
+
+    private bool OwnsInput()
+    {
+        if (_root.XamlRoot is not { } root || HasBlockingPopup(root, allowOwnedCombo: true)) return false;
+        var focused = FocusManager.GetFocusedElement(root) as DependencyObject;
         if (focused is null) return true;
         for (var element = focused; element is not null; element = VisualTreeHelper.GetParent(element))
         {
@@ -393,6 +455,60 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
         _feedback.Content = _localization.GetString("GamepadFeedback");
         AutomationProperties.SetName(_feedback, _localization.GetString("GamepadFeedback"));
         AutomationProperties.SetName(_overlay, _localization.GetString("GamepadControls"));
+        RefreshWindowButtons();
+    }
+
+    private Button[] CreateWindowButtons()
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        var buttons = new Button[3];
+        for (var i = 0; i < buttons.Length; i++)
+        {
+            var button = new Button { UseSystemFocusVisuals = true, MinHeight = 34, CornerRadius = new CornerRadius(8) };
+            button.Click += WindowButtonClicked;
+            row.Children.Add(button);
+            buttons[i] = button;
+        }
+        _help.Children.Add(row);
+        return buttons;
+    }
+
+    private void RefreshWindowButtons()
+    {
+        if (_windowButtons.Length == 0) return;
+        SetWindowButtonLabel(_windowButtons[0], "Window/GamepadMinimize");
+        SetWindowButtonLabel(_windowButtons[1], _canRestoreWindow?.Invoke() == true
+            ? "Window/GamepadRestore" : "Window/GamepadMaximize");
+        SetWindowButtonLabel(_windowButtons[2], "Window/GamepadClose");
+    }
+
+    private void SetWindowButtonLabel(Button button, string key)
+    {
+        var label = _localization.GetString(key);
+        button.Content = label;
+        button.FontFamily = _localization.TextFontFamily;
+        AutomationProperties.SetName(button, label);
+    }
+
+    private string? GetFocusId(Control? control)
+    {
+        var index = control is Button button ? Array.IndexOf(_windowButtons, button) : -1;
+        return index switch
+        {
+            0 => "windowMinimize",
+            1 => "windowMaximizeRestore",
+            2 => "windowClose",
+            _ => _fieldId(control)
+        };
+    }
+
+    private void WindowButtonClicked(object sender, RoutedEventArgs args)
+    {
+        if (_disposed || !_active || _help.Visibility != Visibility.Visible || !OwnsInput()) return;
+        var index = sender is Button button ? Array.IndexOf(_windowButtons, button) : -1;
+        if (index < 0) return;
+        ShowHelp(false);
+        _windowAction?.Invoke((AuthWindowAction)index);
     }
     private void LanguageChanged(object? sender, PropertyChangedEventArgs args) { if (args.PropertyName == nameof(LocalizationService.Revision)) RefreshText(); }
     private void FeedbackChanged(object sender, RoutedEventArgs args) => _session.FeedbackEnabled = _feedback.IsChecked == true;
@@ -438,6 +554,7 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
         _keyboard.Closed -= KeyboardClosed;
         _keyboard.Dispose();
         _feedback.Checked -= FeedbackChanged; _feedback.Unchecked -= FeedbackChanged;
+        foreach (var button in _windowButtons) button.Click -= WindowButtonClicked;
         _localization.PropertyChanged -= LanguageChanged;
         _root.PointerPressed -= PointerPressed; _root.KeyDown -= KeyDown; _root.LostFocus -= LostFocus; _root.SizeChanged -= SizeChanged;
         _root.GotFocus -= GotFocus;

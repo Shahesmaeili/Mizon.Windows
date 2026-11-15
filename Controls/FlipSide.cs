@@ -106,6 +106,7 @@ public sealed partial class FlipSide : UserControl
         }
 
         _front.Visibility = _back.Visibility = Visibility.Visible;
+        _surface.ShowBoth = true;
         _front.IsEnabled = _back.IsEnabled = true;
         // The arriving face accepts focus while the spring is still settling.
         _front.IsHitTestVisible = !IsFlipped;
@@ -149,6 +150,10 @@ public sealed partial class FlipSide : UserControl
         _back.IsHitTestVisible = IsFlipped;
         _front.IsEnabled = !IsFlipped;
         _back.IsEnabled = IsFlipped;
+        _front.Visibility = IsFlipped ? Visibility.Collapsed : Visibility.Visible;
+        _back.Visibility = IsFlipped ? Visibility.Visible : Visibility.Collapsed;
+        _surface.ShowBoth = false;
+        _surface.InvalidateMeasure();
         AutomationProperties.SetAccessibilityView(_front, IsFlipped ? AccessibilityView.Raw : AccessibilityView.Content);
         AutomationProperties.SetAccessibilityView(_back, IsFlipped ? AccessibilityView.Content : AccessibilityView.Raw);
         completion?.TrySetResult();
@@ -195,6 +200,7 @@ public sealed partial class FlipSide : UserControl
         AutomationProperties.SetAccessibilityView(_front, IsFlipped ? AccessibilityView.Raw : AccessibilityView.Content);
         AutomationProperties.SetAccessibilityView(_back, IsFlipped ? AccessibilityView.Content : AccessibilityView.Raw);
         _surface.ShowBack = IsFlipped;
+        _surface.ShowBoth = false;
         _surface.InvalidateMeasure();
     }
 
@@ -234,7 +240,8 @@ public sealed partial class FlipSide : UserControl
         var height = (float)_surface.ActualHeight;
         if (width <= 0 || height <= 0) return;
         var perspective = Matrix4x4.Identity;
-        perspective.M34 = -1f / width;
+        // Keep perspective overhang inside the page's scroll gutter at both card heights.
+        perspective.M34 = -1f / (6 * Math.Max(width, height));
         ElementCompositionPreview.GetElementVisual(_surface).TransformMatrix =
             Matrix4x4.CreateTranslation(-width / 2, -height / 2, 0) * perspective *
             Matrix4x4.CreateTranslation(width / 2, height / 2, 0);
@@ -242,14 +249,19 @@ public sealed partial class FlipSide : UserControl
         Face_SizeChanged(_back, null!);
     }
 
-    // The hidden, longer registration face must not enlarge the login form's scroll extent.
+    // While turning, measure both faces so the outgoing taller card never arranges
+    // outside the space reserved by the scroll viewport. At rest only one face sizes it.
     private sealed partial class FacePanel : Panel
     {
         internal bool ShowBack;
+        internal bool ShowBoth;
         protected override Size MeasureOverride(Size availableSize)
         {
             foreach (var child in Children) child.Measure(new Size(availableSize.Width, double.PositiveInfinity));
-            return Children[ShowBack ? 1 : 0].DesiredSize;
+            var active = Children[ShowBack ? 1 : 0].DesiredSize;
+            if (!ShowBoth) return active;
+            var outgoing = Children[ShowBack ? 0 : 1].DesiredSize;
+            return new Size(Math.Max(active.Width, outgoing.Width), Math.Max(active.Height, outgoing.Height));
         }
         protected override Size ArrangeOverride(Size finalSize)
         {

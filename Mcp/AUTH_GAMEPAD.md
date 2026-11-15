@@ -16,7 +16,8 @@ exactly one `action`: `next`, `previous`, `up`, `down`, `left`, `right`,
 `openKeyboard`, `closeKeyboard`, `showHelp`, `hideHelp`, `enableFeedback` or
 `disableFeedback`. Feedback actions explicitly set the optional page-session
 feedback preference; they do not toggle it, start vibration or accept raw motor
-values/durations. Feedback is off by default. When enabled, it accompanies later
+values/durations. Feedback is enabled when the auth page loads and can be turned
+off in its View help or with the existing control action. Feedback accompanies
 physical controller actions and actual login/registration outcomes on the active
 page with a connected controller. The tool delegates to the
 active page's controller navigation flow. Directions move focus within the page
@@ -50,6 +51,18 @@ The handoff does not authorize a new submit or store credentials. Feedback stops
 on disable, deactivation, removal/disposal and is not replayed on reactivation.
 No MCP arbitrary-vibration tool is exposed: form submission still uses the
 separately permitted shared authentication operation.
+
+The controller View help on Login, Registration and Welcome includes the main
+window actions Minimize, Maximize/Restore and Close. D-pad selects the button,
+A operates it, and B exits the help. MCP's existing scoped focus movement can
+reach those controls and read `windowMinimize`, `windowMaximizeRestore` or
+`windowClose` as the focused ID. These authentication tools cannot execute
+window commands. Window MCP permissions and commands remain independent.
+
+If rejection disables the selected form control and Windows moves focus into
+the inline AI connection notice, focus returns to the form. A later directional
+controller action can reclaim that focus without activating the notice or the
+form. An actual consent dialog retains its own focus.
 
 Headless verification:
 

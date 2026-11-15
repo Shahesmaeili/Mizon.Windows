@@ -8,4 +8,8 @@
   <data name="Minimize" xml:space="preserve"><value>Minimize Mizon</value></data>
   <data name="Close" xml:space="preserve"><value>Close Mizon</value></data>
   <data name="FullScreenControls" xml:space="preserve"><value>Full-screen window controls</value></data>
+  <data name="GamepadMinimize" xml:space="preserve"><value>Minimize</value></data>
+  <data name="GamepadMaximize" xml:space="preserve"><value>Maximize</value></data>
+  <data name="GamepadRestore" xml:space="preserve"><value>Restore</value></data>
+  <data name="GamepadClose" xml:space="preserve"><value>Close</value></data>
 </root>

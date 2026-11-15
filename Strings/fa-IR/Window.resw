@@ -8,4 +8,8 @@
   <data name="Minimize" xml:space="preserve"><value>کوچک کردن میزون</value></data>
   <data name="Close" xml:space="preserve"><value>بستن میزون</value></data>
   <data name="FullScreenControls" xml:space="preserve"><value>کنترل‌های پنجرهٔ تمام‌صفحه</value></data>
+  <data name="GamepadMinimize" xml:space="preserve"><value>کوچک‌کردن</value></data>
+  <data name="GamepadMaximize" xml:space="preserve"><value>بزرگ‌کردن</value></data>
+  <data name="GamepadRestore" xml:space="preserve"><value>بازگرداندن اندازه</value></data>
+  <data name="GamepadClose" xml:space="preserve"><value>بستن</value></data>
 </root>

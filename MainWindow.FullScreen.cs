@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Mizon.Windows.Common;
 using Mizon.Windows.Services;
 using Windows.UI.ViewManagement;
 using WinRT.Interop;
@@ -287,6 +288,46 @@ public sealed partial class MainWindow : IWindowPresentationHost
         ShowWindow(WindowNative.GetWindowHandle(this), 6); // SW_MINIMIZE
     }
     private void CloseWindow_Click(object sender, RoutedEventArgs args) => Close();
+
+    internal bool CanRestoreAccountWindow => !_windowPresentationClosed &&
+        (IsFullScreen || AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Maximized });
+
+    internal void RequestAccountWindowAction(Page owner, AuthWindowAction action)
+    {
+        // Leave the controller input callback before changing HWND state.
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_windowPresentationClosed || !_windowPresentationActive || _windowPresenterChanging
+                || !owner.IsLoaded || !ReferenceEquals(MainFrame.Content, owner)
+                || !AuthGamepadNavigation.IsForeground(this) || _mcpAccessDialog is not null) return;
+            try
+            {
+                switch (action)
+                {
+                    case AuthWindowAction.Minimize when IsFullScreen:
+                        MinimizeWindow_Click(this, new RoutedEventArgs());
+                        break;
+                    case AuthWindowAction.Minimize when AppWindow.Presenter is OverlappedPresenter { IsMinimizable: true } windowed:
+                        windowed.Minimize();
+                        break;
+                    case AuthWindowAction.MaximizeOrRestore when IsFullScreen:
+                        RequestFullScreen(false);
+                        break;
+                    case AuthWindowAction.MaximizeOrRestore when AppWindow.Presenter is OverlappedPresenter { IsMaximizable: true } windowed:
+                        if (windowed.State == OverlappedPresenterState.Maximized) windowed.Restore();
+                        else windowed.Maximize();
+                        break;
+                    case AuthWindowAction.Close:
+                        Close();
+                        break;
+                }
+            }
+            catch (Exception exception) when (exception is COMException or ArgumentException or InvalidOperationException)
+            {
+                AppLog.Information($"Controller window action failed ({exception.GetType().Name}).");
+            }
+        });
+    }
 
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

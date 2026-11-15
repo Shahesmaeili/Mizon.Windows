@@ -17,6 +17,7 @@ public sealed partial class LoginPageViewModel : MainViewModel
     private bool _isSubmitting;
     private readonly LocalizationService _localization = LocalizationService.Current;
     private string _errorKey = string.Empty;
+    internal event EventHandler<AuthSubmissionCompletedEventArgs>? SubmissionCompleted;
 
     public string EmailAddressOrUsername
     {
@@ -189,9 +190,14 @@ public sealed partial class LoginPageViewModel : MainViewModel
         if (!LoginButtonIsEnabled || cancellationToken.IsCancellationRequested) return;
 
         SetError(string.Empty);
-        if (IsRegistrationMode && !ValidateRegistration()) return;
+        if (IsRegistrationMode && !ValidateRegistration())
+        {
+            NotifySubmissionCompleted(AuthSubmissionOutcome.Validation, cancellationToken);
+            return;
+        }
 
         var isRegistration = IsRegistrationMode;
+        var outcomeReported = false;
         SetSubmitting(true);
 
         try
@@ -233,13 +239,18 @@ public sealed partial class LoginPageViewModel : MainViewModel
             if (!isSuccess || string.IsNullOrWhiteSpace(accessToken))
             {
                 SetError(GetErrorKey(errorCode, isRegistration));
+                outcomeReported = true;
+                NotifySubmissionCompleted(AuthSubmissionOutcome.Error, cancellationToken);
                 return;
             }
 
             _localStorageService.SetJwtToken(accessToken);
             MizonApi.SetToken(accessToken);
+            outcomeReported = true;
+            var completed = NotifySubmissionCompleted(AuthSubmissionOutcome.Success, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             ClearSensitiveInputs();
-            NavigationService.MainNavigate(typeof(WelcomePage));
+            NavigationService.MainNavigate(typeof(WelcomePage), completed?.NavigationParameters);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -247,15 +258,36 @@ public sealed partial class LoginPageViewModel : MainViewModel
         }
         catch (Exception exception)
         {
+            if (cancellationToken.IsCancellationRequested) return;
             // Authentication diagnostics intentionally omit payloads and exception messages.
             AppLog.Information($"Authentication submission failed ({exception.GetType().Name}).");
             SetError(GetErrorKey(null, isRegistration));
+            if (!outcomeReported) NotifySubmissionCompleted(AuthSubmissionOutcome.Error, cancellationToken);
         }
         finally
         {
             if (cancellationToken.IsCancellationRequested) ClearSensitiveInputs();
             SetSubmitting(false);
         }
+    }
+
+    private AuthSubmissionCompletedEventArgs? NotifySubmissionCompleted(AuthSubmissionOutcome outcome, CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested) return null;
+        var args = new AuthSubmissionCompletedEventArgs(outcome);
+        if (SubmissionCompleted is not { } handlers) return args;
+        foreach (EventHandler<AuthSubmissionCompletedEventArgs> handler in handlers.GetInvocationList())
+        {
+            if (cancellationToken.IsCancellationRequested) break;
+            try { handler(this, args); }
+            catch (Exception exception)
+            {
+                // An unavailable controller/feedback observer cannot turn a valid
+                // sign-in into an authentication failure or delay navigation.
+                AppLog.Information($"Authentication feedback unavailable ({exception.GetType().Name}).");
+            }
+        }
+        return args;
     }
 
     private bool ValidateRegistration()

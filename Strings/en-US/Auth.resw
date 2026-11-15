@@ -108,12 +108,12 @@
   <data name="ClearInputHelp" xml:space="preserve"><value>Clears this field.</value></data>
   <data name="GamepadHints" xml:space="preserve"><value>A Select / type   B Back   LB/RB Sign in / register   View Help</value></data>
   <data name="GamepadControls" xml:space="preserve"><value>Xbox controller controls</value></data>
-  <data name="GamepadFeedback" xml:space="preserve"><value>Brief controller vibration</value></data>
+  <data name="GamepadFeedback" xml:space="preserve"><value>Controller feedback for navigation and results</value></data>
   <data name="GamepadHelp" xml:space="preserve"><value>D-pad / left stick: move focus
 A: select or open keyboard • B: back
 X: clear input • Y: show / hide the focused password
 LB / RB: sign in / register • LT / RT: previous / next field
-Menu: submit form • View: help
+Menu: submit form • View: help and window controls
 Left stick click: primary action • right stick click: first field
 Right stick: scroll • Xbox / Share: handled by Windows</value></data>
   <data name="GamepadKeyboardTitle" xml:space="preserve"><value>Controller keyboard</value></data>
@@ -138,6 +138,6 @@ Right stick: scroll • Xbox / Share: handled by Windows</value></data>
 B or LB: sign in • Menu: retry
 Left stick click: retry button • RB or right stick click: sign-in button
 LT / RT: previous / next control • right stick: scroll
-View: help • Xbox / Share: handled by Windows
+View: help and window controls • Xbox / Share: handled by Windows
 Sign in and retry become available after preparation finishes with an error.</value></data>
 </root>

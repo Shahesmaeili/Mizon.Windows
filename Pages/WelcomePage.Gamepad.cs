@@ -1,23 +1,58 @@
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Navigation;
 using Mizon.Windows.Common;
 using Mizon.Windows.Mcp.Contracts;
 using Mizon.Windows.Services.Gamepad;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Mizon.Windows.Pages;
 
 public sealed partial class WelcomePage
 {
     private AuthGamepadNavigation? _gamepadNavigation;
+    private AuthGamepadSuccessFeedback? _successFeedback;
+
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        _successFeedback?.Dispose();
+        _successFeedback = null;
+        if (e.Parameter is Dictionary<string, object> parameters
+            && parameters.Remove(AuthGamepadSuccessFeedback.ParameterKey, out var value)
+            && value is AuthGamepadSuccessFeedback ticket) _successFeedback = ticket;
+        // Remove the ticket from the navigation journal; cached/back navigation
+        // must not replay success or retain a native controller reference.
+        if (IsLoaded && _gamepadNavigation is not null) ConsumeSuccessFeedback();
+    }
 
     private void InitializeGamepad()
     {
         _windowActive = AuthGamepadNavigation.IsForeground(_hostWindow);
+        var window = _hostWindow as MainWindow;
         _gamepadNavigation ??= new AuthGamepadNavigation(WelcomeRoot, WelcomeScroller,
-            HandleGamepadAsync, () => [], _ => null, () => { }, welcome: true);
+            HandleGamepadAsync, () => [], _ => null, () => { }, welcome: true,
+            windowAction: window is null ? null : action => window.RequestAccountWindowAction(this, action),
+            canRestoreWindow: window is null ? null : () => window.CanRestoreAccountWindow);
         UpdateGamepadActivity();
+        ConsumeSuccessFeedback();
+    }
+
+    private void ConsumeSuccessFeedback()
+    {
+        var ticket = _successFeedback;
+        _successFeedback = null;
+        try
+        {
+            if (ticket is not null && _hostWindow is not null)
+                _gamepadNavigation?.ConsumeSuccessFeedback(ticket, _hostWindow);
+        }
+        finally
+        {
+            ticket?.Dispose();
+        }
     }
 
     private void UpdateGamepadActivity() => _gamepadNavigation?.SetActive(
@@ -59,6 +94,8 @@ public sealed partial class WelcomePage
 
     private void DisposeGamepad()
     {
+        _successFeedback?.Dispose();
+        _successFeedback = null;
         _gamepadNavigation?.Dispose();
         _gamepadNavigation = null;
     }

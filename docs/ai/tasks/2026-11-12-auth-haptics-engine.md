@@ -62,6 +62,6 @@ the combined WinUI build. No backend/database or API contract change is required
 
 ## Publication
 
-Engine implementation and tests are published on `codex/auth-result-haptics-engine`
-for normal merge by the root integration owner. The containing commit is identified
-by this file's git history; no shared checkout or main history was reset.
+The engine is integrated with the account pages under the
+[controller follow-up](2026-11-15-auth-controller-window.md). The subtask push
+could not authenticate. Verify the integration commit separately.

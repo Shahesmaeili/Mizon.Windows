@@ -108,12 +108,12 @@
   <data name="ClearInputHelp" xml:space="preserve"><value>متن این کادر را پاک می‌کند.</value></data>
   <data name="GamepadHints" xml:space="preserve"><value>A انتخاب / تایپ   B بازگشت   LB/RB ورود و ثبت‌نام   View راهنما</value></data>
   <data name="GamepadControls" xml:space="preserve"><value>کنترل با دستهٔ ایکس‌باکس</value></data>
-  <data name="GamepadFeedback" xml:space="preserve"><value>لرزش کوتاه هنگام کار با دسته</value></data>
+  <data name="GamepadFeedback" xml:space="preserve"><value>لرزش هنگام انتخاب، موفقیت و خطا</value></data>
   <data name="GamepadHelp" xml:space="preserve"><value>جهت‌ها یا استیک چپ: جابه‌جایی انتخاب
 A: انتخاب یا باز کردن صفحه‌کلید • B: بازگشت
 X: پاک کردن ورودی • Y: نمایش یا پنهان کردن گذرواژهٔ انتخاب‌شده
 LB / RB: ورود و ثبت‌نام • LT / RT: ورودی قبلی و بعدی
-Menu: ارسال فرم • View: راهنما
+Menu: ارسال فرم • View: راهنما و کنترل پنجره
 فشردن استیک چپ: دکمهٔ اصلی • فشردن استیک راست: اولین ورودی
 استیک راست: اسکرول • Xbox و Share: کنترل خود ویندوز</value></data>
   <data name="GamepadKeyboardTitle" xml:space="preserve"><value>صفحه‌کلید دسته</value></data>
@@ -138,6 +138,6 @@ Menu: ارسال فرم • View: راهنما
 B یا LB: ورود به حساب • Menu: تلاش مجدد
 فشردن استیک چپ: دکمهٔ تلاش مجدد • RB یا فشردن استیک راست: دکمهٔ ورود
 LT / RT: کنترل قبلی و بعدی • استیک راست: اسکرول
-View: راهنما • Xbox و Share: کنترل خود ویندوز
+View: راهنما و کنترل پنجره • Xbox و Share: کنترل خود ویندوز
 عملیات ورود و تلاش مجدد پس از پایان آماده‌سازی و هنگام نمایش خطا فعال‌اند.</value></data>
 </root>

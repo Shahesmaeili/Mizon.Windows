@@ -44,6 +44,8 @@ public sealed partial class LoginPage : Page
         _pageCancellation ??= new CancellationTokenSource();
         ViewModel.PropertyChanged -= AccountStateChanged;
         ViewModel.PropertyChanged += AccountStateChanged;
+        ViewModel.SubmissionCompleted -= AuthenticationSubmissionCompleted;
+        ViewModel.SubmissionCompleted += AuthenticationSubmissionCompleted;
         Localization.PropertyChanged -= LocalizationChanged;
         Localization.PropertyChanged += LocalizationChanged;
         ViewModel.RefreshLocalization();
@@ -176,7 +178,7 @@ public sealed partial class LoginPage : Page
             });
         (App.MainMizonWindow as MainWindow)?.RefreshTitle();
         // Returning from the taller registration form should not leave the login heading offscreen.
-        LoginScroller.ChangeView(null, 0, null, !_uiSettings.AnimationsEnabled);
+        LoginScroller.ChangeView(null, 0, null, disableAnimation: true);
         AccessibilityAnnouncements.Announce(this, Localization.GetString(ViewModel.IsRegistrationMode ? "AuthModeRegister" : "AuthModeLogin"), "Mizon.Account.Mode");
     }
 
@@ -235,6 +237,7 @@ public sealed partial class LoginPage : Page
 
     private void Page_Unloaded(object sender, RoutedEventArgs args)
     {
+        ViewModel.SubmissionCompleted -= AuthenticationSubmissionCompleted;
         DisposeGamepad();
         ViewModel.PropertyChanged -= AccountStateChanged;
         Localization.PropertyChanged -= LocalizationChanged;

@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Services;
 using Mizon.Windows.UserControls;
 using System;
@@ -13,6 +14,13 @@ public sealed partial class MainWindow
     private ContentDialog? _mcpAccessDialog;
     private bool _mcpAccessClosed;
     private int _mcpPendingCount;
+
+    internal bool IsMcpNoticeFocus(DependencyObject element)
+    {
+        for (DependencyObject? current = element; current is not null; current = VisualTreeHelper.GetParent(current))
+            if (ReferenceEquals(current, McpAccessNotice)) return true;
+        return false;
+    }
 
     private void InitializeMcpAccess()
     {

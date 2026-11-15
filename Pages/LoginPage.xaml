@@ -86,7 +86,7 @@
                               HorizontalContentAlignment="Stretch" VerticalScrollBarVisibility="Hidden"
                               VerticalContentAlignment="Stretch" ZoomMode="Disabled">
                     <Grid MinHeight="{x:Bind LoginScroller.ViewportHeight, Mode=OneWay}">
-                        <controls:AuthFormsPanel x:Name="AuthForms" Margin="4,14" VerticalAlignment="Center"
+                        <controls:AuthFormsPanel x:Name="AuthForms" Margin="8,24" VerticalAlignment="Center"
                                                  ViewModel="{x:Bind ViewModel}" SubmitRequested="AuthForms_SubmitRequested"
                                                  ModeChanged="AuthForms_ModeChanged" />
                     </Grid>

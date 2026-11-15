@@ -129,7 +129,17 @@ namespace Microsoft.UI.Xaml.Controls
     }
     public class Panel : FrameworkElement { public Panel() => Children = new(this); public ElementCollection Children { get; } }
     public class Grid : Panel;
-    public class StackPanel : Panel { public double Spacing { get; set; } }
+    public enum Orientation { Vertical, Horizontal }
+    public class StackPanel : Panel { public double Spacing { get; set; } public Orientation Orientation { get; set; } }
+    public class Button : Primitives.ButtonBase
+    {
+        public bool UseSystemFocusVisuals { get; set; }
+        public CornerRadius CornerRadius { get; set; }
+        public object? Content { get; set; }
+        public object? FontFamily { get; set; }
+        public event Action<object, RoutedEventArgs>? Click;
+        public override void Invoke() { base.Invoke(); Click?.Invoke(this, new()); }
+    }
     public class TextBox : Control { public string Text { get; set; } = string.Empty; }
     public class PasswordBox : Control;
     public class ContentDialog : Control;
@@ -160,7 +170,7 @@ namespace Microsoft.UI.Xaml.Controls
 }
 namespace Microsoft.UI.Xaml.Controls.Primitives
 {
-    public class ButtonBase : Control { public int Invocations { get; private set; } public void Invoke() => Invocations++; }
+    public class ButtonBase : Control { public int Invocations { get; private set; } public virtual void Invoke() => Invocations++; }
     public class Popup : FrameworkElement { public UIElement? Child { get; set; } public bool IsOpen { get; set; } = true; }
 }
 namespace Microsoft.UI.Xaml.Automation { public static class AutomationProperties { public static void SetName(DependencyObject element, string name) { } } }

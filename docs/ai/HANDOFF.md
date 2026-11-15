@@ -2,6 +2,22 @@
 
 Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Auth controller and turning card — 2026-11-15
+
+Successful login/registration, rejected requests and local registration validation
+now have separate bounded haptic patterns. Feedback starts enabled and the
+controller View help can turn it off. Success transfers once to Welcome on the same window and
+controller, without delaying authentication; cancellation, deactivation, disconnect
+and page disposal stop feedback. No credential data is included in the handoff.
+
+Authentication MCP read-state includes result feedback and focused window
+controls. Read/control/submit permission separation is preserved. The View
+help exposes selectable Minimize, Maximize/Restore and Close buttons. Rejected
+submissions recover focus from the inline AI notice while modal consent keeps
+its scope. The existing card spring reserves projection space inside the form
+viewport, leaving the showcase and language picker independent. See
+[controller, focus and card requirements](tasks/2026-11-15-auth-controller-window.md).
+
 ## Xbox controller authentication — 2026-11-12
 
 Login/Registration/Welcome now own native controller sessions, bounded focus,

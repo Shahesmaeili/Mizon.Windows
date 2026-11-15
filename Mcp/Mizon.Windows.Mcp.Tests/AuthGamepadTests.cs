@@ -72,13 +72,17 @@ internal static partial class ConnectionLifecycleTests
             "Relative controller actions must not be advertised as retry-safe.");
         var state = tool.OutputSchema!.Value.GetProperty("properties").GetProperty("state").GetProperty("properties")
             .GetProperty("gamepad").GetProperty("properties");
-        Check.That(state.GetProperty("focusedFieldId").GetProperty("description").GetString()!.Contains("never its entered text", StringComparison.Ordinal)
+        var focusDescription = state.GetProperty("focusedFieldId").GetProperty("description").GetString()!;
+        Check.That(focusDescription.Contains("never its entered text", StringComparison.Ordinal)
+            && new[] { "windowMinimize", "windowMaximizeRestore", "windowClose" }
+                .All(id => focusDescription.Contains(id, StringComparison.Ordinal))
             && state.GetProperty("isFeedbackEnabled").GetProperty("description").GetString()!.Contains("does not start vibration", StringComparison.Ordinal)
             && state.GetProperty("lastFeedback").GetProperty("description").GetString()!.Contains("success, error or validation", StringComparison.Ordinal)
             && state.GetProperty("isFeedbackPlaying").GetProperty("description").GetString()!.Contains("not proof of physical motor movement", StringComparison.Ordinal)
             && state.EnumerateObject().Count() == 8, "Controller read-state is not bounded and self-described.");
         foreach (var input in new[] { "{}", "{\"action\":1}", "{\"action\":null}", "{\"action\":\"accept\"}",
             "{\"action\":\"submit\"}", "{\"action\":\"menu\"}", "{\"action\":\"next\",\"page\":\"home\"}",
+            "{\"action\":\"windowClose\"}", "{\"action\":\"windowMaximizeRestore\"}", "{\"action\":\"windowMinimize\"}",
             "{\"action\":\"next\",\"key\":\"A\"}", "{\"action\":\"enableFeedback\",\"duration\":1000}",
             "{\"action\":\"enableFeedback\",\"motor\":1}", "{\"action\":\"toggleFeedback\"}" })
         {
