@@ -21,6 +21,7 @@ internal static class Program
         await NativeWindowSelection();
         await OtherSurfaces();
         RejectedSubmissionFocus();
+        await WrongPasswordFocus();
         await FeedbackPreference();
         await FeedbackOutcomeReadback();
         await Lifecycle();
@@ -206,13 +207,13 @@ internal static class Program
         using var page = new Fixture(withCaption: true);
         page.First.Focus(FocusState.Keyboard);
         Check(!await page.Apply(McpAuthGamepadAction.Up) && page.Caption.Selected is null,
-            "Remote Up cannot enter native pointer navigation");
+            "Remote Up cannot enter native caption navigation");
         page.Session.Emit(AuthGamepadAction.Up);
         Check(page.Navigator.GetState().FocusedFieldId == "windowMinimize" && FocusManager.Current == page.First,
             "Physical Up from the highest form control selects the caption while retaining WinUI focus");
         page.Session.Emit(AuthGamepadAction.Right);
         Check(page.Navigator.GetState().FocusedFieldId == "windowMaximizeRestore" &&
-            !await page.Apply(McpAuthGamepadAction.Right), "Physical Right selects the next window control and MCP cannot move the pointer");
+            !await page.Apply(McpAuthGamepadAction.Right), "Physical Right selects the next window control and MCP cannot change caption selection");
         page.Session.Emit(AuthGamepadAction.Submit);
         Check(page.PageActions == 0 && page.Caption.Invoked.Count == 0, "Menu cannot operate a selected caption or submit the form");
         page.Session.Emit(AuthGamepadAction.Accept);
@@ -226,11 +227,11 @@ internal static class Program
         Check(page.Caption.Selected is null && FocusManager.Current == page.First && page.Caption.Invoked.Count == 1,
             "Physical B leaves the title bar without a window action");
         page.Session.Emit(AuthGamepadAction.Up);
-        page.Caption.PointerStillAtSelection = false;
+        page.Caption.SelectionAvailable = false;
         page.Session.Emit(AuthGamepadAction.Accept);
         Check(page.Caption.Invoked.Count == 1 && page.Caption.Selected is null && page.Submit.Invocations == 0,
-            "Physical pointer movement invalidates the selected action without accidentally activating the form");
-        page.Caption.PointerStillAtSelection = true;
+            "Unavailable caption selection cannot activate a window action or the focused form");
+        page.Caption.SelectionAvailable = true;
         page.Session.Emit(AuthGamepadAction.Up);
         VisualTreeHelper.OpenPopups.Add(new Popup { Child = new ContentDialog() });
         page.Session.Emit(AuthGamepadAction.Accept);
@@ -269,6 +270,32 @@ internal static class Program
             "Rejection does not pull focus away from an open consent dialog");
     }
 
+    private static async Task WrongPasswordFocus()
+    {
+        using var page = new Fixture();
+        var languagePicker = new ComboBox();
+        page.Root.Children.Add(languagePicker);
+        page.Last.Focus(FocusState.Keyboard);
+        page.Session.Emit(AuthGamepadAction.Submit);
+        languagePicker.Focus(FocusState.Keyboard); // WinUI fallback while the form was disabled.
+        Check(!page.Navigator.RestoreFocusAfterError(preferPassword: true)
+            && FocusManager.Current == languagePicker, "An unrelated login failure does not take in-page focus");
+        Check(page.Navigator.RestoreFocusAfterError(preferPassword: true, invalidCredentials: true)
+            && FocusManager.Current == page.Last && page.Navigator.GetState().FocusedFieldId == "password",
+            "Rejected controller sign-in recovers password focus from the language picker");
+
+        languagePicker.Focus(FocusState.Keyboard);
+        page.Session.NotifyPointerOrKeyboardInput();
+        Check(!page.Navigator.RestoreFocusAfterError(preferPassword: true, invalidCredentials: true)
+            && FocusManager.Current == languagePicker, "A mouse or keyboard change keeps its chosen control");
+
+        page.Session.Emit(AuthGamepadAction.ToggleHelp);
+        Check(!page.Navigator.RestoreFocusAfterError(preferPassword: true, invalidCredentials: true)
+            && page.Navigator.GetState().IsHelpVisible && FocusManager.Current is CheckBox,
+            "A pending rejection cannot steal focus from controller help");
+        await page.Apply(McpAuthGamepadAction.HideHelp);
+    }
+
     private static async Task FeedbackOutcomeReadback()
     {
         using var page = new Fixture();
@@ -305,8 +332,8 @@ internal static class Program
     private sealed class CaptionStub : IAuthCaptionNavigation
     {
         public AuthWindowAction? Selected { get; private set; }
-        public bool PointerStillAtSelection { get; set; } = true;
-        public bool IsCurrent => Selected.HasValue && PointerStillAtSelection;
+        public bool SelectionAvailable { get; set; } = true;
+        public bool IsCurrent => Selected.HasValue && SelectionAvailable;
         public bool IsMaximized => false;
         public List<AuthWindowAction> Invoked { get; } = [];
 

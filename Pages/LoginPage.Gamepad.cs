@@ -1,3 +1,4 @@
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Mizon.Windows.Common;
 using Mizon.Windows.Mcp.Contracts;
@@ -24,11 +25,15 @@ public sealed partial class LoginPage
         {
             var lifetime = _pageCancellation;
             var preferPassword = !ViewModel.IsRegistrationMode;
-            DispatcherQueue.TryEnqueue(() =>
+            var errorCode = ViewModel.ErrorCode;
+            // Let the form's enabled bindings settle before restoring the password.
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
             {
                 if (IsLoaded && ReferenceEquals(_pageCancellation, lifetime) && ViewModel.ControlsIsEnabled
-                    && ViewModel.HasError && ReferenceEquals(ViewModel.NavigationService.CurrentMainPage, this))
-                    _gamepadNavigation?.RestoreFocusAfterError(preferPassword);
+                    && ViewModel.HasError && ViewModel.ErrorCode == errorCode
+                    && ReferenceEquals(ViewModel.NavigationService.CurrentMainPage, this))
+                    _gamepadNavigation?.RestoreFocusAfterError(preferPassword,
+                        invalidCredentials: errorCode == "AuthInvalidCredentialsError");
             });
             _gamepadNavigation?.PlayFeedback(args.Outcome == AuthSubmissionOutcome.Validation
                 ? AuthGamepadFeedback.Validation : AuthGamepadFeedback.Error);

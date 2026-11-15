@@ -94,7 +94,7 @@ internal static class MizonAuthSchemas
             "gamepad" => "Page-local controller navigation snapshot, present only for a loaded authentication page and authentication read consent. Contains no keyboard text, password contents, raw input or controller identifiers.",
             "isControllerConnected" => "Whether an available game controller is connected for authentication navigation. No device name or identifier is disclosed.",
             "isNavigationActive" => "Whether controller navigation is currently active on this authentication page. A connected controller alone does not mean the page accepts actions.",
-            "focusedFieldId" => "Stable authentication control identifier, never its entered text or password contents. Physical controller selection of a native caption button can report windowMinimize, windowMaximizeRestore or windowClose. MCP does not move the native pointer or invoke a window command.",
+            "focusedFieldId" => "Stable authentication control identifier, never its entered text or password contents. Physical controller selection of a native caption button can report windowMinimize, windowMaximizeRestore or windowClose. MCP cannot operate the window caption.",
             "isKeyboardVisible" => "Whether the authentication page's own on-screen controller keyboard is visible. Does not inspect the Windows keyboard or other applications.",
             "isHelpVisible" => "Whether the authentication page's controller help is visible.",
             "isFeedbackEnabled" => "Whether brief controller feedback is enabled for this authentication page session. Enabled by default on the loaded authentication page. Reading or enabling it does not start vibration.",

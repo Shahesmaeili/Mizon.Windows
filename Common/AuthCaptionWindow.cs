@@ -10,13 +10,14 @@ internal static class AuthCaptionWindow
 {
     internal static IAuthCaptionNavigation? Create(Window? window, AppWindow? appWindow)
     {
-        if (window is null || appWindow is null) return null;
+        if (window is not MainWindow mainWindow || appWindow is null) return null;
         InputNonClientPointerSource? pointer = null;
         try { pointer = InputNonClientPointerSource.GetForWindowId(appWindow.Id); }
         catch (Exception exception) when (exception is COMException or InvalidOperationException) { }
 
         return new NativeAuthCaption(WinRT.Interop.WindowNative.GetWindowHandle(window),
-            () => appWindow.Presenter is OverlappedPresenter { State: not OverlappedPresenterState.Minimized },
+            () => mainWindow.IsAvailable && appWindow.IsVisible
+                && appWindow.Presenter is OverlappedPresenter { State: not OverlappedPresenterState.Minimized },
             action =>
             {
                 if (appWindow.Presenter is OverlappedPresenter presenter &&
@@ -37,6 +38,6 @@ internal static class AuthCaptionWindow
                 }
                 catch (Exception exception) when (exception is COMException or InvalidOperationException) { }
                 return (true, 0, 0, 0, 0);
-            });
+            }, mainWindow.ShowAccountCaptionSelection);
     }
 }

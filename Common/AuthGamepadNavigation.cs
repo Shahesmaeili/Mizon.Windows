@@ -132,15 +132,31 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
     private bool IsActiveWithoutBlockingPopup => !_disposed && _active && _root.XamlRoot is { } xamlRoot
         && !HasBlockingPopup(xamlRoot);
 
-    internal bool RestoreFocusAfterError(bool preferPassword) => RestoreFormFocus(preferPassword, allowMissingFocus: true);
+    internal bool RestoreFocusAfterError(bool preferPassword, bool invalidCredentials = false)
+    {
+        if (_keyboard.IsOpen || _help.Visibility == Visibility.Visible || _caption?.Selected is not null) return false;
+        // Disabling the form during submit can make WinUI focus the still-enabled
+        // language picker. On a rejected controller sign-in, return to the password.
+        return RestoreFormFocus(preferPassword, allowMissingFocus: true,
+            allowPageFocus: preferPassword && invalidCredentials && IsGamepadMode);
+    }
 
-    private bool RestoreFormFocus(bool preferPassword, bool allowMissingFocus)
+    private bool RestoreFormFocus(bool preferPassword, bool allowMissingFocus, bool allowPageFocus = false)
     {
         if (!IsActiveWithoutBlockingPopup || _root.XamlRoot is not { } root) return false;
         var focused = FocusManager.GetFocusedElement(root) as DependencyObject;
-        if (focused is null ? !allowMissingFocus : _isExternalNoticeFocus?.Invoke(focused) != true) return false;
+        if (focused is null)
+        {
+            if (!allowMissingFocus) return false;
+        }
+        else if (!(allowPageFocus && IsWithin(focused, _root)) && _isExternalNoticeFocus?.Invoke(focused) != true)
+        {
+            return false;
+        }
         var fields = _fields();
-        return fields.Length > 0 && Focus(preferPassword ? fields[^1] : fields[0]);
+        if (fields.Length == 0) return false;
+        var target = preferPassword ? fields[^1] : fields[0];
+        return IsWithin(focused, target) || Focus(target);
     }
 
     internal bool PlayFeedback(AuthGamepadFeedback feedback) => IsActiveWithoutBlockingPopup && _session.PlayFeedback(feedback);
@@ -155,6 +171,7 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
     }
 
     internal void ResetSurface() { Dismiss(); UpdateVisibility(); }
+    internal void ClearCaptionSelection() => _caption?.Clear();
     internal bool IsGamepadMode => _active && _session.State.IsGamepadMode;
 
     internal void SetActive(bool active)

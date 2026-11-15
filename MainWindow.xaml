@@ -32,6 +32,13 @@
 
         <Frame x:Name="MainFrame"/>
 
+        <Canvas x:Name="AccountCaptionFocusLayer" Visibility="Collapsed" IsHitTestVisible="False"
+                FlowDirection="LeftToRight" Canvas.ZIndex="9999" AutomationProperties.AccessibilityView="Raw">
+            <Border x:Name="AccountCaptionFocusRing" CornerRadius="6" BorderThickness="1"
+                    BorderBrush="{ThemeResource FocusStrokeColorOuterBrush}">
+                <Border CornerRadius="5" BorderThickness="1" BorderBrush="{ThemeResource FocusStrokeColorInnerBrush}" />
+            </Border>
+        </Canvas>
 
 
         <TeachingTip x:Name="MainTeachingTip"  Style="{ThemeResource TransparentTeachingTipStyle}" FontFamily="/Assets/Fonts/IRANSANS.TTF#IRANSans" FlowDirection="RightToLeft" IsLightDismissEnabled="True" PlacementMargin="20" >

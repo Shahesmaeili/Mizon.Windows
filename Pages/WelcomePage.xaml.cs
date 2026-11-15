@@ -160,6 +160,7 @@ public sealed partial class WelcomePage : Page
 
     private void HostWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)
     {
+        if (args.DidPresenterChange || args.DidSizeChange) _gamepadNavigation?.ClearCaptionSelection();
         if (args.DidPresenterChange || args.DidVisibilityChange) UpdateGamepadActivity();
         if (args.DidPresenterChange || args.DidVisibilityChange) UpdateMotionActivity();
     }

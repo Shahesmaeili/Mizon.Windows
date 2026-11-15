@@ -32,7 +32,7 @@ public sealed partial class LoginPage
         var scale = XamlRoot?.RasterizationScale ?? 1;
         var rightInset = (_hostAppWindow?.TitleBar.RightInset ?? 0) / scale;
         var leftInset = (_hostAppWindow?.TitleBar.LeftInset ?? 0) / scale;
-        var pickerWidth = Math.Max(134, LanguagePickerHost.ActualWidth);
+        var pickerWidth = LanguagePickerHost.Width;
         _languageInCaption = _languagePointerSource is not null && captionHeight >= 36
             && width - leftInset - rightInset >= pickerWidth + 24;
         Grid.SetRow(LanguagePickerHost, _languageInCaption ? 0 : 1);

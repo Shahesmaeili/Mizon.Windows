@@ -125,6 +125,7 @@ public sealed partial class LoginPage : Page
 
     private void HostWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)
     {
+        if (args.DidPresenterChange || args.DidSizeChange) _gamepadNavigation?.ClearCaptionSelection();
         if (args.DidPresenterChange) UpdateLayout(ActualWidth, ActualHeight);
         if (!args.DidPresenterChange && !args.DidVisibilityChange) return;
         UpdateGamepadActivity();
@@ -142,7 +143,10 @@ public sealed partial class LoginPage : Page
     private void HostRootChanged(XamlRoot sender, XamlRootChangedEventArgs args)
     {
         if (IsLoaded && ReferenceEquals(sender, _hostXamlRoot))
+        {
+            _gamepadNavigation?.ClearCaptionSelection();
             UpdateLayout(ActualWidth, ActualHeight);
+        }
     }
 
     private void DetachHostWindow()

@@ -230,9 +230,21 @@ namespace Mizon.Windows.Services.Gamepad
             if (ticket.Consumed || !ReferenceEquals(ticket.Owner, owner)) return false;
             ticket.Consumed = true; FeedbackEnabled = true; return PlayFeedback(AuthGamepadFeedback.Success);
         }
-        public void SetActive(bool active) { State = State with { IsActive = active }; if (!active) IsFeedbackPlaying = false; StateChanged?.Invoke(this, State); }
-        public void NotifyPointerOrKeyboardInput() { }
-        public void Emit(AuthGamepadAction action) => _action(action);
+        public void SetActive(bool active) { State = State with { IsActive = active, IsGamepadMode = false }; if (!active) IsFeedbackPlaying = false; StateChanged?.Invoke(this, State); }
+        public void NotifyPointerOrKeyboardInput()
+        {
+            State = State with { IsGamepadMode = false };
+            StateChanged?.Invoke(this, State);
+        }
+        public void Emit(AuthGamepadAction action)
+        {
+            if (State is { IsActive: true, IsGamepadMode: false })
+            {
+                State = State with { IsGamepadMode = true };
+                StateChanged?.Invoke(this, State);
+            }
+            _action(action);
+        }
         public void Disconnect() { State = new(0, false, false); StateChanged?.Invoke(this, State); }
         public void Dispose() { Disposed = true; IsFeedbackPlaying = false; }
     }

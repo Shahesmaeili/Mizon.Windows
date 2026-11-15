@@ -2,6 +2,15 @@
 
 Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Account focus follow-up — 2026-11-16
+
+An invalid controller sign-in returns to the password after the form's enabled
+state settles, including if WinUI sent focus to the language picker. The picker
+uses a single globe in the login header and retains its native dropdown.
+Caption navigation marks the selected Windows button with a passive outline.
+It no longer reads or repositions the mouse. See the current
+[auth controller contract](../../Mcp/AUTH_GAMEPAD.md).
+
 ## Native caption and account layout — 2026-11-16
 
 The native title bar in windowed authentication is selectable with controller Up

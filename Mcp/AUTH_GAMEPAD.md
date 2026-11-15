@@ -53,12 +53,14 @@ No MCP arbitrary-vibration tool is exposed: form submission still uses the
 separately permitted shared authentication operation.
 
 On Login, Registration and Welcome, controller Up from the highest control
-selects a real button on the windowed native caption using the system pointer.
+selects a real button on the windowed native caption. A focus outline marks
+its Windows bounds while the mouse pointer stays in place.
 Left/Right moves across the caption. A sends the selected system command.
-Down/B returns to the previously focused WinUI control. Mouse movement,
-deactivation and disposal clear the selection. The existing state can report
+Down/B returns to the previously focused WinUI control. Pointer presses,
+keyboard input, window resize, deactivation and disposal clear the selection.
+The existing state can report
 `windowMinimize`, `windowMaximizeRestore` or `windowClose` during physical
-selection. MCP focus navigation cannot enter this mode or move the system pointer.
+selection. MCP focus navigation cannot enter this mode.
 Window MCP permissions and commands remain independent.
 
 For the login identifier and registration email, typing, paste, controller
@@ -72,6 +74,12 @@ If rejection disables the selected form control and Windows moves focus into
 the inline AI connection notice, focus returns to the form. A later directional
 controller action can reclaim that focus without activating the notice or the
 form. An actual consent dialog retains its own focus.
+
+After invalid login credentials, an active controller session restores focus
+to the password once the form is enabled again, including when WinUI selected
+the language picker during submission. The existing gamepad snapshot then
+reports `focusedFieldId: "password"`. An open keyboard, controller help, native
+caption selection, or consent dialog retains input ownership.
 
 Headless verification:
 
