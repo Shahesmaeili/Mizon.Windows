@@ -104,6 +104,9 @@ internal sealed class McpAuthenticationService : IDisposable
             || form.Username is not null || form.Email is not null || form.ConfirmPassword is not null)
             || page == "register" && form.Identifier is not null)
             return Failure("invalid_form_fields", "Some supplied fields do not belong to the selected form.");
+        if (!AuthIdentifierInput.IsLogin(form.Identifier) || !AuthIdentifierInput.IsUsername(form.Username)
+            || !AuthIdentifierInput.IsLogin(form.Email))
+            return Failure("invalid_identifier_characters", "Use English letters, digits and the allowed username or email punctuation.");
 
         var model = login!.ViewModel;
         // Validate the whole request before making any partial change to the form.

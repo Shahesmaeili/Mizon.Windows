@@ -190,6 +190,12 @@ public sealed partial class LoginPageViewModel : MainViewModel
         if (!LoginButtonIsEnabled || cancellationToken.IsCancellationRequested) return;
 
         SetError(string.Empty);
+        if (!IsRegistrationMode && !AuthIdentifierInput.IsLogin(EmailAddressOrUsername))
+        {
+            SetError("AuthInvalidIdentifierError");
+            NotifySubmissionCompleted(AuthSubmissionOutcome.Validation, cancellationToken);
+            return;
+        }
         if (IsRegistrationMode && !ValidateRegistration())
         {
             NotifySubmissionCompleted(AuthSubmissionOutcome.Validation, cancellationToken);
@@ -310,9 +316,9 @@ public sealed partial class LoginPageViewModel : MainViewModel
         if (firstName.Length is < 1 or > 60 || lastName.Length is < 1 or > 60
             || ContainsControlCharacter(firstName) || ContainsControlCharacter(lastName))
             SetError("AuthInvalidNameError");
-        else if (!UsernamePattern().IsMatch(username))
+        else if (!AuthIdentifierInput.IsUsername(RegistrationUsername) || !UsernamePattern().IsMatch(username))
             SetError("AuthInvalidUsernameError");
-        else if (email.Length > 128 || !IsAsciiEmail(email) || !EmailAddressPattern().IsMatch(email) || !MailAddress.TryCreate(email, out var address)
+        else if (email.Length > 128 || !AuthIdentifierInput.IsLogin(RegistrationEmailAddress) || !EmailAddressPattern().IsMatch(email) || !MailAddress.TryCreate(email, out var address)
             || !string.Equals(address.Address, email, StringComparison.OrdinalIgnoreCase))
             SetError("AuthInvalidEmailError");
         else if (RegistrationPassword.Length is < 8 or > 128)
@@ -328,13 +334,6 @@ public sealed partial class LoginPageViewModel : MainViewModel
         foreach (var character in value)
             if (char.IsControl(character)) return true;
         return false;
-    }
-
-    private static bool IsAsciiEmail(string value)
-    {
-        foreach (var character in value)
-            if (character > 127 || char.IsWhiteSpace(character) || char.IsControl(character)) return false;
-        return true;
     }
 
     private static string GetErrorKey(int? code, bool isRegistration) => code switch

@@ -39,7 +39,7 @@
   <data name="AuthLoginDescription" xml:space="preserve"><value>با نام کاربری یا ایمیلت وارد شو.</value></data>
   <data name="AuthRegisterDescription" xml:space="preserve"><value>حسابت را بساز؛ دنیای میزون منتظر توست.</value></data>
   <data name="AuthLoginIdentifierLabel" xml:space="preserve"><value>نام کاربری یا ایمیل</value></data>
-  <data name="AuthLoginIdentifierHelp" xml:space="preserve"><value>نام کاربری یا ایمیل حساب خود را وارد کن.</value></data>
+  <data name="AuthLoginIdentifierHelp" xml:space="preserve"><value>نام کاربری یا ایمیل را با حروف انگلیسی، عدد و نشانه‌های مجاز وارد کن.</value></data>
   <data name="AuthPasswordLabel" xml:space="preserve"><value>رمز عبور</value></data>
   <data name="AuthLoginPasswordHelp" xml:space="preserve"><value>رمز حساب خود را وارد کن. برای دیدن یا پنهان کردن آن از دکمهٔ کنار کادر استفاده کن.</value></data>
   <data name="AuthShowPassword" xml:space="preserve"><value>نمایش رمز عبور</value></data>
@@ -113,10 +113,13 @@
 A: انتخاب یا باز کردن صفحه‌کلید • B: بازگشت
 X: پاک کردن ورودی • Y: نمایش یا پنهان کردن گذرواژهٔ انتخاب‌شده
 LB / RB: ورود و ثبت‌نام • LT / RT: ورودی قبلی و بعدی
-Menu: ارسال فرم • View: راهنما و کنترل پنجره
+Menu: ارسال فرم • View: راهنما
+از بالاترین کنترل، بالا را بزن تا وارد دکمه‌های نوار عنوان شوی. چپ و راست برای انتخاب، A برای اجرا و پایین یا B برای بازگشت.
 فشردن استیک چپ: دکمهٔ اصلی • فشردن استیک راست: اولین ورودی
 استیک راست: اسکرول • Xbox و Share: کنترل خود ویندوز</value></data>
   <data name="GamepadKeyboardTitle" xml:space="preserve"><value>صفحه‌کلید دسته</value></data>
+  <data name="GamepadKeyboardIdentifierHelp" xml:space="preserve"><value>این کادر حروف انگلیسی، عددها و نشانه‌های مجاز را می‌پذیرد.</value></data>
+  <data name="GamepadKeyboardIdentifierKeys" xml:space="preserve"><value>A تایپ • X حذف • Y حروف بزرگ • LB حروف • RB نمادها • LT/RT مکان‌نما • Menu پایان • B بستن</value></data>
   <data name="GamepadKeyboardHelp" xml:space="preserve"><value>A تایپ • X حذف • Y حروف بزرگ • LB حروف • RB نمادها • LT/RT مکان‌نما • View زبان • Menu پایان • B بستن</value></data>
   <data name="GamepadKeyboardPasswordHelp" xml:space="preserve"><value>گذرواژه در همین ورودی محفوظ است؛ ویرایش با دسته از انتهای آن انجام می‌شود.</value></data>
   <data name="GamepadKeyboardLetters" xml:space="preserve"><value>حروف</value></data>
@@ -138,6 +141,7 @@ Menu: ارسال فرم • View: راهنما و کنترل پنجره
 B یا LB: ورود به حساب • Menu: تلاش مجدد
 فشردن استیک چپ: دکمهٔ تلاش مجدد • RB یا فشردن استیک راست: دکمهٔ ورود
 LT / RT: کنترل قبلی و بعدی • استیک راست: اسکرول
-View: راهنما و کنترل پنجره • Xbox و Share: کنترل خود ویندوز
+View: راهنما • Xbox و Share: کنترل خود ویندوز
+از بالاترین کنترل، بالا را بزن تا وارد دکمه‌های نوار عنوان شوی. چپ و راست برای انتخاب، A برای اجرا و پایین یا B برای بازگشت.
 عملیات ورود و تلاش مجدد پس از پایان آماده‌سازی و هنگام نمایش خطا فعال‌اند.</value></data>
 </root>

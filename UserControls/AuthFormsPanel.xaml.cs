@@ -99,6 +99,13 @@ public sealed partial class AuthFormsPanel : UserControl
 
     private void SubmitButton_Click(object sender, RoutedEventArgs e) => RequestSubmit();
 
+    private void Identifier_BeforeTextChanging(TextBox sender, TextBoxBeforeTextChangingEventArgs args)
+    {
+        args.Cancel = ReferenceEquals(sender, UsernameInput)
+            ? !AuthIdentifierInput.IsUsername(args.NewText)
+            : !AuthIdentifierInput.IsLogin(args.NewText);
+    }
+
     private void RequestSubmit()
     {
         if (ViewModel?.LoginButtonIsEnabled == true)

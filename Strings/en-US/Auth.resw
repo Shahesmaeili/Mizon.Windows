@@ -39,7 +39,7 @@
   <data name="AuthLoginDescription" xml:space="preserve"><value>Sign in with your username or email.</value></data>
   <data name="AuthRegisterDescription" xml:space="preserve"><value>Create your account. Your world of Mizon awaits.</value></data>
   <data name="AuthLoginIdentifierLabel" xml:space="preserve"><value>Username or email</value></data>
-  <data name="AuthLoginIdentifierHelp" xml:space="preserve"><value>Enter your account username or email.</value></data>
+  <data name="AuthLoginIdentifierHelp" xml:space="preserve"><value>Enter your username or email using English letters, digits and supported punctuation.</value></data>
   <data name="AuthPasswordLabel" xml:space="preserve"><value>Password</value></data>
   <data name="AuthLoginPasswordHelp" xml:space="preserve"><value>Enter your password. Use the button beside the field to show or hide it.</value></data>
   <data name="AuthShowPassword" xml:space="preserve"><value>Show password</value></data>
@@ -113,10 +113,13 @@
 A: select or open keyboard • B: back
 X: clear input • Y: show / hide the focused password
 LB / RB: sign in / register • LT / RT: previous / next field
-Menu: submit form • View: help and window controls
+Menu: submit form • View: help
+From the highest control, press Up to select the native title bar. Left/Right to move, A to act, Down/B to return.
 Left stick click: primary action • right stick click: first field
 Right stick: scroll • Xbox / Share: handled by Windows</value></data>
   <data name="GamepadKeyboardTitle" xml:space="preserve"><value>Controller keyboard</value></data>
+  <data name="GamepadKeyboardIdentifierHelp" xml:space="preserve"><value>This field accepts English letters, digits and its supported punctuation.</value></data>
+  <data name="GamepadKeyboardIdentifierKeys" xml:space="preserve"><value>A Type • X Backspace • Y Case • LB Letters • RB Symbols • LT/RT Caret • Menu Done • B Close</value></data>
   <data name="GamepadKeyboardHelp" xml:space="preserve"><value>A Type • X Backspace • Y Case • LB Letters • RB Symbols • LT/RT Caret • View Language • Menu Done • B Close</value></data>
   <data name="GamepadKeyboardPasswordHelp" xml:space="preserve"><value>The password stays in its masked field; controller edits append or delete at the end.</value></data>
   <data name="GamepadKeyboardLetters" xml:space="preserve"><value>Letters</value></data>
@@ -138,6 +141,7 @@ Right stick: scroll • Xbox / Share: handled by Windows</value></data>
 B or LB: sign in • Menu: retry
 Left stick click: retry button • RB or right stick click: sign-in button
 LT / RT: previous / next control • right stick: scroll
-View: help and window controls • Xbox / Share: handled by Windows
+View: help • Xbox / Share: handled by Windows
+From the highest control, press Up to select the native title bar. Left/Right to move, A to act, Down/B to return.
 Sign in and retry become available after preparation finishes with an error.</value></data>
 </root>

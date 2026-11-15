@@ -100,6 +100,7 @@
                     <StackPanel Spacing="7">
                         <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="LoginIdentifierLabel" Text="{x:Bind Localization.GetString('AuthLoginIdentifierLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthLabel}" />
                         <TextBox FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="LoginIdentifierInput" Style="{StaticResource AuthTextInput}"
+                                 BeforeTextChanging="Identifier_BeforeTextChanging"
                                  Text="{x:Bind ViewModel.EmailAddressOrUsername, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}" MaxLength="256"
                                  AutomationProperties.LabeledBy="{x:Bind LoginIdentifierLabel}" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthLoginIdentifierHelp', Localization.Revision), Mode=OneWay}" />
@@ -193,6 +194,7 @@
                     <StackPanel Spacing="6">
                         <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="UsernameLabel" Text="{x:Bind Localization.GetString('AuthUsernameLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthLabel}" />
                         <TextBox FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="UsernameInput" Style="{StaticResource AuthTextInput}" MaxLength="32"
+                                 BeforeTextChanging="Identifier_BeforeTextChanging"
                                  Text="{x:Bind ViewModel.RegistrationUsername, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}"
                                  AutomationProperties.LabeledBy="{x:Bind UsernameLabel}" AutomationProperties.IsRequiredForForm="True" AutomationProperties.HelpText="{x:Bind Localization.GetString('AuthUsernameHelp', Localization.Revision), Mode=OneWay}" />
@@ -202,6 +204,7 @@
                     <StackPanel Spacing="6">
                         <TextBlock TextReadingOrder="UseFlowDirection" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="EmailLabel" Text="{x:Bind Localization.GetString('AuthEmailLabel', Localization.Revision), Mode=OneWay}" Style="{StaticResource AuthLabel}" />
                         <TextBox FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="EmailInput" Style="{StaticResource AuthTextInput}" MaxLength="128"
+                                 BeforeTextChanging="Identifier_BeforeTextChanging"
                                  InputScope="EmailSmtpAddress"
                                  Text="{x:Bind ViewModel.RegistrationEmailAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  IsEnabled="{x:Bind ViewModel.ControlsIsEnabled, Mode=OneWay}"

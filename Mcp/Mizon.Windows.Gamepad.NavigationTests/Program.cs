@@ -18,7 +18,7 @@ internal static class Program
         await FocusAndKeyboard();
         await HelpScope();
         await FixedLanguagePicker();
-        await WindowButtons();
+        await NativeWindowSelection();
         await OtherSurfaces();
         RejectedSubmissionFocus();
         await FeedbackPreference();
@@ -45,6 +45,8 @@ internal static class Program
         Check(FocusManager.Current == page.Last, "Previous field from a non-field starts at the last field");
         page.First.Focus(FocusState.Keyboard);
         Check(await page.Apply(McpAuthGamepadAction.OpenKeyboard), "MCP opens the page keyboard only for an eligible field");
+        Check(page.Keyboard.AcceptText is { } accepts && accepts("Name+tag@example.com") && !accepts("علی")
+            && !accepts("bad value"), "Controller keyboard gets the same English identifier filter on the login field");
         Check(await page.Apply(McpAuthGamepadAction.Next) && page.Keyboard.Children.Contains((UIElement)FocusManager.Current!),
             "MCP focus moves inside an open keyboard without escaping to form controls");
         Check(page.Navigator.GetState() is { IsKeyboardVisible: true, FocusedFieldId: "identifier" }
@@ -199,30 +201,45 @@ internal static class Program
             "Explicit feedback disable is reflected by the same production state snapshot");
     }
 
-    private static async Task WindowButtons()
+    private static async Task NativeWindowSelection()
     {
-        using var page = new Fixture(withWindowButtons: true);
-        foreach (var (id, action) in new[]
-        {
-            ("windowMinimize", AuthWindowAction.Minimize),
-            ("windowMaximizeRestore", AuthWindowAction.MaximizeOrRestore),
-            ("windowClose", AuthWindowAction.Close)
-        })
-        {
-            page.First.Focus(FocusState.Keyboard);
-            page.Session.Emit(AuthGamepadAction.ToggleHelp);
-            var count = page.WindowActions.Count;
-            for (var i = 0; i < 3 && page.Navigator.GetState().FocusedFieldId != id; i++)
-                await page.Apply(McpAuthGamepadAction.Next);
-            Check(page.Navigator.GetState() is { IsHelpVisible: true } state && state.FocusedFieldId == id
-                && page.WindowActions.Count == count, "Scoped MCP can focus but cannot invoke " + id);
-            page.Session.Emit(AuthGamepadAction.Submit);
-            Check(page.WindowActions.Count == count && page.PageActions == 0, "Menu does not submit or operate the window in help");
-            page.Session.Emit(AuthGamepadAction.Accept);
-            Check(page.WindowActions.Count == count + 1 && page.WindowActions[^1] == action
-                && FocusManager.Current == page.First && !page.Navigator.GetState().IsHelpVisible,
-                "Physical A performs the selected window action and restores page focus");
-        }
+        using var page = new Fixture(withCaption: true);
+        page.First.Focus(FocusState.Keyboard);
+        Check(!await page.Apply(McpAuthGamepadAction.Up) && page.Caption.Selected is null,
+            "Remote Up cannot enter native pointer navigation");
+        page.Session.Emit(AuthGamepadAction.Up);
+        Check(page.Navigator.GetState().FocusedFieldId == "windowMinimize" && FocusManager.Current == page.First,
+            "Physical Up from the highest form control selects the caption while retaining WinUI focus");
+        page.Session.Emit(AuthGamepadAction.Right);
+        Check(page.Navigator.GetState().FocusedFieldId == "windowMaximizeRestore" &&
+            !await page.Apply(McpAuthGamepadAction.Right), "Physical Right selects the next window control and MCP cannot move the pointer");
+        page.Session.Emit(AuthGamepadAction.Submit);
+        Check(page.PageActions == 0 && page.Caption.Invoked.Count == 0, "Menu cannot operate a selected caption or submit the form");
+        page.Session.Emit(AuthGamepadAction.Accept);
+        Check(page.Caption.Invoked.SequenceEqual([AuthWindowAction.MaximizeOrRestore]) && page.Caption.Selected is null,
+            "Physical A dispatches the single selected native action");
+        page.Session.Emit(AuthGamepadAction.Up);
+        page.Session.Emit(AuthGamepadAction.Right);
+        page.Session.Emit(AuthGamepadAction.Right);
+        Check(page.Navigator.GetState().FocusedFieldId == "windowClose", "Focus readback can identify the actual Close selection");
+        page.Session.Emit(AuthGamepadAction.Back);
+        Check(page.Caption.Selected is null && FocusManager.Current == page.First && page.Caption.Invoked.Count == 1,
+            "Physical B leaves the title bar without a window action");
+        page.Session.Emit(AuthGamepadAction.Up);
+        page.Caption.PointerStillAtSelection = false;
+        page.Session.Emit(AuthGamepadAction.Accept);
+        Check(page.Caption.Invoked.Count == 1 && page.Caption.Selected is null && page.Submit.Invocations == 0,
+            "Physical pointer movement invalidates the selected action without accidentally activating the form");
+        page.Caption.PointerStillAtSelection = true;
+        page.Session.Emit(AuthGamepadAction.Up);
+        VisualTreeHelper.OpenPopups.Add(new Popup { Child = new ContentDialog() });
+        page.Session.Emit(AuthGamepadAction.Accept);
+        Check(page.Caption.Invoked.Count == 1 && page.Caption.Selected is null,
+            "A modal that opens after native title-bar selection takes ownership before activation");
+        VisualTreeHelper.OpenPopups.Clear();
+        page.Session.Emit(AuthGamepadAction.Up);
+        page.Navigator.SetActive(false);
+        Check(page.Caption.Selected is null, "Deactivation releases native selection");
     }
 
     private static void RejectedSubmissionFocus()
@@ -285,6 +302,31 @@ internal static class Program
         Check(!page.Navigator.PlayFeedback(AuthGamepadFeedback.Error), "Disposed navigator rejects later feedback callbacks");
     }
 
+    private sealed class CaptionStub : IAuthCaptionNavigation
+    {
+        public AuthWindowAction? Selected { get; private set; }
+        public bool PointerStillAtSelection { get; set; } = true;
+        public bool IsCurrent => Selected.HasValue && PointerStillAtSelection;
+        public bool IsMaximized => false;
+        public List<AuthWindowAction> Invoked { get; } = [];
+
+        public bool Select(int direction)
+        {
+            var next = Selected is null ? 0 : (int)Selected.Value + direction;
+            if (next is < 0 or > 2) return false;
+            Selected = (AuthWindowAction)next;
+            return true;
+        }
+
+        public void Invoke()
+        {
+            if (Selected is { } action) Invoked.Add(action);
+            Clear();
+        }
+
+        public void Clear() => Selected = null;
+    }
+
     private sealed class Fixture : IDisposable
     {
         public Grid Root { get; } = new();
@@ -293,12 +335,12 @@ internal static class Program
         public PasswordBox Last { get; } = new() { Name = "password", Top = 80 };
         public AuthActionButton Submit { get; } = new() { Top = 140 };
         public int PageActions { get; private set; }
-        public List<AuthWindowAction> WindowActions { get; } = [];
+        public CaptionStub Caption { get; } = new();
         public int InitialChildren { get; }
         public AuthGamepadNavigation Navigator { get; }
         public AuthGamepadSession Session { get; }
         public AuthGamepadKeyboard Keyboard { get; }
-        public Fixture(bool withWindowButtons = false, Func<DependencyObject, bool>? isNoticeFocus = null)
+        public Fixture(bool withCaption = false, Func<DependencyObject, bool>? isNoticeFocus = null)
         {
             FocusManager.Current = null; VisualTreeHelper.OpenPopups.Clear();
             Root.Children.Add(First);
@@ -307,7 +349,7 @@ internal static class Program
             Root.Children.Add(new TextBox { IsEnabled = false }); Root.Children.Add(Last); Root.Children.Add(Submit);
             InitialChildren = Root.Children.Count;
             Navigator = new(Root, Scroller, _ => { PageActions++; return Task.CompletedTask; }, () => [First, Last], control => control == First ? "identifier" : control == Last ? "password" : null, () => { },
-                windowAction: withWindowButtons ? WindowActions.Add : null, isExternalNoticeFocus: isNoticeFocus);
+                caption: withCaption ? Caption : null, isExternalNoticeFocus: isNoticeFocus);
             Session = AuthGamepadSession.Latest; Keyboard = AuthGamepadKeyboard.Latest;
             Navigator.SetActive(true);
         }

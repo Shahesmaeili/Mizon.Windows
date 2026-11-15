@@ -30,6 +30,14 @@ internal static class Program
 
     private static async Task LoginOutcomes()
     {
+        var invalidIdentifier = new Fixture();
+        invalidIdentifier.ViewModel.EmailAddressOrUsername = "name\u200f@example.com";
+        await invalidIdentifier.Submit();
+        Check(invalidIdentifier.Api.LoginCalls == 0
+            && invalidIdentifier.Outcomes.SequenceEqual([AuthSubmissionOutcome.Validation])
+            && invalidIdentifier.ViewModel.ErrorCode == "AuthInvalidIdentifierError",
+            "Injected bidi formatting is rejected before the real login operation");
+
         var repeated = new Fixture();
         repeated.Api.Handler = _ => Task.FromResult<AuthResponse?>(new(false, Error: new(401)));
         await repeated.Submit();

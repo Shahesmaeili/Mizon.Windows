@@ -9,6 +9,7 @@ internal static class Program
     private static async Task Main()
     {
         await ActivePageAndActions();
+        await IdentifierEditing();
         await CancellationAndLifecycle();
         Console.WriteLine($"PASS {_checks} production authentication adapter assertions. Synthetic pages only; no UI, accounts or real consent.");
     }
@@ -107,5 +108,32 @@ internal static class Program
         adapter.Dispose();
         Check(storage.Subscribers == 0 && (await adapter.ExecuteAsync(Action(), default)).Code == "unavailable",
             "Disposed auth adapter detaches session subscription and rejects controller work");
+    }
+
+    private static async Task IdentifierEditing()
+    {
+        var login = new LoginPage();
+        using var adapter = new McpAuthenticationService(new NavigationService { CurrentMainPage = login }, new LocalStorageService());
+        var accepted = await adapter.ExecuteAsync(new()
+        {
+            Operation = "set_form", Page = "login", Form = new() { Identifier = "Name+tag@example.com" }
+        }, default);
+        Check(accepted.Code == "form_updated" && login.ViewModel.EmailAddressOrUsername == "Name+tag@example.com",
+            "MCP accepts the same English email punctuation as the Windows input");
+        var previousPassword = login.ViewModel.Password;
+        var denied = await adapter.ExecuteAsync(new()
+        {
+            Operation = "set_form", Page = "login", Form = new() { Identifier = "ali۲", Password = "other-synthetic-text" }
+        }, default);
+        Check(denied.Code == "invalid_identifier_characters" && login.ViewModel.EmailAddressOrUsername == "Name+tag@example.com"
+            && login.ViewModel.Password == previousPassword,
+            "MCP rejects Unicode identifier changes atomically without changing the password");
+        login.ViewModel.IsRegistrationMode = true;
+        var invalidUser = await adapter.ExecuteAsync(new()
+        {
+            Operation = "set_form", Page = "register", Form = new() { Username = "name@example.com" }
+        }, default);
+        Check(invalidUser.Code == "invalid_identifier_characters" && login.Submissions == 0,
+            "Registration username does not accept email punctuation or submit the form");
     }
 }

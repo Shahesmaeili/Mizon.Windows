@@ -52,12 +52,21 @@ on disable, deactivation, removal/disposal and is not replayed on reactivation.
 No MCP arbitrary-vibration tool is exposed: form submission still uses the
 separately permitted shared authentication operation.
 
-The controller View help on Login, Registration and Welcome includes the main
-window actions Minimize, Maximize/Restore and Close. D-pad selects the button,
-A operates it, and B exits the help. MCP's existing scoped focus movement can
-reach those controls and read `windowMinimize`, `windowMaximizeRestore` or
-`windowClose` as the focused ID. These authentication tools cannot execute
-window commands. Window MCP permissions and commands remain independent.
+On Login, Registration and Welcome, controller Up from the highest control
+selects a real button on the windowed native caption using the system pointer.
+Left/Right moves across the caption. A sends the selected system command.
+Down/B returns to the previously focused WinUI control. Mouse movement,
+deactivation and disposal clear the selection. The existing state can report
+`windowMinimize`, `windowMaximizeRestore` or `windowClose` during physical
+selection. MCP focus navigation cannot enter this mode or move the system pointer.
+Window MCP permissions and commands remain independent.
+
+For the login identifier and registration email, typing, paste, controller
+keyboard and MCP edits accept English letters, digits and `._@+%-`. Registration
+username permits letters, digits, dot and underscore. MCP rejects invalid text
+before changing any field. Final registration validation still checks email
+syntax and username length. The controller keyboard keeps Persian input for
+other text fields.
 
 If rejection disables the selected form control and Windows moves focus into
 the inline AI connection notice, focus returns to the form. A later directional

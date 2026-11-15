@@ -21,6 +21,14 @@ public sealed partial class AuthShowcase : UserControl
     public LocalizationService Localization => LocalizationService.Current;
     public static readonly DependencyProperty IsActiveProperty = DependencyProperty.Register(
         nameof(IsActive), typeof(bool), typeof(AuthShowcase), new PropertyMetadata(false, ActivityChanged));
+    public static readonly DependencyProperty SceneHeightProperty = DependencyProperty.Register(
+        nameof(SceneHeight), typeof(double), typeof(AuthShowcase), new PropertyMetadata(280d));
+
+    public double SceneHeight
+    {
+        get => (double)GetValue(SceneHeightProperty);
+        set => SetValue(SceneHeightProperty, value);
+    }
 
     public bool IsActive
     {

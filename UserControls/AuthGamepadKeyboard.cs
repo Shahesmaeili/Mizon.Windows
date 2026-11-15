@@ -31,6 +31,7 @@ public sealed partial class AuthGamepadKeyboard : UserControl, IDisposable
     private readonly FontFamily _persianFont = new("ms-appx:///Assets/Fonts/IRANSANS.TTF#IRANSans");
     private readonly FontFamily _englishFont = new("Segoe UI Variable");
     private Control? _target;
+    private Func<string?, bool>? _acceptText;
     private long _visibilityToken;
     private long? _readOnlyToken;
     private int _generation;
@@ -105,14 +106,15 @@ public sealed partial class AuthGamepadKeyboard : UserControl, IDisposable
     internal Control? EditingTarget => IsOpen ? _target : null;
     public event EventHandler? Closed;
 
-    public void Open(Control target)
+    public void Open(Control target, Func<string?, bool>? acceptText = null)
     {
         if (_disposed || !CanEdit(target)) return;
         EnsureKeys();
         if (IsOpen) Close(false);
         _target = target;
+        _acceptText = acceptText;
         if (target is PasswordBox passwordBox) passwordBox.PasswordRevealMode = PasswordRevealMode.Hidden;
-        _persian = LocalizationService.Current.IsPersian;
+        _persian = acceptText is null && LocalizationService.Current.IsPersian;
         _languageChosen = _symbols = _uppercase = false;
         _focusedKey = 0;
         target.Unloaded += OnTargetUnloaded;
@@ -135,6 +137,7 @@ public sealed partial class AuthGamepadKeyboard : UserControl, IDisposable
         if (_target is not { } target) return;
         _generation++;
         _target = null;
+        _acceptText = null;
         target.Unloaded -= OnTargetUnloaded;
         target.IsEnabledChanged -= OnTargetEnabledChanged;
         target.UnregisterPropertyChangedCallback(VisibilityProperty, _visibilityToken);
@@ -206,9 +209,11 @@ public sealed partial class AuthGamepadKeyboard : UserControl, IDisposable
         Language = localization.LanguageTag;
         _title.FlowDirection = _help.FlowDirection = localization.FlowDirection;
         _title.Text = localization.GetString("GamepadKeyboardTitle");
-        _help.Text = localization.GetString("GamepadKeyboardHelp");
+        _help.Text = localization.GetString(_acceptText is null ? "GamepadKeyboardHelp" : "GamepadKeyboardIdentifierKeys");
         if (_target is PasswordBox)
             _help.Text += "\n" + localization.GetString("GamepadKeyboardPasswordHelp");
+        else if (_acceptText is not null)
+            _help.Text += "\n" + localization.GetString("GamepadKeyboardIdentifierHelp");
         AutomationProperties.SetName(this, _title.Text);
         AutomationProperties.SetHelpText(this, _help.Text);
         var rows = _symbols ? SymbolRows : _persian ? PersianRows : EnglishRows;
@@ -241,6 +246,8 @@ public sealed partial class AuthGamepadKeyboard : UserControl, IDisposable
             }
             key.Button.IsEnabled = key.Command switch
             {
+                KeyCommand.Character => _acceptText?.Invoke(key.Insertion) != false,
+                KeyCommand.Language or KeyCommand.Space => _acceptText is null,
                 KeyCommand.Case => !_persian && !_symbols,
                 KeyCommand.CaretPrevious or KeyCommand.CaretNext or KeyCommand.SelectAll => _target is TextBox,
                 _ => true
@@ -274,6 +281,7 @@ public sealed partial class AuthGamepadKeyboard : UserControl, IDisposable
 
     private void Insert(string value)
     {
+        if (_acceptText?.Invoke(value) == false) return;
         if (_target is TextBox textBox)
             ApplyEdit(textBox, AuthGamepadTextEditing.Insert(textBox.Text, textBox.SelectionStart, textBox.SelectionLength, value, textBox.MaxLength));
         else if (_target is PasswordBox passwordBox)
@@ -324,6 +332,7 @@ public sealed partial class AuthGamepadKeyboard : UserControl, IDisposable
 
     private void ToggleLanguage()
     {
+        if (_acceptText is not null) return;
         _persian = !_persian;
         _languageChosen = true;
         _symbols = false;
@@ -398,7 +407,7 @@ public sealed partial class AuthGamepadKeyboard : UserControl, IDisposable
     private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs args)
     {
         if (!IsOpen || args.PropertyName != nameof(LocalizationService.Revision)) return;
-        if (!_languageChosen) _persian = LocalizationService.Current.IsPersian;
+        if (_acceptText is null && !_languageChosen) _persian = LocalizationService.Current.IsPersian;
         RefreshLabels();
     }
 

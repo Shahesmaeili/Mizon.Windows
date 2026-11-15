@@ -31,11 +31,9 @@ public sealed partial class WelcomePage
     private void InitializeGamepad()
     {
         _windowActive = AuthGamepadNavigation.IsForeground(_hostWindow);
-        var window = _hostWindow as MainWindow;
         _gamepadNavigation ??= new AuthGamepadNavigation(WelcomeRoot, WelcomeScroller,
             HandleGamepadAsync, () => [], _ => null, () => { }, welcome: true,
-            windowAction: window is null ? null : action => window.RequestAccountWindowAction(this, action),
-            canRestoreWindow: window is null ? null : () => window.CanRestoreAccountWindow);
+            caption: AuthCaptionWindow.Create(_hostWindow, _hostAppWindow));
         UpdateGamepadActivity();
         ConsumeSuccessFeedback();
     }

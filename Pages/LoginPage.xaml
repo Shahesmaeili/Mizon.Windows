@@ -22,6 +22,17 @@
                         <Setter Target="AuthForms.CardPadding" Value="22,24" />
                     </VisualState.Setters>
                 </VisualState>
+                <VisualState x:Name="MediumLogin">
+                    <VisualState.Setters>
+                        <Setter Target="ArtColumn.Width" Value="0.9*" />
+                        <Setter Target="ArtPanel.Visibility" Value="Visible" />
+                        <Setter Target="ArtPanel.SceneHeight" Value="160" />
+                        <Setter Target="CompactBrand.Visibility" Value="Collapsed" />
+                        <Setter Target="LoginContent.ColumnSpacing" Value="20" />
+                        <Setter Target="LoginContent.Margin" Value="24,0,24,8" />
+                        <Setter Target="AuthForms.CardPadding" Value="22,24" />
+                    </VisualState.Setters>
+                </VisualState>
                 <VisualState x:Name="WideLogin">
                     <VisualState.Setters>
                         <Setter Target="ArtColumn.Width" Value="1.1*" />
@@ -38,31 +49,10 @@
         <Grid FlowDirection="LeftToRight">
             <Grid.RowDefinitions>
                 <RowDefinition x:Name="CaptionInset" Height="48" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="1" HorizontalAlignment="Right" Margin="0,8,16,6">
-                <controls:LanguagePicker>
-                    <controls:LanguagePicker.SelectorStyle>
-                        <Style TargetType="ComboBox">
-                            <Setter Property="MinWidth" Value="134" />
-                            <Setter Property="MinHeight" Value="36" />
-                            <Setter Property="CornerRadius" Value="13" />
-                            <Setter Property="Padding" Value="36,4,8,4" />
-                            <Setter Property="Background" Value="{ThemeResource AuthInputBackgroundBrush}" />
-                            <Setter Property="BorderBrush" Value="{ThemeResource AuthInputBorderBrush}" />
-                            <Setter Property="BorderThickness" Value="1" />
-                            <Setter Property="UseSystemFocusVisuals" Value="True" />
-                        </Style>
-                    </controls:LanguagePicker.SelectorStyle>
-                </controls:LanguagePicker>
-                <icon:SymbolIcon Symbol="Globe" FontSize="16" Foreground="{ThemeResource AuthAccentBrush}"
-                                 Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
-                                 IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
-            </Grid>
-
-            <Grid x:Name="LoginContent" Grid.Row="2" MaxWidth="1040" Margin="16,0,16,8">
+            <Grid x:Name="LoginContent" Grid.Row="1" MaxWidth="1040" Margin="16,0,16,8">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -91,6 +81,26 @@
                                                  ModeChanged="AuthForms_ModeChanged" />
                     </Grid>
                 </ScrollViewer>
+            </Grid>
+
+            <Grid x:Name="LanguagePickerHost" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="52,0,0,0">
+                <controls:LanguagePicker>
+                    <controls:LanguagePicker.SelectorStyle>
+                        <Style TargetType="ComboBox">
+                            <Setter Property="MinWidth" Value="134" />
+                            <Setter Property="MinHeight" Value="36" />
+                            <Setter Property="CornerRadius" Value="13" />
+                            <Setter Property="Padding" Value="36,4,8,4" />
+                            <Setter Property="Background" Value="{ThemeResource AuthInputBackgroundBrush}" />
+                            <Setter Property="BorderBrush" Value="{ThemeResource AuthInputBorderBrush}" />
+                            <Setter Property="BorderThickness" Value="1" />
+                            <Setter Property="UseSystemFocusVisuals" Value="True" />
+                        </Style>
+                    </controls:LanguagePicker.SelectorStyle>
+                </controls:LanguagePicker>
+                <icon:SymbolIcon Symbol="Globe" FontSize="16" Foreground="{ThemeResource AuthAccentBrush}"
+                                 Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                 IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
             </Grid>
         </Grid>
     </Grid>

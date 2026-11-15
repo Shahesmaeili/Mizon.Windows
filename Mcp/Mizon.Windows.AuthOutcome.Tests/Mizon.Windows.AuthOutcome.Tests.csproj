@@ -11,5 +11,6 @@
     <!-- Exercise real submission, validation, cancellation and outcome ordering. -->
     <Compile Include="$(AuthOutcomeSourceRoot)/ViewModels/LoginPageViewModel.cs" Link="Production/LoginPageViewModel.cs" />
     <Compile Include="$(AuthOutcomeSourceRoot)/Services/AuthSubmissionCompletedEventArgs.cs" Link="Production/AuthSubmissionCompletedEventArgs.cs" />
+    <Compile Include="$(AuthOutcomeSourceRoot)/Services/AuthIdentifierInput.cs" Link="Production/AuthIdentifierInput.cs" />
   </ItemGroup>
 </Project>

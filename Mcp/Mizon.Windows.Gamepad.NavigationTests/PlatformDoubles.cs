@@ -129,17 +129,8 @@ namespace Microsoft.UI.Xaml.Controls
     }
     public class Panel : FrameworkElement { public Panel() => Children = new(this); public ElementCollection Children { get; } }
     public class Grid : Panel;
-    public enum Orientation { Vertical, Horizontal }
-    public class StackPanel : Panel { public double Spacing { get; set; } public Orientation Orientation { get; set; } }
-    public class Button : Primitives.ButtonBase
-    {
-        public bool UseSystemFocusVisuals { get; set; }
-        public CornerRadius CornerRadius { get; set; }
-        public object? Content { get; set; }
-        public object? FontFamily { get; set; }
-        public event Action<object, RoutedEventArgs>? Click;
-        public override void Invoke() { base.Invoke(); Click?.Invoke(this, new()); }
-    }
+    public class StackPanel : Panel { public double Spacing { get; set; } }
+    public class Button : Primitives.ButtonBase;
     public class TextBox : Control { public string Text { get; set; } = string.Empty; }
     public class PasswordBox : Control;
     public class ContentDialog : Control;
@@ -170,7 +161,7 @@ namespace Microsoft.UI.Xaml.Controls
 }
 namespace Microsoft.UI.Xaml.Controls.Primitives
 {
-    public class ButtonBase : Control { public int Invocations { get; private set; } public virtual void Invoke() => Invocations++; }
+    public class ButtonBase : Control { public int Invocations { get; private set; } public void Invoke() => Invocations++; }
     public class Popup : FrameworkElement { public UIElement? Child { get; set; } public bool IsOpen { get; set; } = true; }
 }
 namespace Microsoft.UI.Xaml.Automation { public static class AutomationProperties { public static void SetName(DependencyObject element, string name) { } } }
@@ -254,12 +245,20 @@ namespace Mizon.Windows.UserControls
         public static AuthGamepadKeyboard Latest { get; private set; } = null!;
         public bool IsOpen { get; private set; }
         public Control? EditingTarget { get; private set; }
+        public Func<string?, bool>? AcceptText { get; private set; }
         public int HandledActions { get; private set; }
         public event EventHandler? Closed;
-        public void Open(Control control) { EditingTarget = control; IsOpen = true; Visibility = Visibility.Visible; }
+        public void Open(Control control, Func<string?, bool>? acceptText = null) { EditingTarget = control; AcceptText = acceptText; IsOpen = true; Visibility = Visibility.Visible; }
         public void Close(bool restoreFocus = true) { var target = EditingTarget; var open = IsOpen; IsOpen = false; EditingTarget = null; Visibility = Visibility.Collapsed; if (restoreFocus) target?.Focus(FocusState.Keyboard); if (open) Closed?.Invoke(this, EventArgs.Empty); }
         public bool Handle(Services.Gamepad.AuthGamepadAction action) { HandledActions++; return true; }
         public void Dispose() => Close(false);
+    }
+}
+namespace Mizon.Windows.Common
+{
+    internal static class AccessibilityAnnouncements
+    {
+        internal static void Announce(FrameworkElement source, string message, string activity) { }
     }
 }
 namespace Mizon.Windows.Controls

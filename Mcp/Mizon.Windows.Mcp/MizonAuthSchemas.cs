@@ -34,7 +34,7 @@ internal static class MizonAuthSchemas
             Describe(properties, "enabled", "Required only for mute, fullscreen, like and follow. Sets the desired state explicitly instead of toggling. Like/follow require additional music home submit permission.");
             if (properties["form"] is JsonObject form)
             {
-                form["description"] = "Fields to update on the visible form. Omitted fields stay unchanged; an empty string clears the field. Filling never submits. Use identifier/password for login and firstName/lastName/username/email/password/confirmPassword for registration.";
+                form["description"] = "Fields to update on the visible form. Omitted fields stay unchanged; an empty string clears the field. Filling never submits. Login identifier and registration email accept English letters, digits and ._@+%-. Registration usernames accept English letters, digits, dot and underscore.";
                 var fields = form["properties"]!.AsObject();
                 Describe(fields, "identifier", "Login identifier (username or email). Applies to the login form.");
                 Describe(fields, "firstName", "Given name for the registration form.");
@@ -94,7 +94,7 @@ internal static class MizonAuthSchemas
             "gamepad" => "Page-local controller navigation snapshot, present only for a loaded authentication page and authentication read consent. Contains no keyboard text, password contents, raw input or controller identifiers.",
             "isControllerConnected" => "Whether an available game controller is connected for authentication navigation. No device name or identifier is disclosed.",
             "isNavigationActive" => "Whether controller navigation is currently active on this authentication page. A connected controller alone does not mean the page accepts actions.",
-            "focusedFieldId" => "Stable authentication control identifier currently focused, never its entered text or password contents. The controller help can report windowMinimize, windowMaximizeRestore or windowClose. Focus alone cannot invoke a window command.",
+            "focusedFieldId" => "Stable authentication control identifier, never its entered text or password contents. Physical controller selection of a native caption button can report windowMinimize, windowMaximizeRestore or windowClose. MCP does not move the native pointer or invoke a window command.",
             "isKeyboardVisible" => "Whether the authentication page's own on-screen controller keyboard is visible. Does not inspect the Windows keyboard or other applications.",
             "isHelpVisible" => "Whether the authentication page's controller help is visible.",
             "isFeedbackEnabled" => "Whether brief controller feedback is enabled for this authentication page session. Enabled by default on the loaded authentication page. Reading or enabling it does not start vibration.",

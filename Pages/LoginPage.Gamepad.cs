@@ -42,8 +42,7 @@ public sealed partial class LoginPage
         _gamepadNavigation ??= new AuthGamepadNavigation(LoginRoot, LoginScroller,
             AuthForms.HandleGamepadActionAsync, () => AuthForms.GamepadFields,
             AuthForms.GetGamepadFieldId, AuthForms.HideGamepadPasswords,
-            windowAction: window is null ? null : action => window.RequestAccountWindowAction(this, action),
-            canRestoreWindow: window is null ? null : () => window.CanRestoreAccountWindow,
+            caption: AuthCaptionWindow.Create(window, _hostAppWindow),
             isExternalNoticeFocus: window is null ? null : window.IsMcpNoticeFocus);
         UpdateGamepadActivity();
     }

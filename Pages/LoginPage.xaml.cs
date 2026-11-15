@@ -60,6 +60,7 @@ public sealed partial class LoginPage : Page
             if (_hostAppWindow is not null) _hostAppWindow.Changed += HostWindow_Changed;
             _hostXamlRoot = XamlRoot;
             if (_hostXamlRoot is not null) _hostXamlRoot.Changed += HostRootChanged;
+            AttachLanguagePicker();
         }
         InitializeGamepad();
         UpdateLayout(ActualWidth, ActualHeight);
@@ -100,9 +101,11 @@ public sealed partial class LoginPage : Page
         if (width <= 0 || height <= 0) return;
         var captionHeight = GetCaptionHeight();
         if (CaptionInset.Height.Value != captionHeight) CaptionInset.Height = new GridLength(captionHeight);
+        UpdateLanguagePickerPlacement(width, captionHeight);
 
-        // The art column needs room for its stage and captions below the fixed language picker.
-        var state = width >= 900 && height - captionHeight >= 600 ? "WideLogin" : "CompactLogin";
+        var bodyHeight = height - captionHeight;
+        var state = width >= 900 && bodyHeight >= 550 ? "WideLogin"
+            : width >= 680 && bodyHeight >= 420 ? "MediumLogin" : "CompactLogin";
         if (_layoutState == state) return;
         if (!VisualStateManager.GoToState(this, state, false)) return;
         _layoutState = state;
@@ -110,7 +113,7 @@ public sealed partial class LoginPage : Page
     }
 
     private void UpdateShowcase() =>
-        ArtPanel.IsActive = _pageCancellation is not null && _layoutState == "WideLogin" && _windowActive
+        ArtPanel.IsActive = _pageCancellation is not null && _layoutState is ("WideLogin" or "MediumLogin") && _windowActive
             && _hostAppWindow?.Presenter is not OverlappedPresenter { State: OverlappedPresenterState.Minimized };
 
     private void HostWindow_Activated(object sender, WindowActivatedEventArgs args)
@@ -144,6 +147,7 @@ public sealed partial class LoginPage : Page
 
     private void DetachHostWindow()
     {
+        DetachLanguagePicker();
         if (_hostXamlRoot is not null) _hostXamlRoot.Changed -= HostRootChanged;
         if (_hostAppWindow is not null) _hostAppWindow.Changed -= HostWindow_Changed;
         if (_hostWindow is not null)

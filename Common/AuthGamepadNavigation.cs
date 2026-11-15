@@ -20,8 +20,6 @@ using Windows.UI.ViewManagement;
 
 namespace Mizon.Windows.Common;
 
-internal enum AuthWindowAction { Minimize, MaximizeOrRestore, Close }
-
 // Page-scoped controller ownership. This never injects global keyboard input or
 // keeps polling after its page has left the foreground.
 internal sealed partial class AuthGamepadNavigation : IDisposable
@@ -32,10 +30,8 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
     private readonly Func<Control[]> _fields;
     private readonly Func<Control?, string?> _fieldId;
     private readonly Action _hidePasswords;
-    private readonly Action<AuthWindowAction>? _windowAction;
-    private readonly Func<bool>? _canRestoreWindow;
+    private readonly IAuthCaptionNavigation? _caption;
     private readonly Func<DependencyObject, bool>? _isExternalNoticeFocus;
-    private readonly Button[] _windowButtons;
     private readonly AuthGamepadSession _session;
     private readonly StackPanel _overlay = new() { Spacing = 8, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(12) };
     private readonly TextBlock _hints = new() { FontSize = 11, TextWrapping = TextWrapping.Wrap };
@@ -55,19 +51,17 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
     public AuthGamepadNavigation(Grid root, ScrollViewer scroller,
         Func<AuthGamepadAction, Task> pageAction, Func<Control[]> fields,
         Func<Control?, string?> fieldId, Action hidePasswords, bool welcome = false,
-        Action<AuthWindowAction>? windowAction = null, Func<bool>? canRestoreWindow = null,
+        IAuthCaptionNavigation? caption = null,
         Func<DependencyObject, bool>? isExternalNoticeFocus = null)
     {
         _root = root; _scroller = scroller; _pageAction = pageAction;
         _originalPadding = scroller.Padding;
         _welcome = welcome;
         _fields = fields; _fieldId = fieldId; _hidePasswords = hidePasswords;
-        _windowAction = windowAction;
-        _canRestoreWindow = canRestoreWindow;
+        _caption = caption;
         _isExternalNoticeFocus = isExternalNoticeFocus;
         _help.Children.Add(_helpText);
         _help.Children.Add(_feedback);
-        _windowButtons = windowAction is null ? [] : CreateWindowButtons();
         var content = new StackPanel { Spacing = 8 };
         content.Children.Add(_help);
         content.Children.Add(_hints);
@@ -176,6 +170,7 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
     {
         if (_disposed) return;
         if (!state.IsControllerConnected) Dismiss();
+        else if (!state.IsGamepadMode) _caption?.Clear();
         UpdateVisibility();
     }
 
@@ -192,6 +187,7 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
         if (_disposed || !_active) return;
         try
         {
+            if (HandleCaptionInput(action)) return;
             if (_isExternalNoticeFocus is not null &&
                 action is (AuthGamepadAction.Up or AuthGamepadAction.Down or AuthGamepadAction.Left
                     or AuthGamepadAction.Right or AuthGamepadAction.Back or AuthGamepadAction.ResetFocus) &&
@@ -220,7 +216,8 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
         }
         switch (action)
         {
-            case AuthGamepadAction.Up: return Move(FocusNavigationDirection.Up);
+            case AuthGamepadAction.Up:
+                return Move(FocusNavigationDirection.Up) || TrySelectCaption();
             case AuthGamepadAction.Down: return Move(FocusNavigationDirection.Down);
             case AuthGamepadAction.Left: return Move(FocusNavigationDirection.Left);
             case AuthGamepadAction.Right: return Move(FocusNavigationDirection.Right);
@@ -244,7 +241,7 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
     internal Task<bool> ApplyAsync(McpAuthGamepadAction action, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (!Enum.IsDefined(action) || _disposed || !_active || !OwnsInput()) return Task.FromResult(false);
+        if (!Enum.IsDefined(action) || _disposed || !_active || _caption?.Selected is not null || !OwnsInput()) return Task.FromResult(false);
         if (action is McpAuthGamepadAction.EnableFeedback or McpAuthGamepadAction.DisableFeedback)
         {
             _feedback.IsChecked = action == McpAuthGamepadAction.EnableFeedback;
@@ -276,7 +273,13 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
             || FocusedControl is not { IsEnabled: true } input || !Available(input)) return false;
         if (Array.IndexOf(_fields(), input) < 0) return false;
         _hidePasswords();
-        _keyboard.Open(input);
+        Func<string?, bool>? acceptText = _fieldId(input) switch
+        {
+            "username" => AuthIdentifierInput.IsUsername,
+            "identifier" or "emailAddress" => AuthIdentifierInput.IsLogin,
+            _ => null
+        };
+        _keyboard.Open(input, acceptText);
         UpdateVisibility();
         return _keyboard.IsOpen;
     }
@@ -379,7 +382,6 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
         UpdateVisibility();
         if (show)
         {
-            RefreshWindowButtons();
             _feedback.Focus(FocusState.Keyboard);
         }
         else
@@ -438,6 +440,7 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
 
     private void Dismiss()
     {
+        _caption?.Clear();
         _keyboard.Close(false);
         _help.Visibility = Visibility.Collapsed;
         if (_openCombo is { } combo) combo.IsDropDownOpen = false;
@@ -455,61 +458,63 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
         _feedback.Content = _localization.GetString("GamepadFeedback");
         AutomationProperties.SetName(_feedback, _localization.GetString("GamepadFeedback"));
         AutomationProperties.SetName(_overlay, _localization.GetString("GamepadControls"));
-        RefreshWindowButtons();
     }
 
-    private Button[] CreateWindowButtons()
+    private bool TrySelectCaption()
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-        var buttons = new Button[3];
-        for (var i = 0; i < buttons.Length; i++)
+        if (_help.Visibility == Visibility.Visible || _caption?.Select(0) != true) return false;
+        _hidePasswords();
+        AnnounceCaption();
+        return true;
+    }
+
+    private bool HandleCaptionInput(AuthGamepadAction action)
+    {
+        if (_caption is not { Selected: not null } caption) return false;
+        if (!IsActiveWithoutBlockingPopup || !caption.IsCurrent)
         {
-            var button = new Button { UseSystemFocusVisuals = true, MinHeight = 34, CornerRadius = new CornerRadius(8) };
-            button.Click += WindowButtonClicked;
-            row.Children.Add(button);
-            buttons[i] = button;
+            caption.Clear();
+            return true;
         }
-        _help.Children.Add(row);
-        return buttons;
-    }
 
-    private void RefreshWindowButtons()
-    {
-        if (_windowButtons.Length == 0) return;
-        SetWindowButtonLabel(_windowButtons[0], "Window/GamepadMinimize");
-        SetWindowButtonLabel(_windowButtons[1], _canRestoreWindow?.Invoke() == true
-            ? "Window/GamepadRestore" : "Window/GamepadMaximize");
-        SetWindowButtonLabel(_windowButtons[2], "Window/GamepadClose");
-    }
-
-    private void SetWindowButtonLabel(Button button, string key)
-    {
-        var label = _localization.GetString(key);
-        button.Content = label;
-        button.FontFamily = _localization.TextFontFamily;
-        AutomationProperties.SetName(button, label);
-    }
-
-    private string? GetFocusId(Control? control)
-    {
-        var index = control is Button button ? Array.IndexOf(_windowButtons, button) : -1;
-        return index switch
+        switch (action)
         {
-            0 => "windowMinimize",
-            1 => "windowMaximizeRestore",
-            2 => "windowClose",
-            _ => _fieldId(control)
-        };
+            case AuthGamepadAction.Left:
+            case AuthGamepadAction.Right:
+                if (caption.Select(action == AuthGamepadAction.Left ? -1 : 1)) AnnounceCaption();
+                break;
+            case AuthGamepadAction.Accept:
+                caption.Invoke();
+                break;
+            case AuthGamepadAction.Back:
+            case AuthGamepadAction.Down:
+            case AuthGamepadAction.ToggleHelp:
+                caption.Clear();
+                if (action == AuthGamepadAction.ToggleHelp) ShowHelp(true);
+                break;
+        }
+        return true;
     }
 
-    private void WindowButtonClicked(object sender, RoutedEventArgs args)
+    private void AnnounceCaption()
     {
-        if (_disposed || !_active || _help.Visibility != Visibility.Visible || !OwnsInput()) return;
-        var index = sender is Button button ? Array.IndexOf(_windowButtons, button) : -1;
-        if (index < 0) return;
-        ShowHelp(false);
-        _windowAction?.Invoke((AuthWindowAction)index);
+        var key = _caption?.Selected switch
+        {
+            AuthWindowAction.Minimize => "Window/GamepadMinimize",
+            AuthWindowAction.MaximizeOrRestore => _caption.IsMaximized ? "Window/GamepadRestore" : "Window/GamepadMaximize",
+            _ => "Window/GamepadClose"
+        };
+        AccessibilityAnnouncements.Announce(_root, _localization.GetString(key), "Mizon.Account.Caption");
     }
+
+    private string? GetFocusId(Control? control) => (_caption?.IsCurrent == true ? _caption.Selected : null) switch
+    {
+        AuthWindowAction.Minimize => "windowMinimize",
+        AuthWindowAction.MaximizeOrRestore => "windowMaximizeRestore",
+        AuthWindowAction.Close => "windowClose",
+        _ => _fieldId(control)
+    };
+
     private void LanguageChanged(object? sender, PropertyChangedEventArgs args) { if (args.PropertyName == nameof(LocalizationService.Revision)) RefreshText(); }
     private void FeedbackChanged(object sender, RoutedEventArgs args) => _session.FeedbackEnabled = _feedback.IsChecked == true;
     private void KeyboardClosed(object? sender, EventArgs args) { _hidePasswords(); UpdateVisibility(); }
@@ -554,7 +559,6 @@ internal sealed partial class AuthGamepadNavigation : IDisposable
         _keyboard.Closed -= KeyboardClosed;
         _keyboard.Dispose();
         _feedback.Checked -= FeedbackChanged; _feedback.Unchecked -= FeedbackChanged;
-        foreach (var button in _windowButtons) button.Click -= WindowButtonClicked;
         _localization.PropertyChanged -= LanguageChanged;
         _root.PointerPressed -= PointerPressed; _root.KeyDown -= KeyDown; _root.LostFocus -= LostFocus; _root.SizeChanged -= SizeChanged;
         _root.GotFocus -= GotFocus;

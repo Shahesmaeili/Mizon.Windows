@@ -2,6 +2,16 @@
 
 Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Native caption and account layout — 2026-11-16
+
+The native title bar in windowed authentication is selectable with controller Up
+from the highest control and Left/Right across the buttons. The duplicate buttons
+from View help have been removed. The language picker now uses the left side of
+the title strip. Medium layouts retain a smaller showcase and explicitly apply
+the current language's font to its labels. Typed identifier restrictions also
+cover paste, controller keyboard and the existing auth MCP edit operation.
+See [the task note](tasks/2026-11-16-auth-native-caption.md).
+
 ## Auth controller and turning card — 2026-11-15
 
 Successful login/registration, rejected requests and local registration validation
