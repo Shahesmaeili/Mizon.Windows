@@ -62,7 +62,6 @@
             <Grid MinHeight="{x:Bind WelcomeScroller.ViewportHeight, Mode=OneWay}" Padding="24,18">
             <StackPanel x:Name="WelcomeContent" MaxWidth="480" Spacing="10"
                         HorizontalAlignment="Stretch" VerticalAlignment="Center">
-                <userControls:LanguagePicker HorizontalAlignment="Center" Margin="0,0,0,4" />
                 <Grid ColumnSpacing="10" HorizontalAlignment="Center" AutomationProperties.AccessibilityView="Raw">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="28" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" /></Grid.ColumnDefinitions>
                     <Border Height="1" VerticalAlignment="Center" Background="{ThemeResource AuthAccentTintBrush}" />
@@ -152,5 +151,16 @@
             </StackPanel>
             </Grid>
         </ScrollViewer>
+        <Grid FlowDirection="LeftToRight">
+            <Grid.RowDefinitions>
+                <RowDefinition x:Name="WelcomeCaptionInset" Height="48" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid x:Name="LanguagePickerHost" Width="36" Height="36" HorizontalAlignment="Left"
+                  VerticalAlignment="Center" Margin="12,0,0,0">
+                <userControls:LanguagePicker SelectorStyle="{StaticResource AuthHeaderLanguageSelector}"
+                                             ToolTipService.ToolTip="{x:Bind Localization.GetString('LanguagePickerName', Localization.Revision), Mode=OneWay}" />
+            </Grid>
+        </Grid>
     </Grid>
 </Page>

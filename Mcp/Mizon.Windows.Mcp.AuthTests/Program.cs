@@ -10,6 +10,7 @@ internal static class Program
     {
         await ActivePageAndActions();
         await IdentifierEditing();
+        await WelcomeLanguage();
         await CancellationAndLifecycle();
         Console.WriteLine($"PASS {_checks} production authentication adapter assertions. Synthetic pages only; no UI, accounts or real consent.");
     }
@@ -68,6 +69,26 @@ internal static class Program
         Check((await adapter.ExecuteAsync(Action(McpAuthGamepadAction.ShowHelp), default)) is { Success: true, State.Page: "welcome" }
             && welcome.LastAction == McpAuthGamepadAction.ShowHelp && welcome.Retries == 0, "Welcome controller action shares page flow without triggering a retry");
         Check(login.ActionCalls == calls + 1, "Cached offscreen login never receives Welcome actions");
+    }
+
+    private static async Task WelcomeLanguage()
+    {
+        var welcome = new WelcomePage();
+        var navigation = new NavigationService { CurrentMainPage = welcome };
+        using var adapter = new McpAuthenticationService(navigation, new LocalStorageService());
+        var persian = await adapter.ExecuteAsync(new() { Operation = "set_language", Language = "fa-IR" }, default);
+        Check(persian is { Success: true, Code: "language_updated", State: { Page: "welcome", Language: "fa-IR" } },
+            "Welcome updates the shared application language through the auth MCP action");
+        var bad = await adapter.ExecuteAsync(new() { Operation = "set_language", Language = "de-DE" }, default);
+        Check(bad is { Success: false, Code: "invalid_language", State.Language: "fa-IR" },
+            "Unsupported language does not change the active preference");
+        var english = await adapter.ExecuteAsync(new() { Operation = "set_language", Language = "en-US" }, default);
+        Check(english is { Success: true, State.Language: "en-US" } && welcome.Retries == 0,
+            "Changing language on Welcome does not retry or submit authentication");
+        navigation.CurrentMainPage = new HomePage();
+        var blocked = await adapter.ExecuteAsync(new() { Operation = "set_language", Language = "fa-IR" }, default);
+        Check(blocked is { Code: "page_mismatch", State.Language: "en-US" },
+            "The auth language action cannot steer a non-auth page");
     }
 
     private static async Task CancellationAndLifecycle()

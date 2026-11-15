@@ -84,58 +84,8 @@
             </Grid>
 
             <Grid x:Name="LanguagePickerHost" Width="36" Height="36" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="52,0,0,0">
-                <controls:LanguagePicker ToolTipService.ToolTip="{x:Bind Localization.GetString('LanguagePickerName', Localization.Revision), Mode=OneWay}">
-                    <controls:LanguagePicker.SelectorStyle>
-                        <Style TargetType="ComboBox">
-                            <Setter Property="Width" Value="36" />
-                            <Setter Property="Height" Value="36" />
-                            <Setter Property="CornerRadius" Value="8" />
-                            <Setter Property="UseSystemFocusVisuals" Value="True" />
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ComboBox">
-                                        <Grid x:Name="LayoutRoot" Background="Transparent">
-                                            <VisualStateManager.VisualStateGroups>
-                                                <VisualStateGroup x:Name="CommonStates">
-                                                    <VisualState x:Name="Normal" />
-                                                    <VisualState x:Name="PointerOver">
-                                                        <VisualState.Setters>
-                                                            <Setter Target="Background.Background" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />
-                                                            <Setter Target="Globe.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
-                                                        </VisualState.Setters>
-                                                    </VisualState>
-                                                    <VisualState x:Name="Pressed">
-                                                        <VisualState.Setters>
-                                                            <Setter Target="Background.Background" Value="{ThemeResource SubtleFillColorTertiaryBrush}" />
-                                                        </VisualState.Setters>
-                                                    </VisualState>
-                                                </VisualStateGroup>
-                                            </VisualStateManager.VisualStateGroups>
-                                            <Border x:Name="Background" Background="Transparent" CornerRadius="{TemplateBinding CornerRadius}"
-                                                    Control.IsTemplateFocusTarget="True">
-                                                <icon:SymbolIcon x:Name="Globe" Symbol="Globe" FontSize="17"
-                                                                 HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}" IsHitTestVisible="False"
-                                                                 AutomationProperties.AccessibilityView="Raw" />
-                                            </Border>
-                                            <ContentPresenter x:Name="ContentPresenter" Visibility="Collapsed"
-                                                              AutomationProperties.AccessibilityView="Raw" />
-                                            <Popup x:Name="Popup">
-                                                <Border x:Name="PopupBorder" MinWidth="122" Padding="4" CornerRadius="8"
-                                                        Background="{ThemeResource ComboBoxDropDownBackground}"
-                                                        BorderBrush="{ThemeResource ComboBoxDropDownBorderBrush}" BorderThickness="1">
-                                                    <ScrollViewer x:Name="ScrollViewer" ZoomMode="Disabled">
-                                                        <ItemsPresenter />
-                                                    </ScrollViewer>
-                                                </Border>
-                                            </Popup>
-                                        </Grid>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </controls:LanguagePicker.SelectorStyle>
-                </controls:LanguagePicker>
+                <controls:LanguagePicker SelectorStyle="{StaticResource AuthHeaderLanguageSelector}"
+                                         ToolTipService.ToolTip="{x:Bind Localization.GetString('LanguagePickerName', Localization.Revision), Mode=OneWay}" />
             </Grid>
         </Grid>
     </Grid>

@@ -101,8 +101,6 @@ public sealed partial class LoginPage : Page
         if (width <= 0 || height <= 0) return;
         var captionHeight = GetCaptionHeight();
         if (CaptionInset.Height.Value != captionHeight) CaptionInset.Height = new GridLength(captionHeight);
-        UpdateLanguagePickerPlacement(width, captionHeight);
-
         var bodyHeight = height - captionHeight;
         var state = width >= 900 && bodyHeight >= 550 ? "WideLogin"
             : width >= 680 && bodyHeight >= 420 ? "MediumLogin" : "CompactLogin";
@@ -132,13 +130,7 @@ public sealed partial class LoginPage : Page
         UpdateShowcase();
     }
 
-    private double GetCaptionHeight()
-    {
-        if (_hostAppWindow?.Presenter.Kind == AppWindowPresenterKind.FullScreen) return 0;
-        if (_hostAppWindow?.TitleBar is not { Height: > 0 } titleBar || XamlRoot is not { RasterizationScale: > 0 } root)
-            return 48;
-        return Math.Ceiling(titleBar.Height / root.RasterizationScale);
-    }
+    private double GetCaptionHeight() => AuthHeaderLanguageRegion.GetCaptionHeight(_hostAppWindow, XamlRoot);
 
     private void HostRootChanged(XamlRoot sender, XamlRootChangedEventArgs args)
     {

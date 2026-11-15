@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Windowing;
 using Microsoft.Windows.BadgeNotifications;
+using Mizon.Windows.Common;
 using Mizon.Windows.Services;
 using Mizon.Windows.ViewModels;
 using System;
@@ -28,6 +29,7 @@ public sealed partial class WelcomePage : Page
     private bool _navigationSubscribed;
     private Window? _hostWindow;
     private AppWindow? _hostAppWindow;
+    private AuthHeaderLanguageRegion? _languageRegion;
     private bool _windowActive = true;
     private bool _orbitsStarted;
     private readonly FrameworkElement[] _orbits;
@@ -67,6 +69,7 @@ public sealed partial class WelcomePage : Page
             _hostAppWindow = _hostWindow.AppWindow;
             if (_hostAppWindow is not null) _hostAppWindow.Changed += HostWindow_Changed;
         }
+        _languageRegion = new AuthHeaderLanguageRegion(this, LanguagePickerHost, WelcomeCaptionInset, _hostAppWindow);
         _uiSettings.AnimationsEnabledChanged += MotionPreferenceChanged;
         InitializeGamepad();
         UpdateMotionActivity();
@@ -177,6 +180,8 @@ public sealed partial class WelcomePage : Page
 
     private void DetachHostWindow()
     {
+        _languageRegion?.Dispose();
+        _languageRegion = null;
         var window = _hostWindow;
         var appWindow = _hostAppWindow;
         _hostWindow = null;

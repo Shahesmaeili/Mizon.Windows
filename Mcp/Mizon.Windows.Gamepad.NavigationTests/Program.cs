@@ -17,7 +17,8 @@ internal static class Program
     {
         await FocusAndKeyboard();
         await HelpScope();
-        await FixedLanguagePicker();
+        await FixedLanguagePicker(welcome: false);
+        await FixedLanguagePicker(welcome: true);
         await NativeWindowSelection();
         await OtherSurfaces();
         RejectedSubmissionFocus();
@@ -97,9 +98,9 @@ internal static class Program
         Check(!await page.Apply(McpAuthGamepadAction.OpenKeyboard), "Help visibility blocks keyboard opening after pointer focus escapes");
     }
 
-    private static async Task FixedLanguagePicker()
+    private static async Task FixedLanguagePicker(bool welcome)
     {
-        using var page = new Fixture();
+        using var page = new Fixture(welcome: welcome);
         var picker = new ComboBox();
         page.Root.Children.Add(picker);
         page.Root.Children.Add(page.Scroller);
@@ -367,7 +368,7 @@ internal static class Program
         public AuthGamepadNavigation Navigator { get; }
         public AuthGamepadSession Session { get; }
         public AuthGamepadKeyboard Keyboard { get; }
-        public Fixture(bool withCaption = false, Func<DependencyObject, bool>? isNoticeFocus = null)
+        public Fixture(bool withCaption = false, Func<DependencyObject, bool>? isNoticeFocus = null, bool welcome = false)
         {
             FocusManager.Current = null; VisualTreeHelper.OpenPopups.Clear();
             Root.Children.Add(First);
@@ -376,7 +377,7 @@ internal static class Program
             Root.Children.Add(new TextBox { IsEnabled = false }); Root.Children.Add(Last); Root.Children.Add(Submit);
             InitialChildren = Root.Children.Count;
             Navigator = new(Root, Scroller, _ => { PageActions++; return Task.CompletedTask; }, () => [First, Last], control => control == First ? "identifier" : control == Last ? "password" : null, () => { },
-                caption: withCaption ? Caption : null, isExternalNoticeFocus: isNoticeFocus);
+                welcome: welcome, caption: withCaption ? Caption : null, isExternalNoticeFocus: isNoticeFocus);
             Session = AuthGamepadSession.Latest; Keyboard = AuthGamepadKeyboard.Latest;
             Navigator.SetActive(true);
         }
