@@ -17,8 +17,8 @@
                         <Setter Target="FormColumn.Width" Value="*" />
                         <Setter Target="ArtPanel.Visibility" Value="Collapsed" />
                         <Setter Target="CompactBrand.Visibility" Value="Visible" />
-                        <Setter Target="LoginLayout.ColumnSpacing" Value="0" />
-                        <Setter Target="LoginContent.Margin" Value="16,24" />
+                        <Setter Target="LoginContent.ColumnSpacing" Value="0" />
+                        <Setter Target="LoginContent.Margin" Value="16,0,16,8" />
                         <Setter Target="AuthForms.CardPadding" Value="22,24" />
                     </VisualState.Setters>
                 </VisualState>
@@ -28,39 +28,70 @@
                         <Setter Target="FormColumn.Width" Value="*" />
                         <Setter Target="ArtPanel.Visibility" Value="Visible" />
                         <Setter Target="CompactBrand.Visibility" Value="Collapsed" />
-                        <Setter Target="LoginLayout.ColumnSpacing" Value="32" />
-                        <Setter Target="LoginContent.Margin" Value="40,32" />
+                        <Setter Target="LoginContent.ColumnSpacing" Value="32" />
+                        <Setter Target="LoginContent.Margin" Value="40,0,40,14" />
                         <Setter Target="AuthForms.CardPadding" Value="30,32" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <ScrollViewer x:Name="LoginScroller" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
-                      HorizontalContentAlignment="Stretch" VerticalScrollBarVisibility="Hidden"
-                      VerticalContentAlignment="Stretch" ZoomMode="Disabled">
-            <Grid MinHeight="{x:Bind LoginScroller.ViewportHeight, Mode=OneWay}">
-            <Grid x:Name="LoginContent" Margin="16,24" VerticalAlignment="Center">
-                <Grid x:Name="LoginLayout" MaxWidth="1040" ColumnSpacing="0" FlowDirection="LeftToRight">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition x:Name="ArtColumn" Width="0" />
-                        <ColumnDefinition x:Name="FormColumn" Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <controls:AuthShowcase x:Name="ArtPanel" Grid.Column="0" MaxWidth="430"
-                                           Visibility="Collapsed" VerticalAlignment="Center" />
-                    <StackPanel x:Name="FormPanel" Grid.Column="1" MaxWidth="440" VerticalAlignment="Center" Spacing="18">
-                        <controls:LanguagePicker HorizontalAlignment="Center" />
-                        <StackPanel x:Name="CompactBrand" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10"
-                                    FlowDirection="LeftToRight">
-                            <icon:SymbolIcon Symbol="Headphones" IconVariant="Color" FontSize="24" VerticalAlignment="Center" />
-                            <TextBlock Text="MIZON" FontFamily="Segoe UI Variable Display" FontSize="23"
-                                       FontWeight="SemiBold" CharacterSpacing="130" Foreground="{ThemeResource AuthAccentBrush}" />
-                        </StackPanel>
-                        <controls:AuthFormsPanel x:Name="AuthForms" ViewModel="{x:Bind ViewModel}"
-                                                 SubmitRequested="AuthForms_SubmitRequested" ModeChanged="AuthForms_ModeChanged" />
-                    </StackPanel>
-                </Grid>
+        <Grid FlowDirection="LeftToRight">
+            <Grid.RowDefinitions>
+                <RowDefinition x:Name="CaptionInset" Height="48" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="1" HorizontalAlignment="Right" Margin="0,8,16,6">
+                <controls:LanguagePicker>
+                    <controls:LanguagePicker.SelectorStyle>
+                        <Style TargetType="ComboBox">
+                            <Setter Property="MinWidth" Value="134" />
+                            <Setter Property="MinHeight" Value="36" />
+                            <Setter Property="CornerRadius" Value="13" />
+                            <Setter Property="Padding" Value="36,4,8,4" />
+                            <Setter Property="Background" Value="{ThemeResource AuthInputBackgroundBrush}" />
+                            <Setter Property="BorderBrush" Value="{ThemeResource AuthInputBorderBrush}" />
+                            <Setter Property="BorderThickness" Value="1" />
+                            <Setter Property="UseSystemFocusVisuals" Value="True" />
+                        </Style>
+                    </controls:LanguagePicker.SelectorStyle>
+                </controls:LanguagePicker>
+                <icon:SymbolIcon Symbol="Globe" FontSize="16" Foreground="{ThemeResource AuthAccentBrush}"
+                                 Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                 IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
             </Grid>
+
+            <Grid x:Name="LoginContent" Grid.Row="2" MaxWidth="1040" Margin="16,0,16,8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="ArtColumn" Width="0" />
+                    <ColumnDefinition x:Name="FormColumn" Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <controls:AuthShowcase x:Name="ArtPanel" Grid.Row="1" MaxWidth="430"
+                                       Visibility="Collapsed" VerticalAlignment="Center" />
+                <StackPanel x:Name="CompactBrand" Grid.Column="1" Margin="0,0,0,6" Orientation="Horizontal"
+                            HorizontalAlignment="Center" Spacing="10">
+                    <icon:SymbolIcon Symbol="Headphones" IconVariant="Color" FontSize="24" VerticalAlignment="Center" />
+                    <TextBlock Text="MIZON" FontFamily="Segoe UI Variable Display" FontSize="23"
+                               FontWeight="SemiBold" CharacterSpacing="130" Foreground="{ThemeResource AuthAccentBrush}" />
+                </StackPanel>
+
+                <ScrollViewer x:Name="LoginScroller" Grid.Row="1" Grid.Column="1" MaxWidth="448"
+                              HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
+                              HorizontalContentAlignment="Stretch" VerticalScrollBarVisibility="Hidden"
+                              VerticalContentAlignment="Stretch" ZoomMode="Disabled">
+                    <Grid MinHeight="{x:Bind LoginScroller.ViewportHeight, Mode=OneWay}">
+                        <controls:AuthFormsPanel x:Name="AuthForms" Margin="4,14" VerticalAlignment="Center"
+                                                 ViewModel="{x:Bind ViewModel}" SubmitRequested="AuthForms_SubmitRequested"
+                                                 ModeChanged="AuthForms_ModeChanged" />
+                    </Grid>
+                </ScrollViewer>
             </Grid>
-        </ScrollViewer>
+        </Grid>
     </Grid>
 </Page>

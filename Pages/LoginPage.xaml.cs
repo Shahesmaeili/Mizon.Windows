@@ -25,6 +25,7 @@ public sealed partial class LoginPage : Page
     private bool _entrancePlayed;
     private Window? _hostWindow;
     private AppWindow? _hostAppWindow;
+    private XamlRoot? _hostXamlRoot;
     private bool _windowActive = true;
     private int? _normalBorderColor;
 
@@ -54,7 +55,9 @@ public sealed partial class LoginPage : Page
             window.Activated += HostWindow_Activated;
             window.Closed += HostWindow_Closed;
             _hostAppWindow = window.AppWindow;
-            _hostAppWindow.Changed += HostWindow_Changed;
+            if (_hostAppWindow is not null) _hostAppWindow.Changed += HostWindow_Changed;
+            _hostXamlRoot = XamlRoot;
+            if (_hostXamlRoot is not null) _hostXamlRoot.Changed += HostRootChanged;
         }
         InitializeGamepad();
         UpdateLayout(ActualWidth, ActualHeight);
@@ -93,7 +96,11 @@ public sealed partial class LoginPage : Page
     private void UpdateLayout(double width, double height)
     {
         if (width <= 0 || height <= 0) return;
-        var state = width >= 900 && height >= 560 ? "WideLogin" : "CompactLogin";
+        var captionHeight = GetCaptionHeight();
+        if (CaptionInset.Height.Value != captionHeight) CaptionInset.Height = new GridLength(captionHeight);
+
+        // The art column needs room for its stage and captions below the fixed language picker.
+        var state = width >= 900 && height - captionHeight >= 600 ? "WideLogin" : "CompactLogin";
         if (_layoutState == state) return;
         if (!VisualStateManager.GoToState(this, state, false)) return;
         _layoutState = state;
@@ -102,7 +109,7 @@ public sealed partial class LoginPage : Page
 
     private void UpdateShowcase() =>
         ArtPanel.IsActive = _pageCancellation is not null && _layoutState == "WideLogin" && _windowActive
-            && _hostWindow?.AppWindow.Presenter is not OverlappedPresenter { State: OverlappedPresenterState.Minimized };
+            && _hostAppWindow?.Presenter is not OverlappedPresenter { State: OverlappedPresenterState.Minimized };
 
     private void HostWindow_Activated(object sender, WindowActivatedEventArgs args)
     {
@@ -113,8 +120,38 @@ public sealed partial class LoginPage : Page
 
     private void HostWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)
     {
-        if (args.DidPresenterChange || args.DidVisibilityChange) UpdateGamepadActivity();
-        if (args.DidPresenterChange || args.DidVisibilityChange) UpdateShowcase();
+        if (args.DidPresenterChange) UpdateLayout(ActualWidth, ActualHeight);
+        if (!args.DidPresenterChange && !args.DidVisibilityChange) return;
+        UpdateGamepadActivity();
+        UpdateShowcase();
+    }
+
+    private double GetCaptionHeight()
+    {
+        if (_hostAppWindow?.Presenter.Kind == AppWindowPresenterKind.FullScreen) return 0;
+        if (_hostAppWindow?.TitleBar is not { Height: > 0 } titleBar || XamlRoot is not { RasterizationScale: > 0 } root)
+            return 48;
+        return Math.Ceiling(titleBar.Height / root.RasterizationScale);
+    }
+
+    private void HostRootChanged(XamlRoot sender, XamlRootChangedEventArgs args)
+    {
+        if (IsLoaded && ReferenceEquals(sender, _hostXamlRoot))
+            UpdateLayout(ActualWidth, ActualHeight);
+    }
+
+    private void DetachHostWindow()
+    {
+        if (_hostXamlRoot is not null) _hostXamlRoot.Changed -= HostRootChanged;
+        if (_hostAppWindow is not null) _hostAppWindow.Changed -= HostWindow_Changed;
+        if (_hostWindow is not null)
+        {
+            _hostWindow.Activated -= HostWindow_Activated;
+            _hostWindow.Closed -= HostWindow_Closed;
+        }
+        _hostXamlRoot = null;
+        _hostAppWindow = null;
+        _hostWindow = null;
     }
 
     private async void AuthForms_SubmitRequested(object? sender, EventArgs args)
@@ -207,14 +244,7 @@ public sealed partial class LoginPage : Page
         _pageCancellation?.Dispose();
         _pageCancellation = null;
         ArtPanel.IsActive = false;
-        if (_hostWindow is not null)
-        {
-            _hostWindow.Activated -= HostWindow_Activated;
-            _hostWindow.Closed -= HostWindow_Closed;
-            if (_hostAppWindow is not null) _hostAppWindow.Changed -= HostWindow_Changed;
-            _hostAppWindow = null;
-            _hostWindow = null;
-        }
+        DetachHostWindow();
         AuthForms.CancelTransitions();
         ViewModel.ClearSensitiveInputs();
 

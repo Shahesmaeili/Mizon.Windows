@@ -44,13 +44,6 @@ public sealed partial class LoginPage
     {
         _windowActive = false;
         DisposeGamepad();
-        if (_hostWindow is not null)
-        {
-            _hostWindow.Activated -= HostWindow_Activated;
-            _hostWindow.Closed -= HostWindow_Closed;
-        }
-        if (_hostAppWindow is not null) _hostAppWindow.Changed -= HostWindow_Changed;
-        _hostWindow = null;
-        _hostAppWindow = null;
+        DetachHostWindow();
     }
 }

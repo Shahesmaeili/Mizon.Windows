@@ -4,7 +4,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:common="using:Mizon.Windows.Common"
     Language="{x:Bind Localization.LanguageTag, Mode=OneWay}">
-    <ComboBox x:Name="LanguageSelector" MinWidth="144" CornerRadius="10"
+    <UserControl.Resources>
+        <Style x:Key="DefaultSelectorStyle" TargetType="ComboBox">
+            <Setter Property="MinWidth" Value="144" />
+            <Setter Property="CornerRadius" Value="10" />
+        </Style>
+    </UserControl.Resources>
+    <ComboBox x:Name="LanguageSelector" Style="{StaticResource DefaultSelectorStyle}"
               HorizontalContentAlignment="Stretch" FlowDirection="LeftToRight"
               common:CursorExtensions.Cursor="Hand"
               SelectionChanged="LanguageSelector_SelectionChanged"

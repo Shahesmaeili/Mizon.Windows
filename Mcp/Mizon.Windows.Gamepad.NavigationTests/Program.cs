@@ -17,6 +17,7 @@ internal static class Program
     {
         await FocusAndKeyboard();
         await HelpScope();
+        await FixedLanguagePicker();
         await OtherSurfaces();
         await FeedbackPreference();
         await Lifecycle();
@@ -88,6 +89,39 @@ internal static class Program
         Check(FocusManager.Current is CheckBox && page.PageActions == 0, "Help traps field navigation and blocks physical submission");
         page.First.Focus(FocusState.Keyboard);
         Check(!await page.Apply(McpAuthGamepadAction.OpenKeyboard), "Help visibility blocks keyboard opening after pointer focus escapes");
+    }
+
+    private static async Task FixedLanguagePicker()
+    {
+        using var page = new Fixture();
+        var picker = new ComboBox();
+        page.Root.Children.Add(picker);
+        page.Root.Children.Add(page.Scroller);
+        var form = new Grid();
+        new ElementCollection(page.Scroller).Add(form);
+        foreach (var control in new Control[] { page.First, page.Last, page.Submit })
+        {
+            page.Root.Children.Remove(control);
+            form.Children.Add(control);
+        }
+        page.First.Top = 100;
+        page.Last.Top = 170;
+        page.Submit.Top = 230;
+        page.First.Focus(FocusState.Keyboard);
+        page.Scroller.VerticalOffset = 40;
+
+        Check(await page.Apply(McpAuthGamepadAction.Up) && FocusManager.Current == picker,
+            "Scoped D-pad navigation reaches the stationary language selector from the form");
+        page.Session.Emit(AuthGamepadAction.Accept);
+        page.Session.Emit(AuthGamepadAction.Down);
+        Check(picker.IsDropDownOpen && picker.SelectedIndex == 1 && page.Scroller.VerticalOffset == 40,
+            "Physical controller changes language selection without scrolling the form");
+        page.Session.Emit(AuthGamepadAction.Back);
+        Check(!picker.IsDropDownOpen && FocusManager.Current == picker && page.PageActions == 0,
+            "Back dismisses the selector and restores its focus without acting on the form");
+        page.Session.Emit(AuthGamepadAction.Down);
+        Check(FocusManager.Current == page.First && page.First.BringIntoViewCount > 0,
+            "D-pad Down returns to the form and requests that the focused field scroll into view");
     }
 
     private static async Task OtherSurfaces()

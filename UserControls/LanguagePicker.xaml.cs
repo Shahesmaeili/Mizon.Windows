@@ -8,6 +8,16 @@ namespace Mizon.Windows.UserControls;
 
 public sealed partial class LanguagePicker : UserControl
 {
+    public static readonly DependencyProperty SelectorStyleProperty = DependencyProperty.Register(
+        nameof(SelectorStyle), typeof(Style), typeof(LanguagePicker),
+        new PropertyMetadata(null, OnSelectorStyleChanged));
+
+    public Style? SelectorStyle
+    {
+        get => (Style?)GetValue(SelectorStyleProperty);
+        set => SetValue(SelectorStyleProperty, value);
+    }
+
     public LocalizationService Localization => LocalizationService.Current;
     private bool _synchronizing;
 
@@ -16,6 +26,12 @@ public sealed partial class LanguagePicker : UserControl
         InitializeComponent();
         Loaded += Picker_Loaded;
         Unloaded += Picker_Unloaded;
+    }
+
+    private static void OnSelectorStyleChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
+    {
+        var picker = (LanguagePicker)sender;
+        picker.LanguageSelector.Style = (Style?)args.NewValue ?? (Style)picker.Resources["DefaultSelectorStyle"];
     }
 
     private void Picker_Loaded(object sender, RoutedEventArgs args)
