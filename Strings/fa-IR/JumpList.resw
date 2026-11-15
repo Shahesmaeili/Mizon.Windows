@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="MainGroup" xml:space="preserve"><value>بخش‌های میزون</value></data>
+  <data name="AccountGroup" xml:space="preserve"><value>حساب میزون</value></data>
+  <data name="MusicTitle" xml:space="preserve"><value>موسیقی</value></data>
+  <data name="MusicDescription" xml:space="preserve"><value>آهنگ‌ها، موزیک‌ویدیوها و پلی‌لیست‌ها</value></data>
+  <data name="MoviesTitle" xml:space="preserve"><value>فیلم و سریال</value></data>
+  <data name="MoviesDescription" xml:space="preserve"><value>بخش فیلم‌ها و سریال‌ها</value></data>
+  <data name="AppsTitle" xml:space="preserve"><value>برنامه‌ها</value></data>
+  <data name="AppsDescription" xml:space="preserve"><value>بخش برنامه‌ها</value></data>
+  <data name="VpnTitle" xml:space="preserve"><value>VPN</value></data>
+  <data name="VpnDescription" xml:space="preserve"><value>اتصال و مدیریت VPN</value></data>
+  <data name="LoginTitle" xml:space="preserve"><value>ورود به حساب</value></data>
+  <data name="LoginDescription" xml:space="preserve"><value>ورود به میزون</value></data>
+  <data name="RegisterTitle" xml:space="preserve"><value>ساخت حساب</value></data>
+  <data name="RegisterDescription" xml:space="preserve"><value>ساخت حساب در میزون</value></data>
+</root>

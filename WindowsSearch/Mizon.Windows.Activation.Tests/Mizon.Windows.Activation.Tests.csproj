@@ -7,6 +7,10 @@
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\Services\JumpListService.cs" Link="JumpListService.cs" />
+    <Compile Include="..\..\Services\AppLanguagePreference.cs" Link="AppLanguagePreference.cs" />
+    <None Include="..\..\Strings\en-US\JumpList.resw" Link="Fixtures\en-US\JumpList.resw" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Strings\fa-IR\JumpList.resw" Link="Fixtures\fa-IR\JumpList.resw" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="..\..\Services\AppActivationRoute.cs" Link="AppActivationRoute.cs" />
     <Compile Include="..\..\Services\AppDeepLinkCatalog.cs" Link="AppDeepLinkCatalog.cs" />
     <Compile Include="..\..\Services\AppActionCatalog.cs" Link="AppActionCatalog.cs" />

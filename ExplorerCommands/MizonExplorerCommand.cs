@@ -103,7 +103,8 @@ internal static class ExplorerCommandCurrentUser
 
             try
             {
-                var api = new MizonApi(HttpClient, MemoryCache);
+                using var api = new MizonApi(HttpClient, MemoryCache, ownsHttpClient: false,
+                    global::Mizon.Windows.Services.AppLanguagePreference.ReadShared);
                 api.SetToken(token);
 
                 var response = api.SendRequestAsync(new MeOperation(new()), CancellationToken.None)

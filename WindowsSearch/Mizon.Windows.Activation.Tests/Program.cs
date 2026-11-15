@@ -2,6 +2,8 @@ using Mizon.Windows.Services;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
 
+await JumpListChecks.RunAsync();
+
 var id = Guid.Parse("0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72");
 var count = 0;
 void Check(bool condition, string name)

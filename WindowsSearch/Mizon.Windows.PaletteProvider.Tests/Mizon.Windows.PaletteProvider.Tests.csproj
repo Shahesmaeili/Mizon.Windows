@@ -11,6 +11,7 @@
   <ItemGroup>
     <!-- Exercise the actual ABI implementation, including its ownership code. -->
     <Compile Include="..\Mizon.Windows.PaletteProvider\*.cs" Link="Production\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Services\AppLanguagePreference.cs" Link="Integration\AppLanguagePreference.cs" />
     <Compile Include="..\..\Services\PaletteAuthenticationStore.cs" Link="Integration\PaletteAuthenticationStore.cs" />
     <ProjectReference Include="..\..\..\..\Mizon.API\Mizon.API.Client\Mizon.API.Client.csproj" />
   </ItemGroup>

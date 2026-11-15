@@ -1,61 +1,84 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Mizon.Windows.Pages;
 using Windows.UI.StartScreen;
 
 namespace Mizon.Windows.Services;
 
-public sealed class JumpListService
+// Updates and event subscriptions are owned by the app's UI thread.
+public sealed class JumpListService : IDisposable
 {
-    private readonly SemaphoreSlim _updateGate = new(1, 1);
-    private int _revision;
+    private static readonly JumpListEntry[] MainEntries =
+    [
+        new("music", "Music", "Headphones"),
+        new("movies", "Movies", "Video"),
+        new("apps", "Apps", "Apps"),
+        new("vpn", "Vpn", "Shield")
+    ];
+    private static readonly JumpListEntry[] AccountEntries =
+    [
+        new("login", "Login", "Person"),
+        new("register", "Register", "PersonAdd")
+    ];
 
-    public static IReadOnlyList<JumpListEntry> MainEntries { get; } =
-    [
-        new("music", "موسیقی", "آهنگ‌ها، موزیک‌ویدیوها و پلی‌لیست‌ها", "Headphones"),
-        new("movies", "فیلم و سریال", "بخش فیلم‌ها و سریال‌ها", "Video"),
-        new("apps", "برنامه‌ها", "بخش برنامه‌ها", "Apps"),
-        new("vpn", "VPN", "اتصال و مدیریت VPN", "Shield")
-    ];
-    public static IReadOnlyList<JumpListEntry> AccountEntries { get; } =
-    [
-        new("login", "ورود به حساب", "ورود به میزون", "Person"),
-        new("register", "ساخت حساب", "ساخت حساب در میزون", "PersonAdd")
-    ];
+    private readonly NavigationService _navigation;
+    private readonly LocalizationService _localization = LocalizationService.Current;
+    private Task _pendingUpdate = Task.CompletedTask;
+    private int _revision;
+    private bool? _signedIn;
+    private bool _disposed;
 
     public JumpListService(NavigationService navigationService)
     {
-        navigationService.MainNavigationChanged += (_, args) =>
-        {
-            if (!args.IsEnteringPage) return;
-            if (args.ToPageType == typeof(HomePage)) _ = ConfigureAsync(true);
-            else if (args.ToPageType == typeof(LoginPage)) _ = ConfigureAsync(false);
-        };
+        _navigation = navigationService;
+        _navigation.MainNavigationChanged += OnNavigation;
+        _localization.PropertyChanged += OnLanguageChanged;
+    }
+
+    private void OnNavigation(object? sender, NavigationChangedEventArgs args)
+    {
+        if (!args.IsEnteringPage) return;
+        if (args.ToPageType == typeof(HomePage)) _ = ConfigureAsync(true);
+        else if (args.ToPageType == typeof(LoginPage)) _ = ConfigureAsync(false);
+    }
+
+    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName == nameof(LocalizationService.LanguageTag) && _signedIn is bool signedIn)
+            _ = ConfigureAsync(signedIn);
     }
 
     public Task ConfigureLoginRegisterJumpListAsync() => ConfigureAsync(false);
 
-    public async Task ConfigureAsync(bool signedIn)
+    public Task ConfigureAsync(bool signedIn)
     {
-        var revision = Interlocked.Increment(ref _revision);
-        await _updateGate.WaitAsync();
+        if (_disposed) return Task.CompletedTask;
+        _signedIn = signedIn;
+        return _pendingUpdate = UpdateAsync(_pendingUpdate, ++_revision, signedIn);
+    }
+
+    private async Task UpdateAsync(Task previous, int revision, bool signedIn)
+    {
         try
         {
-            if (revision != _revision || !JumpList.IsSupported()) return;
+            await previous;
+            if (_disposed || revision != _revision || !JumpList.IsSupported()) return;
             var list = await JumpList.LoadCurrentAsync();
-            if (revision != _revision) return;
+            if (_disposed || revision != _revision) return;
+
             var removed = list.Items.Where(item => item.RemovedByUser).Select(item => item.Arguments).ToHashSet(StringComparer.Ordinal);
             list.SystemGroupKind = JumpListSystemGroupKind.None;
             list.Items.Clear();
+            var group = _localization.GetString(signedIn ? "JumpList/MainGroup" : "JumpList/AccountGroup");
             foreach (var entry in signedIn ? MainEntries : AccountEntries)
             {
                 if (removed.Contains(entry.Arguments)) continue;
-                var item = JumpListItem.CreateWithArguments(entry.Arguments, entry.Title);
-                item.Description = entry.Description;
-                item.GroupName = signedIn ? "بخش‌های میزون" : "حساب میزون";
+                var item = JumpListItem.CreateWithArguments(entry.Arguments, _localization.GetString($"JumpList/{entry.ResourceKey}Title"));
+                item.Description = _localization.GetString($"JumpList/{entry.ResourceKey}Description");
+                item.GroupName = group;
                 item.Logo = new Uri(entry.LogoUri);
                 list.Items.Add(item);
             }
@@ -67,7 +90,6 @@ public sealed class JumpListService
             // Shell integration must not block login or logout.
             AppLog.Error("Unable to update the Mizon jump list.", exception);
         }
-        finally { _updateGate.Release(); }
     }
 
     public static string? GetRequestedDestination(string? arguments)
@@ -83,10 +105,18 @@ public sealed class JumpListService
         }
         return null;
     }
-}
 
-public sealed record JumpListEntry(string Destination, string Title, string Description, string Icon)
-{
-    public string Arguments => $"--mizon-destination={Destination}";
-    public string LogoUri => $"ms-appx:///Assets/JumpList/FullSize/{Icon}.png";
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _navigation.MainNavigationChanged -= OnNavigation;
+        _localization.PropertyChanged -= OnLanguageChanged;
+    }
+
+    private sealed record JumpListEntry(string Destination, string ResourceKey, string Icon)
+    {
+        public string Arguments => $"--mizon-destination={Destination}";
+        public string LogoUri => $"ms-appx:///Assets/JumpList/FullSize/{Icon}.png";
+    }
 }

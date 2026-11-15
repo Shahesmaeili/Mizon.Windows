@@ -11,6 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Mizon.API\Mizon.API.Client\Mizon.API.Client.csproj" />
+    <Compile Include="..\..\Services\AppLanguagePreference.cs" Link="Integration\AppLanguagePreference.cs" />
     <Compile Include="..\..\Services\PaletteAuthenticationStore.cs" Link="Integration\PaletteAuthenticationStore.cs" />
   </ItemGroup>
 </Project>

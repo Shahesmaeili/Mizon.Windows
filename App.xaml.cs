@@ -116,6 +116,7 @@ public partial class App : Application
     internal static void ResumePendingActivation() => ((App)Current).OpenPendingActivation();
     private bool _initialized;
     private AppActionsService? _appActions;
+    private JumpListService? _jumpList;
     private MulticastDiscoveryServiceV2? _discoveryService;
     private AppDeepLinkResultDispatcher? _deepLinkResults;
     private AppActivationEnvelope? _pendingResultActivation;
@@ -217,7 +218,7 @@ public partial class App : Application
         var localStorageService = Services.GetRequiredService<LocalStorageService>();
         var navigationService = Services.GetRequiredService<NavigationService>();
         // Subscribe before the first navigation; login/logout replace the shell tasks as one list.
-        _ = Services.GetRequiredService<JumpListService>();
+        _jumpList = Services.GetRequiredService<JumpListService>();
         var mizonApi = Services.GetRequiredService<MizonApi>();
 
         mizonApi.SetDeviceInformation(DeviceInformations.GetOsVersion(),
@@ -228,6 +229,7 @@ public partial class App : Application
             MizonVersions.CurrentVersion);
 
         var userToken = localStorageService.GetJwtToken();
+        _ = _jumpList.ConfigureAsync(!string.IsNullOrWhiteSpace(userToken));
         if (!string.IsNullOrWhiteSpace(userToken))
             mizonApi.SetToken(userToken);
 
@@ -278,6 +280,8 @@ public partial class App : Application
         MainMizonWindow!.Closed -= MainWindow_Closed;
         _appActions?.Dispose();
         _appActions = null;
+        _jumpList?.Dispose();
+        _jumpList = null;
         _discoveryService?.Dispose();
         _discoveryService = null;
         ClearPendingActivation();
@@ -317,7 +321,7 @@ public partial class App : Application
         services.AddSingleton<DispatcherQueue>(
     DispatcherQueue.GetForCurrentThread()
 );
-        services.AddMizonApi();
+        services.AddMizonApi(static () => LocalizationService.Current.LanguageTag);
         services.AddSingleton(sp => new Lazy<MizonSocket>(sp.GetRequiredService<MizonSocket>));
         services.AddSingleton(sp => new ProfilePresenceService(
             () => new MizonProfilePresenceTransport(sp.GetRequiredService<Lazy<MizonSocket>>().Value),

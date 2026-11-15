@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Threading;
 
 namespace Mizon.Windows.Services;
 
@@ -15,9 +16,9 @@ namespace Mizon.Windows.Services;
 /// </summary>
 public sealed class LocalizationService : INotifyPropertyChanged
 {
-    private const string LanguageSettingKey = "UiLanguage";
-    private const string PersianLanguageTag = "fa-IR";
-    private const string EnglishLanguageTag = "en-US";
+    private const string PersianLanguageTag = AppLanguagePreference.Persian;
+    private const string EnglishLanguageTag = AppLanguagePreference.English;
+    private string _languageTag;
     private static readonly Lazy<LocalizationService> Instance = new(() => new LocalizationService());
     private readonly Lazy<ResourceManager> _resourceManager = new(() => new ResourceManager());
     private readonly Dictionary<string, ResourceContext> _contexts = new(StringComparer.Ordinal);
@@ -31,13 +32,14 @@ public sealed class LocalizationService : INotifyPropertyChanged
 
     private LocalizationService()
     {
-        LanguageTag = ReadLanguage();
+        _languageTag = ReadLanguage();
         UpdateUICulture();
+        PublishLanguage(_languageTag);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public string LanguageTag { get; private set; }
+    public string LanguageTag => Volatile.Read(ref _languageTag);
     public bool IsPersian => LanguageTag == PersianLanguageTag;
     public FlowDirection FlowDirection => IsPersian ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
     // Start follows FlowDirection: the right edge in Persian and the left edge in English.
@@ -51,14 +53,15 @@ public sealed class LocalizationService : INotifyPropertyChanged
 
     public void SetLanguage(string languageTag)
     {
-        var normalized = NormalizeLanguage(languageTag)
+        var normalized = AppLanguagePreference.Normalize(languageTag)
             ?? throw new ArgumentException("Supported UI languages are fa-IR and en-US.", nameof(languageTag));
         if (LanguageTag == normalized)
             return;
 
-        LanguageTag = normalized;
+        Volatile.Write(ref _languageTag, normalized);
         UpdateUICulture();
         SaveLanguage(normalized);
+        PublishLanguage(normalized);
         unchecked { Revision++; }
         OnPropertyChanged(nameof(LanguageTag));
         OnPropertyChanged(nameof(IsPersian));
@@ -145,8 +148,8 @@ public sealed class LocalizationService : INotifyPropertyChanged
         try
         {
             var settings = ApplicationData.GetDefault().LocalSettings;
-            if (settings.Values.TryGetValue(LanguageSettingKey, out var value))
-                return NormalizeLanguage(value as string) ?? PersianLanguageTag;
+            if (settings.Values.TryGetValue(AppLanguagePreference.SettingKey, out var value))
+                return AppLanguagePreference.Normalize(value as string) ?? PersianLanguageTag;
         }
         catch (Exception error)
         {
@@ -159,7 +162,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
     {
         try
         {
-            ApplicationData.GetDefault().LocalSettings.Values[LanguageSettingKey] = language;
+            ApplicationData.GetDefault().LocalSettings.Values[AppLanguagePreference.SettingKey] = language;
         }
         catch (Exception error)
         {
@@ -168,16 +171,13 @@ public sealed class LocalizationService : INotifyPropertyChanged
         }
     }
 
-    private static string? NormalizeLanguage(string? language)
+    private static void PublishLanguage(string language)
     {
-        var normalized = language?.Trim().Replace('_', '-');
-        if (string.Equals(normalized, "fa", StringComparison.OrdinalIgnoreCase)
-            || normalized?.StartsWith("fa-", StringComparison.OrdinalIgnoreCase) == true)
-            return PersianLanguageTag;
-        if (string.Equals(normalized, "en", StringComparison.OrdinalIgnoreCase)
-            || normalized?.StartsWith("en-", StringComparison.OrdinalIgnoreCase) == true)
-            return EnglishLanguageTag;
-        return null;
+        try { AppLanguagePreference.Publish(language); }
+        catch (Exception error) when (error is System.IO.IOException or UnauthorizedAccessException)
+        {
+            AppLog.Information($"Shell API language could not be synchronized ({error.GetType().Name}).");
+        }
     }
 
     private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

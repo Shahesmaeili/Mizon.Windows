@@ -7,6 +7,7 @@ using Mizon.API.Client.Operations.Clients;
 using Mizon.API.Client.Responses.Media;
 using Mizon.API.Client.Responses.Search;
 using Mizon.Windows.SearchIntegration;
+using Mizon.Windows.Services;
 using System.Net;
 using System.Runtime.CompilerServices;
 
@@ -44,7 +45,7 @@ internal sealed class PaletteApiSession : IDisposable
         var handler = new ApiAddressHandler(new Uri(authentication.ApiBaseAddress));
         _http = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
         _storage = new HttpClient(StorageTransport, disposeHandler: false) { Timeout = TimeSpan.FromMinutes(5) };
-        _api = new MizonApi(_http, _cache);
+        _api = new MizonApi(_http, _cache, ownsHttpClient: false, AppLanguagePreference.ReadShared);
         _api.SetToken(authentication.AccessToken);
         _downloader = new MediaDownloader(_storage, cacheDirectory ?? CacheDirectory);
     }
@@ -129,7 +130,7 @@ internal sealed class PaletteApiSession : IDisposable
     }
     // Existing Mizon operation errors are domain codes, not HTTP status codes.
     private static bool IsMissingMusicFile(int? code) => code is 404 or 10000 or 10001 or 10002;
-    public void Dispose() { _http.Dispose(); _storage.Dispose(); _cache.Dispose(); }
+    public void Dispose() { _api.Dispose(); _http.Dispose(); _storage.Dispose(); _cache.Dispose(); }
     internal static void DisposeTransports() { ApiInvoker.Dispose(); StorageTransport.Dispose(); ImageSlots.Dispose(); }
 
     private sealed class ApiAddressHandler(Uri address) : HttpMessageHandler

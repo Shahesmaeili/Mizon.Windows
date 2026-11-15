@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Mizon.API\Mizon.API.Client\Mizon.API.Client.csproj" />
+    <Compile Include="..\Services\AppLanguagePreference.cs" Link="Integration\AppLanguagePreference.cs" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.4.1-experimental" />
   </ItemGroup>
 
