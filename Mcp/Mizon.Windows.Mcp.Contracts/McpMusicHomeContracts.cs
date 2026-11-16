@@ -1,4 +1,4 @@
-﻿namespace Mizon.Windows.Mcp.Contracts;
+namespace Mizon.Windows.Mcp.Contracts;
 
 /// <summary>Inputs for the live music discovery page, never an arbitrary service invocation.</summary>
 public sealed record McpMusicHomeRequest
@@ -64,8 +64,22 @@ public sealed record McpMusicHomeItemState
     public string? ActivityKind { get; init; }
     public bool? IsSeen { get; init; }
     public bool? IsSelected { get; init; }
+    public McpMusicHomeArtistState? Artist { get; init; }
     public string[] Actions { get; init; } = [];
 }
+
+public sealed record McpMusicHomeArtistState
+{
+    public bool CanFollow { get; init; }
+    public bool IsFollowing { get; init; }
+    public bool HasModel { get; init; }
+    public int MusicCount { get; init; }
+    public int MonthlyListenersCount { get; init; }
+    public int[] DailyPlays { get; init; } = [];
+    public McpMusicHomeArtistTrack[] Tracks { get; init; } = [];
+}
+
+public sealed record McpMusicHomeArtistTrack(string Id, string Title, double? DurationSeconds);
 
 public sealed record McpMusicHomeHeroState
 {

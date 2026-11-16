@@ -21,6 +21,7 @@ public sealed partial class MusicPage : Page
     public MusicPageViewModel ViewModel { get; }
     public MusicDiscoveryViewModel Discovery { get; } = new();
     public MusicLibraryViewModel Library { get; }
+    public FeaturedArtistsViewModel FeaturedArtists { get; }
     public MusicFeaturesViewModel? Features { get; private set; }
     public FollowingActivitiesViewModel? FollowingActivities { get; private set; }
     private UserControls.StoryViewer? _storyViewer;
@@ -48,11 +49,12 @@ public sealed partial class MusicPage : Page
             services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>(), "music", 4);
         Features = new(services.GetRequiredService<Mizon.API.MizonApi>(),
             services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>());
+        FeaturedArtists = new(services.GetRequiredService<Mizon.API.MizonApi>(),
+            services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>());
         InitializeComponent();
         // Let the hero shadow cross column boundaries, while keeping scrolled content inside the page.
         LayoutRoot.Clip = _pageViewportClip;
         DataContext = ViewModel;
-        FeaturedArtist.ItemsSource = Discovery.ArtistSpotlights;
     }
 
     private async void MusicPage_Loaded(object sender, RoutedEventArgs e)
@@ -82,7 +84,7 @@ public sealed partial class MusicPage : Page
             Bindings.Update();
             FollowingActivitiesHost.ResetPresentation();
         }
-        await Task.WhenAll(ViewModel.RefreshHomeWidgetsAsync(), Library.RefreshAsync(), FollowingActivities.RefreshAsync(), Features.RefreshAsync());
+        await Task.WhenAll(ViewModel.RefreshHomeWidgetsAsync(), Library.RefreshAsync(), FollowingActivities.RefreshAsync(), Features.RefreshAsync(), FeaturedArtists.RefreshAsync());
     }
 
     private void MusicPage_Unloaded(object sender, RoutedEventArgs e)
@@ -95,7 +97,7 @@ public sealed partial class MusicPage : Page
         _followingStoryPresenter?.Dispose();
         _followingStoryPresenter = null;
         ViewModel.CancelHomeWidgetLoading();
-        Discovery.CancelLoading();
+        FeaturedArtists.Clear();
         Library.CancelLoading();
         FollowingActivities?.Dispose();
         FollowingActivities = null;
@@ -115,6 +117,7 @@ public sealed partial class MusicPage : Page
     private void RefreshHomeLanguage()
     {
         Discovery.RefreshLocalization();
+        FeaturedArtists.RefreshLocalization();
         ViewModel.RefreshHomeLocalization();
         Features?.RefreshLocalization();
         _refreshPreviewDialog?.Invoke();
@@ -368,59 +371,20 @@ public sealed partial class MusicPage : Page
         finally { _refreshPreviewDialog = null; _mcpPreviewDialog = null; _dialogOpen = false; }
     }
 
-    private async void TopArtist_ProfileRequested(object? sender, TopArtistItemViewModel artist)
+    private void TopArtist_ProfileRequested(object? sender, TopArtistItemViewModel artist) =>
+        ViewModel.NavigationService.OpenPersonProfile(artist.PublicId);
+
+    private async void Artist_FollowRequested(object? sender, TopArtistItemViewModel artist)
     {
-        if (artist.PublicId != Guid.Empty)
-        {
-            ViewModel.NavigationService.OpenPersonProfile(artist.PublicId);
-            return;
-        }
-        var panel = new StackPanel { Spacing = 12, MaxWidth = 360 };
-        panel.Children.Add(new PersonPicture
-        {
-            DisplayName = artist.DisplayName, ProfilePicture = artist.AvatarImage,
-            Width = 88, Height = 88, HorizontalAlignment = HorizontalAlignment.Center
-        });
-        panel.Children.Add(new TextBlock { Text = artist.GenreTitle, TextAlignment = TextAlignment.Center, Opacity = 0.6 });
-        panel.Children.Add(new TextBlock
-        {
-            Text = artist.FollowersFullText + "  ·  " + artist.MonthlyListenersFullText,
-            FlowDirection = Localization.FlowDirection, TextWrapping = TextWrapping.Wrap, FontSize = 12
-        });
-        panel.Children.Add(new TextBlock { Text = Localization.GetString("MusicHome/ArtistTracks"), FlowDirection = Localization.FlowDirection, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-        var tracks = Discovery.GetArtistMusics(artist).ToArray();
-        foreach (var music in tracks)
-        {
-            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
-            row.Children.Add(new Grid
-            {
-                Width = 40, Height = 40, CornerRadius = new CornerRadius(6),
-                Children = { new Image { Source = music.CoverImage, Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill } }
-            });
-            row.Children.Add(new TextBlock { Text = music.Title, VerticalAlignment = VerticalAlignment.Center, FontSize = 13 });
-            panel.Children.Add(row);
-        }
-        panel.Children.Add(new TextBlock
-        {
-            Text = Localization.GetString("MusicHome/ArtistPreviewExplanation"),
-            TextWrapping = TextWrapping.Wrap, FlowDirection = Localization.FlowDirection, FontSize = 10, Opacity = 0.55
-        });
-        await ShowPreviewDialogAsync(artist.DisplayName, panel, dialog =>
-        {
-            ((TextBlock)panel.Children[1]).Text = artist.GenreTitle;
-            var counts = (TextBlock)panel.Children[2];
-            counts.Text = artist.FollowersFullText + "  ·  " + artist.MonthlyListenersFullText;
-            counts.FlowDirection = Localization.FlowDirection;
-            var heading = (TextBlock)panel.Children[3];
-            heading.Text = Localization.GetString("MusicHome/ArtistTracks");
-            heading.FlowDirection = Localization.FlowDirection;
-            for (var index = 0; index < tracks.Length; index++)
-                ((TextBlock)((StackPanel)panel.Children[4 + index]).Children[1]).Text = tracks[index].DisplayTitle;
-            var description = (TextBlock)panel.Children[panel.Children.Count - 1];
-            description.Text = Localization.GetString("MusicHome/ArtistPreviewExplanation");
-            description.FlowDirection = Localization.FlowDirection;
-        });
+        var followed = !artist.IsFollowed;
+        var changed = await FeaturedArtists.SetFollowingAsync(artist, followed, default);
+        if (!_homeWidgetsActive || !FeaturedArtists.Artists.Any(item => item.PublicId == artist.PublicId)) return;
+        Common.AccessibilityAnnouncements.Announce(sender as FrameworkElement ?? this,
+            Localization.Format(!changed ? "MusicHome/FeaturedFollowFailed" :
+                followed ? "MusicHome/FeaturedFollowed" : "MusicHome/FeaturedUnfollowed", artist.DisplayName), "FeaturedArtistFollow");
     }
+
+    private async void Artists_RefreshRequested(object sender, RoutedEventArgs args) => await FeaturedArtists.RefreshAsync();
 
     private void TopArtistsScroll_Loaded(object sender, RoutedEventArgs e)
     {

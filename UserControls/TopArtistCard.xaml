@@ -58,7 +58,7 @@
                         <StackPanel Spacing="3" VerticalAlignment="Center" MinHeight="46">
                             <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Item.DisplayName, Mode=OneWay}" Style="{StaticResource ArtistCaption}"
                                 FontSize="15" FontWeight="SemiBold" Opacity="1"/>
-                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Item.GenreTitle, Mode=OneWay}" Style="{StaticResource ArtistCaption}" FontSize="9"/>
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Item.DisplayGenre, Mode=OneWay}" Style="{StaticResource ArtistCaption}" FontSize="9"/>
                         </StackPanel>
                         <Border Grid.Column="1" Width="56" Height="56" CornerRadius="28" Padding="3" Margin="0,-28,0,0" VerticalAlignment="Top"
                             Background="{ThemeResource LayerFillColorDefaultBrush}" BorderThickness="1.5">
@@ -94,7 +94,7 @@
                     </Path>
                 </Grid>
             </controls:FeatureButton>
-            <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="FollowButton" Grid.Row="1" Margin="12,0,12,12" MinHeight="36"
+            <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="FollowButton" IsEnabled="{x:Bind Item.CanFollow, Mode=OneWay}" Grid.Row="1" Margin="12,0,12,12" MinHeight="36"
                 Style="{StaticResource DiscoverySectionActionButton}" Click="Follow_Click"
                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                 AutomationProperties.Name="{x:Bind Item.FollowAutomationName, Mode=OneWay}"

@@ -172,4 +172,13 @@
   <data name="ArtistGenreOne" xml:space="preserve"><value>پاپ · الکترونیک</value></data>
   <data name="ArtistGenreTwo" xml:space="preserve"><value>پاپ · جاز</value></data>
   <data name="ArtistGenreThree" xml:space="preserve"><value>الکترونیک · هیپ‌هاپ</value></data>
+  <data name="FeaturedArtistsEmpty" xml:space="preserve"><value>هنوز هنرمند منتخبی برای این بخش ثبت نشده است.</value></data>
+  <data name="FeaturedArtistsError" xml:space="preserve"><value>هنرمندان منتخب بارگذاری نشدند.</value></data>
+  <data name="FeaturedArtistsRetry" xml:space="preserve"><value>تلاش دوباره</value></data>
+  <data name="WeeklyArtistPlays" xml:space="preserve"><value>پخش ۷ روز اخیر</value></data>
+  <data name="FeaturedFollowPending" xml:space="preserve"><value>در حال به‌روزرسانی وضعیت دنبال کردن…</value></data>
+  <data name="FeaturedFollowed" xml:space="preserve"><value>{0} را دنبال می‌کنی.</value></data>
+  <data name="FeaturedUnfollowed" xml:space="preserve"><value>دنبال کردن {0} را لغو کردی.</value></data>
+  <data name="FeaturedFollowFailed" xml:space="preserve"><value>وضعیت دنبال کردن {0} به‌روزرسانی نشد.</value></data>
+  <data name="NoFeaturedArtistTracks" xml:space="preserve"><value>هنوز آهنگی از این هنرمند در میزون ثبت نشده است.</value></data>
 </root>

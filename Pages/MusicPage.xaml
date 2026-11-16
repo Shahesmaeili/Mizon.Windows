@@ -156,11 +156,23 @@
                 ViewModel="{x:Bind Features, Mode=OneWay}"
                 OpenMusicRequested="MainFeature_OpenMusicRequested" PlayMusicRequested="MainFeature_PlayMusicRequested" />
             </controls:WidgetLoadHost>
-            <controls:WidgetLoadHost IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingMusic', Localization.Revision), Mode=OneWay}">
-              <uc:ArtistSpotlight
-                x:Name="FeaturedArtist"
-                ProfileRequested="TopArtist_ProfileRequested"
-                MusicRequested="FeatureHero_OpenMusicRequested" />
+            <controls:WidgetLoadHost IsLoading="{x:Bind FeaturedArtists.IsLoading, Mode=OneWay}"
+                  SkeletonHeight="212" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingArtists', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="8">
+                  <uc:ArtistSpotlight x:Name="FeaturedArtist"
+                    ItemsSource="{x:Bind FeaturedArtists.Spotlights, Mode=OneWay}"
+                    ProfileRequested="TopArtist_ProfileRequested" FollowRequested="Artist_FollowRequested"
+                    MusicRequested="FeatureHero_OpenMusicRequested" />
+                  <StackPanel Spacing="8" Padding="14"
+                      Visibility="{x:Bind FeaturedArtists.StatusVisibility, Mode=OneWay}">
+                    <TextBlock Text="{x:Bind FeaturedArtists.StatusText, Mode=OneWay}" TextWrapping="Wrap"
+                        FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+                        FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" AutomationProperties.LiveSetting="Polite"/>
+                    <controls:FeatureButton Content="{x:Bind Localization.GetString('MusicHome/FeaturedArtistsRetry', Localization.Revision), Mode=OneWay}"
+                        Visibility="{x:Bind FeaturedArtists.RetryVisibility, Mode=OneWay}" Click="Artists_RefreshRequested"
+                        FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" />
+                  </StackPanel>
+                </StackPanel>
             </controls:WidgetLoadHost>
             <uc:StoryOrbitShowcase/>
             <uc:MusicStoriesPanel x:Name="MusicStories" ViewModel="{x:Bind ViewModel}"
@@ -168,9 +180,9 @@
                 RefreshRequested="Stories_RefreshRequested" />
             <uc:MusicGenresPanel ViewModel="{x:Bind ViewModel}"
                 RefreshRequested="Genres_RefreshRequested" />
-            <controls:WidgetLoadHost IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}" WidgetName="{x:Bind Localization.GetString('MusicHome/TopArtists', Localization.Revision), Mode=OneWay}" SkeletonHeight="410" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingArtists', Localization.Revision), Mode=OneWay}">
+            <controls:WidgetLoadHost IsLoading="{x:Bind FeaturedArtists.IsLoading, Mode=OneWay}" WidgetName="{x:Bind Localization.GetString('MusicHome/TopArtists', Localization.Revision), Mode=OneWay}" SkeletonHeight="410" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingArtists', Localization.Revision), Mode=OneWay}">
               <StackPanel
-                x:Name="TopArtistsSection"
+                x:Name="TopArtistsSection" Visibility="{x:Bind FeaturedArtists.ArtistsVisibility, Mode=OneWay}"
                 Spacing="12">
                 <uc:DiscoverySectionToolbar Title="{x:Bind Localization.GetString('MusicHome/TopArtists', Localization.Revision), Mode=OneWay}" Icon="Headphones" AccentColor="#F1C27D">
                     <Grid ColumnSpacing="8">
@@ -181,7 +193,7 @@
                                 <icon:SymbolIcon Symbol="ChevronLeft" FontSize="12" AutomationProperties.AccessibilityView="Raw"/>
                             </controls:FeatureButton>
                             <Border Style="{StaticResource DiscoverySectionBadge}" Width="32" Padding="4">
-                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Discovery.TopArtists.Count, Mode=OneWay}" Style="{StaticResource DiscoverySectionBadgeText}"
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind FeaturedArtists.Artists.Count, Mode=OneWay}" Style="{StaticResource DiscoverySectionBadgeText}"
                                     FontSize="11" TextAlignment="Center" FlowDirection="LeftToRight" AutomationProperties.HelpText="{x:Bind Localization.GetString('MusicHome/ArtistCountHelp', Localization.Revision), Mode=OneWay}"/>
                             </Border>
                             <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="NextArtistsButton" Style="{StaticResource DiscoverySectionIconButton}"
@@ -189,9 +201,6 @@
                                 <icon:SymbolIcon Symbol="ChevronRight" FontSize="12" AutomationProperties.AccessibilityView="Raw"/>
                             </controls:FeatureButton>
                         </StackPanel>
-                        <Border Grid.Column="1" Style="{StaticResource DiscoverySectionBadge}" ToolTipService.ToolTip="{x:Bind Localization.GetString('MusicHome/DemoHelp', Localization.Revision), Mode=OneWay}">
-                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Localization.GetString('MusicHome/Demo', Localization.Revision), Mode=OneWay}" Style="{StaticResource DiscoverySectionBadgeText}"/>
-                        </Border>
                     </Grid>
                 </uc:DiscoverySectionToolbar>
                 <ScrollViewer
@@ -204,7 +213,7 @@
                   VerticalScrollMode="Disabled"
                   VerticalScrollBarVisibility="Disabled">
                   <ItemsRepeater x:Name="ArtistItems"
-                    ItemsSource="{x:Bind Discovery.TopArtists}" HorizontalCacheLength="0.5" VerticalCacheLength="0"
+                    ItemsSource="{x:Bind FeaturedArtists.Artists, Mode=OneWay}" HorizontalCacheLength="0.5" VerticalCacheLength="0"
                     ElementPrepared="Artist_Prepared" ElementClearing="Artist_Clearing">
                     <ItemsRepeater.Layout>
                       <StackLayout
@@ -218,7 +227,7 @@
                           Width="224"
                           Margin="0,6"
                           Item="{x:Bind}"
-                          ProfileRequested="TopArtist_ProfileRequested" />
+                          ProfileRequested="TopArtist_ProfileRequested" FollowRequested="Artist_FollowRequested" />
                       </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
                   </ItemsRepeater>

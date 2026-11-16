@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Mizon.Windows.Common;
@@ -59,9 +59,10 @@ public sealed partial class MusicPage : IMcpMusicHomePage
                 Count = item.LikesCount, DurationSeconds = item.DurationSeconds,
                 Actions = ["open", "play", "copy_link", "like", "request_download"]
             }) ?? [], "api", actions: ["previous", "next", "select"]);
-        Add("spotlight", false, false, null, Discovery.ArtistSpotlights.Select((item, index) =>
-            ArtistItem(item.Artist, "spotlight", index) with { Description = item.Description }), "demo",
-            actions: ["previous", "next", "select", "reset_model", "profile", "follow"]);
+        var selectedArtist = FeaturedArtists.Spotlights.ElementAtOrDefault(FeaturedArtist.McpSelectedIndex);
+        Add("spotlight", FeaturedArtists.IsLoading, FeaturedArtists.HasError, FeaturedArtists.StatusText,
+            FeaturedArtists.Spotlights.Select(item => ArtistItem(item, ReferenceEquals(item, selectedArtist))), "api",
+            actions: ["previous", "next", "select", "reset_model", "open", "play", "profile", "follow"]);
         Add("stories", ViewModel.IsHomeStoriesLoading, ViewModel.HomeStoriesRetryVisibility == Visibility.Visible,
             ViewModel.HomeStoriesMessage, ViewModel.HomeStories.Select(item => new McpMusicHomeItemState
             {
@@ -76,8 +77,8 @@ public sealed partial class MusicPage : IMcpMusicHomePage
                 Title = LocalizationService.Current.IsPersian ? item.PersianTitle ?? item.Title : item.Title,
                 Count = item.MusicsCount, IsAvailable = true, CanOpen = false
             }), "api");
-        Add("artists", false, false, null, Discovery.TopArtists.Select((item, index) => ArtistItem(item, "artists", index)),
-            "demo", actions: ["previous", "next", "select"]);
+        Add("artists", FeaturedArtists.IsLoading, FeaturedArtists.HasError, FeaturedArtists.StatusText,
+            FeaturedArtists.Spotlights.Select(item => ArtistItem(item, false)), "api", actions: ["previous", "next", "select"]);
         AddMusics("recommended", Discovery.RecommendedMusics);
         AddMusics("recent", Discovery.RecentMusics);
         AddMusics("trending", Discovery.TrendingMusics);
@@ -115,7 +116,7 @@ public sealed partial class MusicPage : IMcpMusicHomePage
             Layout = _layoutState ?? "unavailable", IsBusy = sections.Any(section => section.IsLoading),
             Sections = sections.ToArray(), Hero = FeatureHero.GetMcpState(),
             Story = ActiveMcpStory?.GetMcpState(), ActiveStoryId = ActiveMcpStory?.GetMcpState().Id,
-            ActiveArtistId = "spotlight:" + FeaturedArtist.McpSelectedIndex.ToString(CultureInfo.InvariantCulture),
+            ActiveArtistId = selectedArtist?.Artist.PublicId.ToString("D"),
             ActiveNewsIndex = LatestNews.McpSelectedIndex, SelectedDayIndex = WeeklyRhythm.McpSelectedIndex,
             ActiveDialog = _mcpPreviewDialog is not null ? "preview" : LatestNews.McpDialogOpen ? "news" : ActiveMcpStory?.McpDialogOpen == true ? "story_profile" : null,
             Actions = ["set_language", "dismiss"]
@@ -146,13 +147,25 @@ public sealed partial class MusicPage : IMcpMusicHomePage
         IsAvailable = true, CanOpen = true, Count = item.LikesCount, DurationSeconds = item.Duration.TotalSeconds,
         Actions = item.PublicId == Guid.Empty ? ["open", "profile"] : ["open", "play", "profile"]
     };
-    private static McpMusicHomeItemState ArtistItem(TopArtistItemViewModel item, string section, int index) => new()
+    private static McpMusicHomeItemState ArtistItem(ArtistSpotlightItemViewModel item, bool selected)
     {
-        Id = CardId(item.PublicId, section, index), Kind = "artist", Title = item.DisplayName, Subtitle = item.GenreTitle,
-        Count = item.FollowersCount + (item.IsFollowed ? 1 : 0), IsDemo = true, IsAvailable = true,
-        CanOpen = true, ImageAvailable = item.AvatarImage is not null, IsSelected = item.IsFollowed,
-        Actions = ["open", "profile", "follow"]
-    };
+        var artist = item.Artist;
+        var id = artist.PublicId.ToString("D");
+        return new()
+        {
+            Id = id, Kind = "artist", Title = artist.DisplayName, Subtitle = artist.DisplayGenre,
+            Count = artist.FollowersCount, TargetKind = "person", TargetId = id, IsAvailable = true,
+            CanOpen = true, ImageAvailable = artist.ProfileMediaId is not null || artist.CoverMediaId is not null,
+            IsSelected = selected, Actions = artist.CanFollow ? ["open", "profile", "follow"] : ["open", "profile"],
+            Artist = new()
+            {
+                CanFollow = artist.CanFollow, IsFollowing = artist.IsFollowed, HasModel = item.ModelMediaId is not null,
+                MusicCount = item.SongCount, MonthlyListenersCount = artist.MonthlyListenersCount, DailyPlays = item.DailyPlays,
+                Tracks = item.LatestMusics.Select(track => new McpMusicHomeArtistTrack(track.PublicId.ToString("D"),
+                    track.DisplayTitle, track.HasKnownDuration ? track.Duration.TotalSeconds : null)).ToArray()
+            }
+        };
+    }
 
     async Task IMcpMusicHomePage.RefreshAsync(string section, CancellationToken token)
     {
@@ -163,6 +176,7 @@ public sealed partial class MusicPage : IMcpMusicHomePage
         if (section is "all" or "library") tasks.Add(Library.RefreshAsync(token));
         if (section is "all" or "following" && FollowingActivities is not null) tasks.Add(FollowingActivities.RefreshAsync(token));
         if (section is "all" or "stories" or "genres") tasks.Add(ViewModel.RefreshHomeWidgetsAsync(token));
+        if (section is "all" or "artists" or "spotlight") tasks.Add(FeaturedArtists.RefreshAsync(token));
         await Task.WhenAll(tasks);
         token.ThrowIfCancellationRequested();
     }
@@ -206,7 +220,7 @@ public sealed partial class MusicPage : IMcpMusicHomePage
             return await FeatureHero.ExecuteMcpAsync(input, token);
         }
         if (input.Section == "stories") return await ExecuteStoryMcpAsync(input, token);
-        if (input.Section is "artists" or "spotlight") return ExecuteArtistMcp(input);
+        if (input.Section is "artists" or "spotlight") return await ExecuteArtistMcpAsync(input, token);
         if (input.Section == "weekly") return WeeklyRhythm.McpSelect(input.Index!.Value) ? Done("selected") : Missing();
         if (input.Section == "news") return LatestNews.ExecuteMcp(input);
         if (input.Section == "library")
@@ -267,9 +281,17 @@ public sealed partial class MusicPage : IMcpMusicHomePage
         return Done("opened");
     }
 
-    private McpResponse ExecuteArtistMcp(McpMusicHomeRequest input)
+    private async Task<McpResponse> ExecuteArtistMcpAsync(McpMusicHomeRequest input, CancellationToken token)
     {
-        if (input.Action == "reset_model") { FeaturedArtist.McpResetModel(); return Done("reset"); }
+        var items = FeaturedArtists.Spotlights;
+        if (items.Count == 0) return Missing();
+        var current = items.ElementAtOrDefault(FeaturedArtist.McpSelectedIndex);
+        if (input.Action == "reset_model")
+        {
+            if (current?.ModelMediaId is null) return Unavailable("This artist has no 3D model.");
+            FeaturedArtist.McpResetModel();
+            return Done("reset");
+        }
         if (input.Action is "previous" or "next")
         {
             var direction = input.Action == "next" ? 1 : -1;
@@ -280,18 +302,33 @@ public sealed partial class MusicPage : IMcpMusicHomePage
         {
             var index = input.Index!.Value;
             if (input.Section == "spotlight") return FeaturedArtist.McpSelect(index) ? Done("selected") : Missing();
-            if (index >= Discovery.TopArtists.Count) return Missing();
+            if (index >= items.Count) return Missing();
             TopArtistsScroll.ChangeView(Math.Clamp(index * (_artistCardWidth + 12), 0, TopArtistsScroll.ScrollableWidth), null, null, !_uiSettings.AnimationsEnabled);
             return Done("selected");
         }
-        var artists = input.Section == "spotlight" ? Discovery.ArtistSpotlights.Select(item => item.Artist).ToArray() : Discovery.TopArtists.ToArray();
-        var artist = input.Id is null && input.Section == "spotlight" ? artists.ElementAtOrDefault(FeaturedArtist.McpSelectedIndex)
-            : artists.Select((item, index) => (Item: item, Id: CardId(item.PublicId, input.Section!, index))).FirstOrDefault(pair => pair.Id == input.Id).Item;
-        if (artist is null) return Missing();
-        if (input.Action == "follow") { artist.IsFollowed = input.Enabled!.Value; return Done("demo_follow_updated"); }
-        if (input.Action == "play") return Unavailable("This artist is a design preview; choose an actual track to play.");
-        TopArtist_ProfileRequested(this, artist);
-        return PreviewResult();
+        var idValid = Guid.TryParse(input.Id, out var id);
+        if (input is { Section: "spotlight", Action: "open" or "play" } && idValid
+            && current?.LatestMusics.FirstOrDefault(item => item.PublicId == id) is { } track)
+        {
+            _mcpPlaybackHandoff = input.Action == "play";
+            await OpenMusicAsync(track);
+            return input.Action == "open" ? Done("opened")
+                : await ViewModel.ActivateMusicAsync(track.PublicId, MusicActivationAction.Play, token)
+                    ? Done("playing") : Unavailable("Music playback could not start.");
+        }
+        if (input.Action == "play") return Unavailable("Choose one of the selected artist's latest tracks.");
+        var target = idValid
+            ? items.FirstOrDefault(item => item.Artist.PublicId == id)
+            : input.Id is null && input.Section == "spotlight" ? current : null;
+        if (target is null) return Missing();
+        if (input.Action == "follow")
+        {
+            var updated = await FeaturedArtists.SetFollowingAsync(target.Artist, input.Enabled!.Value, token);
+            token.ThrowIfCancellationRequested();
+            return updated ? Done("follow_updated") : Unavailable("The artist follow status could not be updated.");
+        }
+        TopArtist_ProfileRequested(this, target.Artist);
+        return Done("opened");
     }
 
     private async Task<McpResponse> ExecuteStoryMcpAsync(McpMusicHomeRequest input, CancellationToken token)

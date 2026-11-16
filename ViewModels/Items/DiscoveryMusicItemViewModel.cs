@@ -22,6 +22,7 @@ public sealed partial class DiscoveryMusicItemViewModel : ViewModelBase
     public string GenreTitle { get; init; } = string.Empty;
     public string PersianGenreTitle { get; init; } = string.Empty;
     public TimeSpan Duration { get; init; }
+    public bool HasKnownDuration { get; init; } = true;
     public int LikesCount { get; init; }
     public int Rank { get; init; }
     public Guid? CoverMediaPublicId { get; init; }
@@ -40,7 +41,7 @@ public sealed partial class DiscoveryMusicItemViewModel : ViewModelBase
     public ImageSource? SecondaryArtistProfileImage => Contributors.Count > 1 ? Contributors[1].ProfileImage : null;
     public Microsoft.UI.Xaml.Visibility SecondaryArtistVisibility => Contributors.Count > 1
         ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
-    public string DurationText => Duration.TotalHours >= 1 ? Duration.ToString(@"h\:mm\:ss") : Duration.ToString(@"m\:ss");
+    public string DurationText => !HasKnownDuration ? string.Empty : Duration.TotalHours >= 1 ? Duration.ToString(@"h\:mm\:ss") : Duration.ToString(@"m\:ss");
     public string LikesCountText => LikesCount.ToString("N0", CultureInfo.GetCultureInfo(Localization.LanguageTag));
     public string DisplayTitle => Localization.IsPersian && !string.IsNullOrWhiteSpace(PersianTitle) ? PersianTitle : Title;
     public string DisplayGenre => Localization.IsPersian && !string.IsNullOrWhiteSpace(PersianGenreTitle) ? PersianGenreTitle : GenreTitle;
@@ -70,6 +71,12 @@ public sealed partial class DiscoveryMusicItemViewModel : ViewModelBase
         }
     }
 
+    internal void SetCoverImage(ImageSource image)
+    {
+        CoverImage = image;
+        OnPropertyChanged(nameof(CoverImage));
+    }
+
     internal bool IsRankedFrom(DiscoveryMusicItemViewModel source, int rank) =>
         Rank == rank && ReferenceEquals(_rankSource ?? this, source);
 
@@ -82,6 +89,7 @@ public sealed partial class DiscoveryMusicItemViewModel : ViewModelBase
         GenreTitle = GenreTitle,
         PersianGenreTitle = PersianGenreTitle,
         Duration = Duration,
+        HasKnownDuration = HasKnownDuration,
         LikesCount = LikesCount,
         Rank = rank,
         CoverMediaPublicId = CoverMediaPublicId,

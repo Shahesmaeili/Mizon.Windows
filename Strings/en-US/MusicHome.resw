@@ -172,4 +172,13 @@ Story publishing will be available when this preview is connected.</value></data
   <data name="ArtistGenreOne" xml:space="preserve"><value>Pop · Electronic</value></data>
   <data name="ArtistGenreTwo" xml:space="preserve"><value>Pop · Jazz</value></data>
   <data name="ArtistGenreThree" xml:space="preserve"><value>Electronic · Hip-Hop</value></data>
+  <data name="FeaturedArtistsEmpty" xml:space="preserve"><value>No featured artists have been selected yet.</value></data>
+  <data name="FeaturedArtistsError" xml:space="preserve"><value>Featured artists could not be loaded.</value></data>
+  <data name="FeaturedArtistsRetry" xml:space="preserve"><value>Try again</value></data>
+  <data name="WeeklyArtistPlays" xml:space="preserve"><value>Plays in 7 days</value></data>
+  <data name="FeaturedFollowPending" xml:space="preserve"><value>Updating follow status…</value></data>
+  <data name="FeaturedFollowed" xml:space="preserve"><value>You are following {0}.</value></data>
+  <data name="FeaturedUnfollowed" xml:space="preserve"><value>You unfollowed {0}.</value></data>
+  <data name="FeaturedFollowFailed" xml:space="preserve"><value>Could not update your follow status for {0}.</value></data>
+  <data name="NoFeaturedArtistTracks" xml:space="preserve"><value>No tracks are available in Mizon yet.</value></data>
 </root>

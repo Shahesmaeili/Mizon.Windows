@@ -10,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Numerics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Mizon.Windows.UserControls;
 
@@ -27,6 +29,7 @@ public sealed partial class ArtistSpotlight : UserControl
     private CompositionRadialGradientBrush? _modelGlowBrush;
     private readonly List<CompositionColorGradientStop> _modelGlowStops = [];
     private ArtistSpotlightItemViewModel? _current;
+    private CancellationTokenSource? _selectionRequest;
     private int _index;
     private bool _loaded;
     private string? _layout;
@@ -44,13 +47,18 @@ public sealed partial class ArtistSpotlight : UserControl
     }
 
     public event EventHandler<TopArtistItemViewModel>? ProfileRequested;
+    public event EventHandler<TopArtistItemViewModel>? FollowRequested;
     public event EventHandler<DiscoveryMusicItemViewModel>? MusicRequested;
 
     private static void ItemsChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
     {
         var control = (ArtistSpotlight)sender;
         control.ResetContentMotion();
+        var previous = control._current?.Artist.PublicId;
         control._index = 0;
+        if (previous is Guid id && control.ItemsSource is { } items)
+            for (var index = 0; index < items.Count; index++)
+                if (items[index].Artist.PublicId == id) { control._index = index; break; }
         control.RenderSelection();
     }
 
@@ -72,6 +80,10 @@ public sealed partial class ArtistSpotlight : UserControl
         Bindings.StopTracking();
         ResetContentMotion();
         if (_current is not null) _current.Artist.PropertyChanged -= ArtistChanged;
+        CancelSelection();
+        Tracks.ItemsSource = null;
+        PortraitFallback.ProfilePicture = null;
+        ArtistModel.ModelPath = string.Empty;
         ReleaseModelGlow();
     }
 
@@ -94,12 +106,14 @@ public sealed partial class ArtistSpotlight : UserControl
 
     private void RenderSelection()
     {
+        CancelSelection();
         if (_current is not null) _current.Artist.PropertyChanged -= ArtistChanged;
         _current = null;
         if (ItemsSource is not { Count: > 0 } items)
         {
             Visibility = Visibility.Collapsed;
             Tracks.ItemsSource = null;
+            PortraitFallback.ProfilePicture = null;
             ArtistModel.ModelPath = string.Empty;
             return;
         }
@@ -110,17 +124,25 @@ public sealed partial class ArtistSpotlight : UserControl
         var artist = _current.Artist;
         if (_loaded) artist.PropertyChanged += ArtistChanged;
         ArtistName.Text = artist.DisplayName;
-        GenreText.Text = artist.GenreTitle;
-        ToolTipService.SetToolTip(ArtistName, _current.Description);
+        GenreText.Text = artist.DisplayGenre;
+        PortraitFallback.DisplayName = artist.DisplayName;
+        PortraitFallback.ProfilePicture = artist.AvatarImage;
+        PortraitFallback.Visibility = Visibility.Visible;
         ToolTipService.SetToolTip(ArtistModel, _current.ModelAttribution);
-        ArtistModel.InitialYawInDegrees = _current.ModelYawInDegrees;
-        ArtistModel.ViewScale = _current.ModelViewScale;
-        ArtistModel.VerticalFocus = _current.ModelVerticalFocus;
-        ArtistModel.ModelPath = _current.ModelPath;
+        ArtistModel.Visibility = Visibility.Collapsed;
+        ArtistModel.ModelPath = string.Empty;
+        ResetModelButton.Visibility = RotationHint.Visibility = Visibility.Collapsed;
+        if (_loaded)
+        {
+            var request = _selectionRequest = new();
+            _ = PresentSelectionAsync(_current, request);
+        }
         Tracks.ItemsSource = _current.LatestMusics;
+        EmptyTracks.Visibility = _current.LatestMusics.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        TracksScroll.Visibility = _current.LatestMusics.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         TracksScroll.ChangeView(0, 0, null, true);
         SongsText.Text = _current.SongCountText;
-        RatingText.Text = _current.RatingText;
+        WeeklyPlaysText.Text = _current.WeeklyPlaysText;
         ListenerText.Text = artist.MonthlyListenersFullText;
         ListeningTrend.Data = artist.CreateActivityPath();
         PageNumber.Text = $"{_index + 1:00} / {items.Count:00}";
@@ -135,11 +157,10 @@ public sealed partial class ArtistSpotlight : UserControl
     {
         if (!_loaded || _current is not { } current || args.PropertyName != nameof(LocalizationService.Revision)) return;
         // Text-only refresh: keep model orientation, scroll and the current selection.
-        GenreText.Text = current.Artist.GenreTitle;
-        ToolTipService.SetToolTip(ArtistName, current.Description);
+        GenreText.Text = current.Artist.DisplayGenre;
         ToolTipService.SetToolTip(ArtistModel, current.ModelAttribution);
         SongsText.Text = current.SongCountText;
-        RatingText.Text = current.RatingText;
+        WeeklyPlaysText.Text = current.WeeklyPlaysText;
         ListenerText.Text = current.Artist.MonthlyListenersFullText;
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(ProfileButton,
             Localization.Format("MusicHome/ArtistProfileName", current.Artist.DisplayName));
@@ -151,8 +172,73 @@ public sealed partial class ArtistSpotlight : UserControl
         if (!ReferenceEquals(sender, _current?.Artist)) return;
         // IsFollowed also raises several derived-property notifications. Update
         // the persistent controls once instead of replacing their content repeatedly.
-        if (string.IsNullOrEmpty(args.PropertyName) || args.PropertyName == nameof(TopArtistItemViewModel.IsFollowed))
+        if (string.IsNullOrEmpty(args.PropertyName) || args.PropertyName == nameof(TopArtistItemViewModel.IsFollowBusy))
             UpdateFollow();
+        if (args.PropertyName == nameof(TopArtistItemViewModel.AvatarImage))
+            PortraitFallback.ProfilePicture = _current!.Artist.AvatarImage;
+    }
+
+    private void CancelSelection()
+    {
+        var request = _selectionRequest;
+        _selectionRequest = null;
+        request?.Cancel();
+    }
+
+    private async Task PresentSelectionAsync(ArtistSpotlightItemViewModel item, CancellationTokenSource request)
+    {
+        using (request)
+        {
+            var token = request.Token;
+            try
+            {
+                await Task.WhenAll(LoadModelAsync(item, token), item.Artist.LoadArtworkAsync(false, token),
+                    LoadTrackCoversAsync(item, token));
+            }
+            finally
+            {
+                if (ReferenceEquals(_selectionRequest, request)) _selectionRequest = null;
+            }
+        }
+    }
+
+    private async Task LoadModelAsync(ArtistSpotlightItemViewModel item, CancellationToken token)
+    {
+        if (item.ModelMediaId is not Guid id) return;
+        try
+        {
+            var path = await item.Artist.GetMediaPathAsync(id, 32 * 1024 * 1024, token);
+            token.ThrowIfCancellationRequested();
+            if (!_loaded || !ReferenceEquals(item, _current)) return;
+            ArtistModel.InitialYawInDegrees = item.ModelYawInDegrees;
+            ArtistModel.ViewScale = item.ModelViewScale;
+            ArtistModel.VerticalFocus = item.ModelVerticalFocus;
+            ArtistModel.Visibility = Visibility.Visible;
+            ArtistModel.ModelPath = path;
+            PortraitFallback.Visibility = Visibility.Collapsed;
+            ResetModelButton.Visibility = RotationHint.Visibility = Visibility.Visible;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch (Exception error) { AppLog.Error("Featured artist model could not be loaded.", error); }
+    }
+
+    private static async Task LoadTrackCoversAsync(ArtistSpotlightItemViewModel item, CancellationToken token)
+    {
+        foreach (var track in item.LatestMusics)
+        {
+            if (token.IsCancellationRequested) return;
+            if (track.CoverMediaPublicId is not Guid id || track.CoverImage is not null) continue;
+            try
+            {
+                var path = await item.Artist.GetMediaPathAsync(id, 8 * 1024 * 1024, token);
+                token.ThrowIfCancellationRequested();
+                var image = await Common.ImageSourceFactory.LoadFileAsync(path, track.CoverDecodeWidth, token);
+                token.ThrowIfCancellationRequested();
+                track.SetCoverImage(image);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { return; }
+            catch (Exception error) { AppLog.Error("Featured artist track artwork could not be loaded.", error); }
+        }
     }
 
     private void UpdateModelGlow()
@@ -203,6 +289,9 @@ public sealed partial class ArtistSpotlight : UserControl
         var artist = _current.Artist;
         if (!Equals(FollowButton.Content, artist.FollowButtonText))
             FollowButton.Content = artist.FollowButtonText;
+        FollowButton.IsEnabled = artist.CanFollow;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetItemStatus(FollowButton,
+            artist.IsFollowBusy ? Localization.GetString("MusicHome/FeaturedFollowPending") : string.Empty);
         FollowersText.Text = artist.FollowersText;
         ToolTipService.SetToolTip(FollowersText, artist.FollowersFullText);
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(FollowButton,
@@ -211,7 +300,7 @@ public sealed partial class ArtistSpotlight : UserControl
 
     private void Follow_Click(object sender, RoutedEventArgs e)
     {
-        if (_current is not null) _current.Artist.IsFollowed = !_current.Artist.IsFollowed;
+        if (_current?.Artist is { CanToggleFollow: true } artist) FollowRequested?.Invoke(this, artist);
     }
 
     private void Profile_Click(object sender, RoutedEventArgs e)

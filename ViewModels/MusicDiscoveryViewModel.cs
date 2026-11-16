@@ -37,66 +37,12 @@ public sealed partial class MusicDiscoveryViewModel : ViewModelBase
             Preview("First Light", "اولین روشنایی", "نیما", "مهر", "Jazz", "جاز", "first-light.jpg", 219, 3760)
         ];
         Populate(_previewMusics);
-        TopArtists.Add(new("/Assets/Discovery/friend-amir.jpg", "/Assets/Discovery/artist-stage-01.jpg",
-            [0.48, 0.22, 0.56, 0.60, 0.91, 0.79, 0.64, 0.36, 0.20, 0.39, 0.22, 0.48, 0.15, 0.28, 0.23, 0.47, 0.37, 0.64, 0.58, 0.29, 0.42])
-        {
-            FirstName = "آرمان", LastName = "راد", GenreResourceKey = "MusicHome/ArtistGenreOne",
-            FollowersCount = 21400, MonthlyListenersCount = 124800,
-            AccentColor = global::Windows.UI.Color.FromArgb(255, 18, 166, 237)
-        });
-        TopArtists.Add(new("/Assets/Discovery/friend-sara.jpg", "/Assets/Discovery/artist-stage-02.jpg",
-            [0.23, 0.34, 0.46, 0.21, 0.31, 0.29, 0.39, 0.66, 0.79, 0.82, 0.56, 0.62, 0.47, 0.22, 0.39, 0.16, 0.26, 0.34, 0.24, 0.47, 0.30])
-        {
-            FirstName = "رها", LastName = "مهر", GenreResourceKey = "MusicHome/ArtistGenreTwo",
-            FollowersCount = 18700, MonthlyListenersCount = 98600,
-            AccentColor = global::Windows.UI.Color.FromArgb(255, 236, 74, 114)
-        });
-        TopArtists.Add(new("/Assets/Discovery/artist-portrait-03.jpg", "/Assets/Discovery/slow-motion.jpg",
-            [0.28, 0.48, 0.38, 0.17, 0.36, 0.63, 0.55, 0.70, 0.57, 0.34, 0.44, 0.27, 0.39, 0.32, 0.42, 0.22, 0.28, 0.36, 0.31, 0.24, 0.42])
-        {
-            FirstName = "ماهان", LastName = "نوری", GenreResourceKey = "MusicHome/ArtistGenreThree",
-            FollowersCount = 15200, MonthlyListenersCount = 86400,
-            AccentColor = global::Windows.UI.Color.FromArgb(255, 18, 166, 237)
-        });
-        ArtistSpotlights =
-        [
-            new("ms-appx:///Assets/Discovery/Models/MoeinBust.glb")
-            {
-                ModelAttributionKey = "MusicHome/MoeinAttribution",
-                ModelYawInDegrees = 180, ModelViewScale = 1, ModelVerticalFocus = 0,
-                Artist = TopArtists[0], SongCount = 42, Rating = 4.9,
-                DescriptionKey = "MusicHome/SpotlightOneDescription",
-                LatestMusics = GetArtistMusics(TopArtists[0])
-            },
-            new("ms-appx:///Assets/Discovery/Models/AyaScan.glb")
-            {
-                ModelAttributionKey = "MusicHome/AyaAttribution",
-                ModelYawInDegrees = -75, ModelViewScale = 2.1f, ModelVerticalFocus = .5f,
-                Artist = TopArtists[1], SongCount = 28, Rating = 4.8,
-                DescriptionKey = "MusicHome/SpotlightTwoDescription",
-                LatestMusics = GetArtistMusics(TopArtists[1])
-            },
-            new("ms-appx:///Assets/Discovery/Models/KanaScan.glb")
-            {
-                ModelAttributionKey = "MusicHome/KanaAttribution",
-                ModelYawInDegrees = 0, ModelViewScale = 2.1f, ModelVerticalFocus = .5f,
-                Artist = TopArtists[2], SongCount = 36, Rating = 4.9,
-                DescriptionKey = "MusicHome/SpotlightThreeDescription",
-                LatestMusics = GetArtistMusics(TopArtists[2])
-            }
-        ];
     }
 
     public ObservableCollection<DiscoveryMusicItemViewModel> TrendingMusics { get; } = [];
     public ObservableCollection<DiscoveryMusicItemViewModel> RecentMusics { get; } = [];
     public ObservableCollection<DiscoveryMusicItemViewModel> RecommendedMusics { get; } = [];
-    public ObservableCollection<TopArtistItemViewModel> TopArtists { get; } = [];
     public WeeklyRhythmViewModel WeeklyRhythm { get; } = new();
-    public IReadOnlyList<ArtistSpotlightItemViewModel> ArtistSpotlights { get; }
-
-    public IReadOnlyList<DiscoveryMusicItemViewModel> GetArtistMusics(TopArtistItemViewModel artist) =>
-        _previewMusics.Where(music => music.Contributors.Any(contributor =>
-            contributor.DisplayName == artist.DisplayName)).ToArray();
     public bool IsDemo => true;
     public bool HasTrending => TrendingMusics.Count > 0;
     public bool HasRecent => RecentMusics.Count > 0;
@@ -143,13 +89,12 @@ public sealed partial class MusicDiscoveryViewModel : ViewModelBase
         foreach (var item in TrendingMusics) item.RefreshLocalization();
         foreach (var item in RecentMusics) item.RefreshLocalization();
         foreach (var item in RecommendedMusics) item.RefreshLocalization();
-        foreach (var artist in TopArtists) artist.RefreshLocalization();
-        foreach (var spotlight in ArtistSpotlights) spotlight.RefreshLocalization();
+
         OnPropertyChanged(nameof(PreviewNotice));
         OnPropertyChanged(nameof(SelectedGenreTitle));
     }
 
-    public void CancelLoading() { }
+
 
     private static string NormalizeGenre(string value) => value
         .Replace("-", string.Empty)

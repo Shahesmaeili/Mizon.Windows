@@ -1,74 +1,106 @@
-﻿using Mizon.Windows.Services;
 using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Common;
+using Mizon.Windows.Services;
 using System;
 using System.Globalization;
+using System.Threading;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI;
 
 namespace Mizon.Windows.ViewModels.Items;
 
-/// <summary>Presentation data for the sample artist discovery cards.</summary>
 public sealed partial class TopArtistItemViewModel : ViewModelBase
 {
-    public LocalizationService Localization => LocalizationService.Current;
-
-    public void RefreshLocalization() => OnPropertyChanged(string.Empty);
-
+    private static LocalizationService Localization => LocalizationService.Current;
+    private readonly FeaturedArtistsViewModel _owner;
     private readonly Point[] _activityPoints;
 
     public Guid PublicId { get; init; }
+    public Guid? ProfileMediaId { get; init; }
+    public Guid? CoverMediaId { get; init; }
     public string FirstName { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;
     public string DisplayName => $"{FirstName} {LastName}".Trim();
-    public string GenreResourceKey { get; init; } = string.Empty;
-    public string GenreTitle => string.IsNullOrEmpty(GenreResourceKey) ? string.Empty : Localization.GetString(GenreResourceKey);
-    public int FollowersCount { get; init; }
+    public string? GenreTitle { get; init; }
+    public string? PersianGenreTitle { get; init; }
+    public string DisplayGenre => (Localization.IsPersian ? PersianGenreTitle ?? GenreTitle : GenreTitle ?? PersianGenreTitle) ?? string.Empty;
+    public int FollowersCount { get; private set; }
     public int MonthlyListenersCount { get; init; }
     public Color AccentColor { get; init; }
-    public ImageSource? AvatarImage { get; }
-    public ImageSource? CoverImage { get; }
-    public string FollowersText => CompactNumber(FollowersCount + (IsFollowed ? 1 : 0));
+    public ImageSource? AvatarImage { get => field; private set => SetField(ref field, value); }
+    public ImageSource? CoverImage { get => field; private set => SetField(ref field, value); }
+    public string FollowersText => CompactNumber(FollowersCount);
     public string MonthlyListenersText => CompactNumber(MonthlyListenersCount);
-    public string FollowersFullText => Localization.Format("MusicHome/FollowersCount", FollowersCount + (IsFollowed ? 1 : 0));
+    public string FollowersFullText => Localization.Format("MusicHome/FollowersCount", FollowersCount);
     public string MonthlyListenersFullText => Localization.Format("MusicHome/ListenersCount", MonthlyListenersCount);
     public string FollowButtonText => Localization.GetString(IsFollowed ? "MusicHome/Following" : "MusicHome/Follow");
-    public string ProfileAutomationName => string.Join(" · ", Localization.Format("MusicHome/ArtistProfileName", DisplayName), GenreTitle, FollowersFullText, MonthlyListenersFullText);
-    public string FollowAutomationName => IsFollowed ? Localization.Format("MusicHome/DemoUnfollowName", DisplayName) : Localization.Format("MusicHome/DemoFollowName", DisplayName);
+    public string ProfileAutomationName => string.Join(" Â· ", Localization.Format("MusicHome/ArtistProfileName", DisplayName),
+        FollowersFullText, MonthlyListenersFullText);
+    public string FollowAutomationName => $"{FollowButtonText} Â· {DisplayName}";
     public FluentIcons.Common.Symbol FollowSymbol => IsFollowed ? FluentIcons.Common.Symbol.Checkmark : FluentIcons.Common.Symbol.PersonAdd;
-
-    public bool IsFollowed
+    public bool CanFollow { get; init; }
+    public bool CanToggleFollow => CanFollow && !IsFollowBusy;
+    public bool IsFollowed { get; private set; }
+    public bool IsFollowBusy
     {
         get => field;
-        set
+        internal set
         {
-            if (!SetField(ref field, value)) return;
-            OnPropertyChanged(nameof(FollowButtonText));
-            OnPropertyChanged(nameof(FollowersText));
-            OnPropertyChanged(nameof(FollowersFullText));
-            OnPropertyChanged(nameof(ProfileAutomationName));
-            OnPropertyChanged(nameof(FollowAutomationName));
-            OnPropertyChanged(nameof(FollowSymbol));
+            if (SetField(ref field, value)) OnPropertyChanged(nameof(CanToggleFollow));
         }
     }
 
-    public TopArtistItemViewModel(string avatarPath, string coverPath, ReadOnlySpan<double> activity)
+    internal TopArtistItemViewModel(FeaturedArtistsViewModel owner, ReadOnlySpan<double> activity)
     {
-        AvatarImage = ImageSourceFactory.Create(avatarPath, 144);
-        CoverImage = ImageSourceFactory.Create(coverPath, 640);
+        _owner = owner;
         _activityPoints = new Point[activity.Length];
         for (var index = 0; index < activity.Length; index++)
             _activityPoints[index] = new Point(index * 250d / Math.Max(1, activity.Length - 1),
                 56 - Math.Clamp(activity[index], 0, 1) * 50);
     }
 
+    public void RefreshLocalization() => OnPropertyChanged(string.Empty);
+
+    internal void UpdateFollowing(bool following, int count)
+    {
+        IsFollowed = following;
+        FollowersCount = count;
+        OnPropertyChanged(string.Empty);
+    }
+
+    internal Task<string> GetMediaPathAsync(Guid id, long maximumBytes, CancellationToken token) =>
+        _owner.GetMediaPathAsync(id, maximumBytes, token);
+
+    internal async Task LoadArtworkAsync(bool includeCover, CancellationToken token)
+    {
+        if (ProfileMediaId is Guid profile && AvatarImage is null &&
+            await LoadImageAsync(profile, 176, token) is { } avatar && !token.IsCancellationRequested)
+            AvatarImage ??= avatar;
+        if (includeCover && CoverMediaId is Guid cover && CoverImage is null && !token.IsCancellationRequested &&
+            await LoadImageAsync(cover, 560, token) is { } image && !token.IsCancellationRequested)
+            CoverImage ??= image;
+    }
+
+    private async Task<ImageSource?> LoadImageAsync(Guid id, int width, CancellationToken token)
+    {
+        try
+        {
+            var path = await GetMediaPathAsync(id, 12 * 1024 * 1024, token);
+            token.ThrowIfCancellationRequested();
+            return await ImageSourceFactory.LoadFileAsync(path, width, token);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch (Exception error) { AppLog.Error("Featured artist artwork could not be loaded.", error); }
+        return null;
+    }
+
     private static string CompactNumber(int value) => value >= 1_000_000
         ? (value / 1_000_000d).ToString("0.#", CultureInfo.InvariantCulture) + "M"
         : value >= 1000 ? (value / 1000d).ToString("0.#", CultureInfo.InvariantCulture) + "K"
-        : value.ToString(CultureInfo.InvariantCulture);
+        : value.ToString("N0", CultureInfo.GetCultureInfo(Localization.LanguageTag));
 
-    // WinUI geometry has one visual owner. Share the points, not the Geometry,
-    // because the same artist can appear in the spotlight and several cards.
+    // A geometry has one visual owner. Share the points, not the Geometry.
     public PathGeometry CreateActivityPath()
     {
         var geometry = new PathGeometry();

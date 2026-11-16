@@ -1,4 +1,4 @@
-﻿using Mizon.Windows.Mcp.Contracts;
+using Mizon.Windows.Mcp.Contracts;
 using Mizon.Windows.Services;
 
 internal static partial class Program
@@ -22,6 +22,9 @@ internal static partial class Program
         await host.Ui(() => host.Service.RevokeAsync(host.Item(id)));
         await host.Approve(id, false, false, false, musicRead: true);
         var state = await peer.Call("get_music_home");
+        var seededArtist = state.MusicHome?.Sections.Single(x => x.Id == "spotlight").Items.Single();
+        Assert(seededArtist is { Artist: { HasModel: true, Tracks.Length: 1 }, TargetKind: "person" }
+            && Guid.TryParse(seededArtist.Id, out _), "Music home read exposes actual typed artist/track shape without media paths");
         Assert(state is { Success: true, State: null, MusicHome: { HasSession: true, IsAvailable: true } }
             && state.MusicHome.Sections[0] is { Source: "api", Items.Length: 1 }, "Actual pipe reads typed home card/source state through production adapter");
         Assert(!(await peer.Call(HomeAction("pause"))).Success, "Music read cannot control playback");
@@ -32,8 +35,17 @@ internal static partial class Program
             "Control uses the live page and returns no snapshot without read consent");
         Assert(!(await peer.Call(HomeAction("like", enabled: true))).Success && !host.MusicPage.Liked,
             "Playback control never implies permission to submit a like");
+        var follow = HomeAction("follow", "spotlight", enabled: true);
+        Assert(!(await peer.Call(follow)).Success && !host.MusicPage.ArtistFollowed,
+            "Music home control does not authorize an artist follow");
         await host.Ui(() => host.Service.RevokeAsync(host.Item(id)));
         await host.Approve(id, false, false, false, musicRead: true, musicControl: true, musicSubmit: true);
+        var followed = await peer.Call(follow);
+        Assert(followed.Success && host.MusicPage.ArtistFollowed
+            && followed.MusicHome?.Sections.Single(x => x.Id == "spotlight").Items.Single().Artist?.IsFollowing == true,
+            "Explicit submit updates the shared artist state and exposes it to a reader");
+        Assert(!(await peer.Call(follow with { Operation = "music_home_action" })).Success,
+            "Artist follow is rejected under the control operation");
         var like = await peer.Call(HomeAction("like", enabled: true));
         Assert(like.Success && like.MusicHome?.Hero?.IsLiked == true && host.MusicPage.Liked,
             "Explicit submit grant writes the synthetic desired state through production adapter");
@@ -144,6 +156,7 @@ internal static partial class Program
         public Func<McpMusicHomeRequest, CancellationToken, Task<McpResponse>>? ActionHandler { get; set; }
         public bool Playing { get; set; } = true;
         public bool Liked { get; set; }
+        public bool ArtistFollowed { get; private set; }
         public string Language { get; set; } = "fa-IR";
         public int Reads { get; private set; }
         public int Actions { get; private set; }
@@ -155,7 +168,23 @@ internal static partial class Program
             {
                 IsAvailable = true, HasSession = true, Language = Language,
                 Hero = new() { IsPlaying = Playing, IsLiked = Liked },
-                Sections = [new() { Id = "featured", Source = "api", Items = [new() { Id = "synthetic-track", Kind = "music", Title = "Synthetic track" }] }]
+                Sections =
+                [
+                    new() { Id = "featured", Source = "api", Items = [new() { Id = "synthetic-track", Kind = "music", Title = "Synthetic track" }] },
+                    new()
+                    {
+                        Id = "spotlight",
+                        Items = [new()
+                        {
+                            Id = "0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72", Kind = "artist", TargetKind = "person",
+                            Artist = new()
+                            {
+                                CanFollow = true, IsFollowing = ArtistFollowed, HasModel = true,
+                                Tracks = [new("0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a73", "Synthetic track", null)]
+                            }
+                        }]
+                    }
+                ]
             };
         }
         public Task RefreshAsync(string section, CancellationToken token) => RefreshHandler?.Invoke(token) ?? Task.CompletedTask;
@@ -165,6 +194,7 @@ internal static partial class Program
             if (ActionHandler is { } handler) return handler(request, token);
             if (request.Action == "pause") Playing = false;
             if (request.Action == "like") Liked = request.Enabled!.Value;
+            if (request.Action == "follow") ArtistFollowed = request.Enabled!.Value;
             if (request.Action == "set_language") Language = request.Language!;
             return Task.FromResult(new McpResponse { Success = true, Code = "updated" });
         }

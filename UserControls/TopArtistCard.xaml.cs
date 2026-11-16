@@ -4,6 +4,8 @@ using Microsoft.UI.Xaml.Controls;
 using Mizon.Windows.Common;
 using Mizon.Windows.ViewModels.Items;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Mizon.Windows.UserControls;
 
@@ -15,6 +17,7 @@ public sealed partial class TopArtistCard : UserControl
     public static readonly DependencyProperty ItemProperty = DependencyProperty.Register(
         nameof(Item), typeof(TopArtistItemViewModel), typeof(TopArtistCard), new PropertyMetadata(null, ItemChanged));
 
+    private CancellationTokenSource? _artwork;
     private bool _initialized;
     private bool _loaded;
     private TopArtistItemViewModel? _chartItem;
@@ -32,6 +35,7 @@ public sealed partial class TopArtistCard : UserControl
     }
 
     public event EventHandler<TopArtistItemViewModel>? ProfileRequested;
+    public event EventHandler<TopArtistItemViewModel>? FollowRequested;
 
     private static void ItemChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
     {
@@ -44,6 +48,7 @@ public sealed partial class TopArtistCard : UserControl
         }
         card.Bindings.Update();
         card.UpdateChart();
+        card.RequestArtwork();
     }
 
     private void Card_Loaded(object sender, RoutedEventArgs args)
@@ -52,6 +57,7 @@ public sealed partial class TopArtistCard : UserControl
         _loaded = true;
         Bindings.Update();
         UpdateChart();
+        RequestArtwork();
     }
 
     private void Card_Unloaded(object sender, RoutedEventArgs args)
@@ -59,6 +65,7 @@ public sealed partial class TopArtistCard : UserControl
         if (!_loaded || IsLoaded) return;
         _loaded = false;
         Bindings.StopTracking();
+        CancelArtwork();
         ActivityPath.Data = null;
         _chartItem = null;
     }
@@ -82,10 +89,33 @@ public sealed partial class TopArtistCard : UserControl
 
     private void Follow_Click(object sender, RoutedEventArgs e)
     {
+        if (Item is { CanToggleFollow: true } artist) FollowRequested?.Invoke(this, artist);
+    }
+
+    private void CancelArtwork()
+    {
+        var request = _artwork;
+        _artwork = null;
+        request?.Cancel();
+    }
+
+    private void RequestArtwork()
+    {
+        CancelArtwork();
         if (Item is not { } artist) return;
-        artist.IsFollowed = !artist.IsFollowed;
-        AccessibilityAnnouncements.Announce(FollowButton,
-            artist.IsFollowed ? Localization.Format("MusicHome/DemoFollowed", artist.DisplayName) : Localization.Format("MusicHome/DemoUnfollowed", artist.DisplayName),
-            "ArtistPreviewFollow");
+        var request = _artwork = new();
+        _ = LoadArtworkAsync(artist, request);
+    }
+
+    private async Task LoadArtworkAsync(TopArtistItemViewModel artist, CancellationTokenSource request)
+    {
+        using (request)
+        {
+            try { await artist.LoadArtworkAsync(true, request.Token); }
+            finally
+            {
+                if (ReferenceEquals(_artwork, request)) _artwork = null;
+            }
+        }
     }
 }
