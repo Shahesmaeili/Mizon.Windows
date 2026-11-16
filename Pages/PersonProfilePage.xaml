@@ -136,7 +136,7 @@
                                          IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
                                 <Ellipse Width="180" Height="180" Stroke="#24C5DEFF" StrokeThickness="1"
                                          IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
-                                <ui:ArtistModelView x:Name="Model" Visibility="Collapsed" />
+                                <ui:ArtistModelView x:Name="Model" Visibility="Collapsed" FlowDirection="LeftToRight" />
                                 <StackPanel x:Name="ModelPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center"
                                             Spacing="8" Padding="12">
                                     <icon:SymbolIcon Symbol="Cube" FontSize="28" HorizontalAlignment="Center" />

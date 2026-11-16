@@ -9,6 +9,7 @@ using Microsoft.UI.Xaml.Navigation;
 using Mizon.API;
 using Mizon.API.Client.Operations.Media;
 using Mizon.Windows.Common;
+using Mizon.Windows.Controls;
 using Mizon.Windows.Mcp.Contracts;
 using Mizon.Windows.Services;
 using Mizon.Windows.ViewModels;
@@ -180,7 +181,7 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
             _ = LoadHeroImageAsync(profile.ProfileMediaPublicId, avatar: true, token);
             if (profile.CoverMediaPublicId != profile.ProfileMediaPublicId)
                 _ = LoadHeroImageAsync(profile.CoverMediaPublicId, avatar: false, token);
-            _ = LoadModelAsync(profile.ModelMediaPublicId, token);
+            _ = LoadModelAsync(profile.ModelMediaPublicId, profile.ModelYawInDegrees, token);
             await LoadTracksAsync(token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
@@ -323,13 +324,15 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
         catch (Exception error) { AppLog.Error("Artist artwork could not load.", error); }
     }
 
-    private async Task LoadModelAsync(Guid? mediaId, CancellationToken token)
+    private async Task LoadModelAsync(Guid? mediaId, float? yawInDegrees, CancellationToken token)
     {
         if (mediaId is not Guid id) return;
         try
         {
             var path = await GetMediaPathAsync(id, 32 * 1024 * 1024, token);
             token.ThrowIfCancellationRequested();
+            if (yawInDegrees is float yaw) Model.InitialYawInDegrees = yaw;
+            else Model.ClearValue(ArtistModelView.InitialYawInDegreesProperty);
             Model.ModelPath = path;
             Model.Visibility = Visibility.Visible;
             ModelPlaceholder.Visibility = Visibility.Collapsed;

@@ -17,6 +17,15 @@ viewer handles GLB parsing, spring motion, reduced motion and native-resource
 cleanup. Missing media fall back to initials, artwork tint or a localized
 model placeholder.
 
+The profile applies the configured model yaw from the Persons API before it
+loads the GLB. This also sets the pose used by Reset and spring return. The
+3D surface uses the same physical axes in both app languages. The page's text
+and layout continue to follow the selected language.
+This depends on server `81b82d2` and SDK `e6db3aa`. Debug x64, the isolated MCP
+access and gamepad checks, and an offscreen WinUI probe using the Moein GLB
+passed. The probe compared the initial pose, reset and language direction
+changes. The packaged page and physical controller were not exercised.
+
 Use D-pad/left stick to move, A for native controls and tracks, B to go back,
 and the right stick to rotate the focused model. Narrator names, headings,
 localized status text and default focus visuals share the live Persian/English
