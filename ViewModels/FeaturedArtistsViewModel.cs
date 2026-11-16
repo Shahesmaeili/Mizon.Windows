@@ -28,8 +28,13 @@ public sealed partial class FeaturedArtistsViewModel(MizonApi api, MediaDownload
     public IReadOnlyList<TopArtistItemViewModel> Artists { get => field; private set => SetField(ref field, value); } = [];
     public bool IsLoading { get => field; private set => SetField(ref field, value); } = true;
     public bool HasError { get => field; private set => SetField(ref field, value); }
-    public string StatusText => IsLoading ? string.Empty : LocalizationService.Current.GetString(HasError
-        ? "MusicHome/FeaturedArtistsError" : Artists.Count == 0 ? "MusicHome/FeaturedArtistsEmpty" : string.Empty);
+    public string StatusText => (IsLoading, HasError, Artists.Count) switch
+    {
+        (true, _, _) => string.Empty,
+        (_, true, _) => LocalizationService.Current.GetString("MusicHome/FeaturedArtistsError"),
+        (_, _, 0) => LocalizationService.Current.GetString("MusicHome/FeaturedArtistsEmpty"),
+        _ => string.Empty
+    };
     public Microsoft.UI.Xaml.Visibility ArtistsVisibility => Visible(Artists.Count != 0);
     public Microsoft.UI.Xaml.Visibility StatusVisibility => Visible(ShowStatus);
     public Microsoft.UI.Xaml.Visibility RetryVisibility => Visible(!IsLoading && HasError);
