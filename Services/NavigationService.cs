@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Mizon.Windows.Pages;
+using Mizon.Windows.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -200,10 +201,14 @@ public class NavigationService
         InternalNavigate(typeof(MusicPlaylistsPage));
     }
 
-    public void OpenPersonProfile(Guid publicId, PersonPicture? portrait = null)
+    public void OpenPersonProfile(Guid publicId, PersonPicture? portrait = null) =>
+        OpenPersonProfile(publicId, portrait, null);
+
+    internal void OpenPersonProfile(Guid publicId, PersonPicture? portrait, PersonProfileModelPose? modelPose)
     {
         if (publicId == Guid.Empty || CurrentInternalPage is PersonProfilePage page && page.PersonPublicId == publicId) return;
         var parameters = new Dictionary<string, object> { [PageConstants.PERSON_ID] = publicId };
+        if (modelPose is { } featuredPose) parameters[PersonProfileModelPose.NavigationKey] = featuredPose;
         if (portrait is { IsLoaded: true, ActualWidth: > 0, ActualHeight: > 0 }
             && new global::Windows.UI.ViewManagement.UISettings().AnimationsEnabled)
         {

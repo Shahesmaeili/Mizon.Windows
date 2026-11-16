@@ -245,7 +245,7 @@ public sealed partial class ArtistModelView : UserControl
                 reveal.Duration = TimeSpan.FromMilliseconds(240);
                 _scene.Presentation.StartAnimation(nameof(Visual.Opacity), reveal);
             }
-            AppLog.Information($"[ArtistModelView] Loaded {model.Meshes.Length} native meshes from '{ModelPath}'; View={ActualWidth:0.##}x{ActualHeight:0.##}; Host={_modelHost.ActualWidth:0.##}x{_modelHost.ActualHeight:0.##}; Presentation={_scene?.Presentation.Size}; IsLoaded={IsLoaded}; Scale={ViewScale:0.##}; Focus={VerticalFocus:0.##}.");
+            AppLog.Information($"[ArtistModelView] Loaded {model.Meshes.Length} native meshes from '{ModelPath}'; View={ActualWidth:0.##}x{ActualHeight:0.##}; Host={_modelHost.ActualWidth:0.##}x{_modelHost.ActualHeight:0.##}; Presentation={_scene?.Presentation.Size}; IsLoaded={IsLoaded}; Yaw={InitialYawInDegrees:0.##}°; Scale={ViewScale:0.##}; Focus={VerticalFocus:0.##}.");
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception exception)

@@ -29,6 +29,33 @@ internal sealed class PersonProfileViewModel(MizonApi api)
         return null;
     }
 
+    internal async Task<float?> GetModelYawAsync(PersonProfileResponse profile, PersonProfileModelPose? featuredPose,
+        CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        if (profile.ModelMediaPublicId is not Guid mediaId) return null;
+        if (profile.ModelYawInDegrees is float yaw && float.IsFinite(yaw)) return yaw;
+        if (featuredPose is { } pose && pose.MediaId == mediaId && float.IsFinite(pose.YawInDegrees))
+            return pose.YawInDegrees;
+
+        // Older API hosts still publish the angle in the music catalog.
+        // Match the asset as well as the person in case the model has changed.
+        try
+        {
+            var response = await api.SendRequestAsync(new FeaturedPersonsOperation(new() { TypeCode = "music" }), token);
+            token.ThrowIfCancellationRequested();
+            var item = response.IsSuccess ? response.Content?.Persons.FirstOrDefault(person =>
+                person.PersonPublicId == profile.PersonPublicId && person.ModelMediaPublicId == mediaId) : null;
+            return item is not null && float.IsFinite(item.ModelYawInDegrees) ? item.ModelYawInDegrees : null;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+        catch (Exception error)
+        {
+            AppLog.Error("The featured artist model angle could not be loaded.", error);
+            return null;
+        }
+    }
+
     internal async Task<bool> LoadTracksAsync(Guid id, CancellationToken token)
     {
         var before = NextCursor;
@@ -68,6 +95,11 @@ internal sealed class PersonProfileViewModel(MizonApi api)
         _loadedTracks.Clear();
         NextCursor = null;
     }
+}
+
+internal readonly record struct PersonProfileModelPose(Guid MediaId, float YawInDegrees)
+{
+    internal const string NavigationKey = "PersonProfileModelPose";
 }
 
 public sealed class PersonProfileTrackViewModel(MusicTabMusicItemResponse track) : ViewModelBase

@@ -386,8 +386,13 @@ public sealed partial class MusicPage : Page
         finally { _refreshPreviewDialog = null; _mcpPreviewDialog = null; _dialogOpen = false; }
     }
 
-    private void TopArtist_ProfileRequested(object? sender, TopArtistItemViewModel artist) =>
-        ViewModel.NavigationService.OpenPersonProfile(artist.PublicId, sender as PersonPicture);
+    private void TopArtist_ProfileRequested(object? sender, TopArtistItemViewModel artist)
+    {
+        var spotlight = FeaturedArtists.Spotlights.FirstOrDefault(item => item.Artist.PublicId == artist.PublicId);
+        PersonProfileModelPose? modelPose = spotlight?.ModelMediaId is Guid mediaId
+            ? new(mediaId, spotlight.ModelYawInDegrees) : null;
+        ViewModel.NavigationService.OpenPersonProfile(artist.PublicId, sender as PersonPicture, modelPose);
+    }
 
     private async void Artist_FollowRequested(object? sender, TopArtistItemViewModel artist)
     {

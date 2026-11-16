@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using Mizon.API;
 using Mizon.API.Client.Operations.Media;
+using Mizon.API.Client.Responses.Persons;
 using Mizon.Windows.Common;
 using Mizon.Windows.Controls;
 using Mizon.Windows.Mcp.Contracts;
@@ -39,6 +40,7 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
     private string _modelStatus = "NoModel";
     private int _layoutBand = -1;
     private PersonProfileEntrance? _portraitEntrance;
+    private PersonProfileModelPose? _featuredModelPose;
     private ImageSource? _pendingAvatar;
     private TaskCompletionSource<bool> _ready = NewCompletion();
 
@@ -64,9 +66,13 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        PersonPublicId = e.Parameter is Dictionary<string, object> args
-            && args.TryGetValue(PageConstants.PERSON_ID, out var value) && value is Guid id ? id : Guid.Empty;
-        if (e.Parameter is Dictionary<string, object> parameters && parameters.Remove(PersonProfileEntrance.Key, out var entrance))
+        var args = e.Parameter as Dictionary<string, object>;
+        PersonPublicId = args?.TryGetValue(PageConstants.PERSON_ID, out var value) == true
+            && value is Guid id ? id : Guid.Empty;
+        _featuredModelPose = args?.TryGetValue(PersonProfileModelPose.NavigationKey, out var pose) == true
+            && pose is PersonProfileModelPose modelPose
+            ? modelPose : null;
+        if (args?.Remove(PersonProfileEntrance.Key, out var entrance) == true)
             _portraitEntrance = entrance as PersonProfileEntrance;
     }
 
@@ -181,7 +187,7 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
             _ = LoadHeroImageAsync(profile.ProfileMediaPublicId, avatar: true, token);
             if (profile.CoverMediaPublicId != profile.ProfileMediaPublicId)
                 _ = LoadHeroImageAsync(profile.CoverMediaPublicId, avatar: false, token);
-            _ = LoadModelAsync(profile.ModelMediaPublicId, profile.ModelYawInDegrees, token);
+            _ = LoadModelAsync(profile, token);
             await LoadTracksAsync(token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
@@ -324,16 +330,18 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
         catch (Exception error) { AppLog.Error("Artist artwork could not load.", error); }
     }
 
-    private async Task LoadModelAsync(Guid? mediaId, float? yawInDegrees, CancellationToken token)
+    private async Task LoadModelAsync(PersonProfileResponse profile, CancellationToken token)
     {
-        if (mediaId is not Guid id) return;
+        if (profile.ModelMediaPublicId is not Guid id) return;
         try
         {
-            var path = await GetMediaPathAsync(id, 32 * 1024 * 1024, token);
+            var yawTask = _viewModel.GetModelYawAsync(profile, _featuredModelPose, token);
+            var pathTask = GetMediaPathAsync(id, 32 * 1024 * 1024, token);
+            await Task.WhenAll(yawTask, pathTask);
             token.ThrowIfCancellationRequested();
-            if (yawInDegrees is float yaw) Model.InitialYawInDegrees = yaw;
+            if (await yawTask is float yaw) Model.InitialYawInDegrees = yaw;
             else Model.ClearValue(ArtistModelView.InitialYawInDegreesProperty);
-            Model.ModelPath = path;
+            Model.ModelPath = await pathTask;
             Model.Visibility = Visibility.Visible;
             ModelPlaceholder.Visibility = Visibility.Collapsed;
             ResetModel.Visibility = Visibility.Visible;
