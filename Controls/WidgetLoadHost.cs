@@ -254,6 +254,7 @@ public sealed partial class WidgetLoadHost : Grid
     }
 
     private bool IsVisibleToUser => _loaded && _hostVisible && _inViewport;
+    internal bool CanShowPointerGlow => IsVisibleToUser && _body.Visibility == Visibility.Visible;
 
     private void UpdateMotion()
     {

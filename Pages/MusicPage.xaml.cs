@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -31,6 +31,7 @@ public sealed partial class MusicPage : Page
     private string? _layoutState;
     private bool _dialogOpen;
     private bool _homeWidgetsActive;
+    private Controls.WidgetPointerGlow? _sideWidgetGlow;
     private readonly Microsoft.UI.Xaml.Media.RectangleGeometry _pageViewportClip = new();
     private readonly global::Windows.UI.ViewManagement.UISettings _uiSettings = new();
     private sealed class RailState { public long LastWheelTime; public double Target; }
@@ -63,6 +64,12 @@ public sealed partial class MusicPage : Page
         UpdateLayout(ActualWidth);
         if (_homeWidgetsActive) return;
         _homeWidgetsActive = true;
+        _sideWidgetGlow = new(LayoutRoot,
+            (LibraryWidget, WidgetAccent(LibraryWidget, "LibraryAccent")),
+            (RhythmWidget, WidgetAccent(RhythmWidget, "MusicAccent")),
+            (NewsWidget, WidgetAccent(NewsWidget, "NewsAccent")),
+            (TrendingWidget, WidgetAccent(TrendingWidget, "WaveAccent")),
+            (FollowingActivitiesHost, WidgetAccent(FollowingActivitiesHost, "FriendAccent")));
         ActivateMcpHome();
         Localization.PropertyChanged -= MusicHomeLocalizationChanged;
         Localization.PropertyChanged += MusicHomeLocalizationChanged;
@@ -91,6 +98,8 @@ public sealed partial class MusicPage : Page
     {
         if (IsLoaded) return;
         _homeWidgetsActive = false;
+        _sideWidgetGlow?.Dispose();
+        _sideWidgetGlow = null;
         DeactivateMcpHome();
         Localization.PropertyChanged -= MusicHomeLocalizationChanged;
         CloseStory();
@@ -108,6 +117,12 @@ public sealed partial class MusicPage : Page
         Bindings.Update();
         Bindings.StopTracking();
     }
+
+    private static global::Windows.UI.Color WidgetAccent(Controls.WidgetLoadHost host, string key) =>
+        ((Microsoft.UI.Xaml.Media.SolidColorBrush)((FrameworkElement)host.Widget!).Resources[key]).Color;
+
+    private void SideWidgets_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs args) =>
+        _sideWidgetGlow?.ViewportChanged();
 
     private void MusicHomeLocalizationChanged(object? sender, PropertyChangedEventArgs args)
     {

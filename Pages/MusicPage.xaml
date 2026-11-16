@@ -50,7 +50,7 @@
     </Style>
   </Page.Resources>
   <Grid
-    x:Name="LayoutRoot">
+    x:Name="LayoutRoot" Background="Transparent">
     <VisualStateManager.VisualStateGroups>
       <VisualStateGroup
         x:Name="PageLayouts">
@@ -134,7 +134,7 @@
             MaxWidth="320" />
         </Grid.ColumnDefinitions>
         <ScrollViewer
-          x:Name="MainFeedScroll" ViewChanging="MainFeed_ViewChanging"
+          x:Name="MainFeedScroll" ViewChanging="MainFeed_ViewChanging" ViewChanged="SideWidgets_ViewChanged"
           Grid.Column="1"
           CanContentRenderOutsideBounds="True"
           HorizontalScrollMode="Disabled"
@@ -307,7 +307,7 @@
           </StackPanel>
         </ScrollViewer>
         <ScrollViewer
-          x:Name="EditorialScroll"
+          x:Name="EditorialScroll" ViewChanged="SideWidgets_ViewChanged"
           Grid.Column="0"
           Margin="0,0,24,0"
           Visibility="Collapsed"
@@ -321,7 +321,7 @@
             x:Name="EditorialRail"
             Spacing="18"
             Padding="0,0,0,48">
-            <controls:WidgetLoadHost WidgetName="{x:Bind Localization.GetString('MusicHome/Library', Localization.Revision), Mode=OneWay}"
+            <controls:WidgetLoadHost x:Name="LibraryWidget" WidgetName="{x:Bind Localization.GetString('MusicHome/Library', Localization.Revision), Mode=OneWay}"
                                      IsLoading="{x:Bind Library.IsLoading, Mode=OneWay}"
                                      HasError="{x:Bind Library.HasError, Mode=OneWay}"
                                      SkeletonHeight="360" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingLibrary', Localization.Revision), Mode=OneWay}"
@@ -331,18 +331,18 @@
                                     RecentRequested="Library_RecentRequested"
                                     RefreshRequested="Library_RefreshRequested" />
             </controls:WidgetLoadHost>
-            <controls:WidgetLoadHost WidgetName="{x:Bind Localization.GetString('MusicHome/WeeklyRhythm', Localization.Revision), Mode=OneWay}" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingWeeklyRhythm', Localization.Revision), Mode=OneWay}"
+            <controls:WidgetLoadHost x:Name="RhythmWidget" WidgetName="{x:Bind Localization.GetString('MusicHome/WeeklyRhythm', Localization.Revision), Mode=OneWay}" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingWeeklyRhythm', Localization.Revision), Mode=OneWay}"
                                      ReadyText="{x:Bind Localization.GetString('MusicHome/WeeklyRhythmReady', Localization.Revision), Mode=OneWay}">
               <uc:WeeklyRhythmPanel x:Name="WeeklyRhythm" Summary="{x:Bind Discovery.WeeklyRhythm}" />
             </controls:WidgetLoadHost>
-            <controls:WidgetLoadHost WidgetName="{x:Bind Localization.GetString('MusicHome/LatestNews', Localization.Revision), Mode=OneWay}" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingNews', Localization.Revision), Mode=OneWay}"
+            <controls:WidgetLoadHost x:Name="NewsWidget" WidgetName="{x:Bind Localization.GetString('MusicHome/LatestNews', Localization.Revision), Mode=OneWay}" LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingNews', Localization.Revision), Mode=OneWay}"
                                      ReadyText="{x:Bind Localization.GetString('MusicHome/NewsReady', Localization.Revision), Mode=OneWay}">
               <uc:LatestMusicNewsPanel x:Name="LatestNews" />
             </controls:WidgetLoadHost>
           </StackPanel>
         </ScrollViewer>
         <ScrollViewer
-          x:Name="CommunityScroll"
+          x:Name="CommunityScroll" ViewChanged="SideWidgets_ViewChanged"
           Grid.Column="2"
           Margin="24,0,0,0"
           Visibility="Collapsed"
@@ -356,7 +356,7 @@
             x:Name="CommunityRail"
             Spacing="18"
             Padding="0,0,0,48">
-            <controls:WidgetLoadHost WidgetName="{x:Bind Localization.GetString('MusicHome/Trending', Localization.Revision), Mode=OneWay}" IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}"
+            <controls:WidgetLoadHost x:Name="TrendingWidget" WidgetName="{x:Bind Localization.GetString('MusicHome/Trending', Localization.Revision), Mode=OneWay}" IsLoading="{x:Bind Discovery.IsLoading, Mode=OneWay}"
                                      LoadingText="{x:Bind Localization.GetString('MusicHome/LoadingTrending', Localization.Revision), Mode=OneWay}" ReadyText="{x:Bind Localization.GetString('MusicHome/TrendingReady', Localization.Revision), Mode=OneWay}">
               <uc:TrendingMusicPanel
                 ItemsSource="{x:Bind Discovery.TrendingMusics}"
