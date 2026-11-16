@@ -33,6 +33,7 @@ internal static partial class Program
             await MusicHomeLifetimeAndRestoration();
             await PresenceScopesAndState();
             await PresenceLifetimeAndRestoration();
+            await PersonProfileScopesAndLifetime();
             await VpnScopesAndState();
             await VpnLifetimeAndRestoration();
             await WindowScopesAndState();
@@ -205,6 +206,8 @@ internal static partial class Program
         public SyntheticVpnPage VpnPage { get; } = new();
         public bool VpnSession { get; set; } = true;
         public McpVpnService Vpn { get; }
+        public SyntheticPersonPage PersonPage { get; } = new();
+        public McpPersonProfileService PersonProfile { get; }
         private readonly string _pipe;
         private Host(string path)
         {
@@ -218,18 +221,20 @@ internal static partial class Program
             Presence = new(PresenceBackend);
             Window = new(() => WindowBackend);
             Vpn = new(() => VpnPage.IsActive ? VpnPage : null, () => VpnSession);
+            PersonProfile = new(() => PersonPage.IsActive ? PersonPage : null);
         }
         public static async Task<Host> StartAsync(string path)
         {
             var host = new Host(path);
-            await host.Ui(() => host.Service.Start(host._ui, host.Auth, host.Appearance, host.Navigation, host.Taskbar, host.MusicHome, host.Presence, host.Window, host.Vpn));
+            await host.Ui(() => host.Service.Start(host._ui, host.Auth, host.Appearance, host.Navigation, host.Taskbar, host.MusicHome, host.Presence, host.Window, host.Vpn, host.PersonProfile));
             return host;
         }
         public McpConnectionItemViewModel Item(string id) => Service.Connections.Single(item => item.Id == id);
         public Task Approve(string id, bool read, bool control, bool submit, bool appearanceRead = false, bool appearanceControl = false,
             bool navigationRead = false, bool navigationControl = false, bool taskbarRead = false, bool taskbarControl = false,
             bool musicRead = false, bool musicControl = false, bool musicSubmit = false, bool presenceRead = false,
-            bool windowRead = false, bool windowControl = false, bool vpnRead = false, bool vpnControl = false) => Ui(async () =>
+            bool windowRead = false, bool windowControl = false, bool vpnRead = false, bool vpnControl = false,
+            bool personRead = false, bool personControl = false) => Ui(async () =>
         {
             var item = Item(id); item.AllowRead = read; item.AllowControl = control; item.AllowSubmit = submit;
             item.AllowAppearanceRead = appearanceRead; item.AllowAppearanceControl = appearanceControl;
@@ -239,6 +244,7 @@ internal static partial class Program
             item.AllowPresenceRead = presenceRead;
             item.AllowWindowRead = windowRead; item.AllowWindowControl = windowControl;
             item.AllowVpnRead = vpnRead; item.AllowVpnControl = vpnControl;
+            item.AllowPersonProfileRead = personRead; item.AllowPersonProfileControl = personControl;
             await Service.ApproveAsync(item);
         });
         public async Task<Peer> ConnectAsync(string? proof)
@@ -272,6 +278,7 @@ internal static partial class Program
         {
             await Ui(() => Service.DisposeAsync().AsTask());
             VpnPage.Dispose();
+            PersonPage.Dispose();
             _ui.Dispose();
         }
     }

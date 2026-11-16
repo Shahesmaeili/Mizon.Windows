@@ -7,6 +7,8 @@
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../Common/ArtistModelInput.cs" Link="Production/ArtistModelInput.cs" />
+    <Compile Include="../../Common/ArtistModelMotion.cs" Link="Production/ArtistModelMotion.cs" />
     <Compile Include="../../Services/Gamepad/*.cs" Link="Production/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

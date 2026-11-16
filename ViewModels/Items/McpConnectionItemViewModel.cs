@@ -27,6 +27,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
     private bool _allowWindowControl;
     private bool _allowVpnRead;
     private bool _allowVpnControl;
+    private bool _allowPersonProfileRead;
+    private bool _allowPersonProfileControl;
     private bool _isBusy;
     private string _currentOperation = string.Empty;
     private DateTimeOffset? _lastActivity;
@@ -79,6 +81,9 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         "open_destination" => Text("OpenDestination"), "get_taskbar_pin_state" => Text("ReadTaskbarPin"),
         "request_taskbar_pin" => Text("RequestTaskbarPin"),
         "get_presence_state" => Text("ReadPresence"),
+        "get_person_profile" => Text("ReadPersonProfile"),
+        "set_person_following" => Text("ChangePersonFollow"),
+        "load_person_tracks" or "open_person_track" => Text("BrowsePersonTracks"),
         "get_vpn_state" => Text("ReadVpn"),
         "set_vpn_particles" => Text("ChangeVpnParticles"),
         "open_vpn_settings" => Text("OpenVpnSettings"),
@@ -113,6 +118,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
     public bool AllowWindowControl { get => _allowWindowControl; set { if (CanApprove) SetField(ref _allowWindowControl, value); } }
     public bool AllowVpnRead { get => _allowVpnRead; set { if (CanApprove) SetField(ref _allowVpnRead, value); } }
     public bool AllowVpnControl { get => _allowVpnControl; set { if (CanApprove) SetField(ref _allowVpnControl, value); } }
+    public bool AllowPersonProfileRead { get => _allowPersonProfileRead; set { if (CanApprove) SetField(ref _allowPersonProfileRead, value); } }
+    public bool AllowPersonProfileControl { get => _allowPersonProfileControl; set { if (CanApprove) SetField(ref _allowPersonProfileControl, value); } }
     public bool AllowMusicHomeRead { get => _allowMusicHomeRead; set { if (CanApprove) SetField(ref _allowMusicHomeRead, value); } }
     public bool AllowMusicHomeControl
     {
@@ -160,7 +167,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         RenewAuthorization();
         _policy.Approve(AllowRead, AllowControl, AllowSubmit, AllowAppearanceRead, AllowAppearanceControl,
             AllowNavigationRead, AllowNavigationControl, AllowTaskbarRead, AllowTaskbarControl,
-            AllowMusicHomeRead, AllowMusicHomeControl, AllowMusicHomeSubmit, AllowPresenceRead, AllowWindowRead, AllowWindowControl, AllowVpnRead, AllowVpnControl);
+            AllowMusicHomeRead, AllowMusicHomeControl, AllowMusicHomeSubmit, AllowPresenceRead, AllowWindowRead, AllowWindowControl, AllowVpnRead, AllowVpnControl,
+            AllowPersonProfileRead, AllowPersonProfileControl);
         NotifyStatus();
     }
 
@@ -182,6 +190,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         SetField(ref _allowWindowControl, grant.AllowWindowControl, nameof(AllowWindowControl));
         SetField(ref _allowVpnRead, grant.AllowVpnRead, nameof(AllowVpnRead));
         SetField(ref _allowVpnControl, grant.AllowVpnControl, nameof(AllowVpnControl));
+        SetField(ref _allowPersonProfileRead, grant.AllowPersonProfileRead, nameof(AllowPersonProfileRead));
+        SetField(ref _allowPersonProfileControl, grant.AllowPersonProfileControl, nameof(AllowPersonProfileControl));
         SetField(ref _allowMusicHomeControl, grant.AllowMusicHomeControl, nameof(AllowMusicHomeControl));
         SetField(ref _allowMusicHomeSubmit, grant.AllowMusicHomeControl && grant.AllowMusicHomeSubmit, nameof(AllowMusicHomeSubmit));
         _isRemembered = true;
@@ -233,7 +243,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         AllowMusicHomeSubmit = _policy.AllowMusicHomeSubmit,
         AllowPresenceRead = _policy.AllowPresenceRead,
         AllowWindowRead = _policy.AllowWindowRead, AllowWindowControl = _policy.AllowWindowControl,
-        AllowVpnRead = _policy.AllowVpnRead, AllowVpnControl = _policy.AllowVpnControl
+        AllowVpnRead = _policy.AllowVpnRead, AllowVpnControl = _policy.AllowVpnControl,
+        AllowPersonProfileRead = _policy.AllowPersonProfileRead, AllowPersonProfileControl = _policy.AllowPersonProfileControl
     };
 
     internal void RefreshLocalization()

@@ -25,6 +25,7 @@ internal static class AppDeepLinkCatalog
         new("music-download", "mizon://music/{publicId}?action=download", true, "Open a music item and explicitly download through its existing cache service."),
         new("music-comment", "mizon://music/{publicId}/comments/{commentPublicId}", true, "Open the music item and reveal its requested comment."),
         new("client", "mizon://client/{publicId}", true, "Open a client profile by its public ID."),
+        new("person", "mizon://person/{publicId}", true, "Open an artist profile by its public ID."),
         new("story", "mizon://story/{publicId}", true, "Open a story with the existing story viewer."),
         new("activities", "mizon://activities", true, "Open all following activities across available content types."),
         new("settings", "mizon://settings/{section?}", true, "Open settings or one of its explicitly listed sections."),
@@ -43,7 +44,7 @@ internal static class AppDeepLinkCatalog
         request = new();
         if (destination is null) return false;
         var key = destination.ToLowerInvariant();
-        var hasId = key is "music-details" or "music-play" or "music-download" or "music-comment" or "playlist" or "client" or "story";
+        var hasId = key is "music-details" or "music-play" or "music-download" or "music-comment" or "playlist" or "client" or "person" or "story";
         if (hasId != publicId.HasValue || publicId == Guid.Empty || (key == "music-comment") != commentPublicId.HasValue
             || commentPublicId == Guid.Empty || (key == "search") != (searchQuery is not null)
             || (settingsSection is not null && key != "settings")) return false;
@@ -55,6 +56,7 @@ internal static class AppDeepLinkCatalog
             "music-comment" => new(MusicPublicId: publicId, MusicCommentPublicId: commentPublicId),
             "playlist" => new(PlaylistPublicId: publicId),
             "client" => new(ClientPublicId: publicId),
+            "person" => new(PersonPublicId: publicId),
             "story" => new(StoryPublicId: publicId),
             "search" => new(SearchQuery: searchQuery!.Trim()),
             "settings" => new("settings", SettingsSection: settingsSection?.ToLowerInvariant()),

@@ -118,4 +118,13 @@
   <data name="ReadVpn" xml:space="preserve"><value>Reading VPN page</value></data>
   <data name="ChangeVpnParticles" xml:space="preserve"><value>Changing VPN page animation</value></data>
   <data name="OpenVpnSettings" xml:space="preserve"><value>Opening Windows VPN settings</value></data>
+  <data name="PersonProfileGroup" xml:space="preserve"><value>Artist profile</value></data>
+  <data name="PersonProfileGroupHint" xml:space="preserve"><value>This applies only to the artist profile that is open in Mizon.</value></data>
+  <data name="PermissionPersonProfileRead" xml:space="preserve"><value>Read artist profiles</value></data>
+  <data name="PermissionPersonProfileReadHint" xml:space="preserve"><value>Read the profile, counts and visible tracks.</value></data>
+  <data name="PermissionPersonProfileControl" xml:space="preserve"><value>Control artist profiles</value></data>
+  <data name="PermissionPersonProfileControlHint" xml:space="preserve"><value>Follow or unfollow with your account, load more tracks, or open a displayed track.</value></data>
+  <data name="ReadPersonProfile" xml:space="preserve"><value>Reading the artist profile</value></data>
+  <data name="ChangePersonFollow" xml:space="preserve"><value>Updating artist follow status</value></data>
+  <data name="BrowsePersonTracks" xml:space="preserve"><value>Browsing artist tracks</value></data>
 </root>

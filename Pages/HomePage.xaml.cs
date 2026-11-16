@@ -560,6 +560,12 @@ namespace Mizon.Windows.Pages
                     NavigateActivation(() => navigation.OpenMusicPlaylist(playlistId));
                     return true;
                 }
+                if (request.PersonPublicId is Guid personId)
+                {
+                    SelectMusicNavigationItem();
+                    NavigateActivation(() => navigation.OpenPersonProfile(personId));
+                    return true;
+                }
                 if (request.ClientPublicId is Guid clientId)
                 {
                     NavigateActivation(() => navigation.OpenClientProfile(clientId));

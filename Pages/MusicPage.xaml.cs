@@ -370,6 +370,11 @@ public sealed partial class MusicPage : Page
 
     private async void TopArtist_ProfileRequested(object? sender, TopArtistItemViewModel artist)
     {
+        if (artist.PublicId != Guid.Empty)
+        {
+            ViewModel.NavigationService.OpenPersonProfile(artist.PublicId);
+            return;
+        }
         var panel = new StackPanel { Spacing = 12, MaxWidth = 360 };
         panel.Children.Add(new PersonPicture
         {

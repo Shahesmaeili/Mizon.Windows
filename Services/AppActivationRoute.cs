@@ -15,7 +15,8 @@ internal sealed partial record AppActivationRequest(
     string? SearchQuery = null,
     Guid? StoryPublicId = null,
     Guid? MusicCommentPublicId = null,
-    string? SettingsSection = null)
+    string? SettingsSection = null,
+    Guid? PersonPublicId = null)
 {
     private const int MaximumUriLength = 2048;
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
@@ -29,7 +30,7 @@ internal sealed partial record AppActivationRequest(
         {
             var targets = (Destination is null ? 0 : 1) + (MusicPublicId is null ? 0 : 1)
                 + (PlaylistPublicId is null ? 0 : 1) + (ClientPublicId is null ? 0 : 1)
-                + (SearchQuery is null ? 0 : 1) + (StoryPublicId is null ? 0 : 1);
+                + (SearchQuery is null ? 0 : 1) + (StoryPublicId is null ? 0 : 1) + (PersonPublicId is null ? 0 : 1);
             if (targets != 1 || (MusicCommentPublicId is not null && MusicPublicId is null)
                 || (SettingsSection is not null && Destination != "settings")) return null;
             if (MusicPublicId is { } musicId)
@@ -48,6 +49,7 @@ internal sealed partial record AppActivationRequest(
             if (MusicAction != MusicActivationAction.Details) return null;
             if (PlaylistPublicId is { } playlistId) return playlistId == Guid.Empty ? null : "playlist";
             if (ClientPublicId is { } clientId) return clientId == Guid.Empty ? null : "client";
+            if (PersonPublicId is { } personId) return personId == Guid.Empty ? null : "person";
             if (StoryPublicId is { } storyId) return storyId == Guid.Empty ? null : "story";
             if (SearchQuery is { } query) return IsValidSearch(query) ? "search" : null;
             if (Destination == "settings")
@@ -65,6 +67,7 @@ internal sealed partial record AppActivationRequest(
         "music-comment" => $"mizon://music/{MusicPublicId:D}/comments/{MusicCommentPublicId:D}",
         "playlist" => $"mizon://playlist/{PlaylistPublicId:D}",
         "client" => $"mizon://client/{ClientPublicId:D}",
+        "person" => $"mizon://person/{PersonPublicId:D}",
         "story" => $"mizon://story/{StoryPublicId:D}",
         "search" => "mizon://search?query=" + Uri.EscapeDataString(SearchQuery!.Trim()),
         "settings" => SettingsSection is null ? "mizon://settings" : "mizon://settings/" + SettingsSection,
@@ -130,6 +133,7 @@ internal sealed partial record AppActivationRequest(
             "music" => TryGetMusicAction(query, out var action) ? new(MusicPublicId: id, MusicAction: action) : new(),
             "playlist" when query.Length == 0 => new(PlaylistPublicId: id),
             "client" when query.Length == 0 => new(ClientPublicId: id),
+            "person" when query.Length == 0 => new(PersonPublicId: id),
             "story" when query.Length == 0 => new(StoryPublicId: id),
             _ => new()
         };

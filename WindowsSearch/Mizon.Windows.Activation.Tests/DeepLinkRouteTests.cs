@@ -7,7 +7,7 @@ internal static class DeepLinkRouteTests
         var publicId = Guid.Parse("0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72");
         var commentId = Guid.Parse("0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a73");
         var expectedKeys = new[] { "home", "login", "register", "music", "movies", "apps", "vpn", "playlists",
-            "playlist", "music-details", "music-play", "music-download", "music-comment", "client", "story", "activities", "settings", "search" };
+            "playlist", "music-details", "music-play", "music-download", "music-comment", "client", "person", "story", "activities", "settings", "search" };
         check(AppDeepLinkCatalog.Entries.Select(entry => entry.Key).ToHashSet(StringComparer.Ordinal).SetEquals(expectedKeys),
             "catalog describes all supported destinations without unknown routes");
         check(AppDeepLinkCatalog.Entries.Count == expectedKeys.Length, "catalog does not duplicate destinations");
@@ -21,7 +21,7 @@ internal static class DeepLinkRouteTests
 
         foreach (var entry in AppDeepLinkCatalog.Entries)
         {
-            var needsId = entry.Key is "playlist" or "music-details" or "music-play" or "music-download" or "music-comment" or "client" or "story";
+            var needsId = entry.Key is "playlist" or "music-details" or "music-play" or "music-download" or "music-comment" or "client" or "person" or "story";
             var query = entry.Key == "search" ? "معین & Mizon + 🎵" : null;
             var comment = entry.Key == "music-comment" ? (Guid?)commentId : null;
             var section = entry.Key == "settings" ? "appearance" : null;

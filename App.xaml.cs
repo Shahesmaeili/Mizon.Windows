@@ -259,7 +259,10 @@ public partial class App : Application
             vpn: new McpVpnService(
                 () => navigationService.CurrentMainPage is Pages.HomePage { ViewModel.IsSigningOut: false }
                     ? navigationService.CurrentInternalPage as IMcpVpnPage : null,
-                () => !string.IsNullOrWhiteSpace(localStorageService.GetJwtToken())));
+                () => !string.IsNullOrWhiteSpace(localStorageService.GetJwtToken())),
+            personProfile: new McpPersonProfileService(
+                () => navigationService.CurrentMainPage is Pages.HomePage { ViewModel.IsSigningOut: false }
+                    ? navigationService.CurrentInternalPage as IMcpPersonProfilePage : null));
         MainMizonWindow.Closed += MainWindow_Closed;
         if (_pendingResultActivation is { } pendingResult)
         {
@@ -342,6 +345,7 @@ public partial class App : Application
         services.AddTransient<LoginPageViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddTransient<WelcomePageViewModel>();
+        services.AddTransient<PersonProfileViewModel>();
         services.AddSingleton<HomePageViewModel>();
         services.AddSingleton<MusicTopUserControlViewModel>();
         services.AddSingleton<MusicPageViewModel>();

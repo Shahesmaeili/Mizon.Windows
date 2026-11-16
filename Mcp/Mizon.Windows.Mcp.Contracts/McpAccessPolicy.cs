@@ -24,11 +24,14 @@ public sealed class McpAccessPolicy
 
     public bool AllowVpnRead { get; private set; }
     public bool AllowVpnControl { get; private set; }
+    public bool AllowPersonProfileRead { get; private set; }
+    public bool AllowPersonProfileControl { get; private set; }
 
     public void Approve(bool read, bool control, bool submit, bool appearanceRead = false, bool appearanceControl = false,
         bool navigationRead = false, bool navigationControl = false, bool taskbarRead = false, bool taskbarControl = false,
         bool musicHomeRead = false, bool musicHomeControl = false, bool musicHomeSubmit = false, bool presenceRead = false,
-        bool windowRead = false, bool windowControl = false, bool vpnRead = false, bool vpnControl = false)
+        bool windowRead = false, bool windowControl = false, bool vpnRead = false, bool vpnControl = false,
+        bool personProfileRead = false, bool personProfileControl = false)
     {
         if (Status == "disconnected") return;
         AllowRead = read;
@@ -48,6 +51,8 @@ public sealed class McpAccessPolicy
         AllowWindowControl = windowControl;
         AllowVpnRead = vpnRead;
         AllowVpnControl = vpnControl;
+        AllowPersonProfileRead = personProfileRead;
+        AllowPersonProfileControl = personProfileControl;
         Status = "approved";
     }
 
@@ -70,6 +75,8 @@ public sealed class McpAccessPolicy
         "request_taskbar_pin" => Status == "approved" && AllowTaskbarControl,
         "get_music_home" => Status == "approved" && AllowMusicHomeRead,
         "get_presence_state" => Status == "approved" && AllowPresenceRead,
+        "get_person_profile" => Status == "approved" && AllowPersonProfileRead,
+        "set_person_following" or "load_person_tracks" or "open_person_track" => Status == "approved" && AllowPersonProfileControl,
         "get_vpn_state" => Status == "approved" && AllowVpnRead,
         "set_vpn_particles" or "open_vpn_settings" => Status == "approved" && AllowVpnControl,
         "get_window_state" => Status == "approved" && AllowWindowRead,
@@ -91,5 +98,6 @@ public sealed class McpAccessPolicy
         AllowPresenceRead = false;
         AllowWindowRead = AllowWindowControl = false;
         AllowVpnRead = AllowVpnControl = false;
+        AllowPersonProfileRead = AllowPersonProfileControl = false;
     }
 }

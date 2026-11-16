@@ -22,6 +22,7 @@
 | دانلود آهنگ | `mizon://music/{musicPublicId}?action=download` | دانلود با سرویس و کش فعلی برنامه |
 | نظر مشخص آهنگ | `mizon://music/{musicPublicId}/comments/{commentPublicId}` | باز کردن آهنگ و نمایش نظر موردنظر؛ بدون پخش خودکار |
 | پروفایل کلاینت | `mizon://client/{clientPublicId}` | صفحهٔ پروفایل |
+| پروفایل هنرمند | `mizon://person/{personPublicId}` | پروفایل واقعی هنرمند با فهرست آهنگ‌ها |
 | استوری | `mizon://story/{storyPublicId}` | نمایش همان استوری در نمایشگر فعلی عکس/ویدیو |
 | فعالیت دنبال‌شده‌ها | `mizon://activities` | صفحهٔ همهٔ فعالیت‌ها، محدود به موسیقی نیست |
 | تنظیمات | `mizon://settings` | تنظیمات، بخش اکانت |

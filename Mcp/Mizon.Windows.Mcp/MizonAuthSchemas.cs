@@ -22,7 +22,7 @@ internal static class MizonAuthSchemas
             Describe(properties, "fullScreen", "Required desired presentation of the main application window. true enters fullscreen; false restores windowed presentation. This does not toggle or alter a video player's fullscreen state.");
             Describe(properties, "backdrop", "Saved main-window material: acrylic uses the default Acrylic style; acrylicBase and acrylicThin select its variants; mica and micaAlt select Mica styles. Unsupported or accessibility-disabled materials use a solid fallback. Omit to keep the preference.");
             Describe(properties, "destination", "An allowlisted page or popup, never a raw URL. Opening a music detail does not automatically play it. Content destinations require a signed-in shell; login and register are account destinations. Welcome is an internal session-validation page and has no deep link.");
-            Describe(properties, "publicId", "Nonempty public UUID in dashed D format. Required only for playlist, music-details, music-comment, client and story. For music-comment this identifies the music.");
+            Describe(properties, "publicId", "Nonempty public UUID in dashed D format. Required only for playlist, music-details, music-comment, client, person and story. For music-comment this identifies the music.");
             Describe(properties, "commentPublicId", "Nonempty public UUID in dashed D format, required only for music-comment.");
             Describe(properties, "searchQuery", "Search text of 1 to 120 characters without control characters, required only for search. Opens the existing in-app search.");
             Describe(properties, "settingsSection", "Optional section when destination is settings. Selects the existing settings section without changing any setting or permission.");
@@ -71,7 +71,7 @@ internal static class MizonAuthSchemas
                 return definition;
             }
         }).AsObject();
-        schema["description"] = "Result of a scoped Mizon tool. Always inspect success and code. connection describes only this MCP connection. Authentication, appearance, navigation, taskbar, music-home, presence, VPN and main-window state each require their own read permission. Passwords, tokens and cookies are never included. A pending, denied or revoked connection cannot bypass consent using another tool.";
+        schema["description"] = "Result of a scoped Mizon tool. Always inspect success and code. connection describes only this MCP connection. Authentication, appearance, navigation, taskbar, music-home, presence, VPN, artist profile and main-window state each require their own read permission. Passwords, tokens and cookies are never included. A pending, denied or revoked connection cannot bypass consent using another tool.";
         schema["required"] = new JsonArray("success", "code", "message");
         return ToElement(schema);
     }

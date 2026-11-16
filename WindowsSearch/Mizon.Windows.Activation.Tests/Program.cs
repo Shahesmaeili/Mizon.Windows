@@ -22,6 +22,8 @@ foreach (var root in new[] { "mizon://music/", "mizon://localhost/music/", "mizo
 Check(Parse($"mizon://music/{id}?action=details").MusicAction == MusicActivationAction.Details, "explicit details action");
 Check(Parse($"MIZON://music/{id}?ACTION=PLAY").MusicAction == MusicActivationAction.Play, "allowlisted action is case insensitive");
 Check(Parse($"mizon://client/{id}").ClientPublicId == id, "client public id route");
+Check(Parse($"mizon://person/{id}").PersonPublicId == id && Parse($"mizon://person/{id}").RequiresAuthentication,
+    "artist public id route opens a signed-in profile");
 Check(Parse($"mizon://playlist/{id}").PlaylistPublicId == id, "existing playlist public id route");
 foreach (var destination in new[] { "music", "movies", "apps", "vpn", "login", "register" })
     Check(Parse("mizon://" + destination).Destination == destination, "existing section " + destination);
@@ -45,7 +47,7 @@ foreach (var invalid in new[]
     $"mizon://music/{id}?action=delete", $"mizon://music/{id}?action=play&action=download",
     $"mizon://music/{id}?url=https://example.com", $"mizon://music/{id}?action=play&path=C:/file",
     $"mizon://music/{id}#play", $"mizon://person@music/{id}", $"mizon://music:42/{id}",
-    "mizon://music/not-a-guid", $"mizon://music/{Guid.Empty}", $"mizon://client/{id}?action=play",
+    "mizon://music/not-a-guid", $"mizon://music/{Guid.Empty}", $"mizon://client/{id}?action=play", $"mizon://person/{id}?action=follow",
     $"mizon://playlist/{id}?action=download", "mizon://music?action=play"
 }) Check(Parse(invalid) == new AppActivationRequest(), "reject malformed/unsupported route " + invalid);
 Check(AppActivationRequest.FromUri(new Uri("relative", UriKind.Relative)) == new AppActivationRequest(), "reject relative URI");

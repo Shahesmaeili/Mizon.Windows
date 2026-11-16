@@ -41,6 +41,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
     private IMcpPresenceService? _presence;
     private IMcpWindowPresentationService? _windowPresentation;
     private IMcpVpnService? _vpn;
+    private McpPersonProfileService? _personProfile;
     private volatile bool _enabled = true;
     private volatile bool _disposed;
     private string? _pipeName;
@@ -83,7 +84,8 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
     internal void Start(DispatcherQueue dispatcher, McpAuthenticationService authentication, IMcpAppearanceService? appearance = null,
         IMcpNavigationService? navigation = null, IMcpTaskbarPinService? taskbar = null,
         IMcpMusicHomeService? musicHome = null, IMcpPresenceService? presence = null,
-        IMcpWindowPresentationService? windowPresentation = null, IMcpVpnService? vpn = null)
+        IMcpWindowPresentationService? windowPresentation = null, IMcpVpnService? vpn = null,
+        McpPersonProfileService? personProfile = null)
     {
         if (_dispatcher is not null || _disposed) return;
         _dispatcher = dispatcher;
@@ -95,6 +97,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         _presence = presence;
         _windowPresentation = windowPresentation;
         _vpn = vpn;
+        _personProfile = personProfile;
         try
         {
             _enabled = ApplicationData.GetDefault().LocalSettings.Values.TryGetValue("Mcp.Enabled", out var saved)
@@ -136,7 +139,8 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
             AllowMusicHomeSubmit = item.AllowMusicHomeControl && item.AllowMusicHomeSubmit,
             AllowPresenceRead = item.AllowPresenceRead,
             AllowWindowRead = item.AllowWindowRead, AllowWindowControl = item.AllowWindowControl,
-            AllowVpnRead = item.AllowVpnRead, AllowVpnControl = item.AllowVpnControl
+            AllowVpnRead = item.AllowVpnRead, AllowVpnControl = item.AllowVpnControl,
+            AllowPersonProfileRead = item.AllowPersonProfileRead, AllowPersonProfileControl = item.AllowPersonProfileControl
         } : null;
         item.BeginSaving();
         var entered = false;
@@ -424,7 +428,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
             if (request.Operation == "connection_status") return Status(connection);
             if (!_enabled || !connection.CanExecute(request.Operation)) return Denied(connection);
             using var authorized = CancellationTokenSource.CreateLinkedTokenSource(token, connection.AuthorizationToken);
-            var mutation = request.Operation is not ("get_state" or "get_appearance" or "get_navigation" or "get_taskbar_pin_state" or "get_music_home" or "get_presence_state" or "get_window_state" or "get_vpn_state");
+            var mutation = request.Operation is not ("get_state" or "get_appearance" or "get_navigation" or "get_taskbar_pin_state" or "get_music_home" or "get_presence_state" or "get_window_state" or "get_vpn_state" or "get_person_profile");
             var enteredGate = false;
             var started = false;
             try
@@ -453,6 +457,9 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                     "get_presence_state" => _presence is not null
                         ? await _presence.ExecuteAsync(request, authorized.Token)
                         : new McpResponse { Code = "unavailable", Message = "The presence service is unavailable." },
+                    "get_person_profile" or "set_person_following" or "load_person_tracks" or "open_person_track" => _personProfile is not null
+                        ? await _personProfile.ExecuteAsync(request, authorized.Token)
+                        : new McpResponse { Code = "page_unavailable", Message = "The artist profile service is unavailable." },
                     "get_vpn_state" or "set_vpn_particles" or "open_vpn_settings" => _vpn is not null
                         ? await _vpn.ExecuteAsync(request, authorized.Token)
                         : new McpResponse { Code = "page_unavailable", Message = "The VPN page service is unavailable." },
@@ -479,6 +486,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                     Presence = connection.CanExecute("get_presence_state") ? result.Presence : null,
                     Window = connection.CanExecute("get_window_state") ? result.Window : null,
                     Vpn = connection.CanExecute("get_vpn_state") ? result.Vpn : null,
+                    PersonProfile = connection.CanExecute("get_person_profile") ? result.PersonProfile : null,
                     Connection = connection.Snapshot()
                 };
             }
@@ -608,6 +616,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         (_presence as IDisposable)?.Dispose();
         (_windowPresentation as IDisposable)?.Dispose();
         (_vpn as IDisposable)?.Dispose();
+        _personProfile?.Dispose();
         // No synchronous UI-thread wait: active operations need that dispatcher
         // for their cancellation/finally blocks before shared resources can close.
         _shutdownTask = CompleteDisposalAsync();

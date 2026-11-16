@@ -118,4 +118,13 @@
   <data name="ReadVpn" xml:space="preserve"><value>خواندن صفحهٔ VPN</value></data>
   <data name="ChangeVpnParticles" xml:space="preserve"><value>تغییر انیمیشن صفحهٔ VPN</value></data>
   <data name="OpenVpnSettings" xml:space="preserve"><value>باز کردن تنظیمات VPN ویندوز</value></data>
+  <data name="PersonProfileGroup" xml:space="preserve"><value>پروفایل هنرمند</value></data>
+  <data name="PersonProfileGroupHint" xml:space="preserve"><value>این دسترسی فقط برای پروفایل هنرمندی است که در میزون باز است.</value></data>
+  <data name="PermissionPersonProfileRead" xml:space="preserve"><value>خواندن پروفایل هنرمند</value></data>
+  <data name="PermissionPersonProfileReadHint" xml:space="preserve"><value>پروفایل، آمار و آهنگ‌های بارگذاری‌شده را بخواند.</value></data>
+  <data name="PermissionPersonProfileControl" xml:space="preserve"><value>کنترل پروفایل هنرمند</value></data>
+  <data name="PermissionPersonProfileControlHint" xml:space="preserve"><value>با حساب تو هنرمند را دنبال یا لغو دنبال کند و آهنگ‌ها را باز یا بارگذاری کند.</value></data>
+  <data name="ReadPersonProfile" xml:space="preserve"><value>خواندن پروفایل هنرمند</value></data>
+  <data name="ChangePersonFollow" xml:space="preserve"><value>به‌روزرسانی وضعیت دنبال‌کردن هنرمند</value></data>
+  <data name="BrowsePersonTracks" xml:space="preserve"><value>مرور آهنگ‌های هنرمند</value></data>
 </root>

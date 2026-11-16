@@ -199,6 +199,12 @@ public class NavigationService
         InternalNavigate(typeof(MusicPlaylistsPage));
     }
 
+    public void OpenPersonProfile(Guid publicId)
+    {
+        if (publicId == Guid.Empty || CurrentInternalPage is PersonProfilePage page && page.PersonPublicId == publicId) return;
+        InternalNavigate(typeof(PersonProfilePage), new() { [PageConstants.PERSON_ID] = publicId });
+    }
+
     public void OpenClientProfile(Guid publicId)
     {
         if (publicId == Guid.Empty) return;

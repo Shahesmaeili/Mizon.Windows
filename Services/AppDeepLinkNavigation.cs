@@ -52,6 +52,7 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
             MusicsPage music when music.MusicPublicId != Guid.Empty => new(MusicPublicId: music.MusicPublicId),
             MusicPlaylistsPage => new(Destination: "playlists"),
             MusicPlaylistPage playlist when playlist.PlaylistPublicId != Guid.Empty => new(PlaylistPublicId: playlist.PlaylistPublicId),
+            PersonProfilePage person when person.PersonPublicId != Guid.Empty => new(PersonPublicId: person.PersonPublicId),
             ClientProfilePage client when client.ClientPublicId != Guid.Empty => new(ClientPublicId: client.ClientPublicId),
             FollowingActivitiesPage => new(Destination: "activities"),
             SettingsPage settings => new(Destination: "settings", SettingsSection: settings.SelectedSectionSlug),
@@ -109,6 +110,20 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
             if (!loaded) return new(false, "profile_unavailable", "The profile could not be loaded. Check the account and connection.");
             return new(true, "completed", "The profile was opened and loaded.", ResultData(request, "completed"));
         }
+        if (request.PersonPublicId is Guid personId)
+        {
+            if (_navigation.CurrentInternalPage is not PersonProfilePage artist || artist.PersonPublicId != personId
+                || !await McpAuthenticationService.WaitForLoadedAsync(artist, cancellationToken))
+                return new(false, "page_changed", "The artist page changed before it could be loaded.");
+            var loaded = await artist.WaitForProfileAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!ReferenceEquals(_navigation.CurrentInternalPage, artist) || _disposed
+                || !ReferenceEquals(_navigation.CurrentMainPage, home) || !_hasSession)
+                return new(false, "page_changed", "The artist page changed before loading completed.");
+            return loaded
+                ? new(true, "completed", "The artist profile was opened and loaded.", ResultData(request, "completed"))
+                : new(false, "profile_unavailable", "The artist profile could not be loaded.");
+        }
         var completed = request.MusicAction is MusicActivationAction.Play or MusicActivationAction.Download
             || request.StoryPublicId is not null || request.MusicCommentPublicId is not null;
         return completed
@@ -119,7 +134,7 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
     private static AppDeepLinkResultData ResultData(AppActivationRequest request, string stage) => new()
     {
         Destination = request.RouteKey!, Uri = request.ToUri()!, CompletionStage = stage,
-        PublicId = request.ClientPublicId ?? request.MusicPublicId ?? request.PlaylistPublicId ?? request.StoryPublicId,
+        PublicId = request.PersonPublicId ?? request.ClientPublicId ?? request.MusicPublicId ?? request.PlaylistPublicId ?? request.StoryPublicId,
         CommentPublicId = request.MusicCommentPublicId, SettingsSection = request.SettingsSection
     };
 

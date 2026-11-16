@@ -7,4 +7,5 @@ internal sealed class PageConstants
     public const string MUSIC_PLAYLIST_ID = "MusicPlaylistId";
     public const string CLIENT_ID = "ClientPublicId";
     public const string SETTINGS_SECTION = "SettingsSection";
+    public const string PERSON_ID = "PersonPublicId";
 }

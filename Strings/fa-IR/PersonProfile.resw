@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="PageName" xml:space="preserve"><value>پروفایل هنرمند</value></data>
+  <data name="Loading" xml:space="preserve"><value>در حال بارگذاری پروفایل هنرمند</value></data>
+  <data name="Ready" xml:space="preserve"><value>پروفایل هنرمند بارگذاری شد</value></data>
+  <data name="Photo" xml:space="preserve"><value>عکس پروفایل هنرمند</value></data>
+  <data name="Followers" xml:space="preserve"><value>دنبال‌کننده</value></data>
+  <data name="Following" xml:space="preserve"><value>دنبال‌شونده</value></data>
+  <data name="FollowersCount" xml:space="preserve"><value>{0} دنبال‌کننده</value></data>
+  <data name="FollowingCount" xml:space="preserve"><value>{0} دنبال‌شونده</value></data>
+  <data name="FollowingUnavailable" xml:space="preserve"><value>تعداد دنبال‌شونده‌ها در دسترس نیست</value></data>
+  <data name="TracksCount" xml:space="preserve"><value>{0} آهنگ</value></data>
+  <data name="Tracks" xml:space="preserve"><value>آهنگ‌ها</value></data>
+  <data name="TrackLikes" xml:space="preserve"><value>{0:N0} پسند</value></data>
+  <data name="Follow" xml:space="preserve"><value>دنبال کردن</value></data>
+  <data name="Unfollow" xml:space="preserve"><value>لغو دنبال کردن</value></data>
+  <data name="FollowName" xml:space="preserve"><value>دنبال کردن {0}</value></data>
+  <data name="UnfollowName" xml:space="preserve"><value>لغو دنبال کردن {0}</value></data>
+  <data name="FollowedStatus" xml:space="preserve"><value>این هنرمند را دنبال می‌کنی.</value></data>
+  <data name="UnfollowedStatus" xml:space="preserve"><value>دیگر این هنرمند را دنبال نمی‌کنی.</value></data>
+  <data name="FollowFailed" xml:space="preserve"><value>وضعیت دنبال‌کردن به‌روز نشد. دوباره تلاش کن.</value></data>
+  <data name="NotFound" xml:space="preserve"><value>پروفایل این هنرمند پیدا نشد.</value></data>
+  <data name="LoadFailed" xml:space="preserve"><value>پروفایل هنرمند بارگذاری نشد. دوباره تلاش کن.</value></data>
+  <data name="LoadingTracks" xml:space="preserve"><value>در حال بارگذاری آهنگ‌ها</value></data>
+  <data name="NoTracks" xml:space="preserve"><value>هنوز آهنگی برای این هنرمند در دسترس نیست.</value></data>
+  <data name="TracksFailed" xml:space="preserve"><value>آهنگ‌ها بارگذاری نشدند. دوباره تلاش کن.</value></data>
+  <data name="More" xml:space="preserve"><value>آهنگ‌های بیشتر</value></data>
+  <data name="Retry" xml:space="preserve"><value>تلاش دوباره</value></data>
+  <data name="ModelName" xml:space="preserve"><value>مدل سه‌بعدی تعاملی هنرمند</value></data>
+  <data name="ModelHelp" xml:space="preserve"><value>برای چرخاندن مدل آن را بکش. با دستهٔ ایکس‌باکس، بعد از انتخاب مدل از اهرم سمت راست استفاده کن. دکمهٔ بازنشانی نما مدل را به حالت اول برمی‌گرداند.</value></data>
+  <data name="LoadingModel" xml:space="preserve"><value>در حال بارگذاری مدل سه‌بعدی…</value></data>
+  <data name="ModelFailed" xml:space="preserve"><value>مدل سه‌بعدی در دسترس نیست.</value></data>
+  <data name="NoModel" xml:space="preserve"><value>هنوز مدل سه‌بعدی برای این هنرمند ثبت نشده است.</value></data>
+  <data name="ResetModel" xml:space="preserve"><value>بازنشانی نما</value></data>
+</root>

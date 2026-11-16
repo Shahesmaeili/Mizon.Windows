@@ -52,14 +52,14 @@ internal static partial class ConnectionLifecycleTests
         var tool = catalog.Single(item => item.Name == "mizon_open_destination").ProtocolTool;
         var destinations = tool.InputSchema.GetProperty("properties").GetProperty("destination").GetProperty("enum")
             .EnumerateArray().Select(item => item.GetString()!).ToArray();
-        Check.That(destinations.Length == 16 && !destinations.Contains("welcome")
+        Check.That(destinations.Length == 17 && destinations.Contains("person") && !destinations.Contains("welcome")
             && !destinations.Contains("music-play") && !destinations.Contains("music-download"),
             "Navigation discovery exposes undeclared or playback destinations.");
         var id = Guid.NewGuid(); var commentId = Guid.NewGuid();
         foreach (var destination in destinations)
         {
             var body = "{\"destination\":\"" + destination + "\"";
-            if (destination is "playlist" or "music-details" or "music-comment" or "client" or "story") body += ",\"publicId\":\"" + id + "\"";
+            if (destination is "playlist" or "music-details" or "music-comment" or "client" or "person" or "story") body += ",\"publicId\":\"" + id + "\"";
             if (destination == "music-comment") body += ",\"commentPublicId\":\"" + commentId + "\"";
             if (destination == "search") body += ",\"searchQuery\":\"آهنگ فارسی\"";
             if (destination == "settings") body += ",\"settingsSection\":\"ai-connections\"";

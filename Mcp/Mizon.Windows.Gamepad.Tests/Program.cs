@@ -1,4 +1,6 @@
 using Microsoft.UI.Xaml;
+using System.Numerics;
+using Mizon.Windows.Common;
 using Mizon.Windows.Services.Gamepad;
 using Windows.Gaming.Input;
 using Windows.System;
@@ -270,4 +272,25 @@ for (var i = 0; i < 100000; i++) allocationReducer.TryRead(default, i, out _);
 allocated = GC.GetAllocatedBytesForCurrentThread() - allocated;
 Check(allocated == 0, $"Idle reducer must allocate zero managed bytes; got {allocated}");
 FeedbackTests.Run(Check);
+foreach (var (stick, key) in new[]
+{
+    (VirtualKey.GamepadRightThumbstickLeft, VirtualKey.Left),
+    (VirtualKey.GamepadRightThumbstickRight, VirtualKey.Right),
+    (VirtualKey.GamepadRightThumbstickUp, VirtualKey.Up),
+    (VirtualKey.GamepadRightThumbstickDown, VirtualKey.Down)
+})
+    Check(ArtistModelInput.Rotation(stick) == ArtistModelInput.Rotation(key)
+        && ArtistModelInput.Rotation(stick).Mask != 0, $"Artist rotation treats {stick} like {key}.");
+foreach (var key in new[] { VirtualKey.GamepadDPadLeft, VirtualKey.GamepadDPadRight, VirtualKey.GamepadDPadUp, VirtualKey.GamepadDPadDown,
+                           VirtualKey.GamepadA, VirtualKey.GamepadB })
+    Check(ArtistModelInput.Rotation(key).Mask == 0, $"Artist rotation does not consume {key}.");
+var rotation = ArtistModelInput.Rotation(VirtualKey.GamepadRightThumbstickRight).Step;
+var model = new ArtistModelMotion();
+model.SetTarget(Quaternion.CreateFromYawPitchRoll(rotation.X, rotation.Y, 0), Vector3.Zero);
+model.Advance(.05f, dragging: false);
+Check(model.Orientation != Quaternion.Identity && !model.IsSettled, "Controller rotation smoothly advances the real model motion.");
+model.ReturnTo(Quaternion.Identity);
+for (var i = 0; i < 40; i++) model.Advance(.016f, dragging: false);
+Check(model.IsSettled && model.Orientation == Quaternion.Identity, "Releasing rotation returns precisely to the resting pose.");
+
 Console.WriteLine($"PASS: {assertions} gamepad input/session assertions. No Windows UI, real controller or account operation used.");

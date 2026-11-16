@@ -284,6 +284,12 @@ namespace Mizon.Windows.Pages
             await ViewModel.SelectCommentsDetailsAsync();
         }
 
+        private void ContributorProfile_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement { DataContext: MusicContributorItemViewModel person })
+                ViewModel.NavigationService.OpenPersonProfile(person.PersonPublicId);
+        }
+
         private void MusicDetailsMusicCard_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button { Tag: MusicDetailsMusicItemViewModel music })

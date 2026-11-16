@@ -6,10 +6,15 @@ MCP integration verification. This is a standing development requirement, not a
 claim that existing features are already covered.
 
 Current implemented coverage is **Welcome, Login, Registration, Appearance, declared page navigation,
-Mizon taskbar pinning, the active music home page, current-user online presence, main-window presentation and the active VPN page**.
+Mizon taskbar pinning, the active music home page, current-user online presence, main-window presentation, the active VPN page and the active artist profile**.
 VPN has independent read/control grants; [VPN.md](VPN.md) documents its bounded
 page state, decorative-particle preference and fixed Windows settings launch.
 There is no tunnel engine or configuration mutation in these tools.
+Artist profile has independent read/control grants. Read returns a bounded
+current view and its latest 48 loaded tracks. Control can change the signed-in
+account's follow state, load the next track page and open track details already
+present on that page. The [task handoff](../docs/ai/tasks/2026-11-16-person-profile.md)
+describes the shared UI and API behavior.
 Main-window read/control permissions are independent from appearance and music;
 see [window presentation](WINDOW_PRESENTATION.md) for its bounded state/actions.
 Appearance, navigation and taskbar pinning have independent read/control permissions; authentication grants never authorize them.

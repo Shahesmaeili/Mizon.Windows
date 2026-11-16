@@ -90,8 +90,11 @@ namespace Windows.System
 {
     public enum VirtualKey
     {
-        Enter = 13, A = 65, LeftWindows = 91,
-        GamepadA = 195, GamepadB = 196, GamepadRightThumbstickLeft = 218
+        Enter = 13, Left = 37, Up = 38, Right = 39, Down = 40, A = 65, LeftWindows = 91,
+        GamepadA = 195, GamepadB = 196, GamepadDPadUp = 203, GamepadDPadDown = 204,
+        GamepadDPadLeft = 205, GamepadDPadRight = 206,
+        GamepadRightThumbstickUp = 215, GamepadRightThumbstickDown = 216,
+        GamepadRightThumbstickRight = 217, GamepadRightThumbstickLeft = 218
     }
 }
 

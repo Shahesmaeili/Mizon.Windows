@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="PageName" xml:space="preserve"><value>Artist profile</value></data>
+  <data name="Loading" xml:space="preserve"><value>Loading the artist profile</value></data>
+  <data name="Ready" xml:space="preserve"><value>Artist profile loaded</value></data>
+  <data name="Photo" xml:space="preserve"><value>Artist profile photo</value></data>
+  <data name="Followers" xml:space="preserve"><value>Followers</value></data>
+  <data name="Following" xml:space="preserve"><value>Following</value></data>
+  <data name="FollowersCount" xml:space="preserve"><value>{0} followers</value></data>
+  <data name="FollowingCount" xml:space="preserve"><value>Following {0} accounts</value></data>
+  <data name="FollowingUnavailable" xml:space="preserve"><value>Following count unavailable</value></data>
+  <data name="TracksCount" xml:space="preserve"><value>{0} tracks</value></data>
+  <data name="Tracks" xml:space="preserve"><value>Tracks</value></data>
+  <data name="TrackLikes" xml:space="preserve"><value>{0:N0} likes</value></data>
+  <data name="Follow" xml:space="preserve"><value>Follow</value></data>
+  <data name="Unfollow" xml:space="preserve"><value>Unfollow</value></data>
+  <data name="FollowName" xml:space="preserve"><value>Follow {0}</value></data>
+  <data name="UnfollowName" xml:space="preserve"><value>Unfollow {0}</value></data>
+  <data name="FollowedStatus" xml:space="preserve"><value>You are following this artist.</value></data>
+  <data name="UnfollowedStatus" xml:space="preserve"><value>You unfollowed this artist.</value></data>
+  <data name="FollowFailed" xml:space="preserve"><value>Could not update your follow status. Try again.</value></data>
+  <data name="NotFound" xml:space="preserve"><value>This artist profile was not found.</value></data>
+  <data name="LoadFailed" xml:space="preserve"><value>Could not load this artist. Try again.</value></data>
+  <data name="LoadingTracks" xml:space="preserve"><value>Loading tracks</value></data>
+  <data name="NoTracks" xml:space="preserve"><value>There are no available tracks for this artist yet.</value></data>
+  <data name="TracksFailed" xml:space="preserve"><value>Could not load tracks. Try again.</value></data>
+  <data name="More" xml:space="preserve"><value>Load more tracks</value></data>
+  <data name="Retry" xml:space="preserve"><value>Try again</value></data>
+  <data name="ModelName" xml:space="preserve"><value>Interactive 3D artist model</value></data>
+  <data name="ModelHelp" xml:space="preserve"><value>Drag the model to rotate it. With an Xbox controller, use the right stick while the model is focused. Use Home or Reset view to return to the starting position.</value></data>
+  <data name="LoadingModel" xml:space="preserve"><value>Loading the 3D model…</value></data>
+  <data name="ModelFailed" xml:space="preserve"><value>The 3D model is unavailable.</value></data>
+  <data name="NoModel" xml:space="preserve"><value>This artist has no 3D model yet.</value></data>
+  <data name="ResetModel" xml:space="preserve"><value>Reset view</value></data>
+</root>

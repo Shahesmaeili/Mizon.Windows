@@ -14,6 +14,7 @@ using Mizon.Windows.Common;
 using Mizon.Windows.Services;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
@@ -36,7 +37,7 @@ public sealed partial class ArtistModelView : UserControl
     private readonly Grid _modelHost = new() { IsHitTestVisible = false };
     private readonly TextBlock _status = new()
     {
-        Text = "بارگذاری مدل سه‌بعدی…", FontSize = 11, Opacity = .7,
+        FontSize = 11, Opacity = .7,
         TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center,
         HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
         Margin = new Thickness(16), IsHitTestVisible = false
@@ -45,6 +46,7 @@ public sealed partial class ArtistModelView : UserControl
     private CancellationTokenSource? _loadCancellation;
     private ModelScene? _scene;
     private bool _loaded;
+    private string _statusKey = "LoadingModel";
     private bool _textureUpgradeQueued;
     private uint? _pointerId;
     private Vector2 _lastPointer;
@@ -69,9 +71,9 @@ public sealed partial class ArtistModelView : UserControl
         _surface.Background = new SolidColorBrush(Colors.Transparent);
         _surface.Children.Add(_modelHost);
         _surface.Children.Add(_status);
+        AutomationProperties.SetLiveSetting(_status, AutomationLiveSetting.Polite);
         Content = _surface;
-        AutomationProperties.SetName(this, "مدل سه‌بعدی هنرمند");
-        AutomationProperties.SetHelpText(this, "برای چرخش مدل را بگیرید و بکشید؛ با رها کردن به حالت اولیه برمی‌گردد. کلیدهای جهت هم همین رفتار را دارند.");
+        UpdateLanguage();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
         SizeChanged += OnSizeChanged;
@@ -165,6 +167,8 @@ public sealed partial class ArtistModelView : UserControl
         _loaded = true;
         _animationsEnabled = _uiSettings.AnimationsEnabled;
         _uiSettings.AnimationsEnabledChanged += OnAnimationsEnabledChanged;
+        LocalizationService.Current.PropertyChanged += OnLanguageChanged;
+        UpdateLanguage();
         LoadModel();
     }
 
@@ -173,6 +177,7 @@ public sealed partial class ArtistModelView : UserControl
         if (IsLoaded || !_loaded) return;
         _loaded = false;
         _uiSettings.AnimationsEnabledChanged -= OnAnimationsEnabledChanged;
+        LocalizationService.Current.PropertyChanged -= OnLanguageChanged;
         StopMotion();
         _isMouseOver = false;
         _pointerId = null;
@@ -202,13 +207,13 @@ public sealed partial class ArtistModelView : UserControl
         {
             ReleaseScene();
             _status.Visibility = Visibility.Visible;
-            _status.Text = "بارگذاری مدل سه‌بعدی…";
+            SetStatus("LoadingModel");
         }
         ModelScene? pending = null;
         var attached = false;
         try
         {
-            if (string.IsNullOrWhiteSpace(ModelPath)) { _status.Text = "مدل سه‌بعدی انتخاب نشده"; return; }
+            if (string.IsNullOrWhiteSpace(ModelPath)) { SetStatus("NoModel"); return; }
             var model = await GlbModelLoader.LoadAsync(ModelPath, token);
             token.ThrowIfCancellationRequested();
             var compositor = ElementCompositionPreview.GetElementVisual(_modelHost).Compositor;
@@ -249,7 +254,7 @@ public sealed partial class ArtistModelView : UserControl
             {
                 if (!preserveView)
                 {
-                    _status.Text = "نمایش مدل سه‌بعدی در دسترس نیست";
+                    SetStatus("ModelFailed");
                     _status.Visibility = Visibility.Visible;
                 }
                 AppLog.Error($"[ArtistModelView] Failed loading '{ModelPath}'; BaseDirectory='{AppContext.BaseDirectory}'; View={ActualWidth:0.##}x{ActualHeight:0.##}; Host={_modelHost.ActualWidth:0.##}x{_modelHost.ActualHeight:0.##}; Presentation={_scene?.Presentation.Size}; IsLoaded={IsLoaded}.", exception);
@@ -688,23 +693,17 @@ public sealed partial class ArtistModelView : UserControl
     private void OnKeyDown(object sender, KeyRoutedEventArgs args)
     {
         if (args.Key == VirtualKey.Home) { ResetView(); args.Handled = true; return; }
-        var key = RotationKeyMask(args.Key);
+        var (key, step) = ArtistModelInput.Rotation(args.Key);
         if (key == 0 || _pointerId is not null || _scene is null) return;
         if (_heldRotationKeys == 0) BeginRotation();
         _heldRotationKeys |= key;
-        RotateBy(args.Key switch
-        {
-            VirtualKey.Left => new Vector2(-.15f, 0),
-            VirtualKey.Right => new Vector2(.15f, 0),
-            VirtualKey.Up => new Vector2(0, .1f),
-            _ => new Vector2(0, -.1f)
-        });
+        RotateBy(step);
         args.Handled = true;
     }
 
     private void OnKeyUp(object sender, KeyRoutedEventArgs args)
     {
-        var key = RotationKeyMask(args.Key);
+        var key = ArtistModelInput.Rotation(args.Key).Mask;
         if ((_heldRotationKeys & key) == 0) return;
         _heldRotationKeys &= ~key;
         if (_heldRotationKeys == 0) ReturnHome();
@@ -719,14 +718,25 @@ public sealed partial class ArtistModelView : UserControl
         ReturnHome();
     }
 
-    private static int RotationKeyMask(VirtualKey key) => key switch
+    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs args)
     {
-        VirtualKey.Left => 1,
-        VirtualKey.Right => 2,
-        VirtualKey.Up => 4,
-        VirtualKey.Down => 8,
-        _ => 0
-    };
+        if (args.PropertyName == nameof(LocalizationService.Revision)) UpdateLanguage();
+    }
+
+    private void UpdateLanguage()
+    {
+        var localization = LocalizationService.Current;
+        FontFamily = localization.TextFontFamily;
+        AutomationProperties.SetName(this, localization.GetString("PersonProfile/ModelName"));
+        AutomationProperties.SetHelpText(this, localization.GetString("PersonProfile/ModelHelp"));
+        SetStatus(_statusKey);
+    }
+
+    private void SetStatus(string key)
+    {
+        _statusKey = key;
+        _status.Text = LocalizationService.Current.GetString("PersonProfile/" + key);
+    }
 
     private sealed class ModelScene(SceneVisual visual, LayerVisual presentation, SceneNode root, double textureDecodeSize, bool hasReducedTextures,
         List<IDisposable> resources) : IDisposable

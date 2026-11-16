@@ -10,6 +10,12 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
     private const string EmptySchema = """{"type":"object","properties":{},"additionalProperties":false}""";
     private static readonly Tool[] Catalog =
     [
+        Define("mizon_get_person_profile", "Artist profile state", "Read the active artist profile, counts and up to the most recently displayed 48 tracks. Requires Artist profile read consent.", EmptySchema, readOnly: true),
+        Define("mizon_set_person_following", "Follow or unfollow an artist", "Set the desired follow state on the active artist profile for the signed-in account. Requires Artist profile control consent.",
+            """{"type":"object","properties":{"following":{"type":"boolean"}},"required":["following"],"additionalProperties":false}""", openWorld: true),
+        Define("mizon_load_person_tracks", "Load more artist tracks", "Load the next track page or retry a failed load on the active artist profile. Requires Artist profile control consent.", EmptySchema, idempotent: false),
+        Define("mizon_open_person_track", "Open an artist track", "Open details for a track already loaded on the active artist profile. Requires Artist profile control consent.",
+            """{"type":"object","properties":{"musicPublicId":{"type":"string","format":"uuid"}},"required":["musicPublicId"],"additionalProperties":false}""", openWorld: true),
         Define("mizon_get_vpn_state", "VPN page status", "Read the active signed-in VPN page: configuration, connection status, network availability, busy state and decorative particle preference. Requires independent VPN read consent. Does not navigate, start a tunnel, expose IP addresses or credentials, or query other applications. This implementation has no configured tunnel.", EmptySchema, readOnly: true),
         Define("mizon_set_vpn_particles", "Set VPN page animation", "Set decorative particles on the active VPN page. Requires independent VPN control consent. Windows reduced-motion preference still applies. Does not change network or VPN settings. Success with code=applied_not_saved means the live preference changed but persistence failed; do not claim it will survive restart. Readback requires VPN read consent.",
             """{"type":"object","properties":{"enabled":{"type":"boolean","description":"Desired decorative-particle preference on the active VPN page. Explicit true or false, not a toggle."}},"required":["enabled"],"additionalProperties":false}"""),
@@ -42,8 +48,8 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
         Define("mizon_set_appearance", "Change appearance", "Apply and save the chosen theme and/or main-window material through Mizon Settings. Omitted preferences stay unchanged. Requires separate appearance control permission; state is returned only with appearance read permission. System accessibility and material support may require a solid fallback. Does not navigate or change other settings.",
             """{"type":"object","properties":{"theme":{"type":"string","enum":["system","light","dark"]},"backdrop":{"type":"string","enum":["acrylic","acrylicBase","acrylicThin","mica","micaAlt"]}},"minProperties":1,"additionalProperties":false}"""),
         Define("mizon_get_navigation", "Current destination", "Read the current canonical destination, pending deep link and back-navigation availability. Requires separate navigation read permission; authentication and appearance grants do not authorize this tool. Does not read page contents.", EmptySchema, readOnly: true),
-        Define("mizon_open_destination", "Open Mizon destination", "Open one declared app destination through the same route handler as deep links. Requires navigation control permission. A signed-out content request returns requires_sign_in and is never queued for a later login. music-details, playlist, client and story require publicId; music-comment requires publicId (music) and commentPublicId; search requires searchQuery; settings optionally accepts settingsSection. This tool does not submit forms, start playback/downloads or edit settings. Navigation state and the typed invocation receipt (including opened/completed stage) are returned only with navigation read permission.",
-            """{"type":"object","properties":{"destination":{"type":"string","enum":["login","register","home","music","movies","apps","vpn","playlists","playlist","music-details","music-comment","client","story","activities","settings","search"]},"publicId":{"type":"string","format":"uuid"},"commentPublicId":{"type":"string","format":"uuid"},"searchQuery":{"type":"string","minLength":1,"maxLength":120},"settingsSection":{"type":"string","enum":["account","security","language","appearance","notifications","storage","updates","platforms","ai-connections"]}},"required":["destination"],"additionalProperties":false}""", openWorld: true)
+        Define("mizon_open_destination", "Open Mizon destination", "Open one declared app destination through the same route handler as deep links. Requires navigation control permission. A signed-out content request returns requires_sign_in and is never queued for a later login. music-details, playlist, client, person and story require publicId; music-comment requires publicId (music) and commentPublicId; search requires searchQuery; settings optionally accepts settingsSection. This tool does not submit forms, start playback/downloads or edit settings. Navigation state and the typed invocation receipt (including opened/completed stage) are returned only with navigation read permission.",
+            """{"type":"object","properties":{"destination":{"type":"string","enum":["login","register","home","music","movies","apps","vpn","playlists","playlist","music-details","music-comment","client","person","story","activities","settings","search"]},"publicId":{"type":"string","format":"uuid"},"commentPublicId":{"type":"string","format":"uuid"},"searchQuery":{"type":"string","minLength":1,"maxLength":120},"settingsSection":{"type":"string","enum":["account","security","language","appearance","notifications","storage","updates","platforms","ai-connections"]}},"required":["destination"],"additionalProperties":false}""", openWorld: true)
     ];
 
     public ValueTask<ListToolsResult> ListAsync(RequestContext<ListToolsRequestParams> context, CancellationToken cancellationToken)
@@ -80,6 +86,21 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
         var args = call.Arguments;
         switch (call.Name)
         {
+            case "mizon_get_person_profile":
+                CheckKeys(args);
+                return new() { Operation = "get_person_profile" };
+            case "mizon_set_person_following":
+                CheckKeys(args, "following");
+                if (args is null || !args.TryGetValue("following", out var following)
+                    || following.ValueKind is not (JsonValueKind.True or JsonValueKind.False)) throw new ArgumentException();
+                return new() { Operation = "set_person_following", PersonProfile = new() { Following = following.GetBoolean() } };
+            case "mizon_load_person_tracks":
+                CheckKeys(args);
+                return new() { Operation = "load_person_tracks" };
+            case "mizon_open_person_track":
+                CheckKeys(args, "musicPublicId");
+                if (args is null) throw new ArgumentException();
+                return new() { Operation = "open_person_track", PersonProfile = new() { MusicPublicId = Identifier(args, "musicPublicId") } };
             case "mizon_get_vpn_state":
                 CheckKeys(args);
                 return new() { Operation = "get_vpn_state" };
@@ -219,9 +240,9 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
         CheckKeys(args, "destination", "publicId", "commentPublicId", "searchQuery", "settingsSection");
         var destination = RequiredString(args, "destination", 20);
         if (destination is not ("login" or "register" or "home" or "music" or "movies" or "apps" or "vpn"
-            or "playlists" or "playlist" or "music-details" or "music-comment" or "client" or "story" or "activities" or "settings" or "search"))
+            or "playlists" or "playlist" or "music-details" or "music-comment" or "client" or "person" or "story" or "activities" or "settings" or "search"))
             throw new ArgumentException();
-        var needsId = destination is "playlist" or "music-details" or "music-comment" or "client" or "story";
+        var needsId = destination is "playlist" or "music-details" or "music-comment" or "client" or "person" or "story";
         if (args!.ContainsKey("publicId") != needsId || args.ContainsKey("commentPublicId") != (destination == "music-comment")
             || args.ContainsKey("searchQuery") != (destination == "search")
             || args.ContainsKey("settingsSection") && destination != "settings") throw new ArgumentException();

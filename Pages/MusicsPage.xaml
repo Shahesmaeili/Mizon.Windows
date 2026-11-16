@@ -479,7 +479,8 @@
                                             </ItemsRepeater.Layout>
                                             <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Button common:CursorExtensions.Cursor="Hand" Padding="0" CornerRadius="12,4,4,12">
+                                                    <Button common:CursorExtensions.Cursor="Hand" Padding="0" CornerRadius="12,4,4,12"
+                                                            Click="ContributorProfile_Click" AutomationProperties.Name="{Binding FullName}">
                                                         <Grid>
                                                             <StackPanel Orientation="Horizontal">
                                                                 <Border CornerRadius="12" Width="24" Height="24" Background="{ThemeResource CardBackgroundFillColorSecondary}">
