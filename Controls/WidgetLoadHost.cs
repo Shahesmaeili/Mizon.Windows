@@ -1,11 +1,10 @@
-using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Markup;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Mizon.Windows.Common;
 using Mizon.Windows.Services;
 using System;
@@ -45,11 +44,11 @@ public sealed partial class WidgetLoadHost : Grid
     private bool _inViewport;
     private bool _hostVisible;
     private bool _entrancePending;
+    private bool _entranceQueued;
     private bool _announcementQueued;
     private bool? _pendingLoadingAnnouncement;
     private XamlRoot? _root;
-    private ScalarKeyFrameAnimation? _entrance;
-    private CompositionScopedBatch? _entranceBatch;
+    private Storyboard? _entrance;
 
     public WidgetLoadHost()
     {
@@ -206,19 +205,10 @@ public sealed partial class WidgetLoadHost : Grid
 
     private void ReleaseEntrance()
     {
-        if (_entranceBatch is not null)
-        {
-            _entranceBatch.Completed -= Entrance_Completed;
-            _entranceBatch.Dispose();
-            _entranceBatch = null;
-        }
-        if (_entrance is not null)
-        {
-            _body.StopAnimation(_entrance);
-            _entrance.Dispose();
-            _entrance = null;
-        }
-        if (_body.Opacity != 1) _body.Opacity = 1;
+        if (_entrance is not { } entrance) return;
+        _entrance = null;
+        entrance.Completed -= Entrance_Completed;
+        entrance.Stop();
     }
 
     private void ApplyState()
@@ -268,25 +258,36 @@ public sealed partial class WidgetLoadHost : Grid
             if (!animationsEnabled) _entrancePending = false;
             return;
         }
-        if (!_entrancePending || IsLoading) return;
-        _entrancePending = false;
-        ReleaseEntrance();
-        var compositor = ElementCompositionPreview.GetElementVisual(_body).Compositor;
-        _entranceBatch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        _entranceBatch.Completed += Entrance_Completed;
-        // Animate the XAML facade, not the hand-out Visual used by input hit testing.
-        var animation = _entrance = compositor.CreateScalarKeyFrameAnimation();
-        animation.Target = "Opacity";
-        animation.InsertKeyFrame(0, 0);
-        animation.InsertKeyFrame(1, 1);
-        animation.Duration = TimeSpan.FromMilliseconds(240);
-        _body.StartAnimation(animation);
-        _entranceBatch.End();
+        if (!_entrancePending || IsLoading || _entranceQueued) return;
+        // Data can complete while Frame navigation or responsive reparenting is
+        // rebuilding the visual tree. Start only after that notification unwinds.
+        _entranceQueued = DispatcherQueue.TryEnqueue(StartEntrance);
     }
 
-    private void Entrance_Completed(object sender, CompositionBatchCompletedEventArgs args)
+    private void StartEntrance()
     {
-        if (ReferenceEquals(sender, _entranceBatch)) ReleaseEntrance();
+        _entranceQueued = false;
+        if (!_entrancePending || IsLoading || !IsVisibleToUser || !IsLoaded
+            || !_body.IsLoaded || _body.Visibility != Visibility.Visible
+            || _root is null || !ReferenceEquals(_body.XamlRoot, _root)
+            || !AccessibilitySettings.AnimationsEnabled) return;
+
+        _entrancePending = false;
+        ReleaseEntrance();
+        // A XAML storyboard targets the attached presenter without acquiring an
+        // element composition facade from inside a binding/layout callback.
+        var fade = new DoubleAnimation { From = 0, To = 1, Duration = new Duration(TimeSpan.FromMilliseconds(240)) };
+        Storyboard.SetTarget(fade, _body);
+        Storyboard.SetTargetProperty(fade, nameof(Opacity));
+        _entrance = new Storyboard();
+        _entrance.Children.Add(fade);
+        _entrance.Completed += Entrance_Completed;
+        _entrance.Begin();
+    }
+
+    private void Entrance_Completed(object? sender, object args)
+    {
+        if (ReferenceEquals(sender, _entrance)) ReleaseEntrance();
     }
 
     private void Host_EffectiveViewportChanged(FrameworkElement sender, EffectiveViewportChangedEventArgs args)
