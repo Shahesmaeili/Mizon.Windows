@@ -206,9 +206,10 @@
                             <RowDefinition x:Name="InformationStatsRow" Height="54" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <Grid ColumnSpacing="9">
+                        <Grid ColumnSpacing="9" FlowDirection="LeftToRight">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="3" />
                             </Grid.ColumnDefinitions>
                             <StackPanel x:Name="ArtistIdentity" Spacing="3" FlowDirection="LeftToRight">
@@ -220,7 +221,16 @@
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
-                            <Border Grid.Column="1" CornerRadius="2" VerticalAlignment="Stretch" Margin="0,3,0,2" Background="{StaticResource SpotlightAccent}" Opacity="0.75" IsHitTestVisible="False" />
+                            <controls:FeatureButton x:Name="ArtistAvatarButton" Grid.Column="1" Width="44" Height="44"
+                                MinWidth="44" MinHeight="44" Padding="0" CornerRadius="22" BorderThickness="0"
+                                Background="Transparent" VerticalAlignment="Center"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                Click="Profile_Click" UseSystemFocusVisuals="True" common:CursorExtensions.Cursor="Hand"
+                                ToolTipService.ToolTip="{x:Bind Localization.GetString('MusicHome/ViewProfile', Localization.Revision), Mode=OneWay}">
+                                <PersonPicture x:Name="ArtistAvatar" Width="40" Height="40" IsHitTestVisible="False"
+                                    AutomationProperties.AccessibilityView="Raw" />
+                            </controls:FeatureButton>
+                            <Border Grid.Column="2" CornerRadius="2" VerticalAlignment="Stretch" Margin="0,3,0,2" Background="{StaticResource SpotlightAccent}" Opacity="0.75" IsHitTestVisible="False" />
                         </Grid>
                         <Grid x:Name="Stats" Grid.Row="1" Height="54" ColumnSpacing="5">
                             <Grid.ColumnDefinitions>

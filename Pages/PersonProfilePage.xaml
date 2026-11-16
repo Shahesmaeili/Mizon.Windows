@@ -11,29 +11,31 @@
       FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
       AutomationProperties.Name="{x:Bind Localization.GetString('PersonProfile/PageName', Localization.Revision), Mode=OneWay}">
     <Grid Background="Transparent" XYFocusKeyboardNavigation="Enabled" PreviewKeyDown="Profile_PreviewKeyDown">
-        <ListView x:Name="TracksList" MaxWidth="1160" Margin="16,0" Padding="0,0,0,16"
+        <ListView x:Name="TracksList" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="0,0,0,24"
                   SelectionMode="None" IsItemClickEnabled="True" ItemClick="Track_Click"
                   ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden"
                   AutomationProperties.Name="{x:Bind Localization.GetString('PersonProfile/Tracks', Localization.Revision), Mode=OneWay}">
+            <ListView.Resources>
+                <CornerRadius x:Key="ListViewItemCornerRadius">14</CornerRadius>
+            </ListView.Resources>
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
-                    <Setter Property="Padding" Value="10,7" />
+                    <Setter Property="Padding" Value="0" />
                     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                     <Setter Property="CornerRadius" Value="12" />
-                    <Setter Property="Margin" Value="4,2" />
+                    <Setter Property="Margin" Value="24,4" />
                     <Setter Property="UseSystemFocusVisuals" Value="True" />
                     <Setter Property="common:CursorExtensions.Cursor" Value="Hand" />
                 </Style>
             </ListView.ItemContainerStyle>
             <ListView.Header>
-                <StackPanel Spacing="16" Margin="0,12,0,8">
-                    <ui:WidgetLoadHost x:Name="ProfileLoad" SkeletonHeight="290" IsLoading="True"
+                <StackPanel Spacing="20" Margin="0,0,0,8" HorizontalAlignment="Stretch">
+                    <ui:WidgetLoadHost x:Name="ProfileLoad" SkeletonHeight="364" IsLoading="True"
                                        WidgetName="{x:Bind Localization.GetString('PersonProfile/PageName', Localization.Revision), Mode=OneWay}"
                                        LoadingText="{x:Bind Localization.GetString('PersonProfile/Loading', Localization.Revision), Mode=OneWay}"
                                        ReadyText="{x:Bind Localization.GetString('PersonProfile/Ready', Localization.Revision), Mode=OneWay}">
                         <Grid x:Name="Hero" Visibility="Collapsed" UseLayoutRounding="True"
-                              CornerRadius="20" Background="{ThemeResource CardBackgroundFillColorSecondary}"
-                              BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                              MinHeight="350" Background="{ThemeResource CardBackgroundFillColorSecondary}"
                               SizeChanged="Hero_SizeChanged">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -41,58 +43,77 @@
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition x:Name="ModelColumn" Width="300" />
+                                <ColumnDefinition x:Name="ModelColumn" Width="430" />
                             </Grid.ColumnDefinitions>
                             <Grid Grid.ColumnSpan="2" Grid.RowSpan="2" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
                                 <Grid.Background>
-                                    <ImageBrush x:Name="Cover" Stretch="UniformToFill" Opacity=".70" />
+                                    <ImageBrush x:Name="Cover" Stretch="UniformToFill" Opacity=".86" AlignmentY="Center" />
                                 </Grid.Background>
                                 <Rectangle>
                                     <Rectangle.Fill>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                            <GradientStop Offset="0" Color="#101B2640" />
-                                            <GradientStop Offset=".52" Color="#7A13283C" />
-                                            <GradientStop Offset="1" Color="#F0161835" />
+                                        <LinearGradientBrush StartPoint="0,0.38" EndPoint="1,0.38">
+                                            <GradientStop Offset="0" Color="#FA0C1323" />
+                                            <GradientStop Offset=".40" Color="#CF10192D" />
+                                            <GradientStop Offset=".72" Color="#77132338" />
+                                            <GradientStop Offset="1" Color="#49152A48" />
+                                        </LinearGradientBrush>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                                <Rectangle VerticalAlignment="Bottom" Height="160">
+                                    <Rectangle.Fill>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Offset="0" Color="#00131B2C" />
+                                            <GradientStop Offset="1" Color="#E0101728" />
                                         </LinearGradientBrush>
                                     </Rectangle.Fill>
                                 </Rectangle>
                             </Grid>
-                            <StackPanel x:Name="Identity" Grid.ColumnSpan="1" Spacing="14" Padding="24" VerticalAlignment="Center"
-                                        Background="{ThemeResource CardBackgroundFillColorSecondary}">
-                                <PersonPicture x:Name="Avatar" Width="88" Height="88" HorizontalAlignment="Left"
-                                               AutomationProperties.Name="{x:Bind Localization.GetString('PersonProfile/Photo', Localization.Revision), Mode=OneWay}" />
-                                <TextBlock x:Name="ArtistName" FontSize="36" FontWeight="SemiBold" TextWrapping="Wrap"
-                                           TextAlignment="Start" TextReadingOrder="UseFlowDirection" AutomationProperties.HeadingLevel="Level1" />
-                                <Grid ColumnSpacing="10">
+                            <StackPanel x:Name="Identity" Spacing="18" Padding="42,28"
+                                        VerticalAlignment="Center" RequestedTheme="Dark">
+                                <Grid ColumnSpacing="17">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="AvatarFrame" Width="126" Height="126" Padding="5" CornerRadius="63"
+                                            Background="#202C3F5F" BorderBrush="#78D8E6FC" BorderThickness="1"
+                                            HorizontalAlignment="Left" VerticalAlignment="Center">
+                                        <PersonPicture x:Name="Avatar" Width="112" Height="112"
+                                            AutomationProperties.Name="{x:Bind Localization.GetString('PersonProfile/Photo', Localization.Revision), Mode=OneWay}" />
+                                    </Border>
+                                    <TextBlock x:Name="ArtistName" Grid.Column="1" FontSize="54" FontWeight="Bold"
+                                               Foreground="White" TextWrapping="Wrap" VerticalAlignment="Center"
+                                               CharacterSpacing="-18" TextAlignment="Start" TextReadingOrder="UseFlowDirection"
+                                               AutomationProperties.HeadingLevel="Level1" />
+                                </Grid>
+                                <Grid MaxWidth="670" HorizontalAlignment="Left" CornerRadius="18" Padding="14,12"
+                                      Background="#71162134" BorderBrush="#35DBE7FF" BorderThickness="1" ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border Padding="10" CornerRadius="11" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                                        <StackPanel Spacing="3">
-                                            <TextBlock x:Name="Followers" FontSize="20" FontWeight="SemiBold" />
-                                            <TextBlock Text="{x:Bind Localization.GetString('PersonProfile/Followers', Localization.Revision), Mode=OneWay}"
-                                                       FontSize="11" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                        </StackPanel>
-                                    </Border>
-                                    <Border Grid.Column="1" Padding="10" CornerRadius="11" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                                        <StackPanel Spacing="3">
-                                            <TextBlock x:Name="Following" FontSize="20" FontWeight="SemiBold" />
-                                            <TextBlock Text="{x:Bind Localization.GetString('PersonProfile/Following', Localization.Revision), Mode=OneWay}"
-                                                       FontSize="11" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                        </StackPanel>
-                                    </Border>
-                                    <Border Grid.Column="2" Padding="10" CornerRadius="11" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                                        <StackPanel Spacing="3">
-                                            <TextBlock x:Name="TracksCount" FontSize="20" FontWeight="SemiBold" />
-                                            <TextBlock Text="{x:Bind Localization.GetString('PersonProfile/Tracks', Localization.Revision), Mode=OneWay}"
-                                                       FontSize="11" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                        </StackPanel>
-                                    </Border>
+                                    <StackPanel Padding="8,1" Spacing="4">
+                                        <icon:SymbolIcon Symbol="People" FontSize="15" HorizontalAlignment="Left" Foreground="#B7D5FF" AutomationProperties.AccessibilityView="Raw" />
+                                        <TextBlock x:Name="Followers" FontSize="24" FontWeight="SemiBold" Foreground="White" />
+                                        <TextBlock Text="{x:Bind Localization.GetString('PersonProfile/Followers', Localization.Revision), Mode=OneWay}"
+                                                   FontSize="11" TextWrapping="Wrap" Foreground="#C2D3EC" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Padding="8,1" Spacing="4">
+                                        <icon:SymbolIcon Symbol="PersonAdd" FontSize="15" HorizontalAlignment="Left" Foreground="#B7D5FF" AutomationProperties.AccessibilityView="Raw" />
+                                        <TextBlock x:Name="Following" FontSize="24" FontWeight="SemiBold" Foreground="White" />
+                                        <TextBlock Text="{x:Bind Localization.GetString('PersonProfile/Following', Localization.Revision), Mode=OneWay}"
+                                                   FontSize="11" TextWrapping="Wrap" Foreground="#C2D3EC" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Padding="8,1" Spacing="4">
+                                        <icon:SymbolIcon Symbol="MusicNote2" FontSize="15" HorizontalAlignment="Left" Foreground="#B7D5FF" AutomationProperties.AccessibilityView="Raw" />
+                                        <TextBlock x:Name="TracksCount" FontSize="24" FontWeight="SemiBold" Foreground="White" />
+                                        <TextBlock Text="{x:Bind Localization.GetString('PersonProfile/Tracks', Localization.Revision), Mode=OneWay}"
+                                                   FontSize="11" TextWrapping="Wrap" Foreground="#C2D3EC" />
+                                    </StackPanel>
                                 </Grid>
                                 <ui:AuthActionButton x:Name="FollowButton" HorizontalAlignment="Left" MinHeight="44"
-                                                     CornerRadius="12" Padding="15,8" Click="Follow_Click"
+                                                     CornerRadius="22" Padding="22,10" Click="Follow_Click"
                                                      Style="{StaticResource AccentButtonStyle}" common:CursorExtensions.Cursor="Hand">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <icon:SymbolIcon x:Name="FollowIcon" Symbol="PersonAdd" />
@@ -102,8 +123,8 @@
                                     </StackPanel>
                                 </ui:AuthActionButton>
                             </StackPanel>
-                            <Grid x:Name="ModelPanel" Grid.Column="1" Height="300" VerticalAlignment="Stretch">
-                                <Ellipse Width="220" Height="220" Opacity=".42" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+                            <Grid x:Name="ModelPanel" Grid.Column="1" Height="364" VerticalAlignment="Center" Margin="12,0,20,0" RequestedTheme="Dark">
+                                <Ellipse Width="300" Height="270" Opacity=".70" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
                                     <Ellipse.Fill>
                                         <RadialGradientBrush>
                                             <GradientStop Color="#605AABFF" Offset="0" />
@@ -111,9 +132,13 @@
                                         </RadialGradientBrush>
                                     </Ellipse.Fill>
                                 </Ellipse>
+                                <Ellipse Width="226" Height="226" Stroke="#37C5DEFF" StrokeThickness="1"
+                                         IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
+                                <Ellipse Width="180" Height="180" Stroke="#24C5DEFF" StrokeThickness="1"
+                                         IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
                                 <ui:ArtistModelView x:Name="Model" Visibility="Collapsed" />
                                 <StackPanel x:Name="ModelPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                            Spacing="8" Padding="12" Background="{ThemeResource CardBackgroundFillColorSecondary}">
+                                            Spacing="8" Padding="12">
                                     <icon:SymbolIcon Symbol="Cube" FontSize="28" HorizontalAlignment="Center" />
                                     <TextBlock x:Name="ModelStatus" TextWrapping="Wrap"
                                                TextAlignment="Center" MaxWidth="180" AutomationProperties.LiveSetting="Polite" />
@@ -125,27 +150,37 @@
                             </Grid>
                         </Grid>
                     </ui:WidgetLoadHost>
-                    <StackPanel x:Name="ProfileFailure" Visibility="Collapsed" Margin="12,0" Spacing="8">
+                    <StackPanel x:Name="ProfileFailure" Visibility="Collapsed" Margin="24,0" Spacing="8">
                         <TextBlock x:Name="ProfileError" TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive" />
                         <ui:AuthActionButton Click="RetryProfile_Click" HorizontalAlignment="Left"
                                              Content="{x:Bind Localization.GetString('PersonProfile/Retry', Localization.Revision), Mode=OneWay}" />
                     </StackPanel>
                     <TextBlock x:Name="GeneralStatus" TextWrapping="Wrap" FontSize="13" Visibility="Collapsed" Margin="8,0"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.LiveSetting="Polite" />
-                    <TextBlock x:Name="TrackHeading" FontSize="23" FontWeight="SemiBold" Margin="8,0" Visibility="Collapsed"
-                               AutomationProperties.HeadingLevel="Level2"
-                               Text="{x:Bind Localization.GetString('PersonProfile/Tracks', Localization.Revision), Mode=OneWay}" />
+                    <Grid x:Name="TrackHeading" Margin="26,0,26,4" Visibility="Collapsed" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="42" Height="42" CornerRadius="13" Background="{ThemeResource CardBackgroundFillColorSecondary}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" AutomationProperties.AccessibilityView="Raw">
+                            <icon:SymbolIcon Symbol="MusicNote2" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Grid.Column="1" FontSize="26" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   AutomationProperties.HeadingLevel="Level2"
+                                   Text="{x:Bind Localization.GetString('PersonProfile/Tracks', Localization.Revision), Mode=OneWay}" />
+                    </Grid>
                 </StackPanel>
             </ListView.Header>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:PersonProfileTrackViewModel">
-                    <Grid ColumnSpacing="12">
+                    <Grid ColumnSpacing="15" MinHeight="72" Padding="12,8" CornerRadius="14" Background="{ThemeResource CardBackgroundFillColorSecondary}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Grid Width="48" Height="48" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondary}"
+                        <Grid Width="54" Height="54" CornerRadius="10" Background="{ThemeResource CardBackgroundFillColorSecondary}"
                               AutomationProperties.AccessibilityView="Raw">
                             <icon:SymbolIcon Symbol="MusicNote2" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             <Image Stretch="UniformToFill" Loaded="TrackCover_Loaded" Unloaded="TrackCover_Unloaded"
@@ -156,13 +191,17 @@
                             <TextBlock Text="{x:Bind Credits}" FontSize="11" TextTrimming="CharacterEllipsis"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
-                        <TextBlock Grid.Column="2" Text="{x:Bind Likes, Mode=OneWay}" FontSize="11" VerticalAlignment="Center"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <icon:SymbolIcon Symbol="Heart" FontSize="15" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                             AutomationProperties.AccessibilityView="Raw" />
+                            <TextBlock Text="{x:Bind Likes, Mode=OneWay}" FontSize="12" VerticalAlignment="Center"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
             <ListView.Footer>
-                <StackPanel Margin="8,10" Spacing="8">
+                <StackPanel Margin="24,10" Spacing="10">
                     <ui:WidgetLoadHost x:Name="TracksLoading" Visibility="Collapsed" SkeletonHeight="128" IsLoading="True"
                                        LoadingText="{x:Bind Localization.GetString('PersonProfile/LoadingTracks', Localization.Revision), Mode=OneWay}" />
                     <TextBlock x:Name="TracksStatus" Visibility="Collapsed" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />

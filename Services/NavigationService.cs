@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Mizon.Windows.Pages;
 using System;
@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 
 namespace Mizon.Windows.Services;
 
@@ -199,10 +200,33 @@ public class NavigationService
         InternalNavigate(typeof(MusicPlaylistsPage));
     }
 
-    public void OpenPersonProfile(Guid publicId)
+    public void OpenPersonProfile(Guid publicId, PersonPicture? portrait = null)
     {
         if (publicId == Guid.Empty || CurrentInternalPage is PersonProfilePage page && page.PersonPublicId == publicId) return;
-        InternalNavigate(typeof(PersonProfilePage), new() { [PageConstants.PERSON_ID] = publicId });
+        var parameters = new Dictionary<string, object> { [PageConstants.PERSON_ID] = publicId };
+        if (portrait is { IsLoaded: true, ActualWidth: > 0, ActualHeight: > 0 }
+            && new global::Windows.UI.ViewManagement.UISettings().AnimationsEnabled)
+        {
+            try
+            {
+                var animation = ConnectedAnimationService.GetForCurrentView()
+                    .PrepareToAnimate($"PersonPortrait-{Guid.NewGuid():N}", portrait);
+                parameters[PersonProfileEntrance.Key] = new PersonProfileEntrance(animation, portrait.ProfilePicture, portrait.DisplayName);
+            }
+            catch (Exception error) { AppLog.Error("Artist portrait transition could not be prepared.", error); }
+        }
+        try
+        {
+            if (parameters.ContainsKey(PersonProfileEntrance.Key) && _internalFrame is { } frame)
+                frame.Navigate(typeof(PersonProfilePage), parameters, new SuppressNavigationTransitionInfo());
+            else InternalNavigate(typeof(PersonProfilePage), parameters);
+        }
+        finally
+        {
+            // OnNavigatedTo removes the payload when it takes ownership.
+            if (parameters.Remove(PersonProfileEntrance.Key, out var unused))
+                ((PersonProfileEntrance)unused).Animation.Cancel();
+        }
     }
 
     public void OpenClientProfile(Guid publicId)
@@ -249,6 +273,11 @@ public class NavigationService
     }
 }
 
+
+internal sealed record PersonProfileEntrance(ConnectedAnimation Animation, ImageSource? Portrait, string DisplayName)
+{
+    internal const string Key = "PersonProfileEntrance";
+}
 
 public class NavigationChangedEventArgs : EventArgs
 {

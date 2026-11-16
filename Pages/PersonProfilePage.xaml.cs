@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using Mizon.API;
 using Mizon.API.Client.Operations.Media;
@@ -35,7 +36,9 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
     private bool _loadingProfile, _loadingTracks, _followBusy, _tracksFailed;
     private string? _profileError, _generalStatus;
     private string _modelStatus = "NoModel";
-    private bool? _wide;
+    private int _layoutBand = -1;
+    private PersonProfileEntrance? _portraitEntrance;
+    private ImageSource? _pendingAvatar;
     private TaskCompletionSource<bool> _ready = NewCompletion();
 
     public Guid PersonPublicId { get; private set; }
@@ -62,6 +65,8 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
         base.OnNavigatedTo(e);
         PersonPublicId = e.Parameter is Dictionary<string, object> args
             && args.TryGetValue(PageConstants.PERSON_ID, out var value) && value is Guid id ? id : Guid.Empty;
+        if (e.Parameter is Dictionary<string, object> parameters && parameters.Remove(PersonProfileEntrance.Key, out var entrance))
+            _portraitEntrance = entrance as PersonProfileEntrance;
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -77,15 +82,56 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
         Localization.PropertyChanged += LanguageChanged;
         Bindings.Update();
         RefreshText();
+        if (_portraitEntrance is { } entrance)
+        {
+            ArtistName.Text = Avatar.DisplayName = entrance.DisplayName;
+            Avatar.ProfilePicture = entrance.Portrait;
+            Avatar.LayoutUpdated += StartPortraitEntrance;
+            Hero.Visibility = Visibility.Visible;
+            ProfileLoad.IsLoading = false;
+        }
         await LoadProfileAsync();
+    }
+
+    private void StartPortraitEntrance(object? sender, object args)
+    {
+        if (_portraitEntrance is not { } entrance || !Avatar.IsLoaded || Avatar.ActualWidth <= 0) return;
+        Avatar.LayoutUpdated -= StartPortraitEntrance;
+        entrance.Animation.Completed += PortraitEntrance_Completed;
+        try
+        {
+            if (entrance.Animation.TryStart(Avatar)) return;
+        }
+        catch (Exception error) { AppLog.Error("Artist portrait transition could not start.", error); }
+        ClearPortraitEntrance();
+    }
+
+    private void PortraitEntrance_Completed(ConnectedAnimation sender, object args) => ClearPortraitEntrance(cancel: false);
+
+    private void ClearPortraitEntrance(bool cancel = true)
+    {
+        Avatar.LayoutUpdated -= StartPortraitEntrance;
+        var entrance = _portraitEntrance;
+        _portraitEntrance = null;
+        if (entrance is null) return;
+        entrance.Animation.Completed -= PortraitEntrance_Completed;
+        if (cancel) entrance.Animation.Cancel();
+        if (_pendingAvatar is { } avatar && _lifetime is { IsCancellationRequested: false })
+            Avatar.ProfilePicture = avatar;
+        _pendingAvatar = null;
     }
 
     private void Page_Unloaded(object sender, RoutedEventArgs e) => EndPage();
 
     private void EndPage()
     {
-        if (_lifetime is not { } lifetime) return;
+        if (_lifetime is not { } lifetime)
+        {
+            ClearPortraitEntrance();
+            return;
+        }
         _lifetime = null;
+        ClearPortraitEntrance();
         lifetime.Cancel();
         lifetime.Dispose();
         Localization.PropertyChanged -= LanguageChanged;
@@ -109,7 +155,7 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
         _loadingProfile = true;
         _profileError = null;
         ProfileFailure.Visibility = Visibility.Collapsed;
-        ProfileLoad.IsLoading = true;
+        ProfileLoad.IsLoading = _portraitEntrance is null;
         ProfileLoad.Visibility = Visibility.Visible;
         try
         {
@@ -151,6 +197,7 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
                 ProfileLoad.IsLoading = false;
                 if (_profileError is not null)
                 {
+                    ClearPortraitEntrance();
                     ProfileLoad.Visibility = Visibility.Collapsed;
                     ProfileFailure.Visibility = Visibility.Visible;
                     RefreshText();
@@ -266,7 +313,8 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
             token.ThrowIfCancellationRequested();
             if (avatar)
             {
-                Avatar.ProfilePicture = image;
+                if (_portraitEntrance is not null) _pendingAvatar = image;
+                else Avatar.ProfilePicture = image;
                 if (Cover.ImageSource is null) Cover.ImageSource = image;
             }
             else Cover.ImageSource = image;
@@ -398,15 +446,22 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
 
     private void Hero_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        var wide = e.NewSize.Width >= 690;
-        if (_wide == wide) return;
-        _wide = wide;
-        ModelColumn.Width = new GridLength(wide ? 300 : 0);
-        Grid.SetColumn(ModelPanel, wide ? 1 : 0);
-        Grid.SetRow(ModelPanel, wide ? 0 : 1);
-        ModelPanel.Height = wide ? 300 : 224;
-        Identity.Padding = new Thickness(wide ? 24 : 15);
-        ArtistName.FontSize = wide ? 36 : 29;
+        var width = e.NewSize.Width;
+        var band = width < 600 ? 0 : width < 1040 ? 1 : width < 1450 ? 2 : 3;
+        if (_layoutBand == band) return;
+        _layoutBand = band;
+        var stacked = band == 0;
+        ModelColumn.Width = stacked ? new GridLength(0) : new GridLength(band == 1 ? 1.15 : 1, GridUnitType.Star);
+        Grid.SetColumn(ModelPanel, stacked ? 0 : 1);
+        Grid.SetRow(ModelPanel, stacked ? 1 : 0);
+        ModelPanel.Height = band switch { 0 => 220, 1 => 288, 2 => 350, _ => 420 };
+        Hero.MinHeight = band switch { 0 => 0, 1 => 336, 2 => 374, _ => 450 };
+        Identity.Padding = new Thickness(band switch { 0 => 20, 1 => 24, 2 => 38, _ => 56 }, 24, 24, 24);
+        ArtistName.FontSize = band switch { 0 => 30, 1 => 36, 2 => 51, _ => 65 };
+        var avatarSize = band switch { 0 => 78, 1 => 94, 2 => 112, _ => 124 };
+        Avatar.Width = Avatar.Height = avatarSize;
+        AvatarFrame.Width = AvatarFrame.Height = avatarSize + 14;
+        AvatarFrame.CornerRadius = new CornerRadius((avatarSize + 14) / 2d);
     }
 
     private static Visibility Visible(bool value) => value ? Visibility.Visible : Visibility.Collapsed;

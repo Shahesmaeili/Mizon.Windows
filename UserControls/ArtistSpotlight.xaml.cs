@@ -83,6 +83,7 @@ public sealed partial class ArtistSpotlight : UserControl
         CancelSelection();
         Tracks.ItemsSource = null;
         PortraitFallback.ProfilePicture = null;
+        ArtistAvatar.ProfilePicture = null;
         ArtistModel.ModelPath = string.Empty;
         UpdateListeningChart(null);
         ReleaseModelGlow();
@@ -115,6 +116,7 @@ public sealed partial class ArtistSpotlight : UserControl
             Visibility = Visibility.Collapsed;
             Tracks.ItemsSource = null;
             PortraitFallback.ProfilePicture = null;
+            ArtistAvatar.ProfilePicture = null;
             ArtistModel.ModelPath = string.Empty;
             UpdateListeningChart(null);
             return;
@@ -126,6 +128,8 @@ public sealed partial class ArtistSpotlight : UserControl
         var artist = _current.Artist;
         if (_loaded) artist.PropertyChanged += ArtistChanged;
         ArtistName.Text = artist.DisplayName;
+        ArtistAvatar.DisplayName = artist.DisplayName;
+        ArtistAvatar.ProfilePicture = artist.AvatarImage;
         GenreText.Text = artist.DisplayGenre;
         PortraitFallback.DisplayName = artist.DisplayName;
         PortraitFallback.ProfilePicture = artist.AvatarImage;
@@ -152,7 +156,7 @@ public sealed partial class ArtistSpotlight : UserControl
         UpdateModelGlow();
         PreviousButton.IsEnabled = NextButton.IsEnabled = items.Count > 1;
         UpdateFollow();
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(ProfileButton, Localization.Format("MusicHome/ArtistProfileName", artist.DisplayName));
+        UpdateProfileAutomationName(artist.DisplayName);
     }
 
     private void UpdateListeningChart(TopArtistItemViewModel? artist)
@@ -171,9 +175,15 @@ public sealed partial class ArtistSpotlight : UserControl
         SongsText.Text = current.SongCountText;
         WeeklyPlaysText.Text = current.WeeklyPlaysText;
         ListenerText.Text = current.Artist.MonthlyListenersFullText;
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(ProfileButton,
-            Localization.Format("MusicHome/ArtistProfileName", current.Artist.DisplayName));
+        UpdateProfileAutomationName(current.Artist.DisplayName);
         UpdateFollow();
+    }
+
+    private void UpdateProfileAutomationName(string artistName)
+    {
+        var label = Localization.Format("MusicHome/ArtistProfileName", artistName);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(ProfileButton, label);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(ArtistAvatarButton, label);
     }
 
     private void ArtistChanged(object? sender, PropertyChangedEventArgs args)
@@ -184,7 +194,7 @@ public sealed partial class ArtistSpotlight : UserControl
         if (string.IsNullOrEmpty(args.PropertyName) || args.PropertyName == nameof(TopArtistItemViewModel.IsFollowBusy))
             UpdateFollow();
         if (args.PropertyName == nameof(TopArtistItemViewModel.AvatarImage))
-            PortraitFallback.ProfilePicture = _current!.Artist.AvatarImage;
+            ArtistAvatar.ProfilePicture = PortraitFallback.ProfilePicture = _current!.Artist.AvatarImage;
     }
 
     private void CancelSelection()
@@ -314,7 +324,7 @@ public sealed partial class ArtistSpotlight : UserControl
 
     private void Profile_Click(object sender, RoutedEventArgs e)
     {
-        if (_current is not null) ProfileRequested?.Invoke(this, _current.Artist);
+        if (_current is not null) ProfileRequested?.Invoke(ArtistAvatar, _current.Artist);
     }
 
     private void Track_Click(object sender, RoutedEventArgs e)
