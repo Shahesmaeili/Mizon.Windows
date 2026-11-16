@@ -100,11 +100,11 @@ public sealed partial class TopArtistItemViewModel : ViewModelBase
         : value >= 1000 ? (value / 1000d).ToString("0.#", CultureInfo.InvariantCulture) + "K"
         : value.ToString("N0", CultureInfo.GetCultureInfo(Localization.LanguageTag));
 
-    // A geometry has one visual owner. Share the points, not the Geometry.
-    public PathGeometry CreateActivityPath()
+    // A geometry has one visual owner. An absent series has no native shape.
+    public PathGeometry? CreateActivityPath()
     {
+        if (_activityPoints.Length < 2) return null;
         var geometry = new PathGeometry();
-        if (_activityPoints.Length == 0) return geometry;
         var figure = new PathFigure { StartPoint = _activityPoints[0], IsClosed = false, IsFilled = false };
         for (var index = 1; index < _activityPoints.Length; index++)
             figure.Segments.Add(new LineSegment { Point = _activityPoints[index] });

@@ -278,8 +278,10 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="12" />
                                 </Grid.ColumnDefinitions>
-                                <Viewbox x:Name="ListeningChart" Width="48" Height="16" Stretch="Fill" VerticalAlignment="Center" IsHitTestVisible="False">
-                                    <Path x:Name="ListeningTrend" Width="250" Height="56" Stretch="Fill" Stroke="{StaticResource SpotlightAccent}" StrokeThickness="5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.6" AutomationProperties.AccessibilityView="Raw" />
+                                <Viewbox x:Name="ListeningChart" Width="48" Height="16" Stretch="Fill" Visibility="Collapsed" VerticalAlignment="Center" IsHitTestVisible="False">
+                                    <Canvas Width="250" Height="56">
+                                        <Path x:Name="ListeningTrend" Width="250" Height="56" Stretch="None" Stroke="{StaticResource SpotlightAccent}" StrokeThickness="5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.6" AutomationProperties.AccessibilityView="Raw" />
+                                    </Canvas>
                                 </Viewbox>
                                 <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" x:Name="ListenerText" Grid.Column="1" Style="{StaticResource Caption}" FontSize="8" Opacity="0.65" VerticalAlignment="Center" />
                                 <icon:SymbolIcon Grid.Column="2" Symbol="Headphones" FontSize="11" Foreground="{StaticResource SpotlightAccent}" VerticalAlignment="Center" Opacity="0.85" />

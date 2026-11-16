@@ -88,10 +88,14 @@
                             <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Localization.GetString('MusicHome/Followers', Localization.Revision), Mode=OneWay}" Style="{StaticResource ArtistCaption}" FontSize="9"/>
                         </StackPanel>
                     </Grid>
-                    <Path x:Name="ActivityPath" Grid.Row="3" Margin="6,9,6,0" Stretch="Fill" StrokeThickness="1.2" Opacity="0.24"
+                    <Viewbox x:Name="ActivityChart" Grid.Row="3" Margin="6,9,6,0" Stretch="Fill" Visibility="Collapsed"
                         IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
-                        <Path.Stroke><SolidColorBrush Color="{x:Bind Item.AccentColor, Mode=OneWay}"/></Path.Stroke>
-                    </Path>
+                        <Canvas Width="250" Height="56">
+                            <Path x:Name="ActivityPath" Width="250" Height="56" Stretch="None" StrokeThickness="3" Opacity="0.24">
+                                <Path.Stroke><SolidColorBrush Color="{x:Bind Item.AccentColor, Mode=OneWay}"/></Path.Stroke>
+                            </Path>
+                        </Canvas>
+                    </Viewbox>
                 </Grid>
             </controls:FeatureButton>
             <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" x:Name="FollowButton" IsEnabled="{x:Bind Item.CanFollow, Mode=OneWay}" Grid.Row="1" Margin="12,0,12,12" MinHeight="36"

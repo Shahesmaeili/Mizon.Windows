@@ -66,6 +66,7 @@ public sealed partial class TopArtistCard : UserControl
         _loaded = false;
         Bindings.StopTracking();
         CancelArtwork();
+        ActivityChart.Visibility = Visibility.Collapsed;
         ActivityPath.Data = null;
         _chartItem = null;
     }
@@ -75,11 +76,8 @@ public sealed partial class TopArtistCard : UserControl
         if (!_loaded || ReferenceEquals(_chartItem, Item)) return;
         _chartItem = Item;
         var geometry = Item?.CreateActivityPath();
-        // Stretch uses geometry bounds, which exclude unfilled figures on this
-        // WinUI version. The Path has no Fill, so the open contour is still a line.
-        if (geometry is not null)
-            foreach (var figure in geometry.Figures) figure.IsFilled = true;
         ActivityPath.Data = geometry;
+        ActivityChart.Visibility = geometry is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void Profile_Click(object sender, RoutedEventArgs e)

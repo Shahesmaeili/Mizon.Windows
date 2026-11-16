@@ -84,6 +84,7 @@ public sealed partial class ArtistSpotlight : UserControl
         Tracks.ItemsSource = null;
         PortraitFallback.ProfilePicture = null;
         ArtistModel.ModelPath = string.Empty;
+        UpdateListeningChart(null);
         ReleaseModelGlow();
     }
 
@@ -115,6 +116,7 @@ public sealed partial class ArtistSpotlight : UserControl
             Tracks.ItemsSource = null;
             PortraitFallback.ProfilePicture = null;
             ArtistModel.ModelPath = string.Empty;
+            UpdateListeningChart(null);
             return;
         }
 
@@ -144,13 +146,20 @@ public sealed partial class ArtistSpotlight : UserControl
         SongsText.Text = _current.SongCountText;
         WeeklyPlaysText.Text = _current.WeeklyPlaysText;
         ListenerText.Text = artist.MonthlyListenersFullText;
-        ListeningTrend.Data = artist.CreateActivityPath();
+        UpdateListeningChart(artist);
         PageNumber.Text = $"{_index + 1:00} / {items.Count:00}";
         ((SolidColorBrush)Resources["SpotlightAccent"]).Color = artist.AccentColor;
         UpdateModelGlow();
         PreviousButton.IsEnabled = NextButton.IsEnabled = items.Count > 1;
         UpdateFollow();
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(ProfileButton, Localization.Format("MusicHome/ArtistProfileName", artist.DisplayName));
+    }
+
+    private void UpdateListeningChart(TopArtistItemViewModel? artist)
+    {
+        var geometry = artist?.CreateActivityPath();
+        ListeningTrend.Data = geometry;
+        ListeningChart.Visibility = geometry is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void SpotlightLocalizationChanged(object? sender, PropertyChangedEventArgs args)
