@@ -62,7 +62,7 @@ Color="Transparent" />
       Background="Transparent"
       IsHitTestVisible="False"/>
         
-        <NavigationView Loaded="NavigationViewMain_Loaded" Background="Transparent" ElementSoundMode="Default" SelectionChanged="NavigationViewMain_SelectionChanged" IsSettingsVisible="False" CanDrag="False" IsBackEnabled="True" IsBackButtonVisible="Auto" BackRequested="NavigationViewMain_BackRequested" x:Name="NavigationViewMain" PaneDisplayMode="Top">
+        <NavigationView Loaded="NavigationViewMain_Loaded" Background="Transparent" ElementSoundMode="Default" SelectionChanged="NavigationViewMain_SelectionChanged" IsSettingsVisible="False" CanDrag="False" IsBackEnabled="{x:Bind InternalFrame.CanGoBack, Mode=OneWay}" IsBackButtonVisible="Visible" BackRequested="NavigationViewMain_BackRequested" x:Name="NavigationViewMain" PaneDisplayMode="Top">
             <NavigationView.PaneCustomContent>
                 <Grid x:Name="DragAreaOverlayGrid" Background="Transparent">
                     <Grid.ColumnDefinitions>
