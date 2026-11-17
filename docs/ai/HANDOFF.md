@@ -2,6 +2,13 @@
 
 Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Taskbar thumbnail shortcuts — 2026-11-17
+
+The main app's native thumbnail toolbar now includes Playlists and Download &
+Cache Settings after the four transport buttons. Both use existing signed-in
+navigation and localized native tooltips. See the [task note](tasks/2026-11-17-taskbar-preview-actions.md)
+for build, MCP, NativeAOT, and visual verification boundaries.
+
 ## Account focus follow-up — 2026-11-16
 
 An invalid controller sign-in returns to the password after the form's enabled

@@ -14,7 +14,7 @@ namespace Mizon.Windows.Services;
 internal sealed partial class ThumbnailTransportIcons : IDisposable
 {
     private const float GlyphScale = 0.82f;
-    internal nint Previous, Play, Pause, Next, FullScreen;
+    internal nint Previous, Play, Pause, Next, FullScreen, Playlists, DownloadSettings;
     internal ThumbnailTransportIcons(nint window)
     {
         var size = Math.Max(16, GetSystemMetricsForDpi(49, GetDpiForWindow(window))); // SM_CXSMICON
@@ -25,6 +25,8 @@ internal sealed partial class ThumbnailTransportIcons : IDisposable
             Pause = Create(Symbol.Pause, size);
             Next = Create(Symbol.Next, size);
             FullScreen = Create(Symbol.FullScreenMaximize, size);
+            Playlists = Create(Symbol.MusicNote1, size);
+            DownloadSettings = Create(Symbol.ArrowDownload, size);
         }
         catch { Dispose(); throw; }
     }
@@ -61,8 +63,8 @@ internal sealed partial class ThumbnailTransportIcons : IDisposable
     }
     public void Dispose()
     {
-        foreach (var icon in new[] { Previous, Play, Pause, Next, FullScreen }) if (icon != 0) DestroyIcon(icon);
-        Previous = Play = Pause = Next = FullScreen = 0;
+        foreach (var icon in new[] { Previous, Play, Pause, Next, FullScreen, Playlists, DownloadSettings }) if (icon != 0) DestroyIcon(icon);
+        Previous = Play = Pause = Next = FullScreen = Playlists = DownloadSettings = 0;
     }
     private sealed class GlyphResolver : FluentIcons.WinUI.SymbolIcon
     { internal string Text => IconText; internal string FontSource => IconFont.Source; }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="PreviousTrack" xml:space="preserve"><value>Previous track</value></data>
+  <data name="Play" xml:space="preserve"><value>Play song</value></data>
+  <data name="Pause" xml:space="preserve"><value>Pause playback</value></data>
+  <data name="NextTrack" xml:space="preserve"><value>Next track</value></data>
+  <data name="FullScreen" xml:space="preserve"><value>Toggle full screen</value></data>
+  <data name="Playlists" xml:space="preserve"><value>Open your playlists</value></data>
+  <data name="DownloadSettings" xml:space="preserve"><value>Open download and cache settings</value></data>
+</root>

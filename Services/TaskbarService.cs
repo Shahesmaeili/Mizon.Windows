@@ -17,7 +17,11 @@ public interface ITaskbarService
     event EventHandler? PlaybackToggleRequested;
     event EventHandler? PreviousRequested;
     event EventHandler? NextRequested;
+    void SetPreviewDestinationsAvailable(bool available);
+    void RefreshPreviewLabels();
     event EventHandler? FullScreenRequested;
+    event EventHandler? OpenPlaylistsRequested;
+    event EventHandler? OpenDownloadSettingsRequested;
 }
 
 public enum TaskbarProgressState { NoProgress, Indeterminate, Normal, Error, Paused }
@@ -30,16 +34,19 @@ public sealed class TaskbarService(DispatcherQueue dispatcherQueue) : ITaskbarSe
     private nint _window;
     private GCHandle _self;
     private bool _toolbarAdded, _disposed, _canPrevious, _canNext;
+    private bool _previewDestinationsAvailable;
     private AudioPlayerState _playbackState = AudioPlayerState.Idle;
     private ThumbnailTransportIcons? _icons;
     private static readonly TaskbarNative.SubclassProc Callback = WindowProcedure;
     private static readonly uint CreatedMessage = TaskbarNative.RegisterWindowMessage("TaskbarButtonCreated");
-    private const uint PreviousId = 10, PlayId = 11, NextId = 12, FullScreenId = 13;
+    private const uint PreviousId = 10, PlayId = 11, NextId = 12, FullScreenId = 13, PlaylistsId = 14, DownloadSettingsId = 15;
 
     public event EventHandler? PlaybackToggleRequested;
     public event EventHandler? PreviousRequested;
     public event EventHandler? NextRequested;
     public event EventHandler? FullScreenRequested;
+    public event EventHandler? OpenPlaylistsRequested;
+    public event EventHandler? OpenDownloadSettingsRequested;
 
     public void Initialize(nint windowHandle)
     {
@@ -77,6 +84,14 @@ public sealed class TaskbarService(DispatcherQueue dispatcherQueue) : ITaskbarSe
 
     public void SetPlaybackButtonState(AudioPlayerState state) => Dispatch(() => { _playbackState = state; UpdateToolbar(); });
     public void SetNavigationAvailability(bool previous, bool next) => Dispatch(() => { _canPrevious = previous; _canNext = next; UpdateToolbar(); });
+    public void SetPreviewDestinationsAvailable(bool available) => Dispatch(() =>
+    {
+        if (_previewDestinationsAvailable == available) return;
+        _previewDestinationsAvailable = available;
+        UpdateToolbar();
+    });
+
+    public void RefreshPreviewLabels() => Dispatch(UpdateToolbar);
     public void NotifyWindowActivated() => Dispatch(EnsureToolbar);
 
     private void EnsureToolbar()
@@ -85,19 +100,23 @@ public sealed class TaskbarService(DispatcherQueue dispatcherQueue) : ITaskbarSe
         _icons ??= new ThumbnailTransportIcons(_window);
         WriteButtons(add: true);
         _toolbarAdded = true; // Set only after the native HRESULT succeeds.
-        AppLog.Information("Taskbar toolbar added: previous, play/pause, next, fullscreen (native THUMBBUTTON array).");
+        AppLog.Information("Taskbar toolbar added: previous, play/pause, next, fullscreen, playlists, download settings.");
     }
     private void UpdateToolbar() { if (_toolbarAdded) WriteButtons(add: false); }
     private void WriteButtons(bool add)
     {
         if (_native is null || _icons is null) return;
         var playing = _playbackState == AudioPlayerState.Playing;
+        var localization = LocalizationService.Current;
         _native.SetButtons(_window, add,
         [
-            new(PreviousId, _icons.Previous, "آهنگ قبلی", _canPrevious),
-            new(PlayId, playing ? _icons.Pause : _icons.Play, playing ? "توقف موقت پخش" : "پخش آهنگ", true),
-            new(NextId, _icons.Next, "آهنگ بعدی", _canNext),
-            new(FullScreenId, _icons.FullScreen, "تغییر حالت تمام‌صفحه", true)
+            new(PreviousId, _icons.Previous, localization.GetString("TaskbarPreview/PreviousTrack"), _canPrevious),
+            new(PlayId, playing ? _icons.Pause : _icons.Play,
+                localization.GetString(playing ? "TaskbarPreview/Pause" : "TaskbarPreview/Play"), true),
+            new(NextId, _icons.Next, localization.GetString("TaskbarPreview/NextTrack"), _canNext),
+            new(FullScreenId, _icons.FullScreen, localization.GetString("TaskbarPreview/FullScreen"), true),
+            new(PlaylistsId, _icons.Playlists, localization.GetString("TaskbarPreview/Playlists"), true, _previewDestinationsAvailable),
+            new(DownloadSettingsId, _icons.DownloadSettings, localization.GetString("TaskbarPreview/DownloadSettings"), true, _previewDestinationsAvailable)
         ]);
     }
     private void Dispatch(Action action)
@@ -118,6 +137,12 @@ public sealed class TaskbarService(DispatcherQueue dispatcherQueue) : ITaskbarSe
             case PlayId: PlaybackToggleRequested?.Invoke(this, EventArgs.Empty); break;
             case NextId when _canNext: NextRequested?.Invoke(this, EventArgs.Empty); break;
             case FullScreenId: FullScreenRequested?.Invoke(this, EventArgs.Empty); break;
+            case PlaylistsId when _previewDestinationsAvailable:
+                OpenPlaylistsRequested?.Invoke(this, EventArgs.Empty);
+                break;
+            case DownloadSettingsId when _previewDestinationsAvailable:
+                OpenDownloadSettingsRequested?.Invoke(this, EventArgs.Empty);
+                break;
         }
     }
     private static nint WindowProcedure(nint window, uint message, nint wParam, nint lParam, nuint id, nuint data)
@@ -162,6 +187,7 @@ public sealed class TaskbarService(DispatcherQueue dispatcherQueue) : ITaskbarSe
         _icons?.Dispose(); _icons = null;
         _native?.Dispose(); _native = null;
         PlaybackToggleRequested = PreviousRequested = NextRequested = FullScreenRequested = null;
+        OpenPlaylistsRequested = OpenDownloadSettingsRequested = null;
         _window = 0;
     }
 }

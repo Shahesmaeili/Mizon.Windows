@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="PreviousTrack" xml:space="preserve"><value>آهنگ قبلی</value></data>
+  <data name="Play" xml:space="preserve"><value>پخش آهنگ</value></data>
+  <data name="Pause" xml:space="preserve"><value>توقف موقت پخش</value></data>
+  <data name="NextTrack" xml:space="preserve"><value>آهنگ بعدی</value></data>
+  <data name="FullScreen" xml:space="preserve"><value>تغییر حالت تمام‌صفحه</value></data>
+  <data name="Playlists" xml:space="preserve"><value>باز کردن پلی‌لیست‌ها</value></data>
+  <data name="DownloadSettings" xml:space="preserve"><value>باز کردن تنظیمات دانلود و کش</value></data>
+</root>
