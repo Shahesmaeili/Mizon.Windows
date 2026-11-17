@@ -5,7 +5,6 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Windowing;
-using Microsoft.Windows.BadgeNotifications;
 using Mizon.Windows.Common;
 using Mizon.Windows.Services;
 using Mizon.Windows.ViewModels;
@@ -25,6 +24,7 @@ public sealed partial class WelcomePage : Page
     public LocalizationService Localization => LocalizationService.Current;
     private readonly UISettings _uiSettings = new();
     private CancellationTokenSource? _pageCancellation;
+    private WelcomeTaskbarActivity? _activityBadge;
     private bool _initializing;
     private bool _navigationSubscribed;
     private Window? _hostWindow;
@@ -85,10 +85,9 @@ public sealed partial class WelcomePage : Page
         using var request = CancellationTokenSource.CreateLinkedTokenSource(_pageCancellation.Token, cancellationToken);
         var token = request.Token;
         var started = Stopwatch.GetTimestamp();
-        SetActivityBadge(true);
         try
         {
-            if (!await ViewModel.InitializeAsync(token) || token.IsCancellationRequested) return;
+            if (!await InitializeWithActivityBadgeAsync(token) || token.IsCancellationRequested) return;
 
             // A quick cached login still gets a short reveal, without the old fake version-check delay.
             var remaining = TimeSpan.FromMilliseconds(_uiSettings.AnimationsEnabled ? 900 : 0)
@@ -112,8 +111,14 @@ public sealed partial class WelcomePage : Page
         finally
         {
             _initializing = false;
-            SetActivityBadge(false);
         }
+    }
+
+    private async Task<bool> InitializeWithActivityBadgeAsync(CancellationToken token)
+    {
+        using var badge = _activityBadge = new(DispatcherQueue, token);
+        try { return await ViewModel.InitializeAsync(token); }
+        finally { _activityBadge = null; }
     }
 
     private async void Retry_Click(object sender, RoutedEventArgs e) => await EnterAsync();
@@ -171,6 +176,7 @@ public sealed partial class WelcomePage : Page
     private void HostWindow_Closed(object sender, WindowEventArgs args)
     {
         _windowActive = false;
+        StopWelcomeRequest();
         DisposeGamepad();
         Localization.PropertyChanged -= Localization_PropertyChanged;
         Bindings.StopTracking();
@@ -263,7 +269,7 @@ public sealed partial class WelcomePage : Page
         Bindings.StopTracking();
         // Home now owns the decoded source; the cached welcome page need not retain it.
         ViewModel.ReleaseProfileImage();
-        _pageCancellation?.Cancel();
+        StopWelcomeRequest();
         _pageCancellation?.Dispose();
         _pageCancellation = null;
         _uiSettings.AnimationsEnabledChanged -= MotionPreferenceChanged;
@@ -276,13 +282,10 @@ public sealed partial class WelcomePage : Page
         }
     }
 
-    private static void SetActivityBadge(bool active)
+    private void StopWelcomeRequest()
     {
-        try
-        {
-            if (active) BadgeNotificationManager.Current.SetBadgeAsGlyph(BadgeNotificationGlyph.Activity);
-            else BadgeNotificationManager.Current.ClearBadge();
-        }
-        catch (Exception exception) { AppLog.Error("Welcome activity badge could not be updated.", exception); }
+        _activityBadge?.Dispose();
+        _activityBadge = null;
+        _pageCancellation?.Cancel();
     }
 }
