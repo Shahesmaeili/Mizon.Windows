@@ -23,7 +23,6 @@ public sealed partial class MainWindow : Window
     private readonly IDisposable _appearanceAttachment;
     private readonly ProfilePresenceService _profilePresence;
     private readonly LocalStorageService _presenceStorage;
-    private bool _taskbarPreviewClosed;
 
     internal void ShowWindowOverlay(UIElement overlay)
     {
@@ -96,8 +95,6 @@ public sealed partial class MainWindow : Window
         var taskbarService = ((App)App.Current).Services.GetRequiredService<ITaskbarService>();
         taskbarService.PlaybackToggleRequested += TaskbarService_PlaybackToggleRequested;
         taskbarService.FullScreenRequested += TaskbarService_FullScreenRequested;
-        taskbarService.OpenPlaylistsRequested += TaskbarService_OpenPlaylistsRequested;
-        taskbarService.OpenDownloadSettingsRequested += TaskbarService_OpenDownloadSettingsRequested;
 
         // DragMoveAndResizeHelper.SetDragMove(App.MainMizonWindow, DragAreaOverlayGrid);
 
@@ -136,12 +133,7 @@ public sealed partial class MainWindow : Window
 
     private void NavigationChanged(object? sender, NavigationChangedEventArgs args)
     {
-        if (!args.IsEnteringPage) return;
-        RefreshTitle();
-        var services = ((App)App.Current).Services;
-        var navigation = services.GetRequiredService<NavigationService>();
-        services.GetRequiredService<ITaskbarService>().SetPreviewDestinationsAvailable(
-            navigation.CurrentMainPage is HomePage);
+        if (args.IsEnteringPage) RefreshTitle();
     }
 
     private void LocalizationChanged(object? sender, PropertyChangedEventArgs args)
@@ -151,7 +143,6 @@ public sealed partial class MainWindow : Window
             RefreshTitle();
             UpdatePresenceLanguage();
             UpdateWindowPresentationLabels();
-            ((App)App.Current).Services.GetRequiredService<ITaskbarService>().RefreshPreviewLabels();
         }
     }
 
@@ -189,9 +180,6 @@ public sealed partial class MainWindow : Window
         var taskbar = services.GetRequiredService<ITaskbarService>();
         taskbar.PlaybackToggleRequested -= TaskbarService_PlaybackToggleRequested;
         taskbar.FullScreenRequested -= TaskbarService_FullScreenRequested;
-        taskbar.OpenPlaylistsRequested -= TaskbarService_OpenPlaylistsRequested;
-        taskbar.OpenDownloadSettingsRequested -= TaskbarService_OpenDownloadSettingsRequested;
-        _taskbarPreviewClosed = true;
         Closed -= MainWindow_Closed;
     }
 
@@ -225,32 +213,6 @@ public sealed partial class MainWindow : Window
         RequestFullScreen();
     }
 
-
-    private void TaskbarService_OpenPlaylistsRequested(object? sender, EventArgs args) =>
-        OpenTaskbarPreviewDestination(new(Destination: "playlists"));
-
-    private void TaskbarService_OpenDownloadSettingsRequested(object? sender, EventArgs args) =>
-        OpenTaskbarPreviewDestination(new(Destination: "settings", SettingsSection: "storage"));
-
-    private void OpenTaskbarPreviewDestination(AppActivationRequest request)
-    {
-        // Leave the Explorer command callback before restoring the window or moving focus.
-        DispatcherQueue.TryEnqueue(async () =>
-        {
-            if (_taskbarPreviewClosed) return;
-            var navigation = ((App)App.Current).Services.GetRequiredService<NavigationService>();
-            if (navigation.CurrentMainPage is not HomePage { CanOpenDestination: true } home) return;
-            try
-            {
-                ActivateExistingWindow();
-                await home.OpenDestinationAsync(request);
-            }
-            catch (Exception error)
-            {
-                AppLog.Error("Taskbar preview navigation failed.", error);
-            }
-        });
-    }
 
     async Task BuzzWindowAsync()
     {

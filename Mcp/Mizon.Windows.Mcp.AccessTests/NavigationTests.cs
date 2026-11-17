@@ -57,14 +57,6 @@ internal static partial class Program
         var search = await peer.Call(Navigate("search", query: query));
         Assert(search.Success && AppActivationRequest.TryParse(search.Navigation?.Uri, out var parsed) && parsed.SearchQuery == query,
             "Unicode search uses the same encoded canonical deep link as protocol activation");
-        var playlists = await peer.Call(Navigate("playlists"));
-        Assert(playlists is { Success: true, Navigation.Uri: "mizon://playlists" }
-            && host.NavigationBackend.Last is { Destination: "playlists", RequiresAuthentication: true },
-            "The native taskbar playlists shortcut shares the declared signed-in navigation route");
-        var downloads = await peer.Call(Navigate("settings", section: "storage"));
-        Assert(downloads is { Success: true, Navigation.Uri: "mizon://settings/storage" }
-            && host.NavigationBackend.Last is { Destination: "settings", SettingsSection: "storage", RequiresAuthentication: true },
-            "The native taskbar download shortcut selects the existing storage settings section");
         var settings = await peer.Call(Navigate("settings", section: "ai-connections"));
         Assert(settings.Success && settings.Navigation?.Uri == "mizon://settings/ai-connections",
             "Settings navigation selects a declared section without changing permissions");

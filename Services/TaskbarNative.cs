@@ -17,7 +17,7 @@ internal sealed unsafe partial class TaskbarNative : IDisposable
     }
     internal void SetState(nint window, uint state) => Check(((delegate* unmanaged[Stdcall]<nint, nint, uint, int>)Slot(10))(_instance, window, state));
     internal void SetValue(nint window, ulong current, ulong total) => Check(((delegate* unmanaged[Stdcall]<nint, nint, ulong, ulong, int>)Slot(9))(_instance, window, current, total));
-    internal readonly record struct Button(uint Id, nint Icon, string Tooltip, bool Enabled, bool Visible = true);
+    internal readonly record struct Button(uint Id, nint Icon, string Tooltip, bool Enabled);
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct ThumbButton
     {
@@ -36,12 +36,7 @@ internal sealed unsafe partial class TaskbarNative : IDisposable
             native[index].Mask = 2 | 4 | 8;
             native[index].Id = buttons[index].Id;
             native[index].Icon = buttons[index].Icon;
-            native[index].Flags = buttons[index] switch
-            {
-                { Visible: false } => 8, // THBF_HIDDEN
-                { Enabled: false } => 1, // THBF_DISABLED
-                _ => 0
-            };
+            native[index].Flags = buttons[index].Enabled ? 0u : 1u;
             buttons[index].Tooltip.AsSpan(0, Math.Min(259, buttons[index].Tooltip.Length)).CopyTo(new Span<char>(native[index].Tooltip, 260));
         }
         Check(((delegate* unmanaged[Stdcall]<nint, nint, uint, ThumbButton*, int>)Slot(add ? 15 : 16))(_instance, window, (uint)buttons.Length, native));
