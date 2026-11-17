@@ -9,7 +9,7 @@
   x:Class="Mizon.Windows.Pages.MusicPage"
   AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/PageName', Localization.Revision), Mode=OneWay}"
   AutomationProperties.HelpText="{x:Bind Localization.GetString('MusicHome/PageHelp', Localization.Revision), Mode=OneWay}"
-  NavigationCacheMode="Enabled"
+  NavigationCacheMode="Required"
   Loaded="MusicPage_Loaded"
   Unloaded="MusicPage_Unloaded"
   SizeChanged="MusicPage_SizeChanged"

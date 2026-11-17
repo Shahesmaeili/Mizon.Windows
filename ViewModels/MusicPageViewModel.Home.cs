@@ -13,6 +13,7 @@ public partial class MusicPageViewModel
 {
     private CancellationTokenSource? _homeLoadCancellation;
     private int _homeLoadVersion;
+    internal event EventHandler? HomeLibraryChanged;
     public Microsoft.UI.Xaml.Visibility HomeStoriesRetryVisibility { get => field; private set => SetField(ref field, value); } = Microsoft.UI.Xaml.Visibility.Collapsed;
     public Microsoft.UI.Xaml.Visibility HomeGenresRetryVisibility { get => field; private set => SetField(ref field, value); } = Microsoft.UI.Xaml.Visibility.Collapsed;
     public bool IsHomeGenresLoading { get => field; private set => SetField(ref field, value); } = true;
@@ -64,6 +65,16 @@ public partial class MusicPageViewModel
     }
 
     public void CancelHomeWidgetLoading() => CancelHomeWidgetLoading(true);
+
+    internal void ClearHomeWidgetData()
+    {
+        CancelHomeWidgetLoading();
+        HomeStories.Clear();
+        MusicGenreTypes.Clear();
+        HomeStoriesMessage = HomeGenresMessage = string.Empty;
+        HomeStoriesRetryVisibility = HomeGenresRetryVisibility = Microsoft.UI.Xaml.Visibility.Collapsed;
+        IsHomeStoriesLoading = IsHomeGenresLoading = true;
+    }
 
     private void CancelHomeWidgetLoading(bool notify)
     {

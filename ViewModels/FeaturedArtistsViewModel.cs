@@ -160,6 +160,13 @@ public sealed partial class FeaturedArtistsViewModel(MizonApi api, MediaDownload
         }
     }
 
+    internal void ApplyFollowing(Guid personId, bool following, int followersCount)
+    {
+        if (Artists.FirstOrDefault(item => item.PublicId == personId) is not { } artist) return;
+        _confirmedFollows[personId] = (++_followRevision, following, followersCount);
+        artist.UpdateFollowing(following, followersCount);
+    }
+
     internal async Task<string> GetMediaPathAsync(Guid id, long maximumBytes, CancellationToken token)
     {
         // The same shared downloader owns the disk cache. Bound concurrent reads

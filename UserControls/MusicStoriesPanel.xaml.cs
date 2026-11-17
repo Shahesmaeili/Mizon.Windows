@@ -74,9 +74,11 @@ public sealed partial class MusicStoriesPanel : UserControl
         Bindings.StopTracking();
         StoriesScrollViewer.RemoveHandler(PointerWheelChangedEvent, new PointerEventHandler(Rail_Wheel));
         DetachSource();
-        StopImages();
+        StopImages(releaseImages: false);
         _lastWheel = 0;
     }
+
+    internal ScrollViewer NavigationScrollViewer => StoriesScrollViewer;
 
     private void AttachSource()
     {

@@ -49,11 +49,12 @@ public sealed partial class ArtistSpotlight : UserControl
     public event EventHandler<TopArtistItemViewModel>? ProfileRequested;
     public event EventHandler<TopArtistItemViewModel>? FollowRequested;
     public event EventHandler<DiscoveryMusicItemViewModel>? MusicRequested;
+    internal ScrollViewer NavigationScrollViewer => TracksScroll;
 
     private static void ItemsChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
     {
         var control = (ArtistSpotlight)sender;
-        control.ResetContentMotion();
+        if (control._loaded) control.ResetContentMotion();
         var previous = control._current?.Artist.PublicId;
         control._index = 0;
         if (previous is Guid id && control.ItemsSource is { } items)
@@ -64,28 +65,37 @@ public sealed partial class ArtistSpotlight : UserControl
 
     private void Spotlight_Loaded(object sender, RoutedEventArgs e)
     {
+        if (_loaded || !IsLoaded) return;
+        var previous = _current;
         _loaded = true;
         Bindings.Update();
         Localization.PropertyChanged -= SpotlightLocalizationChanged;
         Localization.PropertyChanged += SpotlightLocalizationChanged;
         UpdateLayout(ActualWidth, ActualHeight);
-        RenderSelection();
-        AnimateEntrance(1);
+        if (previous is not null && ReferenceEquals(_current, previous))
+        {
+            previous.Artist.PropertyChanged -= ArtistChanged;
+            previous.Artist.PropertyChanged += ArtistChanged;
+            var request = _selectionRequest = new();
+            _ = PresentSelectionAsync(previous, request);
+            UpdateModelGlow();
+        }
+        else if (_current is null)
+        {
+            RenderSelection();
+            AnimateEntrance(1);
+        }
     }
 
     private void Spotlight_Unloaded(object sender, RoutedEventArgs e)
     {
+        if (IsLoaded || !_loaded) return;
         _loaded = false;
         Localization.PropertyChanged -= SpotlightLocalizationChanged;
         Bindings.StopTracking();
         ResetContentMotion();
         if (_current is not null) _current.Artist.PropertyChanged -= ArtistChanged;
         CancelSelection();
-        Tracks.ItemsSource = null;
-        PortraitFallback.ProfilePicture = null;
-        ArtistAvatar.ProfilePicture = null;
-        ArtistModel.ModelPath = string.Empty;
-        UpdateListeningChart(null);
         ReleaseModelGlow();
     }
 
@@ -223,7 +233,7 @@ public sealed partial class ArtistSpotlight : UserControl
 
     private async Task LoadModelAsync(ArtistSpotlightItemViewModel item, CancellationToken token)
     {
-        if (item.ModelMediaId is not Guid id) return;
+        if (item.ModelMediaId is not Guid id || !string.IsNullOrEmpty(ArtistModel.ModelPath)) return;
         try
         {
             var path = await item.Artist.GetMediaPathAsync(id, 32 * 1024 * 1024, token);

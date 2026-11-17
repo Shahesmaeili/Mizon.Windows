@@ -43,6 +43,7 @@ namespace Mizon.Windows.Pages
         private int _titleBarGeneration;
         private ConnectedAnimation? _profileConnectedAnimation;
         private bool _internalFrameInitialized;
+        private MusicPage? _retainedMusicPage;
         private bool _synchronizingNavigationSelection;
         private bool _resetMusicLanding = true;
         private CancellationTokenSource? _musicActivationCancellation;
@@ -144,6 +145,7 @@ namespace Mizon.Windows.Pages
             }
             navigationService.InternalNavigationChanged -= ActivationNavigationChanged;
             navigationService.InternalNavigationChanged += ActivationNavigationChanged;
+            _retainedMusicPage ??= InternalFrame.Content as MusicPage;
 
             if (!OpenPendingDestination() && (_resetMusicLanding || InternalFrame.Content is null))
             {
@@ -370,6 +372,8 @@ namespace Mizon.Windows.Pages
         private void HomePage_Unloaded(object sender, RoutedEventArgs e)
         {
             if (IsLoaded) return;
+            _retainedMusicPage?.EndHomeSession();
+            _retainedMusicPage = null;
             _musicActivationCancellation?.Cancel();
             _musicActivationCancellation = null;
             ViewModel.NavigationService.InternalNavigationChanged -= ActivationNavigationChanged;
@@ -523,6 +527,8 @@ namespace Mizon.Windows.Pages
 
         private void ActivationNavigationChanged(object? sender, NavigationChangedEventArgs args)
         {
+            if (args.IsEnteringPage && InternalFrame.Content is MusicPage music)
+                _retainedMusicPage = music;
             if (!args.IsEnteringPage && !_navigatingActivation)
             {
                 _musicActivationCancellation?.Cancel();

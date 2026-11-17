@@ -23,6 +23,10 @@ public class NavigationService
 
     public event EventHandler<NavigationChangedEventArgs>? MainNavigationChanged;
     public event EventHandler<NavigationChangedEventArgs>? InternalNavigationChanged;
+    internal event Action<Guid, bool, int>? PersonFollowingChanged;
+
+    internal void NotifyPersonFollowingChanged(Guid personId, bool following, int followersCount) =>
+        PersonFollowingChanged?.Invoke(personId, following, followersCount);
 
     public void MainInitialize(Frame mainFrame)
     {

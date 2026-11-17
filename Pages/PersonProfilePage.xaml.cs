@@ -290,6 +290,8 @@ public sealed partial class PersonProfilePage : Page, IMcpPersonProfilePage
         try
         {
             var changed = await _viewModel.SetFollowingAsync(following, token);
+            if (changed && _viewModel.Profile is { } profile)
+                _navigation.NotifyPersonFollowingChanged(profile.PersonPublicId, profile.IsFollowing, profile.FollowersCount);
             _generalStatus = changed ? (following ? "FollowedStatus" : "UnfollowedStatus") : "FollowFailed";
             return changed;
         }

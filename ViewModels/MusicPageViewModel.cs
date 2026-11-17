@@ -1730,7 +1730,10 @@ public partial class MusicPageViewModel : MainViewModel
             }), cancellationToken);
 
             if (response.IsSuccess)
+            {
+                HomeLibraryChanged?.Invoke(this, EventArgs.Empty);
                 await LoadMusicPlaylistsAsync(true, cancellationToken);
+            }
             else if (changedPlaylist is not null && previousMusicsCount is int musicsCount)
             {
                 changedPlaylist.MusicsCount = musicsCount;
@@ -1757,6 +1760,7 @@ public partial class MusicPageViewModel : MainViewModel
         if (!response.IsSuccess)
             return false;
 
+        HomeLibraryChanged?.Invoke(this, EventArgs.Empty);
         await LoadMusicPlaylistsAsync(cancellationToken: cancellationToken);
         return true;
     }

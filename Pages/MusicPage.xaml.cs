@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Mizon.Windows.Services;
+using Mizon.Windows.Common;
 using Mizon.Windows.ViewModels;
 using Mizon.Windows.ViewModels.Items;
 using System;
@@ -20,7 +21,7 @@ public sealed partial class MusicPage : Page
 
     public MusicPageViewModel ViewModel { get; }
     public MusicDiscoveryViewModel Discovery { get; } = new();
-    public MusicLibraryViewModel Library { get; }
+    public MusicLibraryViewModel Library { get; private set; }
     public FeaturedArtistsViewModel FeaturedArtists { get; }
     public MusicFeaturesViewModel? Features { get; private set; }
     public FollowingActivitiesViewModel? FollowingActivities { get; private set; }
@@ -31,6 +32,9 @@ public sealed partial class MusicPage : Page
     private string? _layoutState;
     private bool _dialogOpen;
     private bool _homeWidgetsActive;
+    private bool _homeDataRequested;
+    private bool _libraryNeedsRefresh;
+    private int _homeLanguageRevision = -1;
     private Controls.WidgetPointerGlow? _sideWidgetGlow;
     private readonly Microsoft.UI.Xaml.Media.RectangleGeometry _pageViewportClip = new();
     private readonly global::Windows.UI.ViewManagement.UISettings _uiSettings = new();
@@ -38,21 +42,21 @@ public sealed partial class MusicPage : Page
     private readonly ConditionalWeakTable<ScrollViewer, RailState> _rails = new();
     private readonly HashSet<UserControls.TopArtistCard> _artistCards = [];
     private double _artistCardWidth = 224;
+    private readonly NavigationScrollPositions _scrollPositions;
 
     public MusicPage()
     {
-        ViewModel = ((App)Application.Current).Services.GetRequiredService<MusicPageViewModel>();
         var services = ((App)Application.Current).Services;
-        // The cached page owns its bounded library state; the root DI scope must not retain it.
-        Library = new(services.GetRequiredService<Mizon.API.MizonApi>(),
-            services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>());
-        FollowingActivities = new(services.GetRequiredService<Mizon.API.MizonApi>(),
-            services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>(), "music", 4);
-        Features = new(services.GetRequiredService<Mizon.API.MizonApi>(),
-            services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>());
-        FeaturedArtists = new(services.GetRequiredService<Mizon.API.MizonApi>(),
-            services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>());
+        ViewModel = services.GetRequiredService<MusicPageViewModel>();
+        var api = services.GetRequiredService<Mizon.API.MizonApi>();
+        var downloader = services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>();
+        Library = new(api, downloader);
+        FollowingActivities = new(api, downloader, "music", 4);
+        Features = new(api, downloader);
+        FeaturedArtists = new(api, downloader);
         InitializeComponent();
+        _scrollPositions = new(LayoutRoot, MainFeedScroll, EditorialScroll, CommunityScroll, TopArtistsScroll,
+            MusicStories.NavigationScrollViewer, FeaturedArtist.NavigationScrollViewer);
         // Let the hero shadow cross column boundaries, while keeping scrolled content inside the page.
         LayoutRoot.Clip = _pageViewportClip;
         DataContext = ViewModel;
@@ -60,9 +64,14 @@ public sealed partial class MusicPage : Page
 
     private async void MusicPage_Loaded(object sender, RoutedEventArgs e)
     {
+        if (!IsLoaded) return;
         UpdateViewportClip(ActualWidth, ActualHeight);
         UpdateLayout(ActualWidth);
-        if (_homeWidgetsActive) return;
+        if (_homeWidgetsActive)
+        {
+            _scrollPositions.Restore();
+            return;
+        }
         _homeWidgetsActive = true;
         _sideWidgetGlow = new(LayoutRoot,
             (LibraryWidget, WidgetAccent(LibraryWidget, "LibraryAccent")),
@@ -73,30 +82,58 @@ public sealed partial class MusicPage : Page
         ActivateMcpHome();
         Localization.PropertyChanged -= MusicHomeLocalizationChanged;
         Localization.PropertyChanged += MusicHomeLocalizationChanged;
-        RefreshHomeLanguage();
-        Bindings.Update();
+        if (_homeLanguageRevision != Localization.Revision) RefreshHomeLanguage();
+        var isNewSession = Features is null;
         if (Features is null)
         {
             var services = ((App)Application.Current).Services;
             Features = new(services.GetRequiredService<Mizon.API.MizonApi>(),
                 services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>());
-            Bindings.Update();
-            FeaturedMediaHost.ResetPresentation();
         }
         if (FollowingActivities is null)
         {
             var services = ((App)Application.Current).Services;
             FollowingActivities = new(services.GetRequiredService<Mizon.API.MizonApi>(),
                 services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>(), "music", 4);
-            Bindings.Update();
+        }
+        Bindings.Update();
+        if (isNewSession)
+        {
+            LibraryWidget.ResetPresentation();
+            FeaturedMediaHost.ResetPresentation();
             FollowingActivitiesHost.ResetPresentation();
         }
-        await Task.WhenAll(ViewModel.RefreshHomeWidgetsAsync(), Library.RefreshAsync(), FollowingActivities.RefreshAsync(), Features.RefreshAsync(), FeaturedArtists.RefreshAsync());
+        _scrollPositions.Restore();
+        // The signed-in shell owns the bounded feed. Let its initial request
+        // finish once even if the user opens a detail before all widgets arrive.
+        if (_homeDataRequested)
+        {
+            await RefreshChangedLibraryAsync();
+            return;
+        }
+        _homeDataRequested = true;
+        ViewModel.HomeLibraryChanged += HomeLibraryChanged;
+        ViewModel.NavigationService.PersonFollowingChanged += FeaturedFollowingChanged;
+        await Task.WhenAll(ViewModel.RefreshHomeWidgetsAsync(), Library.RefreshAsync(),
+            FollowingActivities.RefreshAsync(), Features.RefreshAsync(), FeaturedArtists.RefreshAsync());
     }
 
     private void MusicPage_Unloaded(object sender, RoutedEventArgs e)
     {
         if (IsLoaded) return;
+        SuspendHomeView();
+    }
+
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs args)
+    {
+        _scrollPositions.Capture();
+        base.OnNavigatedFrom(args);
+    }
+
+    private void SuspendHomeView()
+    {
+        _scrollPositions.Suspend();
+        if (!_homeWidgetsActive) return;
         _homeWidgetsActive = false;
         _sideWidgetGlow?.Dispose();
         _sideWidgetGlow = null;
@@ -105,18 +142,49 @@ public sealed partial class MusicPage : Page
         CloseStory();
         _followingStoryPresenter?.Dispose();
         _followingStoryPresenter = null;
-        ViewModel.CancelHomeWidgetLoading();
+        Bindings.StopTracking();
+    }
+
+    internal void EndHomeSession()
+    {
+        SuspendHomeView();
+        _homeDataRequested = false;
+        _libraryNeedsRefresh = false;
+        ViewModel.HomeLibraryChanged -= HomeLibraryChanged;
+        ViewModel.NavigationService.PersonFollowingChanged -= FeaturedFollowingChanged;
+        _scrollPositions.Reset();
+        ViewModel.ClearHomeWidgetData();
         FeaturedArtists.Clear();
-        Library.CancelLoading();
+        // Compiled bindings are disconnected while the cached view is away.
+        FeaturedArtist.ItemsSource = null;
+        ArtistItems.ItemsSource = null;
+        Library.Dispose();
+        var services = ((App)Application.Current).Services;
+        Library = new(services.GetRequiredService<Mizon.API.MizonApi>(),
+            services.GetRequiredService<Mizon.API.Client.Operations.Media.MediaDownloader>());
         FollowingActivities?.Dispose();
         FollowingActivities = null;
         Features?.Dispose();
         Features = null;
-        // This page is cached. Release account data and compiled-binding subscriptions
-        // on departure; reconstruct the small feed only when this page returns.
-        Bindings.Update();
-        Bindings.StopTracking();
+        FeatureHero.ReleaseRetainedArtwork();
     }
+
+    private async void HomeLibraryChanged(object? sender, EventArgs args)
+    {
+        _libraryNeedsRefresh = true;
+        if (_homeWidgetsActive && ReferenceEquals(ViewModel.NavigationService.CurrentInternalPage, this))
+            await RefreshChangedLibraryAsync();
+    }
+
+    private Task RefreshChangedLibraryAsync()
+    {
+        if (!_libraryNeedsRefresh) return Task.CompletedTask;
+        _libraryNeedsRefresh = false;
+        return Library.RefreshAsync();
+    }
+
+    private void FeaturedFollowingChanged(Guid personId, bool following, int followersCount) =>
+        FeaturedArtists.ApplyFollowing(personId, following, followersCount);
 
     private static global::Windows.UI.Color WidgetAccent(Controls.WidgetLoadHost host, string key) =>
         ((Microsoft.UI.Xaml.Media.SolidColorBrush)((FrameworkElement)host.Widget!).Resources[key]).Color;
@@ -131,6 +199,7 @@ public sealed partial class MusicPage : Page
 
     private void RefreshHomeLanguage()
     {
+        _homeLanguageRevision = Localization.Revision;
         Discovery.RefreshLocalization();
         FeaturedArtists.RefreshLocalization();
         ViewModel.RefreshHomeLocalization();

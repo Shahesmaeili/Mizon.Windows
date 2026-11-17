@@ -46,6 +46,7 @@ public sealed partial class ArtistModelView : UserControl
     private CancellationTokenSource? _loadCancellation;
     private ModelScene? _scene;
     private bool _loaded;
+    private bool _hasPresentedModel;
     private string _statusKey = "LoadingModel";
     private bool _textureUpgradeQueued;
     private uint? _pointerId;
@@ -158,6 +159,7 @@ public sealed partial class ArtistModelView : UserControl
     private static void OnModelPathChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
     {
         var control = (ArtistModelView)sender;
+        control._hasPresentedModel = false;
         if (control._loaded) control.LoadModel();
     }
 
@@ -237,7 +239,7 @@ public sealed partial class ArtistModelView : UserControl
             if (!preserveView) ResetView(animate: false);
             UpdateCursor();
             attached = true;
-            if (_animationsEnabled && !preserveView)
+            if (_animationsEnabled && !preserveView && !_hasPresentedModel)
             {
                 using var reveal = compositor.CreateScalarKeyFrameAnimation();
                 reveal.InsertKeyFrame(0, 0);
@@ -245,6 +247,7 @@ public sealed partial class ArtistModelView : UserControl
                 reveal.Duration = TimeSpan.FromMilliseconds(240);
                 _scene.Presentation.StartAnimation(nameof(Visual.Opacity), reveal);
             }
+            _hasPresentedModel = true;
             AppLog.Information($"[ArtistModelView] Loaded {model.Meshes.Length} native meshes from '{ModelPath}'; View={ActualWidth:0.##}x{ActualHeight:0.##}; Host={_modelHost.ActualWidth:0.##}x{_modelHost.ActualHeight:0.##}; Presentation={_scene?.Presentation.Size}; IsLoaded={IsLoaded}; Yaw={InitialYawInDegrees:0.##}°; Scale={ViewScale:0.##}; Focus={VerticalFocus:0.##}.");
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }

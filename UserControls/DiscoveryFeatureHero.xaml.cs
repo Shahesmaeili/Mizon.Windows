@@ -150,11 +150,17 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         _lighting?.Dispose();
         _lighting = null;
         _inViewport = _hostVisible = _pointerInside = _focusInside = _menuOpen = _seeking = false;
-        HeroArtwork.Source = null;
         ArtistPortrait.ProfilePicture = null;
         SongBadgeImage.Source = null;
         foreach (Button button in ThumbnailButtons.Children) button.Click -= Thumbnail_Click;
         ThumbnailButtons.Children.Clear();
+    }
+
+    internal void ReleaseRetainedArtwork()
+    {
+        _index = 0;
+        _selectedMediaId = Guid.Empty;
+        HeroArtwork.Source = null;
     }
 
     private void AttachViewModel()
@@ -241,13 +247,13 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         if (_selected is not null) _selected.PropertyChanged -= Item_Changed;
         _index = index;
         _selected = items[index];
+        if (_selectedMediaId != _selected.MediaPublicId) HeroArtwork.Source = null;
         _selectedMediaId = _selected.MediaPublicId;
         _selectedContentType = _selected.ContentTypeCode;
         _selected.PropertyChanged += Item_Changed;
         _imagePosition = 0;
         _videoEnded = _seeking = false;
         HeroVideo.Visibility = Visibility.Collapsed;
-        HeroArtwork.Source = null;
         ShowStatus(string.Empty);
         UpdatePresentation();
         _selectionCancellation = new();
