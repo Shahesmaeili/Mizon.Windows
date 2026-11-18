@@ -408,6 +408,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
     {
         _lastTick = Stopwatch.GetTimestamp();
         _media?.SetActive(CanPresent);
+        _lighting?.SetActive(CanPresent && _selected is not null && !HeroVideo.IsFullWindow && _settings.AnimationsEnabled);
         UpdateMediaMotion();
         var needsClock = _selected is { IsVideo: true }
             ? _sourceLoading || _media?.IsLoading == true || _media?.WantsToPlay == true || (_videoEnded && CanAdvance)
