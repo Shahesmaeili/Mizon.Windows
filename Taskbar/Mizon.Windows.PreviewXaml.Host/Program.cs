@@ -8,10 +8,6 @@ internal static unsafe partial class Program
     [STAThread]
     private static int Main(string[] arguments)
     {
-        if (arguments is ["--verify-child-startup"])
-            return PreviewHelperProcess.IsStartupFeedbackSuppressed() ? 0 : 1;
-        if (arguments is ["--self-test-startup"])
-            return PreviewHelperProcess.RunAsync(Environment.ProcessPath!, "--verify-child-startup").GetAwaiter().GetResult();
         if (arguments is ["--open-preview-action", var destination])
             return Task.Run(() => PreviewNavigation.Run(destination)).GetAwaiter().GetResult();
 

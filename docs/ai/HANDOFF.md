@@ -2,14 +2,13 @@
 
 Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
-## Taskbar preview build and startup feedback — 2026-11-18
+## Taskbar preview build inputs — 2026-11-18
 
 The deployed Debug payload was older than the caption-retention fix. After the
 correct NativeAOT payload was loaded, the user confirmed the route opened and
 the row stayed in place. Visual Studio now tracks the preview inputs and copies.
-The helper forces startup feedback off; the short-lived preview protocol
-receiver completes its startup message feedback before redirection. See the
-[task record](tasks/2026-11-18-taskbar-preview-startup.md) for live verification limits.
+The experimental startup-cursor handling was reverted at the user's request.
+See the [task record](tasks/2026-11-18-taskbar-preview-startup.md).
 
 ## Taskbar preview row retention — 2026-11-18
 
