@@ -28,6 +28,7 @@ var opened = new AppNavigationOutcome(true, "opened", "The destination was opene
     var json = AppDeepLinkResultProtocol.Serialize(received[0]);
     Check(AppDeepLinkResultProtocol.TryParse(json, id, out var parsed), "generated response round trip");
     Check(parsed?.Data?.PublicId == musicId && parsed.Data.CompletionStage == "opened", "additional data must survive");
+    Check(ReferenceEquals(await session.Completion, received[0]), "in-app status and native caller observe the same successful receipt");
     Check(session.IsCompleted && !session.Token.IsCancellationRequested, "success is not a cancellation");
 }
 {
@@ -72,6 +73,7 @@ var opened = new AppNavigationOutcome(true, "opened", "The destination was opene
     });
     session.Complete(opened);
     session.Cancel("cancelled", "The caller cancelled.");
+    Check((await session.Completion).Success, "a disconnected native caller does not block in-app completion");
     Check(attempts == 1 && session.IsCompleted, "a closed transport is not retried or thrown");
 }
 {
@@ -141,9 +143,10 @@ async Task DispatchException(Exception exception, string expectedCode)
         received.Enqueue(result); reported.TrySetResult();
     }, TimeSpan.FromMilliseconds(20));
     var dispatch = dispatcher.DispatchAsync(music, response);
-    Check(dispatcher.PendingUri == music.ToUri(), "waiting operation exposes only its canonical pending URI");
+    Check(dispatcher.PendingUri == music.ToUri() && !response.Completion.IsCompleted, "waiting operation has a pending URI and no receipt");
     await reported.Task.WaitAsync(TimeSpan.FromSeconds(5));
     Check(!dispatch.IsCompleted && received.Single().Code == "timed_out", "timeout must report while an uncooperative operation is still blocked");
+    Check((await response.Completion).Code == "timed_out", "in-app status receives the timeout without waiting for navigation to unwind");
     Check(dispatcher.PendingUri is null, "timed-out operation is not pending while its task unwinds");
     blocked.SetResult(opened);
     await dispatch.WaitAsync(TimeSpan.FromSeconds(5));
@@ -158,13 +161,15 @@ async Task DispatchException(Exception exception, string expectedCode)
     var next = new List<AppDeepLinkResult>();
     var first = dispatcher.DispatchAsync(music, new(Guid.NewGuid(), previous.Add));
     Check(dispatcher.PendingUri == music.ToUri(), "first request is pending before replacement");
-    var second = dispatcher.DispatchAsync(new(Destination: "login"), new(Guid.NewGuid(), next.Add));
+    using var latest = new AppDeepLinkResponseSession(Guid.NewGuid(), next.Add);
+    var second = dispatcher.DispatchAsync(new(Destination: "login"), latest);
     Check(previous.Count == 1 && previous[0].Code == "superseded", "new request reports previous cancellation immediately");
     Check(dispatcher.PendingUri == "mizon://login", "pending URI follows the replacing request");
     blocked.SetResult(opened);
     await first.WaitAsync(TimeSpan.FromSeconds(5));
     Check(previous.Count == 1, "previous operation cannot publish after supersession");
-    Check(dispatcher.PendingUri == "mizon://login", "previous unwind cannot clear the replacing URI");
+    Check(dispatcher.PendingUri == "mizon://login" && !latest.Completion.IsCompleted,
+        "previous unwind cannot clear the replacing URI or finish its receipt");
     nextBlocked.SetResult(opened);
     await second.WaitAsync(TimeSpan.FromSeconds(5));
     Check(next.Count == 1 && next[0].Success, "new request gets its own independent success");
@@ -212,6 +217,18 @@ async Task DispatchException(Exception exception, string expectedCode)
     await dispatcher.DispatchAsync(music, response);
     Check(navigation.Calls == 0 && results.Count == 1, "expired startup envelope cannot navigate later");
     Check(dispatcher.PendingUri is null, "expired startup envelope does not expose a pending destination");
+}
+
+{
+    using var navigation = new FakeNavigation((_, _) => Task.FromResult(opened));
+    using var dispatcher = new AppDeepLinkResultDispatcher(navigation);
+    using var plain = new AppDeepLinkResponseSession(Guid.NewGuid());
+    await dispatcher.DispatchAsync(music, plain);
+    Check((await plain.Completion) is { Success: true, Code: "opened" } && dispatcher.PendingUri is null,
+        "an ordinary URI gets a local receipt without a native callback");
+    Check(AppDeepLinkResponseSession.TimeoutFor(music with { MusicAction = MusicActivationAction.Download })
+        == TimeSpan.FromMinutes(5) && AppDeepLinkResponseSession.TimeoutFor(music) is null,
+        "ordinary and protocol-for-results links share the download response budget");
 }
 
 Console.WriteLine($"Passed {checks} deep-link response lifecycle assertions.");

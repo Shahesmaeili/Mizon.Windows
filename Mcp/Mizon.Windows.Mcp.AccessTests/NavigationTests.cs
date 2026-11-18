@@ -106,6 +106,37 @@ internal static partial class Program
         Assert((await peer.Call(Navigate("login"))).Code == "page_not_ready", "Page readiness timeout has an explicit outcome");
     }
 
+    private static async Task ExternalLinkPendingState()
+    {
+        await using var host = await Host.StartAsync(Path.Combine(StorageRoot, "navigation-pending", "grants.dat"));
+        await using var peer = await host.ConnectAsync(Proof());
+        var backend = host.NavigationBackend;
+        using var dispatcher = new AppDeepLinkResultDispatcher(backend);
+        backend.ExternalPendingUri = () => dispatcher.PendingUri;
+        var release = new TaskCompletionSource<AppNavigationOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+        backend.Handler = (_, _) => release.Task;
+        var request = new AppActivationRequest(Destination: "playlists");
+        using var response = new AppDeepLinkResponseSession(Guid.NewGuid());
+        var dispatch = dispatcher.DispatchAsync(request, response);
+        try
+        {
+            Assert((await peer.Call("get_navigation")).Navigation is null,
+                "Unapproved clients cannot read a pending ordinary deep link");
+            await host.Approve(peer.Hello.Connection!.Id, false, false, false, navigationRead: true);
+            Assert((await peer.Call("get_navigation")).Navigation is { HasPendingDestination: true, PendingUri: "mizon://playlists" }
+                && !response.Completion.IsCompleted, "Approved read reports the same pending link that owns the in-app loading ring");
+            dispatcher.CancelActive();
+            Assert((await response.Completion).Code == "superseded" && !dispatch.IsCompleted
+                && (await peer.Call("get_navigation")).Navigation is { HasPendingDestination: false, PendingUri: null },
+                "The link stops being pending for UI and MCP as soon as the receipt is cancelled");
+        }
+        finally
+        {
+            release.TrySetResult(new(false, "unavailable", "Synthetic navigation settled."));
+            await dispatch;
+        }
+    }
+
     private static async Task NavigationLifecycle()
     {
         var path = Path.Combine(StorageRoot, "navigation-lifecycle", "grants.dat");
@@ -171,7 +202,8 @@ internal static partial class Program
         public int Opens { get; private set; }
         public AppActivationRequest? Last { get; private set; }
         public bool Disposed { get; private set; }
-        public AppNavigationSnapshot GetState() => State;
+        public Func<string?>? ExternalPendingUri { get; set; }
+        public AppNavigationSnapshot GetState() => ExternalPendingUri is null ? State : State with { PendingUri = ExternalPendingUri() };
         public Task<AppNavigationOutcome> OpenAsync(AppActivationRequest request, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();

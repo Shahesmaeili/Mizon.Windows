@@ -8,6 +8,9 @@ using Mizon.Windows.Services;
 using Mizon.Windows.ViewModels;
 using Mizon.Windows.ViewModels.Items;
 
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace Mizon.Windows.Pages;
 
 // This is the shared activity destination. Only the home widget applies a music filter.
@@ -17,6 +20,7 @@ public sealed partial class FollowingActivitiesPage : Page
     private readonly MediaDownloader _downloader;
     private readonly NavigationService _navigation;
     private bool _active;
+    private Task? _contentLoad;
     private bool _departed;
     private bool _loadingMore;
     private FollowingActivityStoryPresenter? _storyPresenter;
@@ -42,7 +46,17 @@ public sealed partial class FollowingActivitiesPage : Page
             Bindings.Update();
             LoadingHost.ResetPresentation();
         }
-        await ViewModel.RefreshAsync();
+        _contentLoad = ViewModel.RefreshAsync();
+        await _contentLoad;
+    }
+
+    internal async Task<bool> WaitForContentAsync(CancellationToken token)
+    {
+        var model = ViewModel;
+        var load = _contentLoad;
+        if (load is null || model is null) return false;
+        await load.WaitAsync(token);
+        return ReferenceEquals(ViewModel, model) && model.HasLoaded && !model.HasError;
     }
 
     private void Page_Unloaded(object sender, RoutedEventArgs args)
@@ -61,6 +75,7 @@ public sealed partial class FollowingActivitiesPage : Page
     private void Release()
     {
         _active = false;
+        _contentLoad = null;
         _storyPresenter?.Dispose();
         _storyPresenter = null;
         Bindings.StopTracking();

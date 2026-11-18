@@ -147,7 +147,7 @@ namespace Mizon.Windows.Pages
             navigationService.InternalNavigationChanged += ActivationNavigationChanged;
             _retainedMusicPage ??= InternalFrame.Content as MusicPage;
 
-            if (!OpenPendingDestination() && (_resetMusicLanding || InternalFrame.Content is null))
+            if (!App.TryOpenPendingContent() && (_resetMusicLanding || InternalFrame.Content is null))
             {
                 SelectMusicNavigationItem();
                 if (InternalFrame.Content is not MusicPage)
@@ -492,13 +492,6 @@ namespace Mizon.Windows.Pages
             // Invoking that same tab must still return to its section landing page.
             if (!_internalFrameInitialized || _synchronizingNavigationSelection) return;
             if (args.InvokedItemContainer?.Tag is string tag) NavigateSection(tag);
-        }
-
-        internal bool OpenPendingDestination()
-        {
-            if (!CanOpenDestination || !App.PendingActivation.HasDestination) return false;
-            _ = OpenDestinationAsync(App.TakePendingActivation());
-            return true;
         }
 
         // Used by protocol activation and the permission-gated MCP adapter alike.

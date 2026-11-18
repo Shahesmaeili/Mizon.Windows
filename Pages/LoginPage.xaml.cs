@@ -72,19 +72,9 @@ public sealed partial class LoginPage : Page
         {
             if (_pageCancellation is not null && IsLoaded)
             {
-                OpenPendingAccountAction();
                 AuthForms.FocusInitialField();
             }
         });
-    }
-
-    internal async void OpenPendingAccountAction()
-    {
-        if (App.PendingDestination is not ("login" or "register") || !IsLoaded || !ViewModel.ControlsIsEnabled) return;
-        if (!ReferenceEquals(ViewModel.NavigationService.CurrentMainPage, this)) return;
-        var registration = App.PendingDestination == "register";
-        App.PendingDestination = null;
-        await AuthForms.SelectModeAsync(registration);
     }
 
     private void LocalizationChanged(object? sender, PropertyChangedEventArgs args)

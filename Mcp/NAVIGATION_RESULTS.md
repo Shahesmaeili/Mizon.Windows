@@ -25,9 +25,10 @@ Failure may omit data entirely. A timeout, cancelled/revoked request or disposed
 adapter does not manufacture a successful receipt. `mizon_get_navigation` reads
 the current location and does not retain/replay earlier invocation receipts.
 
-The existing `navigation.pendingUri` also reflects an in-flight native
-protocol-for-results request. It is cleared when that response finishes, times
-out or is replaced, even if an older asynchronous operation is still unwinding.
+The existing `navigation.pendingUri` reflects a queued external link or an
+in-flight external link with a local or native response. A response clears the
+in-flight state on completion, timeout or replacement, even if its operation
+is still unwinding. The main-window loading ring uses that same receipt.
 It stays behind navigation read permission and does not expose the companion's
 private UI, credentials or additional business data.
 

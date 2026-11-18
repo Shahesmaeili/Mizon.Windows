@@ -8,12 +8,16 @@ using Mizon.API;
 using System;
 using System.Collections.Generic;
 
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace Mizon.Windows.Pages;
 
 public sealed partial class MusicPlaylistPage : Page
 {
     private readonly MizonApi _api;
     private readonly NavigationService _navigation;
+    private Task? _contentLoad;
     private bool _departed, _preserveContent, _observingNavigation;
     private string? _owner;
     private MusicCoverTransition? _returnTransition;
@@ -58,7 +62,8 @@ public sealed partial class MusicPlaylistPage : Page
             _observingNavigation = true;
             var content = _content = new MusicLibraryBrowser();
             ContentHost.Children.Add(content);
-            await content.OpenAsync(PlaylistPublicId);
+            _contentLoad = content.OpenAsync(PlaylistPublicId);
+            await _contentLoad;
         }
         else
         {
@@ -94,6 +99,15 @@ public sealed partial class MusicPlaylistPage : Page
             && args.ToPageType != typeof(MusicPlaylistPage)) ReleaseContent();
     }
 
+    internal async Task<bool> WaitForContentAsync(CancellationToken token)
+    {
+        var content = _content;
+        var load = _contentLoad;
+        if (content is null || load is null) return false;
+        await load.WaitAsync(token);
+        return ReferenceEquals(content, _content) && content.Details.HasLoaded && !content.Details.HasError;
+    }
+
     private void ReleaseContent()
     {
         if (_observingNavigation)
@@ -104,6 +118,7 @@ public sealed partial class MusicPlaylistPage : Page
         }
         _returnTransition?.Dispose(); _returnTransition = null;
         _preserveContent = false;
+        _contentLoad = null;
         _content?.Dispose();
         _content = null;
         _owner = null;

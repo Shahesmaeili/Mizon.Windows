@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Mizon.Windows.Services;
 
@@ -10,6 +11,7 @@ internal sealed class AppDeepLinkResponseSession : IDisposable
     private readonly object _gate = new();
     private readonly CancellationTokenSource _cancellation = new();
     private readonly CancellationToken _token;
+    private readonly TaskCompletionSource<AppDeepLinkResult> _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private Action<AppDeepLinkResult>? _report;
     private Timer? _deadline;
     private bool _completed;
@@ -17,10 +19,9 @@ internal sealed class AppDeepLinkResponseSession : IDisposable
     private bool _resourcesDisposed;
     private int _cancellationInProgress;
 
-    internal AppDeepLinkResponseSession(Guid requestId, Action<AppDeepLinkResult> report, TimeSpan? timeout = null)
+    internal AppDeepLinkResponseSession(Guid requestId, Action<AppDeepLinkResult>? report = null, TimeSpan? timeout = null)
     {
         if (requestId == Guid.Empty) throw new ArgumentException("A request ID is required.", nameof(requestId));
-        ArgumentNullException.ThrowIfNull(report);
         var duration = timeout ?? TimeSpan.FromSeconds(50);
         if (duration <= TimeSpan.Zero || duration > TimeSpan.FromMinutes(5))
             throw new ArgumentOutOfRangeException(nameof(timeout));
@@ -35,8 +36,12 @@ internal sealed class AppDeepLinkResponseSession : IDisposable
         _deadline.Change(duration, Timeout.InfiniteTimeSpan);
     }
 
+    internal static TimeSpan? TimeoutFor(AppActivationRequest request) =>
+        request.MusicAction == MusicActivationAction.Download ? TimeSpan.FromMinutes(5) : null;
+
     internal Guid RequestId { get; }
     internal CancellationToken Token => _token;
+    internal Task<AppDeepLinkResult> Completion => _completion.Task;
     internal bool IsCompleted { get { lock (_gate) return _completed; } }
 
     internal void Complete(AppNavigationOutcome outcome)
@@ -95,6 +100,7 @@ internal sealed class AppDeepLinkResponseSession : IDisposable
         }
         // The native caller may already have gone away. Reporting is best-effort
         // but is never retried: Windows receives at most one completion attempt.
+        _completion.TrySetResult(result);
         try { report?.Invoke(result); }
         catch (Exception) { /* The transport owns diagnostics; never fault a timer or shutdown callback. */ }
     }

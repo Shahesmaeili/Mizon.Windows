@@ -834,7 +834,6 @@ public partial class MusicPageViewModel : MainViewModel
     {
         try
         {
-            _ = GetMusicAsync(musicPublicId, cancellationToken);
             _ = GetMusicLyricAsync(musicPublicId, cancellationToken);
             _ = GetMusicContributorsAsync(musicPublicId, cancellationToken);
             _ = GetMusicReactionsAsync(musicPublicId, cancellationToken);
@@ -2046,7 +2045,7 @@ public partial class MusicPageViewModel : MainViewModel
         }
     }
 
-    private async Task GetMusicAsync(Guid musicPublicId, CancellationToken cancellationToken)
+    private async Task<bool> GetMusicAsync(Guid musicPublicId, CancellationToken cancellationToken)
     {
         var baseApiResponse = await MizonApi.SendRequestAsync(new MusicOperation(new()
         {
@@ -2087,7 +2086,8 @@ public partial class MusicPageViewModel : MainViewModel
             if (NavigationService.CurrentInternalPage is MusicsPage)
                 _ = MizonSocket.JoinEntityAsync("Music", musicPublicId, cancellationToken);
 
-            _ = GetMusicCoverFileAsync(musicPublicId, musicResponse.MusicCover.MediaPublicId, cancellationToken);
+            if (musicResponse.MusicCover is { } cover)
+                _ = GetMusicCoverFileAsync(musicPublicId, cover.MediaPublicId, cancellationToken);
             // An explicit activity/comment destination or a tab selected while metadata
             // was loading takes precedence over the initial default tab.
             if (!IsAlbumDetailsSelected && !IsContributorDetailsSelected && !IsCommentsDetailsSelected)
@@ -2098,7 +2098,10 @@ public partial class MusicPageViewModel : MainViewModel
                     _ = SelectContributorDetailsAsync();
             }
             await UpdateNowPlayingMetadataAsync();
+            return IsCurrentMusicLoad(musicPublicId, cancellationToken);
         }
+
+        return false;
     }
 
     private async Task GetMusicFileAsync(Guid musicPublicId, CancellationToken cancellationToken)

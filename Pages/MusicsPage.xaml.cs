@@ -51,6 +51,8 @@ namespace Mizon.Windows.Pages
         private Visual? _musicVisual;
         private bool _pageActive;
         public Guid MusicPublicId { get; private set; }
+        internal Task<bool> WaitForDetailsAsync(CancellationToken token) =>
+            ViewModel.WaitForMusicDetailsAsync(MusicPublicId, token);
         private MusicCoverTransition? _coverTransition;
         private Microsoft.UI.Dispatching.DispatcherQueueTimer? _coverTransitionTimeout;
         private bool _coverTransitionStarted, _coverTransitionCompleted, _destinationCoverReady;

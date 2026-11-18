@@ -9,6 +9,7 @@ namespace Mizon.Windows.ViewModels;
 public partial class MusicPageViewModel
 {
     private Task _musicLoadTask = Task.CompletedTask;
+    private Task<bool> _musicDetailsTask = Task.FromResult(false);
 
     private void BeginMusicLoad(Guid musicPublicId)
     {
@@ -17,21 +18,58 @@ public partial class MusicPageViewModel
         _musicLoadCancellationTokenSource = new CancellationTokenSource();
         ResetMusicPresentation();
         _musicPublicId = musicPublicId;
-        _musicLoadTask = LoadMusicAfterNavigationAsync(musicPublicId, _musicLoadCancellationTokenSource.Token);
+        var details = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _musicDetailsTask = details.Task;
+        _musicLoadTask = LoadMusicAfterNavigationAsync(musicPublicId, _musicLoadCancellationTokenSource.Token, details);
     }
 
-    private async Task LoadMusicAfterNavigationAsync(Guid musicPublicId, CancellationToken token)
+    private async Task LoadMusicAfterNavigationAsync(Guid musicPublicId, CancellationToken token,
+        TaskCompletionSource<bool> details)
     {
         var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (!_dispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => ready.TrySetResult())) return;
+        if (!_dispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => ready.TrySetResult()))
+        {
+            details.TrySetResult(false);
+            return;
+        }
         try
         {
             // Give navigation/layout/input a turn before starting all detail requests.
-            // No artificial delay and no UI work is moved to a worker thread.
             await ready.Task.WaitAsync(token);
-            if (IsCurrentMusicLoad(musicPublicId, token)) await LoadMusicAsync(musicPublicId, token);
         }
-        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            details.TrySetResult(false);
+            return;
+        }
+        if (!IsCurrentMusicLoad(musicPublicId, token))
+        {
+            details.TrySetResult(false);
+            return;
+        }
+
+        _ = LoadMusicDetailsAsync(musicPublicId, token, details);
+        await LoadMusicAsync(musicPublicId, token);
+    }
+
+    private async Task LoadMusicDetailsAsync(Guid musicPublicId, CancellationToken token, TaskCompletionSource<bool> details)
+    {
+        try { details.TrySetResult(await GetMusicAsync(musicPublicId, token)); }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { details.TrySetResult(false); }
+        catch (Exception error)
+        {
+            details.TrySetResult(false);
+            AppLog.Error("Music details could not be loaded.", error);
+        }
+    }
+
+    internal async Task<bool> WaitForMusicDetailsAsync(Guid musicPublicId, CancellationToken token)
+    {
+        if (!IsCurrentMusicLoad(musicPublicId, token) || _musicLoadCancellationTokenSource is not { } load) return false;
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(load.Token, token);
+        var currentDetails = _musicDetailsTask;
+        var loaded = await currentDetails.WaitAsync(cancellation.Token);
+        return loaded && ReferenceEquals(currentDetails, _musicDetailsTask) && IsCurrentMusicLoad(musicPublicId, token);
     }
 
     internal async Task<bool> PlayFromPlaylistAsync(Guid musicPublicId, CancellationToken cancellationToken)

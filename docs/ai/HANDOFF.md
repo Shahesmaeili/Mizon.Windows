@@ -2,6 +2,14 @@
 
 Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Deep-link loading — 2026-11-18
+
+Ordinary and native response links now drive one localized main-window progress
+ring from the same per-request receipt. The music details, playlists and
+following-activity routes wait for their initial data. Existing navigation read
+consent controls pending-link visibility in MCP. See the
+[task record](tasks/2026-11-18-deep-link-loading.md) for tested boundaries.
+
 ## XAML inside the taskbar preview — 2026-11-18
 
 A .NET 11 NativeAOT C#/XAML adapter adds a real Grid row beneath the existing four

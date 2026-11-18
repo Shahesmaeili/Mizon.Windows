@@ -30,7 +30,7 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
 
     public AppNavigationSnapshot GetState()
     {
-        var pendingUri = App.PendingResultUri ?? App.PendingActivation.ToUri();
+        var pendingUri = App.PendingLinkUri ?? App.PendingActivation.ToUri();
         // Welcome is an internal validation stage, never a public URI destination.
         if (_navigation.CurrentMainPage is WelcomePage)
             return new("welcome", null, pendingUri, false, _hasSession);
@@ -123,6 +123,29 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
             return loaded
                 ? new(true, "completed", "The artist profile was opened and loaded.", ResultData(request, "completed"))
                 : new(false, "profile_unavailable", "The artist profile could not be loaded.");
+        }
+        var destination = _navigation.CurrentInternalPage;
+        Func<CancellationToken, Task<bool>>? waitForContent = (request.RouteKey, destination) switch
+        {
+            ("music-details", MusicsPage music) when music.MusicPublicId == request.MusicPublicId => music.WaitForDetailsAsync,
+            ("playlist", MusicPlaylistPage playlist) when playlist.PlaylistPublicId == request.PlaylistPublicId => playlist.WaitForContentAsync,
+            ("playlists", MusicPlaylistsPage playlists) => playlists.WaitForContentAsync,
+            ("activities", FollowingActivitiesPage activities) => activities.WaitForContentAsync,
+            _ => null
+        };
+        if (request.RouteKey is "music-details" or "playlist" or "playlists" or "activities")
+        {
+            if (destination is not FrameworkElement page || waitForContent is null
+                || !await McpAuthenticationService.WaitForLoadedAsync(page, cancellationToken))
+                return new(false, "page_changed", "The destination changed before it could be loaded.");
+            var loaded = await waitForContent(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_disposed || !_hasSession || !ReferenceEquals(_navigation.CurrentMainPage, home)
+                || !ReferenceEquals(_navigation.CurrentInternalPage, page))
+                return new(false, "page_changed", "The destination changed before loading completed.");
+            return loaded
+                ? new(true, "completed", "The requested content was loaded.", ResultData(request, "completed"))
+                : new(false, "page_unavailable", "The requested content could not be loaded.");
         }
         var completed = request.MusicAction is MusicActivationAction.Play or MusicActivationAction.Download
             || request.StoryPublicId is not null || request.MusicCommentPublicId is not null;

@@ -52,6 +52,20 @@
         <!--<Button Content="asdasd" Click="Button_Click_1">
             
         </Button>-->
+        <Border x:Name="DeepLinkStatus" Canvas.ZIndex="9998" Visibility="Collapsed" IsHitTestVisible="False"
+                HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="16,0,16,24"
+                CornerRadius="18" Padding="12,7"
+                Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}" BorderThickness="1"
+                AutomationProperties.LiveSetting="Polite">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <ProgressRing x:Name="DeepLinkRing" Width="20" Height="20" IsActive="False"
+                              AutomationProperties.AccessibilityView="Raw"/>
+                <TextBlock x:Name="DeepLinkStatusLabel" VerticalAlignment="Center"
+                           FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+            </StackPanel>
+        </Border>
+
         <Grid x:Name="WindowOverlayHost" Canvas.ZIndex="10000" Visibility="Collapsed"/>
         <!-- Overlay-only window controls: revealing them never resizes page content. -->
         <Grid x:Name="FullScreenEdge" Canvas.ZIndex="10002" Height="3" VerticalAlignment="Top"

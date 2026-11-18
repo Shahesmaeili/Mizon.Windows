@@ -3,10 +3,14 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Mizon.Windows.UserControls;
 
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace Mizon.Windows.Pages;
 
 public sealed partial class MusicPlaylistsPage : Page
 {
+    private Task? _contentLoad;
     private bool _departed;
     private MusicLibraryBrowser? _content;
     public MusicPlaylistsPage() => InitializeComponent();
@@ -16,7 +20,8 @@ public sealed partial class MusicPlaylistsPage : Page
         if (_content is not null || _departed) return;
         var content = _content = new MusicLibraryBrowser();
         ContentHost.Children.Add(content);
-        await content.OpenAsync();
+        _contentLoad = content.OpenAsync();
+        await _contentLoad;
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs args)
@@ -34,8 +39,18 @@ public sealed partial class MusicPlaylistsPage : Page
         ReleaseContent();
     }
 
+    internal async Task<bool> WaitForContentAsync(CancellationToken token)
+    {
+        var content = _content;
+        var load = _contentLoad;
+        if (content is null || load is null) return false;
+        await load.WaitAsync(token);
+        return ReferenceEquals(content, _content) && content.Library.HasLoaded && !content.Library.HasError;
+    }
+
     private void ReleaseContent()
     {
+        _contentLoad = null;
         _content?.Dispose();
         _content = null;
         ContentHost.Children.Clear();

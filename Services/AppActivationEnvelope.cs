@@ -43,7 +43,7 @@ internal sealed record AppActivationEnvelope(AppActivationRequest Request, AppDe
                 // search text or result payload, and never retry ReportCompleted.
                 AppLog.Information($"Deep-link response transport closed (HRESULT=0x{error.HResult:X8}).");
             }
-        }, request.MusicAction == MusicActivationAction.Download ? TimeSpan.FromMinutes(5) : null);
+        }, AppDeepLinkResponseSession.TimeoutFor(request));
         if (errorCode is not null)
             response.Fail(errorCode, "The deep-link request metadata is invalid or its response version is unsupported.");
         return new(request, response);

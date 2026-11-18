@@ -121,7 +121,7 @@ public partial class App : Application
     private AppDeepLinkResultDispatcher? _deepLinkResults;
     private AppActivationEnvelope? _pendingResultActivation;
     private bool _closing;
-    internal static string? PendingResultUri => Current is App app
+    internal static string? PendingLinkUri => Current is App app
         ? app._pendingResultActivation is { Response.IsCompleted: false } pending
             ? pending.Request.ToUri() : app._deepLinkResults?.PendingUri
         : null;
@@ -143,8 +143,16 @@ public partial class App : Application
         CancelResultActivation("superseded", "A newer deep-link request replaced this request.");
         ClearPendingActivation();
         if (_deepLinkResults is null) _pendingResultActivation = envelope;
-        else _ = _deepLinkResults.DispatchAsync(envelope.Request, response);
+        else StartActivation(envelope.Request, response);
         if (MainMizonWindow is MainWindow window) window.ActivateExistingWindow();
+    }
+
+    private void StartActivation(AppActivationRequest request, AppDeepLinkResponseSession? response = null)
+    {
+        var dispatcher = _deepLinkResults!;
+        response ??= new AppDeepLinkResponseSession(Guid.NewGuid(), timeout: AppDeepLinkResponseSession.TimeoutFor(request));
+        if (MainMizonWindow is MainWindow window) window.TrackDeepLinkResponse(response);
+        _ = dispatcher.DispatchAsync(request, response);
     }
 
     private void CancelResultActivation(string code, string message)
@@ -156,6 +164,7 @@ public partial class App : Application
 
     private void ReceiveActivation(AppActivationRequest request)
     {
+        if (_closing) return;
         if (request.HasDestination)
         {
             CancelResultActivation("superseded", "Another app activation replaced this request.");
@@ -179,12 +188,8 @@ public partial class App : Application
             ClearPendingActivation();
             return;
         }
-        if (OpenPendingAccountDestination(navigation)) return;
-        if (navigation.CurrentMainPage is HomePage home)
-        {
-            home.OpenPendingDestination();
-            return;
-        }
+        if (OpenPendingAccountDestination() || TryOpenPendingContent()) return;
+        if (navigation.CurrentMainPage is HomePage) return; // Home will resume from Loaded.
         var hasSession = !string.IsNullOrWhiteSpace(Services.GetRequiredService<LocalStorageService>().GetJwtToken());
         if (hasSession)
         {
@@ -196,18 +201,21 @@ public partial class App : Application
             navigation.MainNavigate(typeof(LoginPage));
     }
 
-    internal static bool OpenPendingAccountDestination(NavigationService navigation)
+    private bool OpenPendingAccountDestination()
     {
-        // Page-only actions never submit credentials or sign the current account out.
-        // Login consumes the requested form after its controls have loaded.
-        if (PendingDestination is "login" or "register")
-        {
-            AppLog.Information($"Opening account destination: {PendingDestination}.");
-            if (navigation.CurrentMainPage is LoginPage login) login.OpenPendingAccountAction();
-            else navigation.MainNavigate(typeof(LoginPage));
-            return true;
-        }
-        return false;
+        if (PendingDestination is not ("login" or "register")) return false;
+        StartActivation(TakePendingActivation());
+        return true;
+    }
+
+    internal static bool TryOpenPendingContent()
+    {
+        var app = (App)Current;
+        if (!PendingActivation.RequiresAuthentication
+            || app.Services.GetRequiredService<NavigationService>().CurrentMainPage is not HomePage { CanOpenDestination: true })
+            return false;
+        app.StartActivation(TakePendingActivation());
+        return true;
     }
 
     private void AppInitialize()
@@ -235,17 +243,17 @@ public partial class App : Application
 
         // The first activation is queued before initialization. Restore the session
         // before honoring its page, and do not briefly load a different page first.
+        var authentication = new McpAuthenticationService(navigationService, localStorageService);
+        var deepLinkNavigation = new AppDeepLinkNavigation(navigationService, localStorageService, authentication);
+        _deepLinkResults = new AppDeepLinkResultDispatcher(deepLinkNavigation);
         _initialized = true;
-        if (!OpenPendingAccountDestination(navigationService))
+        if (!OpenPendingAccountDestination())
             navigationService.MainNavigate(string.IsNullOrWhiteSpace(userToken) ? typeof(LoginPage) : typeof(WelcomePage));
         if (AppActionsService.IsSupported)
         {
             _appActions = new AppActionsService(localStorageService, !string.IsNullOrWhiteSpace(userToken), ReceiveAppAction);
             Program.ConnectAppActionHandler(_appActions.Invoke);
         }
-        var authentication = new McpAuthenticationService(navigationService, localStorageService);
-        var deepLinkNavigation = new AppDeepLinkNavigation(navigationService, localStorageService, authentication);
-        _deepLinkResults = new AppDeepLinkResultDispatcher(deepLinkNavigation);
         McpAccessService.Current.Start(MainMizonWindow!.DispatcherQueue,
             authentication, new McpAppearanceService(AppearanceSettingsService.Current),
             new McpNavigationService(deepLinkNavigation),
@@ -267,7 +275,7 @@ public partial class App : Application
         if (_pendingResultActivation is { } pendingResult)
         {
             _pendingResultActivation = null;
-            _ = _deepLinkResults.DispatchAsync(pendingResult.Request, pendingResult.Response!);
+            StartActivation(pendingResult.Request, pendingResult.Response!);
         }
         // The authenticated shell starts the socket after account validation. Login and
         // Welcome do not need SignalR's connection, transport buffers or reconnect loop.
