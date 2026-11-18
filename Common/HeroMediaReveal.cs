@@ -11,34 +11,36 @@ namespace Mizon.Windows.Common;
 internal sealed class HeroMediaReveal(FrameworkElement layer, Action? onFinished = null) : IDisposable
 {
     private CompositionScopedBatch? _batch;
-    private ScalarKeyFrameAnimation? _fade;
-    private Vector3KeyFrameAnimation? _drift;
+    private Visual? _visual;
+    private Vector3 _originalCenter;
 
     public void Start(int direction, TimeSpan duration, FrameworkElement? bounds = null)
     {
         Finish();
         if (duration <= TimeSpan.Zero) return;
 
-        var compositor = ElementCompositionPreview.GetElementVisual(layer).Compositor;
+        // Obtaining the element's visual reserves the transform for Composition.
+        // Keep the pivot, scale and opacity on that same visual.
+        var visual = _visual = ElementCompositionPreview.GetElementVisual(layer);
+        var compositor = visual.Compositor;
         bounds ??= layer;
-        layer.CenterPoint = new((float)bounds.ActualWidth * (direction < 0 ? .78f : .22f),
+        _originalCenter = visual.CenterPoint;
+        visual.CenterPoint = new((float)bounds.ActualWidth * (direction < 0 ? .78f : .22f),
             (float)bounds.ActualHeight / 2, 0);
         using var easing = compositor.CreateCubicBezierEasingFunction(new Vector2(.18f, .72f), Vector2.One);
-        var fade = _fade = compositor.CreateScalarKeyFrameAnimation();
-        fade.Target = nameof(UIElement.Opacity);
+        using var fade = compositor.CreateScalarKeyFrameAnimation();
         fade.Duration = duration;
         fade.InsertKeyFrame(0, 0);
         fade.InsertKeyFrame(.72f, .96f, easing);
         fade.InsertKeyFrame(1, 1);
-        var drift = _drift = compositor.CreateVector3KeyFrameAnimation();
-        drift.Target = nameof(UIElement.Scale);
+        using var drift = compositor.CreateVector3KeyFrameAnimation();
         drift.Duration = duration;
         drift.InsertKeyFrame(0, new Vector3(1.055f, 1.055f, 1));
         drift.InsertKeyFrame(1, Vector3.One, easing);
         _batch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
         _batch.Completed += Completed;
-        layer.StartAnimation(fade);
-        layer.StartAnimation(drift);
+        visual.StartAnimation(nameof(Visual.Opacity), fade);
+        visual.StartAnimation(nameof(Visual.Scale), drift);
         _batch.End();
     }
 
@@ -53,20 +55,15 @@ internal sealed class HeroMediaReveal(FrameworkElement layer, Action? onFinished
         _batch.Completed -= Completed;
         _batch.Dispose();
         _batch = null;
-        if (_fade is not null)
+        if (_visual is { } visual)
         {
-            layer.StopAnimation(_fade);
-            _fade.Dispose();
-            _fade = null;
+            _visual = null;
+            visual.StopAnimation(nameof(Visual.Opacity));
+            visual.StopAnimation(nameof(Visual.Scale));
+            visual.Opacity = 1;
+            visual.Scale = Vector3.One;
+            visual.CenterPoint = _originalCenter;
         }
-        if (_drift is not null)
-        {
-            layer.StopAnimation(_drift);
-            _drift.Dispose();
-            _drift = null;
-        }
-        layer.Opacity = 1;
-        layer.Scale = Vector3.One;
         onFinished?.Invoke();
     }
 

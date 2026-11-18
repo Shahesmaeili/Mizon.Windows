@@ -14,6 +14,7 @@ namespace Mizon.Windows.Common;
 internal sealed partial class DiscoveryHeroLighting : IDisposable
 {
     private readonly FrameworkElement _root;
+    private readonly HeroSpectrumBorder _spectrum;
     private readonly global::Windows.UI.ViewManagement.UISettings _accessibilitySettings = new();
     private readonly HeroAmbientLight _ambientLight = new();
     private readonly HeroHoverLight _hoverLight = new();
@@ -23,10 +24,11 @@ internal sealed partial class DiscoveryHeroLighting : IDisposable
     private readonly PointerEventHandler _pointerCanceledHandler;
     private bool _disposed;
 
-    public DiscoveryHeroLighting(FrameworkElement root)
+    public DiscoveryHeroLighting(FrameworkElement root, HeroSpectrumBorder spectrum)
     {
         ArgumentNullException.ThrowIfNull(root);
         _root = root;
+        _spectrum = spectrum;
         _pointerMovedHandler = PointerMoved;
         _pointerExitedHandler = PointerExited;
         _pointerReleasedHandler = PointerReleased;
@@ -45,14 +47,17 @@ internal sealed partial class DiscoveryHeroLighting : IDisposable
     private void PointerMoved(object sender, PointerRoutedEventArgs args)
     {
         if (_disposed) return;
+        var point = args.GetCurrentPoint(_root).Position;
+        var isInside = IsInside(point.X, point.Y);
+        if (args.Pointer.PointerDeviceType == PointerDeviceType.Mouse)
+            _spectrum.UpdatePointer(new Vector2((float)point.X, (float)point.Y), isInside);
         if (!_accessibilitySettings.AnimationsEnabled)
         {
             _hoverLight.Rest(false);
             return;
         }
 
-        var point = args.GetCurrentPoint(_root).Position;
-        if (!IsInside(point.X, point.Y))
+        if (!isInside)
         {
             _hoverLight.Rest(true);
             return;
@@ -70,6 +75,8 @@ internal sealed partial class DiscoveryHeroLighting : IDisposable
         var point = args.GetCurrentPoint(_root).Position;
         // Routed exits from images, text and buttons do not mean the pointer left the hero.
         if (IsInside(point.X, point.Y)) return;
+        if (args.Pointer.PointerDeviceType == PointerDeviceType.Mouse)
+            _spectrum.UpdatePointer(new Vector2((float)point.X, (float)point.Y), false);
         _hoverLight.Rest(_accessibilitySettings.AnimationsEnabled);
     }
 
@@ -85,6 +92,11 @@ internal sealed partial class DiscoveryHeroLighting : IDisposable
     private void PointerCanceled(object sender, PointerRoutedEventArgs args)
     {
         if (_disposed) return;
+        if (args.Pointer.PointerDeviceType == PointerDeviceType.Mouse)
+        {
+            var point = args.GetCurrentPoint(_root).Position;
+            _spectrum.UpdatePointer(new Vector2((float)point.X, (float)point.Y), false);
+        }
         _hoverLight.Rest(_accessibilitySettings.AnimationsEnabled);
     }
 
