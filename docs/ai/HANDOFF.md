@@ -2,6 +2,13 @@
 
 Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Welcome typography and profile entrance — 2026-11-18
+
+The Welcome labels, error actions and language tooltip bind to the current
+locale font. Home seeds the native caption inset before layout and starts the
+connected profile animation after the destination bounds settle. See the
+[task record](tasks/2026-11-18-welcome-font-profile-entrance.md).
+
 ## Main shell tab selection — 2026-11-18
 
 The four top navigation items now reflect the actual page in the inner frame.

@@ -1,5 +1,6 @@
 ﻿using DevWinUI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -42,6 +43,8 @@ namespace Mizon.Windows.Pages
         private AppWindowPresenterKind? _lastTitleBarPresenter;
         private int _titleBarGeneration;
         private ConnectedAnimation? _profileConnectedAnimation;
+        private DispatcherQueueTimer? _profileEntranceDeadline;
+        private RectInt32? _profileEntranceBounds;
         private bool _internalFrameInitialized;
         private MusicPage? _retainedMusicPage;
         private bool _synchronizingNavigationSelection;
@@ -58,6 +61,8 @@ namespace Mizon.Windows.Pages
         {
             ViewModel = ((App)App.Current).Services.GetRequiredService<HomePageViewModel>();
             this.InitializeComponent();
+            if (App.MainMizonWindow is { } window && window.Content?.XamlRoot is { RasterizationScale: > 0 } root)
+                SetRightCaptionInset(GetRightCaptionInset(window.AppWindow, root.RasterizationScale));
             DataContext = ViewModel;
 
             Loaded += HomePage_Loaded;
@@ -232,31 +237,70 @@ namespace Mizon.Windows.Pages
                 .GetAnimation("ProfilePictureAnimation");
             if (_profileConnectedAnimation is null) return;
 
-            // Frame.Navigated fires before the destination's visual tree has completed layout.
-            if (!TryStartProfileConnectedAnimation())
-                ProfilePersonButtton.LayoutUpdated += ProfileTarget_LayoutUpdated;
+            // Keep the destination measured while native caption metrics settle.
+            // The prepared animation owns the visual hand-off during this brief gap.
+            ProfilePersonButtton.Opacity = 0;
+            _profileEntranceDeadline = DispatcherQueue.CreateTimer();
+            _profileEntranceDeadline.Interval = TimeSpan.FromMilliseconds(300);
+            _profileEntranceDeadline.IsRepeating = false;
+            _profileEntranceDeadline.Tick += ProfileEntranceDeadline_Tick;
+            _profileEntranceDeadline.Start();
+            QueueTitleBarRegionUpdate();
         }
 
-        private void ProfileTarget_LayoutUpdated(object? sender, object e) => TryStartProfileConnectedAnimation();
+        private void ProfileEntranceDeadline_Tick(DispatcherQueueTimer sender, object args) =>
+            ReleaseProfileEntrance()?.Cancel();
 
-        private bool TryStartProfileConnectedAnimation()
+        private void TryStartProfileConnectedAnimation()
         {
-            if (ProfilePersonButtton.XamlRoot is null ||
-                ProfilePersonButtton.ActualWidth <= 0 || ProfilePersonButtton.ActualHeight <= 0)
-                return false;
+            if (_profileConnectedAnimation is null
+                || Math.Abs(RightCaptionInset.ActualWidth - RightCaptionInset.Width.Value) > .75
+                || Common.TitleBarRegions.GetPixelBounds(ProfilePersonButtton) is not { } bounds)
+                return;
 
-            ProfilePersonButtton.LayoutUpdated -= ProfileTarget_LayoutUpdated;
-            var animation = _profileConnectedAnimation;
-            _profileConnectedAnimation = null;
+            if (_profileEntranceBounds is not { } previous || !previous.Equals(bounds))
+            {
+                _profileEntranceBounds = bounds;
+                QueueTitleBarRegionUpdate(DispatcherQueuePriority.Low);
+                return;
+            }
+
+            var animation = ReleaseProfileEntrance()!;
             try
             {
-                animation?.TryStart(ProfilePersonButtton);
+                if (!animation.TryStart(ProfilePersonButtton)) animation.Cancel();
             }
-            catch (System.Runtime.InteropServices.COMException exception)
+            catch (COMException exception)
             {
-                animation?.Cancel();
+                animation.Cancel();
                 AppLog.Error("Welcome profile transition could not be started.", exception);
             }
+        }
+
+        private ConnectedAnimation? ReleaseProfileEntrance()
+        {
+            if (_profileEntranceDeadline is { } timer)
+            {
+                timer.Stop();
+                timer.Tick -= ProfileEntranceDeadline_Tick;
+                _profileEntranceDeadline = null;
+            }
+
+            var animation = _profileConnectedAnimation;
+            _profileConnectedAnimation = null;
+            _profileEntranceBounds = null;
+            if (animation is not null) ProfilePersonButtton.Opacity = 1;
+            return animation;
+        }
+
+        private static double GetRightCaptionInset(AppWindow window, double scale) =>
+            window.Presenter.Kind == AppWindowPresenterKind.FullScreen ? 0 : window.TitleBar.RightInset / scale;
+
+        private bool SetRightCaptionInset(double width)
+        {
+            if (Math.Abs(RightCaptionInset.Width.Value - width) <= .01) return false;
+            RightCaptionInset.Width = new GridLength(width);
+            _profileEntranceBounds = null;
             return true;
         }
 
@@ -269,23 +313,33 @@ namespace Mizon.Windows.Pages
             _titleBarRoot = XamlRoot;
             _titleBarWindow = App.MainMizonWindow.AppWindow;
             _titleBarWindow.Changed += TitleBarWindow_Changed;
-            if (_titleBarRoot is not null) _titleBarRoot.Changed += TitleBarRoot_Changed;
+            if (_titleBarRoot is { RasterizationScale: > 0 } root)
+            {
+                SetRightCaptionInset(GetRightCaptionInset(_titleBarWindow, root.RasterizationScale));
+                root.Changed += TitleBarRoot_Changed;
+            }
             DragAreaOverlayGrid.LayoutUpdated += TitleBar_LayoutUpdated;
             QueueTitleBarRegionUpdate();
         }
 
-        private void TitleBarRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args) => QueueTitleBarRegionUpdate();
+        private void TitleBarRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args)
+        {
+            _profileEntranceBounds = null;
+            QueueTitleBarRegionUpdate();
+        }
         private void TitleBar_LayoutUpdated(object? sender, object args) => QueueTitleBarRegionUpdate();
         private void TitleBarWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)
         {
-            if (args.DidPresenterChange || args.DidSizeChange) QueueTitleBarRegionUpdate();
+            if (!args.DidPresenterChange && !args.DidSizeChange) return;
+            _profileEntranceBounds = null;
+            QueueTitleBarRegionUpdate();
         }
 
-        private void QueueTitleBarRegionUpdate()
+        private void QueueTitleBarRegionUpdate(DispatcherQueuePriority priority = DispatcherQueuePriority.Normal)
         {
             if (_titleBarRegionUpdateQueued || _titleBarPointerSource is null || !IsLoaded) return;
             var generation = _titleBarGeneration;
-            _titleBarRegionUpdateQueued = DispatcherQueue.TryEnqueue(() =>
+            _titleBarRegionUpdateQueued = DispatcherQueue.TryEnqueue(priority, () =>
             {
                 // A cached page may unload and attach to the window again before
                 // this callback runs. The old lifetime must not update new regions.
@@ -327,13 +381,13 @@ namespace Mizon.Windows.Pages
             var rightInset = fullScreen ? 0 : titleBar.RightInset / scale;
             if (_lastTitleBarPresenter != presenter)
                 AppLog.Information($"Title-bar native regions: presenter={presenter}, leftInset={titleBar.LeftInset}, rightInset={titleBar.RightInset}, scale={scale}, previousRegions={_titleBarInteractiveRects.Length}.");
-            if (Math.Abs(RightCaptionInset.Width.Value - rightInset) > .01)
+            if (SetRightCaptionInset(rightInset))
             {
-                RightCaptionInset.Width = new GridLength(rightInset);
-                // Wait for the new header layout before publishing its transformed
-                // bounds. Old control bounds no longer match the native caption.
+                // The new inset must be arranged before publishing hit-test bounds
+                // or using the avatar as the connected animation destination.
                 if (!fullScreen) return;
             }
+            else TryStartProfileConnectedAnimation();
 
             // Fullscreen has no native caption region. Let all header controls and
             // the window's top-edge reveal surface receive normal client input.
@@ -398,9 +452,7 @@ namespace Mizon.Windows.Pages
             _searchCancellationTokenSource = null;
             SearchBox.ClearSearch();
             ViewModel.MainSearch.Clear();
-            ProfilePersonButtton.LayoutUpdated -= ProfileTarget_LayoutUpdated;
-            _profileConnectedAnimation?.Cancel();
-            _profileConnectedAnimation = null;
+            ReleaseProfileEntrance()?.Cancel();
 
             DragAreaOverlayGrid.LayoutUpdated -= TitleBar_LayoutUpdated;
             if (_titleBarWindow is not null)

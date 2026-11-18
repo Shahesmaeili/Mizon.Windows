@@ -113,18 +113,18 @@
                     </Canvas>
                 </Viewbox>
                 <StackPanel Spacing="5" Margin="12,0" HorizontalAlignment="Stretch">
-                    <TextBlock x:Name="WelcomeHeading" Text="{x:Bind ViewModel.WelcomeTitle, Mode=OneWay}" FontSize="21"
+                    <TextBlock x:Name="WelcomeHeading" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind ViewModel.WelcomeTitle, Mode=OneWay}" FontSize="21"
                                FontWeight="SemiBold" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" TextReadingOrder="UseFlowDirection" HorizontalAlignment="Stretch" TextWrapping="Wrap" AutomationProperties.HeadingLevel="Level1" />
-                    <TextBlock Text="{x:Bind Localization.GetString('WelcomeTagline', Localization.Revision), Mode=OneWay}" Style="{StaticResource WelcomeCaption}" FontSize="12" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" />
+                    <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Localization.GetString('WelcomeTagline', Localization.Revision), Mode=OneWay}" Style="{StaticResource WelcomeCaption}" FontSize="12" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" />
                 </StackPanel>
                 <Border Padding="16,14" CornerRadius="16" BorderBrush="{ThemeResource AuthStrokeBrush}" BorderThickness="1" Background="{ThemeResource CardBackgroundFillColorSecondary}">
                     <StackPanel x:Name="StatusStackPanel" Spacing="12">
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="5" VerticalAlignment="Center" HorizontalAlignment="Stretch">
-                                <TextBlock x:Name="StatusTextBlock" Text="{x:Bind ViewModel.StatusTitle, Mode=OneWay}" FontSize="13"
+                                <TextBlock x:Name="StatusTextBlock" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind ViewModel.StatusTitle, Mode=OneWay}" FontSize="13"
                                            FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" TextReadingOrder="UseFlowDirection" HorizontalAlignment="Stretch" AutomationProperties.LiveSetting="Polite" />
-                                <TextBlock x:Name="StatusDetailTextBlock" Text="{x:Bind ViewModel.StatusDetail, Mode=OneWay}" Style="{StaticResource WelcomeCaption}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" />
+                                <TextBlock x:Name="StatusDetailTextBlock" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind ViewModel.StatusDetail, Mode=OneWay}" Style="{StaticResource WelcomeCaption}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" />
                             </StackPanel>
                             <!-- Keep the text width stable when the busy indicator disappears. -->
                             <Grid Grid.Column="1" Width="38" Height="38" VerticalAlignment="Center" IsHitTestVisible="False">
@@ -142,9 +142,17 @@
                         </Grid>
                         <Grid ColumnSpacing="8" Visibility="{x:Bind ViewModel.ErrorVisibility, Mode=OneWay}">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                            <controls:AuthActionButton x:Name="WelcomeLoginButton" Grid.Column="0" Style="{StaticResource WelcomeAction}" Click="Login_Click" Content="{x:Bind Localization.GetString('WelcomeLogin', Localization.Revision), Mode=OneWay}" />
-                            <controls:AuthActionButton x:Name="WelcomeRetryButton" Grid.Column="1" Style="{StaticResource WelcomeAction}" Click="Retry_Click" Content="{x:Bind Localization.GetString('WelcomeRetry', Localization.Revision), Mode=OneWay}"
-                                    Background="{ThemeResource AuthAccentWashBrush}" BorderBrush="{ThemeResource AuthAccentBorderBrush}" />
+                            <controls:AuthActionButton x:Name="WelcomeLoginButton" Grid.Column="0" Style="{StaticResource WelcomeAction}" Click="Login_Click"
+                                    AutomationProperties.Name="{x:Bind Localization.GetString('WelcomeLogin', Localization.Revision), Mode=OneWay}">
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+                                           Text="{x:Bind Localization.GetString('WelcomeLogin', Localization.Revision), Mode=OneWay}" TextAlignment="Center" />
+                            </controls:AuthActionButton>
+                            <controls:AuthActionButton x:Name="WelcomeRetryButton" Grid.Column="1" Style="{StaticResource WelcomeAction}" Click="Retry_Click"
+                                    Background="{ThemeResource AuthAccentWashBrush}" BorderBrush="{ThemeResource AuthAccentBorderBrush}"
+                                    AutomationProperties.Name="{x:Bind Localization.GetString('WelcomeRetry', Localization.Revision), Mode=OneWay}">
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+                                           Text="{x:Bind Localization.GetString('WelcomeRetry', Localization.Revision), Mode=OneWay}" TextAlignment="Center" />
+                            </controls:AuthActionButton>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -158,8 +166,15 @@
             </Grid.RowDefinitions>
             <Grid x:Name="LanguagePickerHost" Width="36" Height="36" HorizontalAlignment="Left"
                   VerticalAlignment="Center" Margin="12,0,0,0">
-                <userControls:LanguagePicker SelectorStyle="{StaticResource AuthHeaderLanguageSelector}"
-                                             ToolTipService.ToolTip="{x:Bind Localization.GetString('LanguagePickerName', Localization.Revision), Mode=OneWay}" />
+                <userControls:LanguagePicker SelectorStyle="{StaticResource AuthHeaderLanguageSelector}">
+                    <ToolTipService.ToolTip>
+                        <ToolTip FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+                                 Language="{x:Bind Localization.LanguageTag, Mode=OneWay}">
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+                                       Text="{x:Bind Localization.GetString('LanguagePickerName', Localization.Revision), Mode=OneWay}" />
+                        </ToolTip>
+                    </ToolTipService.ToolTip>
+                </userControls:LanguagePicker>
             </Grid>
         </Grid>
     </Grid>
