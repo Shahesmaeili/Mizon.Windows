@@ -28,18 +28,20 @@ internal sealed class HeroSpectrumBorder : IDisposable
     private readonly PointerEventHandler _pointerCanceled;
     private readonly ThemeSettings? _themeSettings;
     private AccessibilitySettings? _accessibility;
-    private readonly ShapeVisual _visual;
+    private readonly ContainerVisual _visual;
+    private readonly ShapeVisual _stroke;
     private readonly CompositionRoundedRectangleGeometry _geometry;
     private readonly CompositionSpriteShape _shape;
     private readonly CompositionRadialGradientBrush _brush;
     private readonly CompositionColorGradientStop[] _stops;
     private readonly ScalarKeyFrameAnimation _fade;
     private ColorKeyFrameAnimation? _blend;
+    private HeroBorderHalo? _halo;
     private HeroMediaPalette? _palette;
     private Point? _pointer;
     private Vector2 _size;
     private float _opacity;
-    private bool _visible, _motion, _enabled, _queued, _disposed;
+    private bool _visible, _motion, _enabled, _queued, _disposed, _haloUnavailable;
 
     public HeroSpectrumBorder(FrameworkElement host, FrameworkElement pointerRoot, WindowId windowId)
     {
@@ -61,11 +63,14 @@ internal sealed class HeroSpectrumBorder : IDisposable
         _shape = compositor.CreateSpriteShape(_geometry);
         _shape.StrokeThickness = Stroke;
         _shape.StrokeBrush = _brush;
-        _visual = compositor.CreateShapeVisual();
+        _visual = compositor.CreateContainerVisual();
         _visual.RelativeSizeAdjustment = Vector2.One;
         _visual.IsVisible = false;
         _visual.Opacity = 0;
-        _visual.Shapes.Add(_shape);
+        _stroke = compositor.CreateShapeVisual();
+        _stroke.RelativeSizeAdjustment = Vector2.One;
+        _stroke.Shapes.Add(_shape);
+        _visual.Children.InsertAtTop(_stroke);
         _fade = compositor.CreateScalarKeyFrameAnimation();
         _fade.StopBehavior = AnimationStopBehavior.SetToFinalValue;
         _fade.Duration = TimeSpan.FromMilliseconds(125);
@@ -206,6 +211,7 @@ internal sealed class HeroSpectrumBorder : IDisposable
 
     private void SetOpacity(float opacity, bool animate)
     {
+        if (opacity > 0 && _halo is null) ResizeHalo(create: true);
         if (animate)
         {
             if (_opacity == opacity || (opacity is > 0 and < 1 && Math.Abs(_opacity - opacity) < .02f)) return;
@@ -253,12 +259,47 @@ internal sealed class HeroSpectrumBorder : IDisposable
 
     private void UpdateBounds(double width, double height)
     {
-        _size = new Vector2((float)width, (float)height);
+        var size = new Vector2((float)width, (float)height);
+        if (_size == size) return;
+        _size = size;
         _geometry.Size = Vector2.Max(Vector2.Zero, _size - new Vector2(Stroke));
         var minimum = Math.Min(_geometry.Size.X, _geometry.Size.Y);
         _geometry.CornerRadius = new Vector2(Math.Min(12 - Stroke / 2, minimum / 2));
         _brush.EllipseRadius = new Vector2(Math.Clamp(minimum * .8f, 130, 250));
+        ResizeHalo(create: false);
         ViewportChanged();
+    }
+
+    private void ResizeHalo(bool create)
+    {
+        if (_haloUnavailable || (!create && _halo is null)) return;
+        if (_size.X <= 0 || _size.Y <= 0)
+        {
+            if (_halo is not null) _halo.Visual.IsVisible = false;
+            return;
+        }
+
+        try
+        {
+            _halo ??= new HeroBorderHalo(_stroke);
+            _halo.Resize(_size, Math.Min(12, Math.Min(_size.X, _size.Y) / 2));
+            if (_halo.Visual.Parent is null) _visual.Children.InsertAtBottom(_halo.Visual);
+            _halo.Visual.IsVisible = true;
+        }
+        catch (Exception error) when (error is COMException or ArgumentException or NotSupportedException)
+        {
+            _haloUnavailable = true;
+            ReleaseHalo();
+            AppLog.Information($"Featured border halo is unavailable ({error.HResult:X8}).");
+        }
+    }
+
+    private void ReleaseHalo()
+    {
+        if (_halo is not { } halo) return;
+        _halo = null;
+        if (halo.Visual.Parent is not null) _visual.Children.Remove(halo.Visual);
+        halo.Dispose();
     }
 
     public void Dispose()
@@ -282,13 +323,16 @@ internal sealed class HeroSpectrumBorder : IDisposable
         _pointerRoot.RemoveHandler(UIElement.PointerCanceledEvent, _pointerCanceled);
         SetState(false, false);
         ElementCompositionPreview.SetElementChildVisual(_host, null);
-        _visual.Shapes.Clear();
+        ReleaseHalo();
+        _visual.Children.RemoveAll();
+        _stroke.Shapes.Clear();
         _shape.StrokeBrush = null;
         _brush.ColorStops.Clear();
         foreach (var stop in _stops) stop.Dispose();
         _fade.Dispose();
         _blend?.Dispose();
         _visual.Dispose();
+        _stroke.Dispose();
         _shape.Dispose();
         _brush.Dispose();
         _geometry.Dispose();
