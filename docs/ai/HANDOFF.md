@@ -2,6 +2,13 @@
 
 Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Main shell tab selection — 2026-11-18
+
+The four top navigation items now reflect the actual page in the inner frame.
+Pages such as Settings and profiles clear the selection. Returning to a
+section landing page selects its tab. See the
+[task record](tasks/2026-11-18-main-shell-tab-selection.md).
+
 ## Taskbar preview build inputs — 2026-11-18
 
 The deployed Debug payload was older than the caption-retention fix. After the

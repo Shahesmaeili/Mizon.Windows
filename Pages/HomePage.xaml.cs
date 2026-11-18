@@ -147,12 +147,11 @@ namespace Mizon.Windows.Pages
             navigationService.InternalNavigationChanged += ActivationNavigationChanged;
             _retainedMusicPage ??= InternalFrame.Content as MusicPage;
 
-            if (!App.TryOpenPendingContent() && (_resetMusicLanding || InternalFrame.Content is null))
-            {
-                SelectMusicNavigationItem();
-                if (InternalFrame.Content is not MusicPage)
-                    navigationService.InternalNavigate(typeof(MusicPage));
-            }
+            if (!App.TryOpenPendingContent() && (_resetMusicLanding || InternalFrame.Content is null)
+                && InternalFrame.Content is not MusicPage)
+                navigationService.InternalNavigate(typeof(MusicPage));
+
+            SynchronizeNavigationSelection();
             _resetMusicLanding = false;
 
             var access = await RequestLocationAccessAsync();
@@ -207,19 +206,24 @@ namespace Mizon.Windows.Pages
             await _ble.ConnectAsync();
         }
 
-        private void SelectMusicNavigationItem()
+        private void SynchronizeNavigationSelection()
         {
+            var tag = InternalFrame.Content switch
+            {
+                MusicPage => nameof(MusicPage),
+                SectionLandingPage { Destination: "movies" } => "MoviesPage",
+                SectionLandingPage { Destination: "apps" } => "AppsPage",
+                VPNPage => nameof(VPNPage),
+                _ => null
+            };
+            var selected = tag is null ? null : NavigationViewMain.MenuItems
+                .OfType<NavigationViewItem>()
+                .FirstOrDefault(item => item.Tag as string == tag);
+            if (ReferenceEquals(NavigationViewMain.SelectedItem, selected)) return;
+
             _synchronizingNavigationSelection = true;
-            try
-            {
-                NavigationViewMain.SelectedItem = NavigationViewMain.MenuItems
-                    .OfType<NavigationViewItem>()
-                    .FirstOrDefault(item => item.Tag as string == nameof(MusicPage));
-            }
-            finally
-            {
-                _synchronizingNavigationSelection = false;
-            }
+            try { NavigationViewMain.SelectedItem = selected; }
+            finally { _synchronizingNavigationSelection = false; }
         }
 
         private void StartProfileConnectedAnimation()
@@ -488,8 +492,7 @@ namespace Mizon.Windows.Pages
 
         private void NavigationViewMain_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            // Settings and detail pages keep the previous shell tab selected.
-            // Invoking that same tab must still return to its section landing page.
+            // Native invocation also handles reselecting a section with keyboard or controller.
             if (!_internalFrameInitialized || _synchronizingNavigationSelection) return;
             if (args.InvokedItemContainer?.Tag is string tag) NavigateSection(tag);
         }
@@ -520,9 +523,13 @@ namespace Mizon.Windows.Pages
 
         private void ActivationNavigationChanged(object? sender, NavigationChangedEventArgs args)
         {
-            if (args.IsEnteringPage && InternalFrame.Content is MusicPage music)
-                _retainedMusicPage = music;
-            if (!args.IsEnteringPage && !_navigatingActivation)
+            if (args.IsEnteringPage)
+            {
+                if (InternalFrame.Content is MusicPage music) _retainedMusicPage = music;
+                SynchronizeNavigationSelection();
+                return;
+            }
+            if (!_navigatingActivation)
             {
                 _musicActivationCancellation?.Cancel();
                 _activationStoryPresenter?.Dispose();
@@ -555,13 +562,11 @@ namespace Mizon.Windows.Pages
                 SearchBox.ClearSearch();
                 if (request.PlaylistPublicId is Guid playlistId)
                 {
-                    SelectMusicNavigationItem();
                     NavigateActivation(() => navigation.OpenMusicPlaylist(playlistId));
                     return true;
                 }
                 if (request.PersonPublicId is Guid personId)
                 {
-                    SelectMusicNavigationItem();
                     NavigateActivation(() => navigation.OpenPersonProfile(personId));
                     return true;
                 }
@@ -583,7 +588,6 @@ namespace Mizon.Windows.Pages
                 }
                 if (request.MusicPublicId is Guid musicId)
                 {
-                    SelectMusicNavigationItem();
                     if (request.MusicCommentPublicId is Guid commentId)
                     {
                         NavigateActivation(() => navigation.InternalNavigate(typeof(MusicsPage), new()
@@ -600,7 +604,6 @@ namespace Mizon.Windows.Pages
                 switch (request.Destination)
                 {
                     case "playlists":
-                        SelectMusicNavigationItem();
                         NavigateActivation(navigation.OpenMusicPlaylists);
                         return true;
                     case "activities":
@@ -619,13 +622,6 @@ namespace Mizon.Windows.Pages
                     "apps" => "AppsPage", "vpn" => nameof(VPNPage), _ => null
                 };
                 if (tag is null) return false;
-                _synchronizingNavigationSelection = true;
-                try
-                {
-                    NavigationViewMain.SelectedItem = NavigationViewMain.MenuItems.OfType<NavigationViewItem>()
-                        .FirstOrDefault(item => item.Tag as string == tag);
-                }
-                finally { _synchronizingNavigationSelection = false; }
                 NavigateActivation(() => NavigateSection(tag));
                 return true;
             }
@@ -646,7 +642,6 @@ namespace Mizon.Windows.Pages
         private void EnsureActivationLanding()
         {
             if (InternalFrame.Content is not null) return;
-            SelectMusicNavigationItem();
             NavigateActivation(() => ViewModel.NavigationService.InternalNavigate(typeof(MusicPage)));
         }
 
