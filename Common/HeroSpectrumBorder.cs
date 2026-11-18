@@ -1,10 +1,14 @@
 using Microsoft.UI.Composition;
+using Microsoft.UI.System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Hosting;
+using Mizon.Windows.Services;
 using System;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Windows.UI;
 using Windows.UI.ViewManagement;
+using WindowId = Microsoft.UI.WindowId;
 
 namespace Mizon.Windows.Common;
 
@@ -13,7 +17,8 @@ internal sealed class HeroSpectrumBorder : IDisposable
 {
     private const float Stroke = .75f;
     private readonly FrameworkElement _host;
-    private readonly AccessibilitySettings _accessibility = new();
+    private readonly ThemeSettings? _themeSettings;
+    private AccessibilitySettings? _accessibility;
     private readonly ShapeVisual _visual;
     private readonly CompositionRoundedRectangleGeometry _geometry;
     private readonly CompositionSpriteShape _shape;
@@ -23,7 +28,7 @@ internal sealed class HeroSpectrumBorder : IDisposable
     private HeroMediaPalette? _palette;
     private bool _visible, _motion, _rotating, _disposed;
 
-    public HeroSpectrumBorder(FrameworkElement host)
+    public HeroSpectrumBorder(FrameworkElement host, WindowId windowId)
     {
         _host = host;
         var compositor = ElementCompositionPreview.GetElementVisual(host).Compositor;
@@ -53,7 +58,8 @@ internal sealed class HeroSpectrumBorder : IDisposable
         _visual.Shapes.Add(_shape);
         ElementCompositionPreview.SetElementChildVisual(host, _visual);
         host.SizeChanged += SizeChanged;
-        _accessibility.HighContrastChanged += HighContrastChanged;
+        _themeSettings = ObserveWindowTheme(windowId);
+        if (_themeSettings is null) host.ActualThemeChanged += ActualThemeChanged;
         UpdateBounds(host.ActualWidth, host.ActualHeight);
     }
 
@@ -102,7 +108,7 @@ internal sealed class HeroSpectrumBorder : IDisposable
 
     private void UpdateVisibility()
     {
-        _visual.IsVisible = _visible && _palette.HasValue && !_accessibility.HighContrast;
+        _visual.IsVisible = _visible && _palette.HasValue && !ReadHighContrast();
         var rotate = _visual.IsVisible && _motion;
         if (rotate == _rotating) return;
         _rotating = rotate;
@@ -116,8 +122,33 @@ internal sealed class HeroSpectrumBorder : IDisposable
         }
     }
 
-    private void HighContrastChanged(AccessibilitySettings sender, object args) =>
+    private ThemeSettings? ObserveWindowTheme(WindowId windowId)
+    {
+        if (windowId.Value == 0) return null;
+        try
+        {
+            var theme = ThemeSettings.CreateForWindowId(windowId);
+            theme.Changed += WindowThemeChanged;
+            return theme;
+        }
+        catch (Exception error) when (error is COMException or ArgumentException)
+        {
+            // A decorative effect must not prevent the desktop player from loading.
+            AppLog.Information($"Featured border theme notifications are unavailable ({error.HResult:X8}).");
+            return null;
+        }
+    }
+
+    private bool ReadHighContrast()
+    {
+        try { return _themeSettings?.HighContrast ?? (_accessibility ??= new()).HighContrast; }
+        catch (COMException) { return true; }
+    }
+
+    private void WindowThemeChanged(ThemeSettings sender, object args) =>
         _host.DispatcherQueue.TryEnqueue(() => { if (!_disposed) UpdateVisibility(); });
+
+    private void ActualThemeChanged(FrameworkElement sender, object args) => UpdateVisibility();
 
     private void SizeChanged(object sender, SizeChangedEventArgs args) => UpdateBounds(args.NewSize.Width, args.NewSize.Height);
 
@@ -132,7 +163,15 @@ internal sealed class HeroSpectrumBorder : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        _accessibility.HighContrastChanged -= HighContrastChanged;
+        if (_themeSettings is not null)
+        {
+            try { _themeSettings.Changed -= WindowThemeChanged; }
+            catch (COMException error)
+            {
+                AppLog.Information($"Featured border theme notifications could not be detached ({error.HResult:X8}).");
+            }
+        }
+        else _host.ActualThemeChanged -= ActualThemeChanged;
         _host.SizeChanged -= SizeChanged;
         SetState(false, false);
         ElementCompositionPreview.SetElementChildVisual(_host, null);
