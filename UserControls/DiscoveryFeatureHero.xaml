@@ -170,9 +170,11 @@
       x:Name="HeroRoot"
       CornerRadius="12"
       Background="Transparent">
-      <MediaPlayerElement x:Name="HeroVideo" AreTransportControlsEnabled="False"
-        AutoPlay="False" Stretch="Uniform" Visibility="Collapsed" IsHitTestVisible="False"
-        AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/FeaturedVideo', Localization.Revision), Mode=OneWay}" />
+      <Grid x:Name="HeroVideoStage" Visibility="Collapsed" Background="#FF090C0F">
+        <MediaPlayerElement x:Name="HeroVideo" AreTransportControlsEnabled="False"
+          AutoPlay="False" Stretch="Uniform" IsHitTestVisible="False"
+          AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/FeaturedVideo', Localization.Revision), Mode=OneWay}" />
+      </Grid>
       <!-- A continuous slate tint softens bright artwork; the lower gradient supports the controls. -->
       <Border
         x:Name="HeroImageOverlay"
@@ -600,6 +602,7 @@
       <ProgressBar x:Name="DownloadProgress" VerticalAlignment="Top" Height="2" Minimum="0" Maximum="100"
         Visibility="Collapsed" AutomationProperties.Name="{x:Bind Localization.GetString('MusicHome/DownloadingVideo', Localization.Revision), Mode=OneWay}" />
     </Grid>
+    <Grid x:Name="HeroSpectrumHost" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw" />
   </Grid>
   <Border x:Name="EmptyPanel" Visibility="Collapsed" Style="{StaticResource DiscoveryWidgetSurface}" MinHeight="190" Margin="8,12,8,16">
     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Stretch" Spacing="12">

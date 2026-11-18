@@ -66,6 +66,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
     {
         InitializeComponent();
         HeroRoot.Clip = _clip;
+        _videoReveal = new(HeroVideoStage);
         PositionSlider.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(Seek_Pressed), true);
         PositionSlider.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(Seek_Released), true);
         PositionSlider.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler(Seek_Released), true);
@@ -102,6 +103,9 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         Localization.PropertyChanged += HeroLocalizationChanged;
         _playRequested = _settings.AnimationsEnabled;
         _lighting = new(HeroSurface);
+        _spectrum = new(HeroSpectrumHost);
+        _spectrum.SetPalette(HeroArtwork.Palette);
+        HeroArtwork.ImagePresented += Artwork_Presented;
         _media = new(HeroVideo, Downloader);
         _media.Changed += Media_Changed;
         _media.Ended += Media_Ended;
@@ -128,6 +132,8 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         Bindings.StopTracking();
         MediaOptionsFlyout.Hide();
         CancelSelection();
+        HeroArtwork.ImagePresented -= Artwork_Presented;
+        HideVideo();
         DetachViewModel();
         if (_selected is not null) _selected.PropertyChanged -= Item_Changed;
         _selected = null;
@@ -149,6 +155,8 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         }
         _lighting?.Dispose();
         _lighting = null;
+        _spectrum?.Dispose();
+        _spectrum = null;
         _inViewport = _hostVisible = _pointerInside = _focusInside = _menuOpen = _seeking = false;
         ArtistPortrait.ProfilePicture = null;
         SongBadgeImage.Source = null;
@@ -160,7 +168,8 @@ public sealed partial class DiscoveryFeatureHero : UserControl
     {
         _index = 0;
         _selectedMediaId = Guid.Empty;
-        HeroArtwork.Source = null;
+        HeroArtwork.ClearArtwork();
+        _spectrum?.SetPalette(null);
     }
 
     private void AttachViewModel()
@@ -207,9 +216,12 @@ public sealed partial class DiscoveryFeatureHero : UserControl
             MediaOptionsFlyout.Hide();
             CancelSelection();
             HeroVideo.IsFullWindow = false;
+            HideVideo();
             _media?.Stop();
             if (_selected is not null) _selected.PropertyChanged -= Item_Changed;
             _selected = null;
+            HeroArtwork.ClearArtwork();
+            _spectrum?.SetPalette(null);
             HeroSurface.Visibility = Visibility.Collapsed;
             EmptyPanel.Visibility = Visibility.Visible;
             EmptyText.Text = ViewModel?.StatusText ?? Localization.GetString("MusicHome/NoFeatures");
@@ -230,33 +242,34 @@ public sealed partial class DiscoveryFeatureHero : UserControl
     private void SelectRelative(int direction, bool manual)
     {
         if (ViewModel?.Items is not { Count: > 0 } items) return;
-        Select((_index + direction + items.Count) % items.Count, manual);
+        Select((_index + direction + items.Count) % items.Count, manual, direction);
     }
     private void Thumbnail_Click(object sender, RoutedEventArgs args)
     {
         if (sender is Button { Tag: int index } && index != _index) Select(index, true);
     }
 
-    private void Select(int index, bool announce)
+    private void Select(int index, bool announce, int direction = 0)
     {
         if (!_loaded || ViewModel?.Items is not { } items || index < 0 || index >= items.Count) return;
         MediaOptionsFlyout.Hide();
+        HeroArtwork.RetainForSelection(_videoTransitionFrame, _videoPalette);
         CancelSelection();
         HeroVideo.IsFullWindow = false;
+        HideVideo();
         _media?.Stop();
         if (_selected is not null) _selected.PropertyChanged -= Item_Changed;
+        _mediaDirection = direction != 0 ? direction : index < _index ? -1 : 1;
         _index = index;
         _selected = items[index];
-        if (_selectedMediaId != _selected.MediaPublicId) HeroArtwork.Source = null;
         _selectedMediaId = _selected.MediaPublicId;
         _selectedContentType = _selected.ContentTypeCode;
         _selected.PropertyChanged += Item_Changed;
         _imagePosition = 0;
         _videoEnded = _seeking = false;
-        HeroVideo.Visibility = Visibility.Collapsed;
         ShowStatus(string.Empty);
-        UpdatePresentation();
         _selectionCancellation = new();
+        UpdatePresentation();
         if (_selected.IsVideo) _ = LoadVideoAsync(_selected, _selectionVersion, _selectionCancellation.Token);
         if (announce) AccessibilityAnnouncements.Announce(MainTitle, _selected.AutomationName, "hero-selection");
         SelectedItemChanged?.Invoke(this, _selected);
@@ -270,6 +283,11 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         _selectionCancellation?.Dispose();
         _selectionCancellation = null;
         _sourceLoading = false;
+        _sampledVideoPath = null;
+        _videoTransitionFrame = null;
+        _videoPalette = null;
+        _videoFallback = false;
+        _artworkSource = null;
     }
 
     private async Task LoadVideoAsync(MusicFeatureItemViewModel item, int version, CancellationToken token)
@@ -295,7 +313,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         catch (Exception exception)
         {
             AppLog.Error("Featured video could not be loaded.", exception);
-            if (_loaded && version == _selectionVersion) ShowLocalizedStatus("MusicHome/VideoFailed", true);
+            if (_loaded && version == _selectionVersion) Media_Failed(this, string.Empty);
         }
         finally
         {
@@ -332,11 +350,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         AutomationProperties.SetName(ArtworkButton, Localization.Format("MusicHome/OpenTrackName", item.DisplayTitle));
         AutomationProperties.SetName(PlayTrackButton, Localization.Format("MusicHome/PlayTrackName", item.DisplayTitle));
         AutomationProperties.SetName(PositionSlider, item.IsVideo ? Localization.GetString("MusicHome/VideoPosition") : Localization.GetString("MusicHome/ImagePosition"));
-        if (Uri.TryCreate(item.ImagePath, UriKind.Absolute, out var uri) && !Equals(HeroArtwork.Source, uri))
-        {
-            HeroArtwork.TransitionDuration = _settings.AnimationsEnabled && CanPresent ? TimeSpan.FromMilliseconds(260) : TimeSpan.Zero;
-            HeroArtwork.Source = uri;
-        }
+        UpdateArtwork(item);
         if (!item.IsVideo)
         {
             if (!string.IsNullOrEmpty(item.ArtworkErrorText)) ShowStatus(item.ArtworkErrorText, true);
@@ -394,6 +408,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
     {
         _lastTick = Stopwatch.GetTimestamp();
         _media?.SetActive(CanPresent);
+        UpdateMediaMotion();
         var needsClock = _selected is { IsVideo: true }
             ? _sourceLoading || _media?.IsLoading == true || _media?.WantsToPlay == true || (_videoEnded && CanAdvance)
             : CanAdvance;
@@ -407,7 +422,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         var elapsed = Math.Min(1, Stopwatch.GetElapsedTime(_lastTick, now).TotalSeconds);
         _lastTick = now;
         if (_selected is not { } item) return;
-        if (!item.IsVideo && CanAdvance && !string.IsNullOrWhiteSpace(item.ImagePath))
+        if (!item.IsVideo && CanAdvance && _artworkSource is { } source && HeroArtwork.IsDisplaying(source))
         {
             _imagePosition += elapsed;
             if (_imagePosition >= item.DisplaySeconds)
@@ -441,7 +456,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         AutomationProperties.SetName(MuteButton, _media?.IsMuted != false ? Localization.GetString("MusicHome/UnmuteVideo") : Localization.GetString("MusicHome/MuteVideo"));
         FullscreenMenuItem.IsEnabled = video && _media?.IsReady == true;
         SaveMenuItem.IsEnabled = !_saving;
-        HeroVideo.Visibility = video && _media?.IsReady == true ? Visibility.Visible : Visibility.Collapsed;
+        UpdateVideoStage(video && _media?.IsReady == true);
         DownloadProgress.Visibility = video && loading ? Visibility.Visible : Visibility.Collapsed;
         DownloadProgress.IsIndeterminate = video && loading && (_sourceLoading || _media?.DownloadProgress <= 0) && CanPresent && _settings.AnimationsEnabled;
         DownloadProgress.Value = _media?.DownloadProgress ?? 0;
@@ -488,7 +503,12 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         finally { _audioPausePending = false; }
     }
     private void Media_Ended(object? sender, EventArgs args) { _videoEnded = true; UpdateTransport(); UpdateActive(); }
-    private void Media_Failed(object? sender, string message) => ShowLocalizedStatus("MusicHome/VideoFailed", true);
+    private void Media_Failed(object? sender, string message)
+    {
+        _videoFallback = true;
+        if (_selected is { } item) UpdateArtwork(item);
+        ShowLocalizedStatus("MusicHome/VideoFailed", true);
+    }
     private void Artwork_Failed(object? sender, string message)
     {
         if (_loaded && _selected?.IsVideo == false) ShowLocalizedStatus("MusicHome/ImageFailed", true);
@@ -693,6 +713,7 @@ public sealed partial class DiscoveryFeatureHero : UserControl
     private void Fullscreen_Click(object sender, RoutedEventArgs args)
     {
         if (_media?.IsReady != true || _selected?.IsVideo != true) return;
+        _videoReveal.Finish();
         MediaOptionsFlyout.Hide();
         HeroVideo.AreTransportControlsEnabled = true;
         HeroVideo.IsHitTestVisible = true;

@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Shapes;
+using Mizon.Windows.Common;
 using Mizon.Windows.Services;
 using System;
 using System.Collections.Generic;
@@ -42,19 +43,20 @@ public sealed partial class FeatureArtwork : UserControl
         Fill = new SolidColorBrush(Color.FromArgb(255, 9, 12, 15)),
         IsHitTestVisible = false
     };
+    private readonly Image _outgoing = new();
     private readonly Image _image = new() { Stretch = Stretch.UniformToFill };
     private readonly UISettings _settings = new();
-    private readonly Dictionary<Uri, Color> _edgeColors = [];
-    private readonly Queue<Uri> _edgeColorOrder = [];
+    private readonly Dictionary<Uri, ArtworkColors> _colors = [];
+    private readonly Queue<Uri> _colorOrder = [];
+    private readonly HeroMediaReveal _reveal;
     private CancellationTokenSource? _decode;
     private Uri? _decodedSource;
+    private bool _resumeSourceRequest;
     private Color? _edgeColor;
     private SpriteVisual? _shadowVisual;
     private DropShadow? _shadow;
     private CompositionRoundedRectangleGeometry? _geometry;
     private CompositionGeometricClip? _imageClip;
-    private ScalarKeyFrameAnimation? _fade;
-    private CompositionScopedBatch? _fadeBatch;
     private long _cornerRadiusToken;
     private int _version;
     private bool _loaded;
@@ -68,7 +70,9 @@ public sealed partial class FeatureArtwork : UserControl
         VerticalContentAlignment = VerticalAlignment.Stretch;
         AutomationProperties.SetAccessibilityView(this, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
         _imageHost.Children.Add(_shadowMask);
+        _imageHost.Children.Add(_outgoing);
         _imageHost.Children.Add(_image);
+        _reveal = new(_image, () => _outgoing.Source = null);
         // CornerRadius belongs to this control, not to the outer Grid. A rounded
         // Grid clips all descendants, including the glow outside the artwork.
         var root = new Grid();
@@ -86,20 +90,61 @@ public sealed partial class FeatureArtwork : UserControl
     public TimeSpan TransitionDuration { get => (TimeSpan)GetValue(TransitionDurationProperty); set => SetValue(TransitionDurationProperty, value); }
     public Stretch Stretch { get => (Stretch)GetValue(StretchProperty); set => SetValue(StretchProperty, value); }
     public event EventHandler<string>? ImageFailed;
+    internal event EventHandler? ImagePresented;
+    internal HeroMediaPalette? Palette { get; private set; }
+    internal int TransitionDirection { get; set; } = 1;
+    internal bool HasArtwork => _image.Source is not null;
+    internal bool IsDisplaying(Uri source) => Equals(_decodedSource, source);
+
+    internal void RequestSource(Uri source)
+    {
+        if (!Equals(Source, source)) Source = source;
+        else if (_loaded && _resumeSourceRequest)
+        {
+            _resumeSourceRequest = false;
+            _ = LoadSourceAsync(source);
+        }
+    }
+
+    internal void FinishTransition() => _reveal.Finish();
+
+    internal void ClearArtwork()
+    {
+        if (Source is not null) Source = null;
+        else ResetArtwork();
+    }
+
+    internal void RetainForSelection(ImageSource? videoFrame = null, HeroMediaPalette? videoPalette = null)
+    {
+        CancelDecode();
+        _resumeSourceRequest = !Equals(Source, _decodedSource) || videoFrame is not null;
+        _reveal.Finish();
+        if (videoFrame is null) return;
+        _decodedSource = null;
+        _image.Stretch = Stretch.Uniform;
+        _image.Source = videoFrame;
+        Palette = videoPalette;
+        if (videoPalette is { } colors) _edgeColor = colors.Base;
+        UpdateAppearance();
+    }
 
     private static void SourceChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
     {
         var control = (FeatureArtwork)sender;
         control.CancelDecode();
-        if (control.Source is null)
-        {
-            control.EndFade();
-            control._image.Source = null;
-            control._decodedSource = null;
-            control._edgeColor = null;
-            control.UpdateAppearance();
-        }
+        control._resumeSourceRequest = false;
+        if (control.Source is null) control.ResetArtwork();
         else if (control._loaded) _ = control.LoadSourceAsync(control.Source);
+    }
+
+    private void ResetArtwork()
+    {
+        _reveal.Finish();
+        _image.Source = null;
+        _decodedSource = null;
+        _edgeColor = null;
+        Palette = null;
+        UpdateAppearance();
     }
 
     private static void AppearanceChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args) =>
@@ -125,7 +170,7 @@ public sealed partial class FeatureArtwork : UserControl
         CancelDecode();
         _settings.AnimationsEnabledChanged -= AnimationsChanged;
         UnregisterPropertyChangedCallback(CornerRadiusProperty, _cornerRadiusToken);
-        EndFade();
+        _reveal.Finish();
         ReleaseShadow();
         // A responsive move may reattach this same control. Keep its one decoded
         // bitmap; clearing Source or collecting the control releases that bitmap.
@@ -154,18 +199,30 @@ public sealed partial class FeatureArtwork : UserControl
             stream.Seek(0);
             var image = new BitmapImage { DecodePixelWidth = width };
             await image.SetSourceAsync(stream).AsTask(token);
-            var edgeColor = await GetEdgeColorAsync(source, file.Path, token);
+            var colors = await GetColorsAsync(source, file.Path, token);
             if (!_loaded || token.IsCancellationRequested || version != _version || !Equals(Source, source)) return;
             _decodedSource = source;
-            _edgeColor = edgeColor;
-            if (edgeColor is { } color && _edgeColors.TryAdd(source, color))
+            _edgeColor = colors.Edge;
+            Palette = colors.Palette;
+            if (colors != default && _colors.TryAdd(source, colors))
             {
-                _edgeColorOrder.Enqueue(source);
-                if (_edgeColorOrder.Count > 12) _edgeColors.Remove(_edgeColorOrder.Dequeue());
+                _colorOrder.Enqueue(source);
+                if (_colorOrder.Count > 12) _colors.Remove(_colorOrder.Dequeue());
             }
+            _reveal.Finish();
+            var duration = _settings.AnimationsEnabled && _image.Source is not null
+                ? TimeSpan.FromMilliseconds(Math.Clamp(TransitionDuration.TotalMilliseconds, 0, 1000))
+                : TimeSpan.Zero;
+            if (duration > TimeSpan.Zero)
+            {
+                _outgoing.Stretch = _image.Stretch;
+                _outgoing.Source = _image.Source;
+            }
+            _image.Stretch = Stretch;
             _image.Source = image;
             UpdateAppearance();
-            BeginFade();
+            _reveal.Start(TransitionDirection, duration);
+            ImagePresented?.Invoke(this, EventArgs.Empty);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception error)
@@ -181,12 +238,14 @@ public sealed partial class FeatureArtwork : UserControl
         }
     }
 
-    private async Task<Color?> GetEdgeColorAsync(Uri source, string path, CancellationToken token)
+    private readonly record struct ArtworkColors(Color? Edge, HeroMediaPalette? Palette);
+
+    private async Task<ArtworkColors> GetColorsAsync(Uri source, string path, CancellationToken token)
     {
-        if (_edgeColors.TryGetValue(source, out var cached)) return cached;
+        if (_colors.TryGetValue(source, out var cached)) return cached;
         try
         {
-            return await Task.Run<Color?>(async () =>
+            return await Task.Run<ArtworkColors>(async () =>
             {
                 token.ThrowIfCancellationRequested();
                 // Keep the previous hero's exact perimeter average, including the
@@ -196,7 +255,7 @@ public sealed partial class FeatureArtwork : UserControl
                 token.ThrowIfCancellationRequested();
                 var width = checked((int)bitmap.SizeInPixels.Width);
                 var height = checked((int)bitmap.SizeInPixels.Height);
-                if (width == 0 || height == 0) return null;
+                if (width == 0 || height == 0) return default;
                 long red = 0, green = 0, blue = 0;
                 void AddEdge(Color pixel)
                 {
@@ -210,7 +269,8 @@ public sealed partial class FeatureArtwork : UserControl
                 foreach (var pixel in bitmap.GetPixelColors(width - 1, 0, 1, height)) AddEdge(pixel);
                 token.ThrowIfCancellationRequested();
                 var count = 2L * (width + height);
-                return Color.FromArgb(255, (byte)(red / count), (byte)(green / count), (byte)(blue / count));
+                var edge = Color.FromArgb(255, (byte)(red / count), (byte)(green / count), (byte)(blue / count));
+                return new ArtworkColors(edge, HeroMediaPalette.Sample(device, bitmap));
             }, token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
@@ -218,7 +278,7 @@ public sealed partial class FeatureArtwork : UserControl
         {
             // Shadow analysis must never prevent a valid cached image from loading.
             AppLog.Error("Featured artwork perimeter color could not be read.", error);
-            return null;
+            return default;
         }
     }
 
@@ -253,7 +313,7 @@ public sealed partial class FeatureArtwork : UserControl
 
     private void UpdateAppearance()
     {
-        if (_image.Stretch != Stretch) _image.Stretch = Stretch;
+        if (_decodedSource is not null && _image.Stretch != Stretch) _image.Stretch = Stretch;
         if (_shadow is null) return;
         _shadow.Color = UseAutoShadowColor && _edgeColor is { } color ? color : ShadowColor;
         _shadow.Opacity = _image.Source is null ? 0 : 1;
@@ -279,48 +339,10 @@ public sealed partial class FeatureArtwork : UserControl
         _shadowMask.RadiusY = radius;
     }
 
-    private void BeginFade()
-    {
-        EndFade();
-        if (!_loaded || !_settings.AnimationsEnabled || TransitionDuration <= TimeSpan.Zero) return;
-        var compositor = ElementCompositionPreview.GetElementVisual(_imageHost).Compositor;
-        _fadeBatch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        _fadeBatch.Completed += FadeCompleted;
-        _fade = compositor.CreateScalarKeyFrameAnimation();
-        _fade.Target = nameof(Opacity);
-        _fade.InsertKeyFrame(0, 0);
-        _fade.InsertKeyFrame(1, 1);
-        _fade.Duration = TimeSpan.FromMilliseconds(Math.Clamp(TransitionDuration.TotalMilliseconds, 1, 1000));
-        _imageHost.StartAnimation(_fade);
-        _fadeBatch.End();
-    }
-
-    private void FadeCompleted(object sender, CompositionBatchCompletedEventArgs args)
-    {
-        if (ReferenceEquals(sender, _fadeBatch)) EndFade();
-    }
-
     private void AnimationsChanged(UISettings sender, object args) => DispatcherQueue.TryEnqueue(() =>
     {
-        if (_loaded && !_settings.AnimationsEnabled) EndFade();
+        if (_loaded && !_settings.AnimationsEnabled) _reveal.Finish();
     });
-
-    private void EndFade()
-    {
-        if (_fadeBatch is not null)
-        {
-            _fadeBatch.Completed -= FadeCompleted;
-            _fadeBatch.Dispose();
-            _fadeBatch = null;
-        }
-        if (_fade is not null)
-        {
-            _imageHost.StopAnimation(_fade);
-            _fade.Dispose();
-            _fade = null;
-        }
-        if (_imageHost.Opacity != 1) _imageHost.Opacity = 1;
-    }
 
     private void ReleaseShadow()
     {

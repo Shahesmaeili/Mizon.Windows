@@ -262,6 +262,12 @@ protocol groups; native MCP catalog and matching server/SDK SignalR diagnostics.
 No live UI, Narrator speech, self-approval or whole-app NativeAOT publish was tested.
 See [implementation, dependencies and limits](tasks/2026-11-11-profile-presence.md).
 
+## Featured media spectrum and transitions — 2026-11-18
+
+- The music home hero now draws a thin Composition border using a palette sampled from the selected artwork or one Windows frame thumbnail of the cached video. The existing hover glow and artwork perimeter shadow are separate. Video formats without a usable frame thumbnail use the selected video's own poster when available.
+- The outgoing image or representative video frame remains behind the incoming layer until it is ready. The directional fade and zoom run on the media layer while the transport and focus targets stay in place. Selection cancels stale sampling and previous transitions. The sweep stops offscreen and with reduced motion, and the decorative border is suppressed in high contrast.
+- Existing MCP music-home action scopes and controller mappings remain the entry points. Managed and NativeAOT headless checks exercised the production palette sampler with generated image and MP4 data and the Windows Composition animation targets. The existing MCP access, gamepad and localization suites passed. Actual animation appearance, Narrator, and physical Xbox input were not checked.
+
 ## Music home localization, MCP and artwork — 2026-11-11
 
 The current music home (`MusicPage`, not details `MusicsPage`) now uses live
