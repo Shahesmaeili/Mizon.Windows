@@ -1,4 +1,16 @@
 <Project>
+  <!-- These projects publish through a custom target, beyond the normal C# project graph.
+       Tell Visual Studio when a preview-only change requires the main app to be rebuilt. -->
+  <ItemGroup>
+    <UpToDateCheckInput Include="$(MSBuildThisFileFullPath);Taskbar\Mizon.Windows.PreviewXaml\**\*.cs;Taskbar\Mizon.Windows.PreviewXaml\**\*.xaml;Taskbar\Mizon.Windows.PreviewXaml\*.csproj;Taskbar\Mizon.Windows.PreviewXaml.Host\**\*.cs;Taskbar\Mizon.Windows.PreviewXaml.Host\*.csproj;Taskbar\Mizon.Windows.PreviewXaml.Host\*.manifest;Services\AppDeepLinkResult.cs;Services\TaskbarPreviewDeepLink.cs"
+                        Exclude="Taskbar\**\bin\**;Taskbar\**\obj\**"
+                        Set="TaskbarPreviewXaml" />
+    <UpToDateCheckOutput Include="$(IntermediateOutputPath)TaskbarPreviewXaml.stamp" Set="TaskbarPreviewXaml" />
+    <UpToDateCheckBuilt Include="$(TargetDir)Taskbar\PreviewXaml\Mizon.Windows.PreviewXaml.dll"
+                       Original="$(MSBuildProjectDirectory)\Taskbar\PreviewPayload\Mizon.Windows.PreviewXaml.dll" />
+    <UpToDateCheckBuilt Include="$(TargetDir)Taskbar\PreviewXaml\Mizon.Windows.PreviewXaml.Host.exe"
+                       Original="$(MSBuildProjectDirectory)\Taskbar\PreviewPayload\Mizon.Windows.PreviewXaml.Host.exe" />
+  </ItemGroup>
   <Target Name="BuildTaskbarPreviewXaml" BeforeTargets="AssignTargetPaths"
           Condition="'$(DesignTimeBuild)' != 'true'">
     <PropertyGroup>
@@ -7,6 +19,9 @@
     <!-- The TAP is C# compiled to a native COM DLL. It cannot be loaded as IL by Explorer. -->
     <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\Taskbar\Mizon.Windows.PreviewXaml\Mizon.Windows.PreviewXaml.csproj&quot; -c Release -o &quot;$(_PreviewXamlDirectory).&quot; --nologo" />
     <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\Taskbar\Mizon.Windows.PreviewXaml.Host\Mizon.Windows.PreviewXaml.Host.csproj&quot; -c Release -p:PublishAot=true -o &quot;$(_PreviewXamlDirectory).&quot; --nologo" />
+    <!-- One successful publish stamp avoids redundant builds when only one binary changed. -->
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <Touch Files="$(IntermediateOutputPath)TaskbarPreviewXaml.stamp" AlwaysCreate="true" />
     <ItemGroup>
       <_PreviewXamlPayload Include="$(_PreviewXamlDirectory)*.dll;$(_PreviewXamlDirectory)*.exe" />
       <Content Include="@(_PreviewXamlPayload)">

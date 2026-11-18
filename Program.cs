@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Activation;
 
 namespace Mizon.Windows;
 
@@ -32,6 +33,11 @@ internal static partial class Program
             $"Local\\Mizon.AppActions.Ready.{_instance.ProcessId}");
         if (!_instance.IsCurrent)
         {
+            if (activation.Data is ProtocolForResultsActivatedEventArgs preview
+                && TaskbarPreviewDeepLink.IsSupported(preview.Uri.AbsoluteUri.TrimEnd('/'))
+                && preview.Data.TryGetValue(TaskbarPreviewDeepLink.PresentAfterResponseKey, out var presentation)
+                && presentation is true)
+                CompletePreviewStartupFeedback();
             AllowSetForegroundWindow(_instance.ProcessId);
             // A COM activation has no destination until InvokeAsync arrives.
             // Wait for its factory: owning the instance key does not imply that
@@ -163,6 +169,42 @@ internal static partial class Program
         Marshal.ThrowExceptionForHR(result);
         redirect.GetAwaiter().GetResult();
     }
+
+    private static void CompletePreviewStartupFeedback()
+    {
+        // The protocol broker can start a short-lived GUI instance. Its normal
+        // WinUI message loop never runs, so finish the Windows startup feedback
+        // using a private thread message before forwarding the activation.
+        const uint StartupReady = 0x8000 + 0x39;
+        _ = PeekMessage(out _, -1, StartupReady, StartupReady, 0);
+        if (PostThreadMessage(GetCurrentThreadId(), StartupReady, 0, 0))
+            _ = GetMessage(out _, -1, StartupReady, StartupReady);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct ThreadMessage
+    {
+        internal nint Window;
+        internal uint Message;
+        internal nuint WParam;
+        internal nint LParam;
+        internal uint Time;
+        internal int X, Y;
+        internal uint Private;
+    }
+
+    [LibraryImport("kernel32.dll")]
+    private static partial uint GetCurrentThreadId();
+
+    [LibraryImport("user32.dll", EntryPoint = "PeekMessageW")]
+    private static partial int PeekMessage(out ThreadMessage message, nint window, uint min, uint max, uint remove);
+
+    [LibraryImport("user32.dll", EntryPoint = "PostThreadMessageW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool PostThreadMessage(uint threadId, uint message, nuint wParam, nint lParam);
+
+    [LibraryImport("user32.dll", EntryPoint = "GetMessageW")]
+    private static partial int GetMessage(out ThreadMessage message, nint window, uint min, uint max);
 
     [LibraryImport("ole32.dll")]
     private static unsafe partial int CoWaitForMultipleHandles(uint flags, uint timeout, uint count, nint* handles, out uint index);

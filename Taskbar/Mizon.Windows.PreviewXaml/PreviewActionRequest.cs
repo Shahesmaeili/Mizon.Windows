@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Mizon.Windows.Services;
 
 namespace Mizon.Windows.PreviewXaml;
@@ -40,27 +39,7 @@ internal sealed class PreviewActionRequest(Func<string, Task<int>> launch)
         // Leave the native input callback before Windows processes the launch.
         await Task.Delay(100).ConfigureAwait(false);
         if (PreviewConfiguration.Read() is null) return 2;
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo(Exports.GetHostPath())
-            {
-                UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden
-            }
-        };
-        process.StartInfo.ArgumentList.Add("--open-preview-action");
-        process.StartInfo.ArgumentList.Add(destination);
-        if (!process.Start()) return 2;
-        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-        try
-        {
-            await process.WaitForExitAsync(deadline.Token).ConfigureAwait(false);
-            return process.ExitCode;
-        }
-        catch (OperationCanceledException) when (deadline.IsCancellationRequested)
-        {
-            try { if (!process.HasExited) process.Kill(); }
-            catch (InvalidOperationException) { /* The helper exited concurrently. */ }
-            return 2;
-        }
+        return await PreviewHelperProcess.RunAsync(Exports.GetHostPath(), "--open-preview-action " + destination)
+            .ConfigureAwait(false);
     }
 }
