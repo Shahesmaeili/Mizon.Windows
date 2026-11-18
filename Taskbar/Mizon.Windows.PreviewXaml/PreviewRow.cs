@@ -17,6 +17,9 @@ internal sealed unsafe class PreviewRow : IDisposable
     private double _oldCardHeight, _oldPanelHeight;
     private bool _disposed;
     private bool _layoutSaved;
+    private PreviewConfiguration _owner;
+    private string? _lastCaption;
+    private long? _captionMismatchSince;
     internal bool Persian { get; private set; }
 
     private PreviewRow(PreviewActionRequest playlists, PreviewActionRequest downloads)
@@ -55,42 +58,78 @@ internal sealed unsafe class PreviewRow : IDisposable
         finally { Native.Release(current); Native.Release(tree); }
     }
 
-    internal static bool Matches(nint card, string title)
+    internal static bool Matches(nint card, string title) => MatchCaption(card, title, null) == CaptionMatch.Current;
+
+    internal bool RetainFor(nint card, PreviewConfiguration configuration, long now)
+    {
+        if (_owner.Window != configuration.Window || _owner.ProcessId != configuration.ProcessId) return false;
+        switch (MatchCaption(card, configuration.Title, _lastCaption))
+        {
+            case CaptionMatch.Current:
+                _lastCaption = configuration.Title;
+                _captionMismatchSince = null;
+                return true;
+            case CaptionMatch.Previous:
+                // Explorer can keep showing the old title for this exact card
+                // until it closes, even though the HWND already has its new title.
+                _captionMismatchSince = null;
+                return true;
+            default:
+                if (configuration.Title == _lastCaption) return false;
+                _captionMismatchSince ??= now;
+                return now - _captionMismatchSince.Value < 2_000;
+        }
+    }
+
+    private enum CaptionMatch { None, Previous, Current }
+
+    private static CaptionMatch MatchCaption(nint card, string current, string? previous)
     {
         var tree = Tree();
         var remaining = 200;
-        try { return ContainsTitle(tree, card, title, 0, ref remaining); }
+        try { return FindCaption(tree, card, current, previous, 0, ref remaining); }
         finally { Native.Release(tree); }
     }
 
-    private static bool ContainsTitle(nint tree, nint element, string title, int depth, ref int remaining)
+    private static CaptionMatch FindCaption(nint tree, nint element, string current, string? previous, int depth, ref int remaining)
     {
-        if (depth > 14 || remaining-- <= 0) return false;
+        if (depth > 14 || remaining-- <= 0) return CaptionMatch.None;
         var text = Native.Query(element, Native.TextBlock);
         if (text != 0)
         {
-            try { if (Native.GetText(text, 26) == title) return true; }
+            try
+            {
+                var value = Native.GetText(text, 26);
+                if (value == current) return CaptionMatch.Current;
+                if (value == previous) return CaptionMatch.Previous;
+            }
             finally { Native.Release(text); }
         }
         var dependency = Native.Query(element, Native.Dependency);
-        if (dependency == 0) return false;
+        if (dependency == 0) return CaptionMatch.None;
         try
         {
             int count;
             Native.Check(((delegate* unmanaged[Stdcall]<nint, nint, int*, int>)Native.Slot(tree, 11))(tree, dependency, &count));
+            var match = CaptionMatch.None;
             for (var index = 0; index < count && remaining > 0; index++)
             {
                 nint child = 0;
                 Native.Check(((delegate* unmanaged[Stdcall]<nint, nint, int, nint*, int>)Native.Slot(tree, 10))(tree, dependency, index, &child));
-                try { if (ContainsTitle(tree, child, title, depth + 1, ref remaining)) return true; }
+                try
+                {
+                    var found = FindCaption(tree, child, current, previous, depth + 1, ref remaining);
+                    if (found == CaptionMatch.Current) return found;
+                    if (found == CaptionMatch.Previous) match = found;
+                }
                 finally { Native.Release(child); }
             }
-            return false;
+            return match;
         }
         finally { Native.Release(dependency); }
     }
 
-    internal static PreviewRow? Attach(nint card, bool persian, Action refresh)
+    internal static PreviewRow? Attach(nint card, PreviewConfiguration configuration, Action refresh)
     {
         var framework = Native.Query(card, Native.Framework);
         if (framework == 0) return null;
@@ -99,7 +138,11 @@ internal sealed unsafe class PreviewRow : IDisposable
         {
             var height = Native.GetDouble(framework, 14);
             if (height < 40 || height > 800) return null;
-            result = new PreviewRow(Playlists, Downloads) { _card = framework, Persian = persian, _refresh = refresh };
+            result = new PreviewRow(Playlists, Downloads)
+            {
+                _card = framework, Persian = configuration.Persian, _refresh = refresh,
+                _owner = configuration, _lastCaption = configuration.Title
+            };
             framework = 0;
             result.AttachCore(card, height);
             return result;
@@ -237,12 +280,14 @@ internal sealed unsafe class PreviewRow : IDisposable
     {
         var fixture = LoadMarkup("""
             <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Height="200" Width="360">
-                <Grid><Border Name="BackgroundBorder"/><StackPanel><TextBlock Text="Mizon preview fixture"/></StackPanel></Grid>
+                <Grid><Border Name="BackgroundBorder"/><StackPanel><TextBlock Name="FixtureCaption" Text="Mizon preview fixture"/></StackPanel></Grid>
             </Grid>
             """);
         try
         {
             if (!Matches(fixture, "Mizon preview fixture")) throw new InvalidOperationException("Fixture title matching failed.");
+            var original = new PreviewConfiguration(1, 42, persian, "Mizon preview fixture");
+            var updated = original with { Title = "Mizon - Playlists" };
             var playlistReply = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
             var downloadReply = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
             var playlists = new PreviewActionRequest(_ => playlistReply.Task);
@@ -251,7 +296,10 @@ internal sealed unsafe class PreviewRow : IDisposable
             PreviewRow MakeRow()
             {
                 var framework = Native.Query(fixture, Native.Framework);
-                var row = new PreviewRow(playlists, downloads) { _card = framework, Persian = persian };
+                var row = new PreviewRow(playlists, downloads)
+                {
+                    _card = framework, Persian = persian, _owner = original, _lastCaption = original.Title
+                };
                 try
                 {
                     row.AttachCore(fixture, 200);
@@ -281,7 +329,22 @@ internal sealed unsafe class PreviewRow : IDisposable
                 reopened._input[4].VerifyLoading(true);
                 playlistReply.SetResult(0);
                 pendingPlaylist.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+                if (!reopened.RetainFor(fixture, updated, 0) || !reopened.RetainFor(fixture, updated, 3_000))
+                    throw new InvalidOperationException("The row detached while Explorer still showed the last caption.");
+                SetFixtureCaption(fixture, "");
+                if (!reopened.RetainFor(fixture, updated, 3_100) || reopened.RetainFor(fixture, updated, 5_100))
+                    throw new InvalidOperationException("A temporarily missing caption had the wrong retention window.");
+                SetFixtureCaption(fixture, updated.Title);
+                if (!reopened.RetainFor(fixture, updated, 5_200)
+                    || reopened.RetainFor(fixture, updated with { Window = 2 }, 5_200)
+                    || reopened.RetainFor(fixture, updated with { ProcessId = 43 }, 5_200))
+                    throw new InvalidOperationException("Caption retention did not stay bound to the original window.");
+                SetFixtureCaption(fixture, "Another window");
+                if (reopened.RetainFor(fixture, updated, 5_300))
+                    throw new InvalidOperationException("An unrelated caption could keep the row after the new caption was acknowledged.");
                 reopened.RefreshLoading();
+                if (Native.GetDouble(reopened._card, 17) != 250)
+                    throw new InvalidOperationException("A progress response changed the reserved preview height.");
                 reopened._input[3].VerifyLoading(false);
                 reopened._input[4].VerifyLoading(true);
                 downloadReply.SetResult(3);
@@ -302,6 +365,26 @@ internal sealed unsafe class PreviewRow : IDisposable
             finally { Native.Release(restored); }
         }
         finally { Native.Release(fixture); }
+    }
+
+    private static void SetFixtureCaption(nint fixture, string caption)
+    {
+        var framework = Native.Query(fixture, Native.Framework);
+        nint element = 0, text = 0, value = 0;
+        try
+        {
+            element = FindName(framework, "FixtureCaption");
+            text = Native.Query(element, Native.TextBlock);
+            value = Native.HString(caption);
+            Native.Check(((delegate* unmanaged[Stdcall]<nint, nint, int>)Native.Slot(text, 27))(text, value));
+        }
+        finally
+        {
+            Native.WindowsDeleteString(value);
+            Native.Release(text);
+            Native.Release(element);
+            Native.Release(framework);
+        }
     }
 
     public void Dispose()

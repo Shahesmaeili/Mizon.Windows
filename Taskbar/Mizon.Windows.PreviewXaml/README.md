@@ -28,10 +28,13 @@ Explorer, and reconnects after a main-window or Explorer restart. A newer
 payload asks the previous watcher and adapter to detach via the existing stop
 marker before reconnecting. Its old NativeAOT image may remain resident.
 
-The adapter matches the current Mizon window title before attaching. It does
-not use an overlay window as its visible surface. Its message-only HWND queues
-diagnostics work. XAML operations are dispatched through the element's own
-CoreDispatcher, after visual-tree notifications return.
+The adapter matches the current Mizon window title before first attaching.
+Once attached, the row belongs to that card and to the validated window handle
+and process. Explorer can keep the last matched caption while Mizon updates
+its title after navigation. A brief missing-caption grace period applies
+during that transition. A real card removal reported by XAML Diagnostics
+releases its row and retained references. The message-only HWND queues this
+work, and XAML operations run on the element's own CoreDispatcher.
 
 ## Input, localization and cleanup
 

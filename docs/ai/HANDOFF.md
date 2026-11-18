@@ -2,6 +2,13 @@
 
 Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Taskbar preview row retention — 2026-11-18
+
+The bound card retains its action row when Mizon changes its title before the
+shell refreshes the caption. The isolated XAML test covers the stale caption,
+a short missing caption, and rejecting a different window. See the
+[task record](tasks/2026-11-18-taskbar-row-retention.md).
+
 ## Deep-link loading — 2026-11-18
 
 Loading is displayed at the source button. The taskbar preview's playlists

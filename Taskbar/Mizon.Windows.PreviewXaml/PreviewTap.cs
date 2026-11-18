@@ -6,8 +6,11 @@ namespace Mizon.Windows.PreviewXaml;
 [GeneratedComClass]
 internal sealed unsafe partial class PreviewTap : IObjectWithSite, IVisualTreeCallback2, IAgileObject
 {
-    private readonly ConcurrentDictionary<ulong, nint> _cards = new();
+    private readonly Lock _lifetimeGate = new();
+    private readonly ConcurrentDictionary<ulong, Card> _cards = new();
+    private sealed record Card(nint Element, ulong DiagnosticHandle);
     private readonly ConcurrentDictionary<ulong, byte> _pending = new();
+    private readonly ConcurrentDictionary<ulong, Card> _removed = new();
     private readonly ConcurrentDictionary<ulong, PreviewRow> _rows = new();
     private nint _site, _tree, _callback, _messageWindow;
     private int _scanQueued, _stopped;
@@ -56,14 +59,19 @@ internal sealed unsafe partial class PreviewTap : IObjectWithSite, IVisualTreeCa
 
     public int GetSite(in Guid iid, out nint result)
     {
-        result = Native.Query(_site, iid);
+        lock (_lifetimeGate) result = Native.Query(_site, iid);
         return result == 0 ? unchecked((int)0x80004002) : 0;
     }
 
     public int OnVisualTreeChange(ParentChildRelation relation, VisualElement element, int mutation)
     {
         if (Volatile.Read(ref _stopped) != 0) return 0;
-        if (mutation == 1) _pending.TryRemove(element.Handle, out _);
+        if (mutation == 1)
+        {
+            _pending.TryRemove(element.Handle, out _);
+            foreach (var (key, card) in _cards)
+                if (card.DiagnosticHandle == element.Handle) _removed.TryAdd(key, card);
+        }
         else if (_pending.Count < 256) _pending.TryAdd(element.Handle, 0);
         if (Interlocked.Exchange(ref _scanQueued, 1) == 0) MessageWindow.Queue(_messageWindow);
         return 0;
@@ -77,18 +85,12 @@ internal sealed unsafe partial class PreviewTap : IObjectWithSite, IVisualTreeCa
         if (_stopped != 0) return;
         try
         {
-            if (PreviewConfiguration.Read() is null) { ReleaseRows(); _pending.Clear(); return; }
-            foreach (var handle in _pending.Keys)
-            {
-                _pending.TryRemove(handle, out _);
-                nint element = 0;
-                var hr = ((delegate* unmanaged[Stdcall]<nint, ulong, nint*, int>)Native.Slot(_site, 6))(_site, handle, &element);
-                if (hr < 0 || element == 0) continue;
-                try { UiDispatcher.Run(element, InspectElement); }
-                finally { Native.Release(element); }
-            }
+            if (PreviewConfiguration.Read() is null) { ReleaseRows(); _pending.Clear(); _removed.Clear(); return; }
+            foreach (var key in _removed.Keys)
+                if (_removed.TryRemove(key, out var removed)) DispatchCard(key, removed, _ => RemoveCard(key));
+            InspectPending();
             foreach (var pair in _cards.ToArray())
-                UiDispatcher.Run(pair.Value, card => RefreshCard(pair.Key, card));
+                DispatchCard(pair.Key, pair.Value, card => RefreshCard(pair.Key, card));
             _lastError = null;
         }
         catch (Exception error)
@@ -98,6 +100,24 @@ internal sealed unsafe partial class PreviewTap : IObjectWithSite, IVisualTreeCa
         }
     }
 
+    private void InspectPending()
+    {
+        if (_pending.IsEmpty || GetSite(in DiagnosticsId, out var site) < 0) return;
+        try
+        {
+            foreach (var handle in _pending.Keys)
+            {
+                if (!_pending.TryRemove(handle, out _)) continue;
+                nint element = 0;
+                var hr = ((delegate* unmanaged[Stdcall]<nint, ulong, nint*, int>)Native.Slot(site, 6))(site, handle, &element);
+                if (hr < 0 || element == 0) continue;
+                try { UiDispatcher.Run(element, InspectElement); }
+                finally { Native.Release(element); }
+            }
+        }
+        finally { Native.Release(site); }
+    }
+
     private void InspectElement(nint element)
     {
         if (_stopped != 0 || PreviewConfiguration.Read() is not { } configuration) return;
@@ -105,30 +125,43 @@ internal sealed unsafe partial class PreviewTap : IObjectWithSite, IVisualTreeCa
         if (thumbnail == 0) return;
         try
         {
-            if (!PreviewRow.Matches(thumbnail, configuration.Title)) return;
             var identity = Native.Query(thumbnail, new Guid("00000000-0000-0000-C000-000000000046"));
             var key = (ulong)identity;
             Native.Release(identity);
-            if (_cards.Count < 8 && !_cards.ContainsKey(key))
+            if (key == 0 || _cards.ContainsKey(key) || _cards.Count >= 8
+                || !PreviewRow.Matches(thumbnail, configuration.Title)) return;
+
+            ulong handle = 0;
+            if (GetSite(in DiagnosticsId, out var site) < 0) return;
+            try
             {
-                var retained = Native.Query(thumbnail, Native.Dependency);
-                if (!_cards.TryAdd(key, retained)) Native.Release(retained);
+                // IXamlDiagnostics::GetHandleFromIInspectable, xamlOM.h.
+                var hr = ((delegate* unmanaged[Stdcall]<nint, nint, ulong*, int>)Native.Slot(site, 7))(site, thumbnail, &handle);
+                if (hr < 0) handle = 0;
             }
-            if (_cards.ContainsKey(key)) RefreshCard(key, thumbnail);
+            finally { Native.Release(site); }
+            var retained = Native.Query(thumbnail, Native.Dependency);
+            if (retained == 0) return;
+            if (_cards.TryAdd(key, new(retained, handle))) RefreshCard(key, thumbnail);
+            else Native.Release(retained);
         }
         finally { Native.Release(thumbnail); }
     }
 
     private void RefreshCard(ulong key, nint card)
     {
-        if (_stopped != 0 || PreviewConfiguration.Read() is not { } configuration
-            || !PreviewRow.Matches(card, configuration.Title))
+        if (_stopped != 0 || PreviewConfiguration.Read() is not { } configuration)
         {
             RemoveCard(key);
             return;
         }
         if (_rows.TryGetValue(key, out var current))
         {
+            if (!current.RetainFor(card, configuration, Environment.TickCount64))
+            {
+                RemoveCard(key);
+                return;
+            }
             if (current.Persian == configuration.Persian)
             {
                 current.RefreshLoading();
@@ -136,7 +169,12 @@ internal sealed unsafe partial class PreviewTap : IObjectWithSite, IVisualTreeCa
             }
             if (_rows.TryRemove(key, out var old)) old.Dispose();
         }
-        var row = PreviewRow.Attach(card, configuration.Persian, QueueRefresh);
+        else if (!PreviewRow.Matches(card, configuration.Title))
+        {
+            RemoveCard(key);
+            return;
+        }
+        var row = PreviewRow.Attach(card, configuration, QueueRefresh);
         if (row is null) return;
         if (!_rows.TryAdd(key, row)) row.Dispose();
         else Log("XAML row attached to Mizon thumbnail.");
@@ -147,13 +185,36 @@ internal sealed unsafe partial class PreviewTap : IObjectWithSite, IVisualTreeCa
     private void RemoveCard(ulong key)
     {
         if (_rows.TryRemove(key, out var row)) row.Dispose();
-        if (_cards.TryRemove(key, out var card)) Native.Release(card);
+        Card? card;
+        lock (_lifetimeGate) _cards.TryRemove(key, out card);
+        if (card is not null) Native.Release(card.Element);
+    }
+
+    private bool IsTracked(ulong key, Card card) =>
+        _cards.TryGetValue(key, out var current) && ReferenceEquals(current, card);
+
+    private void DispatchCard(ulong key, Card card, Action<nint> action)
+    {
+        nint element;
+        lock (_lifetimeGate)
+        {
+            if (!IsTracked(key, card)) return;
+            element = Native.Query(card.Element, Native.Dependency);
+        }
+        try
+        {
+            UiDispatcher.Run(element, dispatched =>
+            {
+                if (IsTracked(key, card)) action(dispatched);
+            });
+        }
+        finally { Native.Release(element); }
     }
 
     private void ReleaseRows()
     {
         foreach (var pair in _cards.ToArray())
-            UiDispatcher.Run(pair.Value, _ => RemoveCard(pair.Key));
+            DispatchCard(pair.Key, pair.Value, _ => RemoveCard(pair.Key));
     }
 
     internal void Stop()
@@ -161,10 +222,16 @@ internal sealed unsafe partial class PreviewTap : IObjectWithSite, IVisualTreeCa
         if (Interlocked.Exchange(ref _stopped, 1) != 0) return;
         ReleaseRows();
         _pending.Clear();
+        _removed.Clear();
         var tree = _tree;
         var callback = _callback;
-        var site = _site;
-        _tree = _callback = _site = 0;
+        nint site;
+        lock (_lifetimeGate)
+        {
+            site = _site;
+            _site = 0;
+        }
+        _tree = _callback = 0;
         _ = _subscription.ContinueWith(_ =>
         {
             try
