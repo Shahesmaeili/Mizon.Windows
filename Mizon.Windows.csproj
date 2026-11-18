@@ -411,4 +411,5 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
 	</ItemGroup>
+  <Import Project="Build\TaskbarPreviewXaml.targets" />
 </Project>

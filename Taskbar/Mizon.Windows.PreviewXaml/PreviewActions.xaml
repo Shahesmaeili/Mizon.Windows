@@ -1,0 +1,29 @@
+<Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      Name="MizonPreviewActions" Grid.Row="{ROW}" Grid.ColumnSpan="100" Height="44" Margin="8,0,8,6"
+      VerticalAlignment="Bottom" FlowDirection="{DIRECTION}">
+    <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="8" />
+        <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+    <Button Name="MizonPreviewPlaylists" Padding="10,6" TabIndex="0" UseSystemFocusVisuals="True"
+                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                     Background="{ThemeResource SystemControlBackgroundListLowBrush}"
+                     Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
+                     AutomationProperties.Name="{PLAYLISTS}" XYFocusKeyboardNavigation="Enabled">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8F1;" FontSize="15" />
+            <TextBlock Text="{PLAYLISTS}" FontSize="12" VerticalAlignment="Center" />
+        </StackPanel>
+    </Button>
+    <Button Name="MizonPreviewDownloads" Grid.Column="2" Padding="10,6" TabIndex="1" UseSystemFocusVisuals="True"
+                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                     Background="{ThemeResource SystemControlBackgroundListLowBrush}"
+                     Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
+                     AutomationProperties.Name="{DOWNLOADS}" XYFocusKeyboardNavigation="Enabled">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE896;" FontSize="15" />
+            <TextBlock Text="{DOWNLOADS}" FontSize="12" VerticalAlignment="Center" />
+        </StackPanel>
+    </Button>
+</Grid>

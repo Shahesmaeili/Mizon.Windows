@@ -1,0 +1,18 @@
+<Project>
+  <Target Name="BuildTaskbarPreviewXaml" BeforeTargets="AssignTargetPaths"
+          Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <_PreviewXamlDirectory>$(MSBuildProjectDirectory)\Taskbar\PreviewPayload\</_PreviewXamlDirectory>
+    </PropertyGroup>
+    <!-- The TAP is C# compiled to a native COM DLL. It cannot be loaded as IL by Explorer. -->
+    <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\Taskbar\Mizon.Windows.PreviewXaml\Mizon.Windows.PreviewXaml.csproj&quot; -c Release -o &quot;$(_PreviewXamlDirectory).&quot; --nologo" />
+    <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\Taskbar\Mizon.Windows.PreviewXaml.Host\Mizon.Windows.PreviewXaml.Host.csproj&quot; -c Release -p:PublishAot=true -o &quot;$(_PreviewXamlDirectory).&quot; --nologo" />
+    <ItemGroup>
+      <_PreviewXamlPayload Include="$(_PreviewXamlDirectory)*.dll;$(_PreviewXamlDirectory)*.exe" />
+      <Content Include="@(_PreviewXamlPayload)">
+        <Link>Taskbar\PreviewXaml\%(_PreviewXamlPayload.Filename)%(_PreviewXamlPayload.Extension)</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+  </Target>
+</Project>

@@ -23,6 +23,7 @@ public sealed partial class MainWindow : Window
     private readonly IDisposable _appearanceAttachment;
     private readonly ProfilePresenceService _profilePresence;
     private readonly LocalStorageService _presenceStorage;
+    private TaskbarPreviewXamlService? _taskbarPreviewXaml;
 
     internal void ShowWindowOverlay(UIElement overlay)
     {
@@ -95,6 +96,7 @@ public sealed partial class MainWindow : Window
         var taskbarService = ((App)App.Current).Services.GetRequiredService<ITaskbarService>();
         taskbarService.PlaybackToggleRequested += TaskbarService_PlaybackToggleRequested;
         taskbarService.FullScreenRequested += TaskbarService_FullScreenRequested;
+        _taskbarPreviewXaml = new TaskbarPreviewXamlService(WindowNative.GetWindowHandle(this), DispatcherQueue);
 
         // DragMoveAndResizeHelper.SetDragMove(App.MainMizonWindow, DragAreaOverlayGrid);
 
@@ -133,7 +135,9 @@ public sealed partial class MainWindow : Window
 
     private void NavigationChanged(object? sender, NavigationChangedEventArgs args)
     {
-        if (args.IsEnteringPage) RefreshTitle();
+        if (!args.IsEnteringPage) return;
+        RefreshTitle();
+        RefreshTaskbarPreviewXaml();
     }
 
     private void LocalizationChanged(object? sender, PropertyChangedEventArgs args)
@@ -143,7 +147,14 @@ public sealed partial class MainWindow : Window
             RefreshTitle();
             UpdatePresenceLanguage();
             UpdateWindowPresentationLabels();
+            RefreshTaskbarPreviewXaml();
         }
+    }
+
+    private void RefreshTaskbarPreviewXaml()
+    {
+        var navigation = ((App)Application.Current).Services.GetRequiredService<NavigationService>();
+        _taskbarPreviewXaml?.Update(navigation.CurrentMainPage is HomePage);
     }
 
     private void PresenceWindowActivated(object sender, WindowActivatedEventArgs args) =>
@@ -164,6 +175,8 @@ public sealed partial class MainWindow : Window
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
+        _taskbarPreviewXaml?.Dispose();
+        _taskbarPreviewXaml = null;
         DisposeWindowPresentation();
         Activated -= PresenceWindowActivated;
         _presenceStorage.AuthenticationChanged -= PresenceAuthenticationChanged;

@@ -32,3 +32,6 @@ BenchmarkDotNet.Artifacts/
 *.binlog
 *.dmp
 
+
+# Published NativeAOT taskbar preview payload
+Taskbar/PreviewPayload/

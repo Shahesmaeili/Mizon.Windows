@@ -2,6 +2,15 @@
 
 Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## XAML inside the taskbar preview — 2026-11-18
+
+A .NET 11 NativeAOT C#/XAML adapter adds a real Grid row beneath the existing four
+transport controls. The native-toolbar fallback was reverted. See the
+[task record](tasks/2026-11-18-taskbar-preview-xaml.md) and the
+[component guide](../../Taskbar/Mizon.Windows.PreviewXaml/README.md) for the
+confirmed rendering and both destination clicks, the earlier
+prototype Explorer crash and the Windows-build/NativeAOT lifetime boundaries.
+
 ## Account focus follow-up — 2026-11-16
 
 An invalid controller sign-in returns to the password after the form's enabled
