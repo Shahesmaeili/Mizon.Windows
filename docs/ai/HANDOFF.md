@@ -4,11 +4,14 @@ Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion 
 
 ## Deep-link loading — 2026-11-18
 
-Ordinary and native response links now drive one localized main-window progress
-ring from the same per-request receipt. The music details, playlists and
-following-activity routes wait for their initial data. Existing navigation read
-consent controls pending-link visibility in MCP. See the
-[task record](tasks/2026-11-18-deep-link-loading.md) for tested boundaries.
+Loading is displayed at the source button. The taskbar preview's playlists
+and storage action buttons show individual native rings until their
+protocol-for-results receipts finish. The music details, playlists and
+following-activity routes still wait for their initial data. The main-window
+loading chip was removed at the user's request. Existing navigation read consent
+controls pending-link visibility in MCP. See the
+[preview guide](../../Taskbar/Mizon.Windows.PreviewXaml/README.md) and the
+[preview loading task record](tasks/2026-11-18-preview-button-loading.md).
 
 ## XAML inside the taskbar preview — 2026-11-18
 

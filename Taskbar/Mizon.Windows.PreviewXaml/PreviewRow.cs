@@ -1,9 +1,16 @@
+using Mizon.Windows.Services;
+
 namespace Mizon.Windows.PreviewXaml;
 
 internal sealed unsafe class PreviewRow : IDisposable
 {
     private static readonly Guid VectorId = new("B4C1E3AC-8768-5B9D-A661-F63330B8507B");
     private static readonly Guid ElementId = new("676D0BE9-B65C-41C6-BA40-58CF87F201C1");
+    private static readonly PreviewActionRequest Playlists = new(PreviewActionRequest.LaunchAsync);
+    private static readonly PreviewActionRequest Downloads = new(PreviewActionRequest.LaunchAsync);
+    private readonly PreviewActionRequest _playlists;
+    private readonly PreviewActionRequest _downloads;
+    private Action? _refresh;
     private nint _card, _panel, _vector, _row, _definitions;
     private readonly List<PreviewInputBinding> _input = [];
     private uint _addedDefinitions;
@@ -11,6 +18,12 @@ internal sealed unsafe class PreviewRow : IDisposable
     private bool _disposed;
     private bool _layoutSaved;
     internal bool Persian { get; private set; }
+
+    private PreviewRow(PreviewActionRequest playlists, PreviewActionRequest downloads)
+    {
+        _playlists = playlists;
+        _downloads = downloads;
+    }
 
     private static nint Tree() => Native.Factory("Windows.UI.Xaml.Media.VisualTreeHelper",
         new Guid("E75758C4-D25D-4B1D-971F-596F17F12BAA"));
@@ -77,7 +90,7 @@ internal sealed unsafe class PreviewRow : IDisposable
         finally { Native.Release(dependency); }
     }
 
-    internal static PreviewRow? Attach(nint card, bool persian)
+    internal static PreviewRow? Attach(nint card, bool persian, Action refresh)
     {
         var framework = Native.Query(card, Native.Framework);
         if (framework == 0) return null;
@@ -86,7 +99,7 @@ internal sealed unsafe class PreviewRow : IDisposable
         {
             var height = Native.GetDouble(framework, 14);
             if (height < 40 || height > 800) return null;
-            result = new PreviewRow { _card = framework, Persian = persian };
+            result = new PreviewRow(Playlists, Downloads) { _card = framework, Persian = persian, _refresh = refresh };
             framework = 0;
             result.AttachCore(card, height);
             return result;
@@ -140,8 +153,9 @@ internal sealed unsafe class PreviewRow : IDisposable
         _input.Add(PreviewInputBinding.Pointer(_row, 57));
         _input.Add(PreviewInputBinding.Pointer(_row, 61));
         _input.Add(PreviewInputBinding.Tapped(_row));
-        BindClick("MizonPreviewPlaylists", "mizon://playlists");
-        BindClick("MizonPreviewDownloads", "mizon://settings/storage");
+        BindClick("Playlists", TaskbarPreviewDeepLink.Playlists, _playlists);
+        BindClick("Downloads", TaskbarPreviewDeepLink.Storage, _downloads);
+        RefreshLoading();
         uint size;
         Native.Check(((delegate* unmanaged[Stdcall]<nint, uint*, int>)Native.Slot(_vector, 7))(_vector, &size));
         if (size > 40) throw new InvalidOperationException("Unexpected thumbnail child count.");
@@ -155,18 +169,43 @@ internal sealed unsafe class PreviewRow : IDisposable
         finally { Native.Release(uiElement); }
     }
 
-    private void BindClick(string name, string destination)
+    internal void RefreshLoading()
+    {
+        foreach (var binding in _input) binding.RefreshLoading();
+    }
+
+    private void BindClick(string name, string destination, PreviewActionRequest request)
     {
         var framework = Native.Query(_row, Native.Framework);
-        var text = Native.HString(name);
-        nint button = 0;
+        nint button = 0, icon = 0, ring = 0;
         try
         {
-            Native.Check(((delegate* unmanaged[Stdcall]<nint, nint, nint*, int>)Native.Slot(framework, 51))(framework, text, &button));
-            if (button == 0) throw new InvalidOperationException("Missing named preview action.");
-            _input.Add(PreviewInputBinding.Click(button, destination));
+            button = FindName(framework, "MizonPreview" + name);
+            icon = FindName(framework, name + "Icon");
+            ring = FindName(framework, name + "Loading");
+            var progress = new PreviewButtonProgress(button, icon, ring, Persian);
+            _input.Add(PreviewInputBinding.Click(button, destination, request, progress, _refresh));
         }
-        finally { Native.Release(button); Native.WindowsDeleteString(text); Native.Release(framework); }
+        finally
+        {
+            Native.Release(button);
+            Native.Release(icon);
+            Native.Release(ring);
+            Native.Release(framework);
+        }
+    }
+
+    private static nint FindName(nint framework, string name)
+    {
+        var text = Native.HString(name);
+        try
+        {
+            nint element = 0;
+            Native.Check(((delegate* unmanaged[Stdcall]<nint, nint, nint*, int>)Native.Slot(framework, 51))(framework, text, &element));
+            if (element == 0) throw new InvalidOperationException("Missing named preview element.");
+            return element;
+        }
+        finally { Native.WindowsDeleteString(text); }
     }
 
     private void AppendDefinition(string height)
@@ -194,7 +233,7 @@ internal sealed unsafe class PreviewRow : IDisposable
         finally { Native.WindowsDeleteString(text); Native.Release(factory); }
     }
 
-    internal static void VerifyAttachment()
+    internal static void VerifyAttachment(bool persian)
     {
         var fixture = LoadMarkup("""
             <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Height="200" Width="360">
@@ -204,11 +243,57 @@ internal sealed unsafe class PreviewRow : IDisposable
         try
         {
             if (!Matches(fixture, "Mizon preview fixture")) throw new InvalidOperationException("Fixture title matching failed.");
-            var framework = Native.Query(fixture, Native.Framework);
-            var row = new PreviewRow { _card = framework, Persian = true };
-            row.AttachCore(fixture, 200);
-            if (Native.GetDouble(framework, 17) != 250) throw new InvalidOperationException("Preview space was not reserved.");
-            row.Dispose();
+            var playlistReply = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var downloadReply = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var playlists = new PreviewActionRequest(_ => playlistReply.Task);
+            var downloads = new PreviewActionRequest(_ => downloadReply.Task);
+
+            PreviewRow MakeRow()
+            {
+                var framework = Native.Query(fixture, Native.Framework);
+                var row = new PreviewRow(playlists, downloads) { _card = framework, Persian = persian };
+                try
+                {
+                    row.AttachCore(fixture, 200);
+                    if (Native.GetDouble(framework, 17) != 250)
+                        throw new InvalidOperationException("Preview space was not reserved.");
+                    return row;
+                }
+                catch { row.Dispose(); throw; }
+            }
+
+            try
+            {
+                var pendingPlaylist = playlists.Start(TaskbarPreviewDeepLink.Playlists, null)
+                    ?? throw new InvalidOperationException("The playlist request was not started.");
+                using (var first = MakeRow())
+                {
+                    first._input[3].VerifyLoading(true);
+                    first._input[4].VerifyLoading(false);
+                    if (playlists.Start(TaskbarPreviewDeepLink.Playlists, null) is not null)
+                        throw new InvalidOperationException("A second click started a duplicate request.");
+                }
+                using var reopened = MakeRow();
+                reopened._input[3].VerifyLoading(true);
+                var pendingDownload = downloads.Start(TaskbarPreviewDeepLink.Storage, null)
+                    ?? throw new InvalidOperationException("The storage request was not started.");
+                reopened.RefreshLoading();
+                reopened._input[4].VerifyLoading(true);
+                playlistReply.SetResult(0);
+                pendingPlaylist.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+                reopened.RefreshLoading();
+                reopened._input[3].VerifyLoading(false);
+                reopened._input[4].VerifyLoading(true);
+                downloadReply.SetResult(3);
+                pendingDownload.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+                reopened.RefreshLoading();
+                reopened._input[4].VerifyLoading(false);
+            }
+            finally
+            {
+                playlistReply.TrySetResult(2);
+                downloadReply.TrySetResult(2);
+            }
             var restored = Native.Query(fixture, Native.Framework);
             try
             {

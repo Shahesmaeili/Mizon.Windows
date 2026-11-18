@@ -8,6 +8,9 @@ internal static unsafe partial class Program
     [STAThread]
     private static int Main(string[] arguments)
     {
+        if (arguments is ["--open-preview-action", var destination])
+            return Task.Run(() => PreviewNavigation.Run(destination)).GetAwaiter().GetResult();
+
         var apartment = Native.RoInitialize(0);
         try
         {
@@ -79,19 +82,50 @@ internal static unsafe partial class Program
     {
         if (!File.Exists(library)) throw new FileNotFoundException("The preview DLL is missing.");
         using var current = Process.GetCurrentProcess();
-        using var single = new Mutex(true, @"Local\Mizon.PreviewXaml.Host." + current.SessionId, out var created);
-        if (!created) return 0;
+        using var single = new Mutex(false, @"Local\Mizon.PreviewXaml.Host." + current.SessionId);
+        var directory = PreviewConfiguration.DirectoryPath;
+        Directory.CreateDirectory(directory);
+        var stop = Path.Combine(directory, "stop");
+        var owner = Path.Combine(directory, "watcher-payload.txt");
+        if (!TakeWatcher(single, 0))
+        {
+            if (File.Exists(owner) && File.ReadAllText(owner) == library) return 0;
+            // Let the existing watcher and TAP retire cooperatively before
+            // attaching a new payload in the same Explorer session.
+            File.WriteAllText(stop, "Mizon preview payload changed.");
+            if (!TakeWatcher(single, 8000)) return 1;
+        }
+        try
+        {
+            if (File.Exists(stop)) Thread.Sleep(2200); // Allow the older TAP's stop check to run.
+            File.WriteAllText(owner, library);
+            File.Delete(stop);
+            return WatchOwned(library, current.SessionId, stop);
+        }
+        finally
+        {
+            try { File.Delete(owner); }
+            finally { single.ReleaseMutex(); }
+        }
+    }
+
+    private static bool TakeWatcher(Mutex watcher, int milliseconds)
+    {
+        try { return watcher.WaitOne(milliseconds); }
+        catch (AbandonedMutexException) { return true; }
+    }
+
+    private static int WatchOwned(string library, int sessionId, string stop)
+    {
         var previousExplorer = 0u;
         var previousProcess = 0;
         var emptyChecks = 0;
-        var stop = Path.Combine(PreviewConfiguration.DirectoryPath, "stop");
-        File.Delete(stop);
         while (!File.Exists(stop))
         {
             var available = Process.GetProcessesByName("Mizon.Windows");
             try
             {
-                var mizon = available.FirstOrDefault(process => process.SessionId == current.SessionId && process.MainWindowHandle != 0);
+                var mizon = available.FirstOrDefault(process => process.SessionId == sessionId && process.MainWindowHandle != 0);
                 if (mizon is null)
                 {
                     if (++emptyChecks >= 10)
@@ -175,7 +209,7 @@ internal static unsafe partial class Program
             Console.WriteLine("PASS actual NativeAOT exports, factory, detached TAP, and unsupported class.");
             var verifyMarkup = (delegate* unmanaged[Stdcall]<int, int>)NativeLibrary.GetExport(module, "MizonVerifyMarkup");
             Native.Check(verifyMarkup(persian ? 1 : 0));
-            Console.WriteLine("PASS " + (persian ? "Persian" : "English") + " XAML parsing, real UIElement insertion and layout restoration.");
+            Console.WriteLine("PASS " + (persian ? "Persian" : "English") + " XAML parsing, per-button response loading, reopen, and layout restoration.");
             return 0;
         }
         finally { Native.Release(factory); }

@@ -120,6 +120,7 @@ public partial class App : Application
     private MulticastDiscoveryServiceV2? _discoveryService;
     private AppDeepLinkResultDispatcher? _deepLinkResults;
     private AppActivationEnvelope? _pendingResultActivation;
+    private AppDeepLinkResponseSession? _deferredForeground;
     private bool _closing;
     internal static string? PendingLinkUri => Current is App app
         ? app._pendingResultActivation is { Response.IsCompleted: false } pending
@@ -143,20 +144,34 @@ public partial class App : Application
         CancelResultActivation("superseded", "A newer deep-link request replaced this request.");
         ClearPendingActivation();
         if (_deepLinkResults is null) _pendingResultActivation = envelope;
-        else StartActivation(envelope.Request, response);
-        if (MainMizonWindow is MainWindow window) window.ActivateExistingWindow();
+        else StartActivation(envelope.Request, response, envelope.PresentAfterResponse);
+        if (!envelope.PresentAfterResponse && MainMizonWindow is MainWindow window) window.ActivateExistingWindow();
     }
 
-    private void StartActivation(AppActivationRequest request, AppDeepLinkResponseSession? response = null)
+    private void StartActivation(AppActivationRequest request, AppDeepLinkResponseSession? response = null,
+        bool presentAfterResponse = false)
     {
         var dispatcher = _deepLinkResults!;
         response ??= new AppDeepLinkResponseSession(Guid.NewGuid(), timeout: AppDeepLinkResponseSession.TimeoutFor(request));
-        if (MainMizonWindow is MainWindow window) window.TrackDeepLinkResponse(response);
+        if (presentAfterResponse)
+        {
+            _deferredForeground = response;
+            _ = PresentWhenReadyAsync(response);
+        }
         _ = dispatcher.DispatchAsync(request, response);
+    }
+
+    private async Task PresentWhenReadyAsync(AppDeepLinkResponseSession response)
+    {
+        var result = await response.Completion;
+        if (_closing || !ReferenceEquals(_deferredForeground, response)) return;
+        _deferredForeground = null;
+        if (result.Success && MainMizonWindow is MainWindow window) window.ActivateExistingWindow();
     }
 
     private void CancelResultActivation(string code, string message)
     {
+        _deferredForeground = null;
         _pendingResultActivation?.Close(code, message);
         _pendingResultActivation = null;
         _deepLinkResults?.CancelActive(code, message);
@@ -275,7 +290,7 @@ public partial class App : Application
         if (_pendingResultActivation is { } pendingResult)
         {
             _pendingResultActivation = null;
-            StartActivation(pendingResult.Request, pendingResult.Response!);
+            StartActivation(pendingResult.Request, pendingResult.Response!, pendingResult.PresentAfterResponse);
         }
         // The authenticated shell starts the socket after account validation. Login and
         // Welcome do not need SignalR's connection, transport buffers or reconnect loop.

@@ -12,5 +12,4 @@
   <data name="GamepadMaximize" xml:space="preserve"><value>بزرگ‌کردن</value></data>
   <data name="GamepadRestore" xml:space="preserve"><value>بازگرداندن اندازه</value></data>
   <data name="GamepadClose" xml:space="preserve"><value>بستن</value></data>
-  <data name="DeepLinkOpening" xml:space="preserve"><value>در حال باز کردن پیوند…</value></data>
 </root>

@@ -147,7 +147,6 @@ public sealed partial class MainWindow : Window
             RefreshTitle();
             UpdatePresenceLanguage();
             UpdateWindowPresentationLabels();
-            if (DeepLinkStatus.Visibility == Visibility.Visible) UpdateDeepLinkStatusLanguage();
             RefreshTaskbarPreviewXaml();
         }
     }
@@ -176,8 +175,6 @@ public sealed partial class MainWindow : Window
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
-        SetDeepLinkStatusVisible(false);
-        _trackedDeepLink = null;
         _taskbarPreviewXaml?.Dispose();
         _taskbarPreviewXaml = null;
         DisposeWindowPresentation();

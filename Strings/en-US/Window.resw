@@ -12,5 +12,4 @@
   <data name="GamepadMaximize" xml:space="preserve"><value>Maximize</value></data>
   <data name="GamepadRestore" xml:space="preserve"><value>Restore</value></data>
   <data name="GamepadClose" xml:space="preserve"><value>Close</value></data>
-  <data name="DeepLinkOpening" xml:space="preserve"><value>Opening link…</value></data>
 </root>

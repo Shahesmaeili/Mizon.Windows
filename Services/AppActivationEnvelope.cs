@@ -7,7 +7,8 @@ namespace Mizon.Windows.Services;
 
 // Extract the agile native operation synchronously inside AppInstance.Activated.
 // The redirecting process may exit as soon as that callback returns.
-internal sealed record AppActivationEnvelope(AppActivationRequest Request, AppDeepLinkResponseSession? Response = null)
+internal sealed record AppActivationEnvelope(AppActivationRequest Request, AppDeepLinkResponseSession? Response = null,
+    bool PresentAfterResponse = false)
 {
     internal static AppActivationEnvelope FromActivation(AppActivationArguments activation)
     {
@@ -46,7 +47,10 @@ internal sealed record AppActivationEnvelope(AppActivationRequest Request, AppDe
         }, AppDeepLinkResponseSession.TimeoutFor(request));
         if (errorCode is not null)
             response.Fail(errorCode, "The deep-link request metadata is invalid or its response version is unsupported.");
-        return new(request, response);
+        var presentAfterResponse = TaskbarPreviewDeepLink.IsSupported(request.ToUri())
+            && arguments.Data.TryGetValue(TaskbarPreviewDeepLink.PresentAfterResponseKey, out var presentation)
+            && presentation is true;
+        return new(request, response, presentAfterResponse);
     }
 
     internal void Close(string code, string message)

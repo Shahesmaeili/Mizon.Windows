@@ -1,7 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net11.0</TargetFramework>
+    <TargetFramework>net11.0-windows10.0.26100.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <WindowsSdkPackageVersion>10.0.26100.75</WindowsSdkPackageVersion>
+    <CsWinRTAotOptimizerEnabled>true</CsWinRTAotOptimizerEnabled>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -10,6 +14,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../Services/AppDeepLinkResult.cs" Link="AppDeepLinkResult.cs" />
+    <Compile Include="../../Services/TaskbarPreviewDeepLink.cs" Link="TaskbarPreviewDeepLink.cs" />
     <Compile Include="../Mizon.Windows.PreviewXaml/Native.cs" Link="Native.cs" />
     <Compile Include="../Mizon.Windows.PreviewXaml/PreviewConfiguration.cs" Link="PreviewConfiguration.cs" />
   </ItemGroup>

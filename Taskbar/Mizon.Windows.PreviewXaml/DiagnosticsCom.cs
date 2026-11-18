@@ -98,7 +98,7 @@ internal static unsafe partial class Exports
             try
             {
                 if (Native.GetText(name, 33) != "MizonPreviewActions") return unchecked((int)0x80004005);
-                PreviewRow.VerifyAttachment();
+                PreviewRow.VerifyAttachment(persian != 0);
                 return 0;
             }
             finally { Native.Release(name); }
@@ -117,6 +117,21 @@ internal static unsafe partial class Exports
             if (apartment >= 0) Native.RoUninitialize();
         }
     }
+
+    internal static string GetHostPath()
+    {
+        var address = (nint)(delegate* unmanaged[Stdcall]<Guid*, Guid*, nint*, int>)&GetClassObject;
+        if (!GetModuleHandleEx(6, address, out var module))
+            throw new InvalidOperationException("Cannot locate the preview adapter module.");
+        var buffer = stackalloc char[512];
+        var length = GetModuleFileName(module, buffer, 512);
+        if (length is 0 or >= 512) throw new InvalidOperationException("Cannot read the preview adapter path.");
+        var directory = Path.GetDirectoryName(new string(buffer, 0, (int)length))!;
+        return Path.Combine(directory, "Mizon.Windows.PreviewXaml.Host.exe");
+    }
+
+    [LibraryImport("kernel32.dll", EntryPoint = "GetModuleFileNameW")]
+    private static partial uint GetModuleFileName(nint module, char* path, uint capacity);
 
     [LibraryImport("kernel32.dll", EntryPoint = "GetModuleHandleExW")]
     [return: MarshalAs(UnmanagedType.Bool)]

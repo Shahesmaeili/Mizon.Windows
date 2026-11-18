@@ -24,7 +24,9 @@ process ID and Mizon language after entry into HomePage, stages an immutable
 payload version under the user's .mizon/TaskbarPreview directory, and launches
 the hidden host. No tokens, profile information or arbitrary XAML/commands cross
 this boundary. The watcher validates the Mizon process and current-session
-Explorer, and reconnects after a main-window or Explorer restart.
+Explorer, and reconnects after a main-window or Explorer restart. A newer
+payload asks the previous watcher and adapter to detach via the existing stop
+marker before reconnecting. Its old NativeAOT image may remain resident.
 
 The adapter matches the current Mizon window title before attaching. It does
 not use an overlay window as its visible surface. Its message-only HWND queues
@@ -41,8 +43,16 @@ the app and the permission-gated MCP navigation service. No playback, download
 mutation or consent bypass is introduced.
 
 Pointer/tap events are marked handled at the new row so they do not propagate
-into Explorer's thumbnail-activation handlers. Protocol launch runs after the
-pointer callback. The adapter removes registered events, injected elements and
+into Explorer's thumbnail-activation handlers. A click switches that button's
+icon to a same-size native XAML ring and exposes localized UI Automation item
+status without moving focus. The per-action pending state outlives a recycled
+card and rejects duplicate clicks. The sibling launcher starts the allowlisted
+route with LaunchUriForResultsAsync after the pointer callback, validates the
+correlation ID and result, and exits. Success, failure and the bounded deadline
+all restore the icon. Mizon defers raising an already-running window for these
+two actions until successful completion. Windows still owns preview visibility.
+
+The adapter removes registered events, injected elements and
 added RowDefinitions, and restores the original heights when detached. Signing
 out removes the window configuration and visible row. Closing Mizon allows the
 host to exit after its bounded restart grace period and stop diagnostics.
@@ -57,8 +67,10 @@ marker. No Run registry entry or persistent startup task is registered.
 Publish the library, then run the host in --self-test mode against that DLL.
 The test executes the real native exports and COM factory, rejects unsupported
 classes, parses the embedded XAML with Windows.UI.Xaml, adds it to a synthetic
-Grid, subscribes input handlers, and verifies height restoration on removal.
-Run a separate process with the en-US argument to test the English layout.
+Grid, subscribes input handlers, and verifies the individual rings through
+duplicate input, overlapping replies, card recreation, success and failure,
+then checks height restoration. Run a separate process with the en-US argument
+to test the English layout.
 
 The self-test does not click real app buttons or approve MCP permissions.
 The normal MCP access suite covers both declared navigation destinations with

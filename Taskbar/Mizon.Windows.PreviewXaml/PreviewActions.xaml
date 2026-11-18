@@ -12,7 +12,11 @@
                      Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
                      AutomationProperties.Name="{PLAYLISTS}" XYFocusKeyboardNavigation="Enabled">
         <StackPanel Orientation="Horizontal" Spacing="8">
-            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8F1;" FontSize="15" />
+            <Grid Width="18" Height="18" IsHitTestVisible="False">
+                <FontIcon Name="PlaylistsIcon" FontFamily="Segoe Fluent Icons" Glyph="&#xE8F1;" FontSize="15" />
+                <ProgressRing Name="PlaylistsLoading" Width="18" Height="18" IsActive="False"
+                              Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+            </Grid>
             <TextBlock Text="{PLAYLISTS}" FontSize="12" VerticalAlignment="Center" />
         </StackPanel>
     </Button>
@@ -22,7 +26,11 @@
                      Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
                      AutomationProperties.Name="{DOWNLOADS}" XYFocusKeyboardNavigation="Enabled">
         <StackPanel Orientation="Horizontal" Spacing="8">
-            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE896;" FontSize="15" />
+            <Grid Width="18" Height="18" IsHitTestVisible="False">
+                <FontIcon Name="DownloadsIcon" FontFamily="Segoe Fluent Icons" Glyph="&#xE896;" FontSize="15" />
+                <ProgressRing Name="DownloadsLoading" Width="18" Height="18" IsActive="False"
+                              Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+            </Grid>
             <TextBlock Text="{DOWNLOADS}" FontSize="12" VerticalAlignment="Center" />
         </StackPanel>
     </Button>

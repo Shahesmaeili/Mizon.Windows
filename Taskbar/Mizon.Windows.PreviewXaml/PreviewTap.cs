@@ -129,14 +129,20 @@ internal sealed unsafe partial class PreviewTap : IObjectWithSite, IVisualTreeCa
         }
         if (_rows.TryGetValue(key, out var current))
         {
-            if (current.Persian == configuration.Persian) return;
+            if (current.Persian == configuration.Persian)
+            {
+                current.RefreshLoading();
+                return;
+            }
             if (_rows.TryRemove(key, out var old)) old.Dispose();
         }
-        var row = PreviewRow.Attach(card, configuration.Persian);
+        var row = PreviewRow.Attach(card, configuration.Persian, QueueRefresh);
         if (row is null) return;
         if (!_rows.TryAdd(key, row)) row.Dispose();
         else Log("XAML row attached to Mizon thumbnail.");
     }
+
+    private void QueueRefresh() => MessageWindow.Queue(_messageWindow);
 
     private void RemoveCard(ulong key)
     {

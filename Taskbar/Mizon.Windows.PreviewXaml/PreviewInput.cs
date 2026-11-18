@@ -11,10 +11,11 @@ internal partial interface IPointerCallback { [PreserveSig] int Invoke(nint send
 internal partial interface ITapCallback { [PreserveSig] int Invoke(nint sender, nint args); }
 
 [GeneratedComClass]
-internal sealed partial class PreviewInput(string? destination, bool pointer = false) : IClickCallback, IPointerCallback, ITapCallback
+internal sealed partial class PreviewInput(string? destination, bool pointer = false,
+    PreviewActionRequest? request = null, PreviewButtonProgress? progress = null, Action? refresh = null)
+    : IClickCallback, IPointerCallback, ITapCallback
 {
     private bool _disposed;
-    private int _launching;
     public unsafe int Invoke(nint sender, nint args)
     {
         if (_disposed) return 0;
@@ -31,31 +32,26 @@ internal sealed partial class PreviewInput(string? destination, bool pointer = f
                 }
                 finally { Native.Release(eventArgs); }
             }
-            else if (Interlocked.Exchange(ref _launching, 1) == 0)
-                _ = Task.Run(Launch);
+            else if (request?.Start(destination, refresh) is not null)
+                RefreshLoading();
         }
         catch (Exception error) { PreviewTap.Log("Preview input", error); }
         return 0;
     }
 
-    private void Launch()
+    internal void RefreshLoading()
     {
-        try
-        {
-            // Restore Mizon after the shell has finished processing this pointer event.
-            Thread.Sleep(100);
-            if (PreviewConfiguration.Read() is null) return;
-            if (destination is not ("mizon://playlists" or "mizon://settings/storage")) return;
-            var result = ShellExecute(0, "open", destination, null, null, 1);
-            PreviewTap.Log(result.ToInt64() > 32 ? "Preview action launched " + destination : "Preview action could not launch.");
-        }
-        catch (Exception error) { PreviewTap.Log("Preview activation", error); }
-        finally { Interlocked.Exchange(ref _launching, 0); }
+        if (!_disposed && request is not null) progress?.Apply(request.IsPending);
     }
 
-    internal void Stop() => _disposed = true;
-    [LibraryImport("shell32.dll", EntryPoint = "ShellExecuteW", StringMarshalling = StringMarshalling.Utf16)]
-    private static partial nint ShellExecute(nint window, string operation, string file, string? parameters, string? directory, int show);
+    internal void VerifyLoading(bool pending) =>
+        (progress ?? throw new InvalidOperationException("No button progress attached.")).Verify(pending);
+
+    internal void Stop()
+    {
+        _disposed = true;
+        progress?.Dispose();
+    }
 }
 
 internal sealed unsafe class PreviewInputBinding : IDisposable
@@ -68,14 +64,25 @@ internal sealed unsafe class PreviewInputBinding : IDisposable
     private PreviewInputBinding(nint target, int remove, long token, PreviewInput handler)
     { _target = target; _remove = remove; _token = token; _handler = handler; }
 
-    internal static PreviewInputBinding Click(nint button, string destination)
+    internal static PreviewInputBinding Click(nint button, string destination, PreviewActionRequest request,
+        PreviewButtonProgress progress, Action? refresh)
     {
-        var target = Native.Query(button, new Guid("FA002C1A-494E-46CF-91D4-E14A8D798674"));
-        var handler = new PreviewInput(destination);
-        var callback = ComInterfaceMarshaller<IClickCallback>.ConvertToUnmanaged(handler);
-        try { return Register(target, 14, (nint)callback, handler); }
-        finally { ComInterfaceMarshaller<IClickCallback>.Free(callback); }
+        var handler = new PreviewInput(destination, request: request, progress: progress, refresh: refresh);
+        try
+        {
+            var callback = ComInterfaceMarshaller<IClickCallback>.ConvertToUnmanaged(handler);
+            try
+            {
+                var target = Native.Query(button, new Guid("FA002C1A-494E-46CF-91D4-E14A8D798674"));
+                return Register(target, 14, (nint)callback, handler);
+            }
+            finally { ComInterfaceMarshaller<IClickCallback>.Free(callback); }
+        }
+        catch { handler.Stop(); throw; }
     }
+
+    internal void RefreshLoading() => _handler.RefreshLoading();
+    internal void VerifyLoading(bool pending) => _handler.VerifyLoading(pending);
 
     internal static PreviewInputBinding Pointer(nint root, int slot)
     {
@@ -112,8 +119,11 @@ internal sealed unsafe class PreviewInputBinding : IDisposable
         var target = _target;
         if (target == 0) return;
         _target = 0;
-        _handler.Stop();
-        try { Native.Check(((delegate* unmanaged[Stdcall]<nint, long, int>)Native.Slot(target, _remove))(target, _token)); }
-        finally { Native.Release(target); }
+        try { _handler.Stop(); }
+        finally
+        {
+            try { Native.Check(((delegate* unmanaged[Stdcall]<nint, long, int>)Native.Slot(target, _remove))(target, _token)); }
+            finally { Native.Release(target); }
+        }
     }
 }

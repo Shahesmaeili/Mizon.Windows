@@ -28,7 +28,9 @@ the current location and does not retain/replay earlier invocation receipts.
 The existing `navigation.pendingUri` reflects a queued external link or an
 in-flight external link with a local or native response. A response clears the
 in-flight state on completion, timeout or replacement, even if its operation
-is still unwinding. The main-window loading ring uses that same receipt.
+is still unwinding. The taskbar preview uses the protocol-for-results receipt
+for the selected source button. MCP retains the same navigation permissions
+and exposes the pending destination, independent of which preview is visible.
 It stays behind navigation read permission and does not expose the companion's
 private UI, credentials or additional business data.
 
