@@ -1,22 +1,31 @@
 using Microsoft.UI.Composition;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Hosting;
+using Microsoft.UI.Xaml.Input;
 using Mizon.Windows.Services;
 using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using WindowId = Microsoft.UI.WindowId;
 
 namespace Mizon.Windows.Common;
 
-/// <summary>A media-colored Composition stroke with no per-frame UI work.</summary>
+/// <summary>A media-colored stroke that responds to the mouse around the player.</summary>
 internal sealed class HeroSpectrumBorder : IDisposable
 {
     private const float Stroke = .75f;
+    private const float Proximity = 76;
     private readonly FrameworkElement _host;
+    private readonly FrameworkElement _pointerRoot;
+    private readonly PointerEventHandler _pointerMoved;
+    private readonly PointerEventHandler _pointerExited;
+    private readonly PointerEventHandler _pointerCanceled;
     private readonly ThemeSettings? _themeSettings;
     private AccessibilitySettings? _accessibility;
     private readonly ShapeVisual _visual;
@@ -24,15 +33,18 @@ internal sealed class HeroSpectrumBorder : IDisposable
     private readonly CompositionSpriteShape _shape;
     private readonly CompositionRadialGradientBrush _brush;
     private readonly CompositionColorGradientStop[] _stops;
-    private readonly ExpressionAnimation _followPointer;
     private readonly ScalarKeyFrameAnimation _fade;
     private ColorKeyFrameAnimation? _blend;
     private HeroMediaPalette? _palette;
-    private bool _visible, _motion, _pointerOver, _shown, _disposed;
+    private Point? _pointer;
+    private Vector2 _size;
+    private float _opacity;
+    private bool _visible, _motion, _enabled, _queued, _disposed;
 
-    public HeroSpectrumBorder(FrameworkElement host, FrameworkElement pointerTarget, WindowId windowId)
+    public HeroSpectrumBorder(FrameworkElement host, FrameworkElement pointerRoot, WindowId windowId)
     {
         _host = host;
+        _pointerRoot = pointerRoot;
         var compositor = ElementCompositionPreview.GetElementVisual(host).Compositor;
         _geometry = compositor.CreateRoundedRectangleGeometry();
         _geometry.Offset = new Vector2(Stroke / 2);
@@ -54,13 +66,19 @@ internal sealed class HeroSpectrumBorder : IDisposable
         _visual.IsVisible = false;
         _visual.Opacity = 0;
         _visual.Shapes.Add(_shape);
-        _followPointer = compositor.CreateExpressionAnimation("Vector2(hover.Position.X, hover.Position.Y)");
-        _followPointer.SetReferenceParameter("hover", ElementCompositionPreview.GetPointerPositionPropertySet(pointerTarget));
         _fade = compositor.CreateScalarKeyFrameAnimation();
         _fade.StopBehavior = AnimationStopBehavior.SetToFinalValue;
-        _fade.Duration = TimeSpan.FromMilliseconds(160);
+        _fade.Duration = TimeSpan.FromMilliseconds(125);
         ElementCompositionPreview.SetElementChildVisual(host, _visual);
         host.SizeChanged += SizeChanged;
+        _pointerMoved = PointerMoved;
+        _pointerExited = PointerExited;
+        _pointerCanceled = PointerCanceled;
+        pointerRoot.AddHandler(UIElement.PointerEnteredEvent, _pointerMoved, handledEventsToo: true);
+        pointerRoot.AddHandler(UIElement.PointerMovedEvent, _pointerMoved, handledEventsToo: true);
+        pointerRoot.AddHandler(UIElement.PointerExitedEvent, _pointerExited, handledEventsToo: true);
+        pointerRoot.AddHandler(UIElement.PointerCanceledEvent, _pointerCanceled, handledEventsToo: true);
+        pointerRoot.SizeChanged += PointerRootSizeChanged;
         _themeSettings = ObserveWindowTheme(windowId);
         if (_themeSettings is null) host.ActualThemeChanged += ActualThemeChanged;
         UpdateBounds(host.ActualWidth, host.ActualHeight);
@@ -69,26 +87,77 @@ internal sealed class HeroSpectrumBorder : IDisposable
     public void SetState(bool visible, bool motion)
     {
         if (_visible == visible && _motion == motion) return;
-        if (_motion && !motion && _palette is { } colors) ApplyColors(colors, false);
+        if (_motion && !motion)
+        {
+            if (_palette is { } colors) ApplyColors(colors, false);
+            _visual.StopAnimation(nameof(Visual.Opacity));
+            _visual.Opacity = _opacity;
+        }
         _visible = visible;
         _motion = motion;
-        if (!visible) _pointerOver = false;
         UpdateVisibility();
     }
 
-    public void UpdatePointer(Vector2 point, bool isOver)
+    public void ViewportChanged()
     {
-        if (!_visible || _pointerOver == isOver) return;
-        _pointerOver = isOver;
-        // Keep the light at the exit edge until the opacity fade ends.
-        _brush.EllipseCenter = Vector2.Clamp(point, Vector2.Zero, _geometry.Size);
-        UpdateVisibility();
+        if (_disposed || !_enabled || !_pointer.HasValue || _queued) return;
+        _queued = _host.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, UpdatePointerLight);
+    }
+
+    private void PointerMoved(object sender, PointerRoutedEventArgs args)
+    {
+        if (args.Pointer.PointerDeviceType != PointerDeviceType.Mouse) return;
+        _pointer = args.GetCurrentPoint(_pointerRoot).Position;
+        ViewportChanged();
+    }
+
+    private void PointerExited(object sender, PointerRoutedEventArgs args)
+    {
+        if (args.Pointer.PointerDeviceType != PointerDeviceType.Mouse) return;
+        var point = args.GetCurrentPoint(_pointerRoot).Position;
+        // Moving between descendants still leaves the pointer on the page.
+        if (!ReferenceEquals(args.OriginalSource, _pointerRoot) && point.X >= 0 && point.Y >= 0 &&
+            point.X < _pointerRoot.ActualWidth && point.Y < _pointerRoot.ActualHeight) return;
+        _pointer = null;
+        SetOpacity(0, _enabled && _motion);
+    }
+
+    private void PointerCanceled(object sender, PointerRoutedEventArgs args)
+    {
+        if (args.Pointer.PointerDeviceType != PointerDeviceType.Mouse) return;
+        _pointer = null;
+        SetOpacity(0, _enabled && _motion);
+    }
+
+    private void UpdatePointerLight()
+    {
+        _queued = false;
+        if (_disposed || !_enabled || _pointer is not { } pointer) return;
+        if (_host.XamlRoot is not { } xamlRoot || !ReferenceEquals(_pointerRoot.XamlRoot, xamlRoot))
+        {
+            SetOpacity(0, animate: false);
+            return;
+        }
+
+        var point = _pointerRoot.TransformToVisual(_host).TransformPoint(pointer);
+        var location = new Vector2((float)point.X, (float)point.Y);
+        var opacity = ProximityOpacity(location, _size);
+        if (opacity > 0 && _brush.EllipseCenter != location) _brush.EllipseCenter = location;
+        if (_opacity != opacity) SetOpacity(opacity, _motion);
+    }
+
+    internal static float ProximityOpacity(Vector2 point, Vector2 size)
+    {
+        if (size.X <= 0 || size.Y <= 0 || !float.IsFinite(point.X) || !float.IsFinite(point.Y)) return 0;
+        var distance = Vector2.Distance(point, Vector2.Clamp(point, Vector2.Zero, size));
+        var strength = Math.Clamp(1 - distance / Proximity, 0, 1);
+        return strength * strength * (3 - 2 * strength);
     }
 
     public void SetPalette(HeroMediaPalette? palette)
     {
         if (_palette == palette) return;
-        var blend = _palette.HasValue && _shown && _motion;
+        var blend = _palette.HasValue && _opacity > 0 && _motion;
         _palette = palette;
         if (palette is { } colors) ApplyColors(colors, blend);
         UpdateVisibility();
@@ -129,26 +198,26 @@ internal sealed class HeroSpectrumBorder : IDisposable
 
     private void UpdateVisibility()
     {
-        var enabled = _visible && _palette.HasValue && !ReadHighContrast();
-        _visual.IsVisible = enabled;
-        var show = enabled && _pointerOver;
-        if (show != _shown)
+        _enabled = _visible && _palette.HasValue && !ReadHighContrast();
+        _visual.IsVisible = _enabled;
+        if (_enabled) ViewportChanged();
+        else SetOpacity(0, animate: false);
+    }
+
+    private void SetOpacity(float opacity, bool animate)
+    {
+        if (animate)
         {
-            _shown = show;
-            if (show) _brush.StartAnimation(nameof(CompositionRadialGradientBrush.EllipseCenter), _followPointer);
-            else _brush.StopAnimation(nameof(CompositionRadialGradientBrush.EllipseCenter));
-            if (enabled && _motion)
-            {
-                _fade.InsertKeyFrame(1, show ? 1 : 0);
-                _visual.StartAnimation(nameof(Visual.Opacity), _fade);
-                return;
-            }
+            if (_opacity == opacity || (opacity is > 0 and < 1 && Math.Abs(_opacity - opacity) < .02f)) return;
+            _fade.InsertKeyFrame(1, opacity);
+            _visual.StartAnimation(nameof(Visual.Opacity), _fade);
         }
-        if (!enabled || !_motion)
+        else
         {
             _visual.StopAnimation(nameof(Visual.Opacity));
-            _visual.Opacity = show ? 1 : 0;
+            _visual.Opacity = opacity;
         }
+        _opacity = opacity;
     }
 
     private ThemeSettings? ObserveWindowTheme(WindowId windowId)
@@ -180,13 +249,16 @@ internal sealed class HeroSpectrumBorder : IDisposable
     private void ActualThemeChanged(FrameworkElement sender, object args) => UpdateVisibility();
 
     private void SizeChanged(object sender, SizeChangedEventArgs args) => UpdateBounds(args.NewSize.Width, args.NewSize.Height);
+    private void PointerRootSizeChanged(object sender, SizeChangedEventArgs args) => ViewportChanged();
 
     private void UpdateBounds(double width, double height)
     {
-        var size = Vector2.Max(Vector2.Zero, new Vector2((float)width, (float)height) - new Vector2(Stroke));
-        _geometry.Size = size;
-        _geometry.CornerRadius = new Vector2(Math.Min(12 - Stroke / 2, Math.Min(size.X, size.Y) / 2));
-        _brush.EllipseRadius = new Vector2(Math.Clamp(Math.Min(size.X, size.Y) * .8f, 130, 250));
+        _size = new Vector2((float)width, (float)height);
+        _geometry.Size = Vector2.Max(Vector2.Zero, _size - new Vector2(Stroke));
+        var minimum = Math.Min(_geometry.Size.X, _geometry.Size.Y);
+        _geometry.CornerRadius = new Vector2(Math.Min(12 - Stroke / 2, minimum / 2));
+        _brush.EllipseRadius = new Vector2(Math.Clamp(minimum * .8f, 130, 250));
+        ViewportChanged();
     }
 
     public void Dispose()
@@ -203,13 +275,17 @@ internal sealed class HeroSpectrumBorder : IDisposable
         }
         else _host.ActualThemeChanged -= ActualThemeChanged;
         _host.SizeChanged -= SizeChanged;
+        _pointerRoot.SizeChanged -= PointerRootSizeChanged;
+        _pointerRoot.RemoveHandler(UIElement.PointerEnteredEvent, _pointerMoved);
+        _pointerRoot.RemoveHandler(UIElement.PointerMovedEvent, _pointerMoved);
+        _pointerRoot.RemoveHandler(UIElement.PointerExitedEvent, _pointerExited);
+        _pointerRoot.RemoveHandler(UIElement.PointerCanceledEvent, _pointerCanceled);
         SetState(false, false);
         ElementCompositionPreview.SetElementChildVisual(_host, null);
         _visual.Shapes.Clear();
         _shape.StrokeBrush = null;
         _brush.ColorStops.Clear();
         foreach (var stop in _stops) stop.Dispose();
-        _followPointer.Dispose();
         _fade.Dispose();
         _blend?.Dispose();
         _visual.Dispose();

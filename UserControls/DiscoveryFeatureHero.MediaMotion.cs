@@ -26,6 +26,10 @@ public sealed partial class DiscoveryFeatureHero
 
     private bool AnimateMedia => CanPresent && _settings.AnimationsEnabled && !HeroVideo.IsFullWindow;
 
+    internal FrameworkElement? SpectrumPointerRoot { get; set; }
+
+    internal void RefreshSpectrumProximity() => _spectrum?.ViewportChanged();
+
     private void UpdateArtwork(MusicFeatureItemViewModel item)
     {
         if (item.IsVideo && HeroArtwork.HasArtwork && !_videoFallback) return;

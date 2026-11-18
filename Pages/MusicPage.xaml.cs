@@ -55,6 +55,7 @@ public sealed partial class MusicPage : Page
         Features = new(api, downloader);
         FeaturedArtists = new(api, downloader);
         InitializeComponent();
+        FeatureHero.SpectrumPointerRoot = LayoutRoot;
         _scrollPositions = new(LayoutRoot, MainFeedScroll, EditorialScroll, CommunityScroll, TopArtistsScroll,
             MusicStories.NavigationScrollViewer, FeaturedArtist.NavigationScrollViewer);
         // Let the hero shadow cross column boundaries, while keeping scrolled content inside the page.
@@ -189,8 +190,11 @@ public sealed partial class MusicPage : Page
     private static global::Windows.UI.Color WidgetAccent(Controls.WidgetLoadHost host, string key) =>
         ((Microsoft.UI.Xaml.Media.SolidColorBrush)((FrameworkElement)host.Widget!).Resources[key]).Color;
 
-    private void SideWidgets_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs args) =>
+    private void SideWidgets_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs args)
+    {
         _sideWidgetGlow?.ViewportChanged();
+        if (ReferenceEquals(sender, MainFeedScroll)) FeatureHero.RefreshSpectrumProximity();
+    }
 
     private void MusicHomeLocalizationChanged(object? sender, PropertyChangedEventArgs args)
     {

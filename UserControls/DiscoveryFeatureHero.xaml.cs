@@ -102,8 +102,8 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         Bindings.Update();
         Localization.PropertyChanged += HeroLocalizationChanged;
         _playRequested = _settings.AnimationsEnabled;
-        _spectrum = new(HeroSpectrumHost, HeroSurface, App.MainMizonWindow?.AppWindow.Id ?? default);
-        _lighting = new(HeroSurface, _spectrum);
+        _spectrum = new(HeroSpectrumHost, SpectrumPointerRoot ?? HeroSurface, App.MainMizonWindow?.AppWindow.Id ?? default);
+        _lighting = new(HeroSurface);
         _spectrum.SetPalette(HeroArtwork.Palette);
         HeroArtwork.ImagePresented += Artwork_Presented;
         _media = new(HeroVideo, Downloader);
