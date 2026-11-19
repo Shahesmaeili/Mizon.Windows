@@ -23,6 +23,7 @@ internal static class AppDeepLinkCatalog
         new("music-details", "mizon://music/{publicId}", true, "Open music details without starting playback."),
         new("music-play", "mizon://music/{publicId}?action=play", true, "Open a music item and explicitly start playback."),
         new("music-download", "mizon://music/{publicId}?action=download", true, "Open a music item and explicitly download through its existing cache service."),
+        new("music-video", "mizon://music/{publicId}?action=video", true, "Open the linked music video without starting playback."),
         new("music-comment", "mizon://music/{publicId}/comments/{commentPublicId}", true, "Open the music item and reveal its requested comment."),
         new("client", "mizon://client/{publicId}", true, "Open a client profile by its public ID."),
         new("person", "mizon://person/{publicId}", true, "Open an artist profile by its public ID."),
@@ -44,7 +45,7 @@ internal static class AppDeepLinkCatalog
         request = new();
         if (destination is null) return false;
         var key = destination.ToLowerInvariant();
-        var hasId = key is "music-details" or "music-play" or "music-download" or "music-comment" or "playlist" or "client" or "person" or "story";
+        var hasId = key is "music-details" or "music-play" or "music-download" or "music-video" or "music-comment" or "playlist" or "client" or "person" or "story";
         if (hasId != publicId.HasValue || publicId == Guid.Empty || (key == "music-comment") != commentPublicId.HasValue
             || commentPublicId == Guid.Empty || (key == "search") != (searchQuery is not null)
             || (settingsSection is not null && key != "settings")) return false;
@@ -53,6 +54,7 @@ internal static class AppDeepLinkCatalog
             "music-details" => new(MusicPublicId: publicId),
             "music-play" => new(MusicPublicId: publicId, MusicAction: MusicActivationAction.Play),
             "music-download" => new(MusicPublicId: publicId, MusicAction: MusicActivationAction.Download),
+            "music-video" => new(MusicPublicId: publicId, MusicAction: MusicActivationAction.Video),
             "music-comment" => new(MusicPublicId: publicId, MusicCommentPublicId: commentPublicId),
             "playlist" => new(PlaylistPublicId: publicId),
             "client" => new(ClientPublicId: publicId),

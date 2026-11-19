@@ -50,6 +50,7 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
         {
             MusicPage => new(Destination: "music"),
             MusicsPage music when music.MusicPublicId != Guid.Empty => new(MusicPublicId: music.MusicPublicId),
+            MusicVideoPage video when video.MusicPublicId != Guid.Empty => new(MusicPublicId: video.MusicPublicId, MusicAction: MusicActivationAction.Video),
             MusicPlaylistsPage => new(Destination: "playlists"),
             MusicPlaylistPage playlist when playlist.PlaylistPublicId != Guid.Empty => new(PlaylistPublicId: playlist.PlaylistPublicId),
             PersonProfilePage person when person.PersonPublicId != Guid.Empty => new(PersonPublicId: person.PersonPublicId),
@@ -128,12 +129,13 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
         Func<CancellationToken, Task<bool>>? waitForContent = (request.RouteKey, destination) switch
         {
             ("music-details", MusicsPage music) when music.MusicPublicId == request.MusicPublicId => music.WaitForDetailsAsync,
+            ("music-video", MusicVideoPage video) when video.MusicPublicId == request.MusicPublicId => video.WaitForContentAsync,
             ("playlist", MusicPlaylistPage playlist) when playlist.PlaylistPublicId == request.PlaylistPublicId => playlist.WaitForContentAsync,
             ("playlists", MusicPlaylistsPage playlists) => playlists.WaitForContentAsync,
             ("activities", FollowingActivitiesPage activities) => activities.WaitForContentAsync,
             _ => null
         };
-        if (request.RouteKey is "music-details" or "playlist" or "playlists" or "activities")
+        if (request.RouteKey is "music-details" or "music-video" or "playlist" or "playlists" or "activities")
         {
             if (destination is not FrameworkElement page || waitForContent is null
                 || !await McpAuthenticationService.WaitForLoadedAsync(page, cancellationToken))

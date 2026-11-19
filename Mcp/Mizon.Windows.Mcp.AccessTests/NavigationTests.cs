@@ -53,6 +53,11 @@ internal static partial class Program
             && receipt.RequestId != Guid.Empty && receipt.Data.PublicId == musicId && receipt.Data.CommentPublicId == commentId
             && receipt.Data.Uri == comment.Navigation?.Uri,
             "Navigation receipt preserves real outcome stage and typed public IDs through the production pipe");
+        var video = await peer.Call(Navigate("music-video", musicId));
+        Assert(video.Success && video.Navigation?.Uri == $"mizon://music/{musicId:D}?action=video" &&
+            host.NavigationBackend.Last is { MusicAction: MusicActivationAction.Video, MusicPublicId: var videoTrackId } &&
+            videoTrackId == musicId && video.NavigationResult?.Data?.Destination == "music-video",
+            "Approved navigation opens the linked video page through the typed route");
         var query = "آهنگ & + #";
         var search = await peer.Call(Navigate("search", query: query));
         Assert(search.Success && AppActivationRequest.TryParse(search.Navigation?.Uri, out var parsed) && parsed.SearchQuery == query,
@@ -87,6 +92,9 @@ internal static partial class Program
                 "Production adapter rejects unsupported navigation before any UI operation");
 
         await host.Ui(() => host.NavigationBackend.State = new("login", "mizon://login", null, false, false));
+        var signedOutVideo = await peer.Call(Navigate("music-video", musicId));
+        Assert(signedOutVideo.Code == "requires_sign_in" && host.NavigationBackend.Opens == opens,
+            "Signed-out navigation cannot open a music-video page");
         var signIn = await peer.Call(Navigate("story", Guid.NewGuid()));
         Assert(signIn.Code == "requires_sign_in" && host.NavigationBackend.Opens == opens
             && host.NavigationBackend.State.PendingUri is null, "Signed-out content request never queues future navigation under a later consent generation");

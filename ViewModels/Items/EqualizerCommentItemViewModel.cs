@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media;
 
 using System;
 
@@ -34,14 +34,7 @@ public class EqualizerCommentItemViewModel : ViewModelBase
         set => SetField(ref field, value);
     } = 80;
 
-    public int ZIndex
-    {
-        get => field;
-        set => SetField(ref field, value);
-    } = 1;
-
-    public string ImageSource { get => field; set => SetField(ref field, value); } = "/Assets/photo.jpg";
-    public double Opacity { get; set; } = 0.4;
+    public ImageSource? ImageSource { get => field; set => SetField(ref field, value); }
     public RelayCommand Command { get; set; }
     public RelayCommand MouseEnterCommand { get; set; }
 }

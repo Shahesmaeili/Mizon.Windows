@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Common;
+using Mizon.Windows.Services;
 
 namespace Mizon.Windows.ViewModels.Items;
 
@@ -30,6 +31,9 @@ public sealed class MusicDetailsMusicItemViewModel : ViewModelBase
         private set => SetField(ref field, value);
     }
 
+    public LocalizationService Localization => LocalizationService.Current;
+    public string DisplayTitle(int revision) => Localization.IsPersian && !string.IsNullOrWhiteSpace(PersianTitle) ? PersianTitle : Title;
+    public string? AlternateTitle(int revision) => string.IsNullOrWhiteSpace(PersianTitle) ? null : Localization.IsPersian ? Title : PersianTitle;
     public string LikesCountText => $"{LikesCount:N0}";
 }
 

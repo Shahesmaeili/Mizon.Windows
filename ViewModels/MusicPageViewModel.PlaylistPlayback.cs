@@ -18,6 +18,9 @@ public partial class MusicPageViewModel
         _musicLoadCancellationTokenSource = new CancellationTokenSource();
         ResetMusicPresentation();
         _musicPublicId = musicPublicId;
+        UpdateTrackPlaybackPresentation();
+        if (HasCurrentTrackSource)
+            _lastMusicPosition = _audioPlayerService.Position;
         var details = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         _musicDetailsTask = details.Task;
         _musicLoadTask = LoadMusicAfterNavigationAsync(musicPublicId, _musicLoadCancellationTokenSource.Token, details);

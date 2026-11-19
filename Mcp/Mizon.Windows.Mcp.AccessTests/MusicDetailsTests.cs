@@ -5,6 +5,7 @@ internal static partial class Program
 {
     private static async Task MusicDetailsScopesAndLifetime()
     {
+        WaveformTimestampRoundTrip();
         var path = Path.Combine(StorageRoot, "music-details", "grants.dat");
         var proof = Proof();
         var open = new McpRequest { Operation = "set_music_details", MusicDetails = new() { CoverOpen = true } };
@@ -22,6 +23,14 @@ internal static partial class Program
             await host.Approve(id, false, false, false, detailsRead: true);
             Assert((await peer.Call("get_music_details")).MusicDetails is { ContributorCount: 2, ContributorsWithPortrait: 1, CoverOpen: false },
                 "Read returns bounded metadata and loaded portrait count");
+            Assert((await peer.Call("get_music_details")).MusicDetails is { MixerAvailable: true, MixerEnabled: true,
+                MixerActive: true, MixerLoading: false, MixerBalance: 100, WaveformCommentCount: 1 },
+                "The existing track read grant exposes the active mix and confirmed comment count");
+            await host.Ui(() => host.MusicDetailsPage.Language = "en-US");
+            Assert((await peer.Call("get_music_details")).MusicDetails is
+                { Language: "en-US", PlaybackDeviceCount: 2, PlaybackDeviceSelected: true,
+                    PlaybackDeviceVolume: 0, PlaybackDeviceSilent: true, MusicVideoAvailable: true },
+                "Track readback reflects app language and bounded render-device availability without endpoint identifiers");
             Assert(!(await peer.Call(repeat)).Success && !host.MusicDetailsPage.RepeatEnabled, "Read cannot set repeat");
 
             await host.Ui(() => host.Service.RevokeAsync(host.Item(id)));
@@ -57,19 +66,48 @@ internal static partial class Program
         }
     }
 
+    private static void WaveformTimestampRoundTrip()
+    {
+        var duration = TimeSpan.FromSeconds(241.37);
+        // The local coordinate includes the scroller offset before submission.
+        foreach (var contentX in new[] { 0d, 15.4d, 520.75d, 1210.32d, MusicWaveformTimeline.Width })
+        {
+            var timestamp = MusicWaveformTimeline.GetTimestamp(contentX, duration);
+            var center = MusicWaveformTimeline.GetMarkerLeft(timestamp, duration, 0) + 14;
+            Assert(timestamp.HasValue && Math.Abs(center - contentX) < 0.0001,
+                "A confirmed timestamp draws the avatar centered on the original selection");
+        }
+        Assert(MusicWaveformTimeline.GetTimestamp(100d, TimeSpan.Zero) is null,
+            "Posting is unavailable until the selected track's duration is known");
+        Assert(new[] { 0d, 5.99d, 6d, 35.99d, 36d, 5.99d, 0d, 1500d, -0.01d }
+                .Select(x => MusicWaveformTimeline.GetBarIndex(x, 250))
+                .SequenceEqual(new[] { 0, 0, 1, 5, 6, 0, 0, 249, -1 }),
+            "Fast forward and backward hover maps directly to its current bar across gaps and edges");
+        Assert(MusicWaveformTimeline.GetBarIndex(42, 0) == -1,
+            "Hover cannot target a waveform while it is being replaced");
+        var stackedOffsets = Enumerable.Range(0, 5).Select(MusicWaveformTimeline.GetCommentStackOffset).ToArray();
+        Assert(stackedOffsets[0] == 0 && stackedOffsets.Distinct().Count() == 5 &&
+                stackedOffsets.All(offset => offset is >= -18 and <= 4),
+            "Up to five coincident comments have separate vertical hit targets without moving their timestamps");
+    }
+
     private sealed class SyntheticMusicDetails : IMcpMusicDetailsPage
     {
         private readonly Guid _id = Guid.NewGuid();
         public bool Active { get; set; } = true;
         public bool HasCover { get; set; }
+        public string Language { get; set; } = "fa-IR";
         public bool CoverOpen { get; private set; }
         public bool RepeatEnabled { get; private set; }
 
         public McpMusicDetailsState ReadState() => new()
         {
             MusicPublicId = _id, Title = "Synthetic track", Duration = "00:03:00",
+            Language = Language, PlaybackDeviceCount = 2, PlaybackDeviceSelected = true,
+            PlaybackDeviceVolume = 0, PlaybackDeviceSilent = true, MusicVideoAvailable = true,
             CoverAvailable = HasCover, CoverOpen = CoverOpen, RepeatEnabled = RepeatEnabled,
-            ContributorCount = 2, ContributorsWithPortrait = 1
+            ContributorCount = 2, ContributorsWithPortrait = 1,
+            MixerAvailable = true, MixerEnabled = true, MixerActive = true, MixerBalance = 100, WaveformCommentCount = 1
         };
 
         public bool SetCoverOpen(bool open)

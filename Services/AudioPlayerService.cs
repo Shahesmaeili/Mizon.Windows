@@ -1,4 +1,4 @@
-﻿
+
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -64,7 +64,9 @@ public interface IAudioPlayerService
     Task InitializeAsync();
     Task PlayAsync(string path, TimeSpan? startPosition = null);
     Task PlayAsync(Uri uri, TimeSpan? startPosition = null);
-    Task PlayStemMixAsync(string vocalsPath, string instrumentalPath, TimeSpan? startPosition = null);
+    Task PlayStemMixAsync(string vocalsPath, string instrumentalPath, double balance, CancellationToken token = default);
+    Task SwitchStemMixAsync(string vocalsPath, string instrumentalPath, double balance, CancellationToken token);
+    Task SwitchToMainAsync(string path, CancellationToken token);
     Task PauseAsync();
     Task StopAsync();
     Task TogglePlayPauseAsync();
@@ -89,22 +91,16 @@ public interface IAudioPlayerService
 public class AudioPlayerService : IAudioPlayerService, IDisposable
 {
     private AudioGraph _audioGraph;
-    private MediaSourceAudioInputNode _audioInputNode;
+    private MediaSourceAudioInputNode? _audioInputNode;
     private MediaSourceAudioInputNode? _vocalsInputNode;
     private MediaSourceAudioInputNode? _instrumentalInputNode;
     private AudioSubmixNode? _stemSubmixNode;
     private AudioFrameOutputNode _frameOutputNode;
     private AudioDeviceOutputNode _deviceOutputNode;
     private ReverbEffectDefinition? _reverbEffectDefinition;
-    // AudioGraph state transitions await fades. Cancelling an active fade leaves the
-    // caller (Pause/Resume/Stop) midway through its transition, which can leave old
-    // sources audible. Keep fades serialized instead.
-    private readonly SemaphoreSlim _fadeTransitionLock = new(1, 1);
-    private const int FadeDurationMs = 400;
     private SystemMediaTransportControls _smtc;
     private NowPlayingMetadata? _nowPlayingMetadata;
     private string? _currentTrackPath;
-    private string? _vocalsSourcePath;
     private string? _instrumentalSourcePath;
     private long _totalSamplesProcessed;
     private int _sampleRate;
@@ -115,14 +111,10 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
     private TimeSpan _lastPosition = TimeSpan.Zero;
     private long _lastTaskbarProgressUpdate;
     private long _lastSmtcTimelineUpdate;
-    private int _lastStemDiagnosticSecond = -1;
-    private long _audioGraphGeneration;
-    private long _stemDiagnosticSessionId;
     private readonly DispatcherQueue _dispatcher;
     private readonly DispatcherQueueTimer _positionNotificationTimer;
     private Window? _lifetimeWindow;
     private readonly ITaskbarService _taskbarService;
-    private readonly SemaphoreSlim _outputDeviceChangeLock = new(1, 1);
     private readonly SemaphoreSlim _playbackTransitionLock = new(1, 1);
     // Frame analysis runs on a worker thread. A source switch must freeze that
     // timeline before it snapshots the audible position, otherwise a queued frame
@@ -160,8 +152,12 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         get => _stemMixBalance;
         set
         {
+            if (!double.IsFinite(value))
+                return;
+
             _stemMixBalance = Math.Clamp(value, -1d, 1d);
-            ApplyStemMixGains();
+            if (_vocalsInputNode is { } vocals && _instrumentalInputNode is { } instrumental)
+                ApplyStemMixGains(vocals, instrumental, _stemMixBalance);
         }
     }
 
@@ -271,7 +267,7 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         await _playbackTransitionLock.WaitAsync();
         try
         {
-            await ResumeCoreAsync();
+            ResumeCore();
         }
         finally
         {
@@ -279,12 +275,11 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         }
     }
 
-    private async Task ResumeCoreAsync()
+    private void ResumeCore()
     {
         if (_playState != AudioPlayerState.Paused || (_audioInputNode == null && !IsStemMixing))
             return;
 
-        LogStemDiagnostic("resume-before");
         _audioInputNode?.Seek(_lastPosition);
         _vocalsInputNode?.Seek(_lastPosition);
         _instrumentalInputNode?.Seek(_lastPosition);
@@ -295,11 +290,10 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         StartAudioAnalysis();
         SetPlayState(AudioPlayerState.Playing);
 
-        await FadeInAsync((float)_lastVolume);
+        SetDeviceGain(Volume);
 
         _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
         UpdateSmtcTimeline(_lastPosition);
-        LogStemDiagnostic("resume-after");
 
     }
 
@@ -342,8 +336,8 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
                 await ResumeAsync();
                 break;
             case AudioPlayerState.Idle when !string.IsNullOrWhiteSpace(_currentTrackPath):
-                if (IsStemMixing && _vocalsSourcePath is not null && _instrumentalSourcePath is not null)
-                    await PlayStemMixAsync(_vocalsSourcePath, _instrumentalSourcePath);
+                if (_instrumentalSourcePath is { } instrumentalPath)
+                    await PlayStemMixAsync(_currentTrackPath, instrumentalPath, _stemMixBalance);
                 else
                     await PlayAsync(_currentTrackPath);
                 if (_playState == AudioPlayerState.Playing && Volatile.Read(ref _disposed) == 0)
@@ -392,348 +386,152 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         await completionSource.Task;
     }
 
-    public async Task PlayAsync(string path, TimeSpan? startPosition = null)
+    public Task PlayAsync(string path, TimeSpan? startPosition = null) =>
+        ReplaceSourcesAsync(path, null, startPosition, 0, false, CancellationToken.None);
+
+    public Task PlayAsync(Uri uri, TimeSpan? startPosition = null) =>
+        PlayAsync(uri.AbsoluteUri, startPosition);
+
+    public Task PlayStemMixAsync(string vocalsPath, string instrumentalPath, double balance, CancellationToken token = default) =>
+        ReplaceSourcesAsync(vocalsPath, instrumentalPath, TimeSpan.Zero, balance, false, token);
+
+    public Task SwitchStemMixAsync(string vocalsPath, string instrumentalPath, double balance, CancellationToken token) =>
+        ReplaceSourcesAsync(vocalsPath, instrumentalPath, null, balance, true, token);
+
+    public Task SwitchToMainAsync(string path, CancellationToken token) =>
+        ReplaceSourcesAsync(path, null, null, 0, true, token);
+
+    private async Task ReplaceSourcesAsync(string path, string? instrumentalPath, TimeSpan? startPosition,
+        double balance, bool preservePlayback, CancellationToken token)
     {
-        if (Uri.TryCreate(path, UriKind.Absolute, out var uri) &&
-            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
-        {
-            await PlayAsync(uri, startPosition);
-            return;
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        if (instrumentalPath is not null)
+            ArgumentException.ThrowIfNullOrWhiteSpace(instrumentalPath);
 
-        if (IsStemMixing && _playState != AudioPlayerState.Idle)
-        {
-            await SwitchStemMixToMainAsync(path, startPosition);
-            return;
-        }
-
-        if (_playState == AudioPlayerState.Paused && _currentTrackPath == path)
-        {
-            await ResumeAsync();
-            return;
-        }
-
-        await StopAsync();
-        ClearStemMixSources();
-
-        if (_audioGraph == null)
-            await InitializeAsync();
-
-        if (_nowPlayingMetadata is not null)
-            await UpdateNowPlayingAsync(_nowPlayingMetadata);
-
-
-        var file = await StorageFile.GetFileFromPathAsync(path);
-        _currentTrackPath = path;
-
-        var source = MediaSource.CreateFromStorageFile(file);
-        var inputResult = await _audioGraph.CreateMediaSourceAudioInputNodeAsync(source);
-
-        if (inputResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
-            throw new Exception("Audio input node creation failed");
-
-        _audioInputNode = inputResult.Node;
-        TrackDuration = source.Duration ?? _audioInputNode.Duration;
-
-        _audioInputNode.AddOutgoingConnection(_deviceOutputNode);
-        _audioInputNode.AddOutgoingConnection(_frameOutputNode);
-
-        _sampleRate = (int)_audioGraph.EncodingProperties.SampleRate;
-        _channelCount = (int)_audioGraph.EncodingProperties.ChannelCount;
-        SetInitialPlaybackPosition(_audioInputNode, startPosition);
-
-        _audioGraph.Start();
-        StartAudioAnalysis();
-
-        await FadeInAsync((float)Volume);
-
-        _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
-
-        SetPlayState(AudioPlayerState.Playing);
-        // update taskbar immediately after starting playback
-        UpdateTaskbarProgress(_lastPosition);
-
-    }
-
-    public async Task PlayAsync(Uri uri, TimeSpan? startPosition = null)
-    {
-        if (_playState == AudioPlayerState.Paused && _currentTrackPath == uri.AbsoluteUri)
-        {
-            await ResumeAsync();
-            return;
-        }
-
-        if (IsStemMixing && _playState != AudioPlayerState.Idle)
-        {
-            await SwitchStemMixToMainAsync(uri.AbsoluteUri, startPosition);
-            return;
-        }
-
-        await StopAsync();
-        ClearStemMixSources();
-
-        if (_audioGraph == null)
-            await InitializeAsync();
-
-        if (_nowPlayingMetadata is not null)
-            await UpdateNowPlayingAsync(_nowPlayingMetadata);
-
-        _currentTrackPath = uri.AbsoluteUri;
-
-        var source = MediaSource.CreateFromUri(uri);
-        var inputResult = await _audioGraph.CreateMediaSourceAudioInputNodeAsync(source);
-
-        if (inputResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
-            throw new Exception("Audio input node creation failed");
-
-        _audioInputNode = inputResult.Node;
-        TrackDuration = source.Duration ?? _audioInputNode.Duration;
-
-        _audioInputNode.AddOutgoingConnection(_deviceOutputNode);
-        _audioInputNode.AddOutgoingConnection(_frameOutputNode);
-
-        _sampleRate = (int)_audioGraph.EncodingProperties.SampleRate;
-        _channelCount = (int)_audioGraph.EncodingProperties.ChannelCount;
-        SetInitialPlaybackPosition(_audioInputNode, startPosition);
-
-        _audioGraph.Start();
-        StartAudioAnalysis();
-
-        await FadeInAsync((float)Volume);
-
-        _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
-
-        SetPlayState(AudioPlayerState.Playing);
-        UpdateTaskbarProgress(_lastPosition);
-    }
-
-    public async Task PlayStemMixAsync(string vocalsPath, string instrumentalPath, TimeSpan? startPosition = null)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(vocalsPath);
-        ArgumentException.ThrowIfNullOrWhiteSpace(instrumentalPath);
-
-        if (_playState == AudioPlayerState.Paused &&
-            string.Equals(_vocalsSourcePath, vocalsPath, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(_instrumentalSourcePath, instrumentalPath, StringComparison.OrdinalIgnoreCase))
-        {
-            await ResumeAsync();
-            return;
-        }
-
-        AppLog.Information($"StemDiag play-mix-request. Vocals='{vocalsPath}', Instrumental='{instrumentalPath}', State='{_playState}'.");
-        if (_audioInputNode is not null && _playState != AudioPlayerState.Idle)
-        {
-            await SwitchMainToStemMixAsync(vocalsPath, instrumentalPath, startPosition);
-            return;
-        }
-        LogAudioGraphState("stem-request-before-stop");
-        var handoffPosition = await StopForSourceSwitchAsync();
-        LogAudioGraphState("stem-request-after-stop");
-        ClearStemMixSources();
-
-        if (_audioGraph == null)
-            await InitializeAsync();
-
-        if (_nowPlayingMetadata is not null)
-            await UpdateNowPlayingAsync(_nowPlayingMetadata);
-
-        var vocalsSource = await CreateMediaSourceAsync(vocalsPath);
-        var instrumentalSource = await CreateMediaSourceAsync(instrumentalPath);
-        AppLog.Information($"StemDiag source-created. VocalsDurationMs='{vocalsSource.Duration?.TotalMilliseconds:F0}', InstrumentalDurationMs='{instrumentalSource.Duration?.TotalMilliseconds:F0}', GraphGeneration='{_audioGraphGeneration}'.");
-        var vocalsResult = await _audioGraph.CreateMediaSourceAudioInputNodeAsync(vocalsSource);
-        var instrumentalResult = await _audioGraph.CreateMediaSourceAudioInputNodeAsync(instrumentalSource);
-
-        AppLog.Information($"StemDiag node-creation-result. VocalsStatus='{vocalsResult.Status}', InstrumentalStatus='{instrumentalResult.Status}'.");
-
-        if (vocalsResult.Status != MediaSourceAudioInputNodeCreationStatus.Success ||
-            instrumentalResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
-            throw new InvalidOperationException("Unable to create the audio stem input nodes.");
-
-        _vocalsInputNode = vocalsResult.Node;
-        _instrumentalInputNode = instrumentalResult.Node;
-        _audioGraphGeneration++;
-        _vocalsSourcePath = vocalsPath;
-        _instrumentalSourcePath = instrumentalPath;
-        _currentTrackPath = $"stem-mix:{vocalsPath}|{instrumentalPath}";
-
-        ConnectStemNodes();
-        ApplyStemMixGains();
-        LogAudioGraphState("stem-nodes-connected");
-
-        TrackDuration = GetShortestDuration(vocalsSource.Duration ?? _vocalsInputNode.Duration,
-            instrumentalSource.Duration ?? _instrumentalInputNode.Duration);
-        _sampleRate = (int)_audioGraph.EncodingProperties.SampleRate;
-        _channelCount = (int)_audioGraph.EncodingProperties.ChannelCount;
-        // The original source keeps advancing while it fades out. Start stems at its
-        // actual hand-off point rather than the position captured at click time.
-        var initialPosition = handoffPosition ?? startPosition.GetValueOrDefault();
-        if (initialPosition < TimeSpan.Zero)
-            initialPosition = TimeSpan.Zero;
-
-        if (TrackDuration != TimeSpan.Zero && initialPosition > TrackDuration)
-            initialPosition = TrackDuration;
-
-        // Both sources must be positioned before the graph starts. Starting at zero and
-        // seeking after FadeInAsync made source switching audibly jump and left the page
-        // timeline briefly reporting the wrong position.
-        _vocalsInputNode.Seek(initialPosition);
-        _instrumentalInputNode.Seek(initialPosition);
-        _totalSamplesProcessed = (long)(initialPosition.TotalSeconds * _sampleRate);
-        _lastPosition = initialPosition;
-        LogStemDiagnostic("initial-seek-applied");
-
-        // MediaSourceAudioInputNode uses an independent decoder for each stem. Prime both
-        // decoders while the device output is muted, then seek them together once more.
-        // This prevents a decoder's initial buffered packets from being heard against the
-        // other stem when switching from the original track.
-        _deviceOutputNode.OutgoingGain = 0f;
-        _audioGraph.Start();
-        LogStemDiagnostic("graph-started-muted");
-        await Task.Delay(TimeSpan.FromMilliseconds(180));
-        LogStemDiagnostic("decoder-prime-complete-before-reseek");
-
-        _vocalsInputNode.Seek(initialPosition);
-        _instrumentalInputNode.Seek(initialPosition);
-        _totalSamplesProcessed = (long)(initialPosition.TotalSeconds * _sampleRate);
-        _lastPosition = initialPosition;
-        LogStemDiagnostic("decoder-prime-complete-after-reseek");
-
-        StartAudioAnalysis();
-        LogAudioGraphState("stem-graph-primed-and-started");
-        await FadeInAsync((float)Volume);
-        _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
-        SetPlayState(AudioPlayerState.Playing);
-        UpdateTaskbarProgress(_lastPosition, force: true);
-        LogStemDiagnostic("play-mix-started");
-        ScheduleStemDiagnosticSnapshots();
-    }
-
-    private async Task SwitchMainToStemMixAsync(string vocalsPath, string instrumentalPath, TimeSpan? requestedPosition)
-    {
-        await _playbackTransitionLock.WaitAsync();
+        await _playbackTransitionLock.WaitAsync(token);
         try
         {
-            var previousMain = _audioInputNode
-                ?? throw new InvalidOperationException("There is no main-track node to switch from.");
-            var wasPlaying = _playState == AudioPlayerState.Playing;
-            var handoffPosition = FreezeTimelineForSourceSwitch();
+            ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+            if (preservePlayback && _playState == AudioPlayerState.Idle)
+                return;
+
+            if (!preservePlayback && instrumentalPath is null && _playState == AudioPlayerState.Paused && !startPosition.HasValue &&
+                string.Equals(_currentTrackPath, path, StringComparison.OrdinalIgnoreCase) && !IsStemMixing)
+            {
+                ResumeCore();
+                return;
+            }
+
+            if (_audioGraph is null)
+                await InitializeAsync();
+            if (!preservePlayback && _nowPlayingMetadata is not null)
+                await UpdateNowPlayingAsync(_nowPlayingMetadata);
+
+            var graph = _audioGraph ?? throw new InvalidOperationException("The audio graph is unavailable.");
+            MediaSourceAudioInputNode? primary = null;
+            MediaSourceAudioInputNode? instrumental = null;
+            AudioSubmixNode? submix = null;
+            var previousState = _playState;
+            var previousPosition = TimeSpan.Zero;
+            var frozen = false;
 
             try
             {
-                // Do not add/start one decoder at a time while the graph is rendering.
-                // Both MediaSource nodes are created and positioned while the graph is
-                // stopped, then AudioGraph.Start becomes the single start barrier.
-                var vocalsSource = await CreateMediaSourceAsync(vocalsPath);
-                var instrumentalSource = await CreateMediaSourceAsync(instrumentalPath);
-                var vocalsResult = await _audioGraph.CreateMediaSourceAudioInputNodeAsync(vocalsSource);
-                var instrumentalResult = await _audioGraph.CreateMediaSourceAudioInputNodeAsync(instrumentalSource);
-                if (vocalsResult.Status != MediaSourceAudioInputNodeCreationStatus.Success ||
-                    instrumentalResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
-                    throw new InvalidOperationException("Unable to create stem nodes during source switch.");
+                // Open and decode the files with no output connection. The current source
+                // keeps playing until all new nodes are ready for the same render quantum.
+                primary = await CreateInputNodeAsync(graph, path);
+                if (instrumentalPath is not null)
+                    instrumental = await CreateInputNodeAsync(graph, instrumentalPath);
+                token.ThrowIfCancellationRequested();
+                ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+                if (preservePlayback && _playState == AudioPlayerState.Idle)
+                    return;
 
-                _vocalsInputNode = vocalsResult.Node;
-                _instrumentalInputNode = instrumentalResult.Node;
-                ConnectStemNodes();
+                previousState = _playState;
+                frozen = true;
+                previousPosition = FreezeTimelineForSourceSwitch();
+                var duration = instrumental is null ? primary.Duration : GetShortestDuration(primary.Duration, instrumental.Duration);
+                var position = ClampPosition(preservePlayback ? previousPosition : startPosition.GetValueOrDefault(), duration);
 
-                TrackDuration = GetShortestDuration(
-                    vocalsSource.Duration ?? _vocalsInputNode.Duration,
-                    instrumentalSource.Duration ?? _instrumentalInputNode.Duration);
-                var position = ClampPosition(handoffPosition, TrackDuration);
-                _vocalsInputNode.Seek(position);
-                _instrumentalInputNode.Seek(position);
-
-                _vocalsSourcePath = vocalsPath;
-                _instrumentalSourcePath = instrumentalPath;
-                _currentTrackPath = $"stem-mix:{vocalsPath}|{instrumentalPath}";
-                SetTimelineAfterSourceSwitch(position);
-
-                previousMain.OutgoingGain = 0f;
-                DisposeInputNode(previousMain);
-                _audioInputNode = null;
-                ApplyStemMixGains();
-
-                if (wasPlaying)
+                primary.Seek(position);
+                if (instrumental is null)
                 {
-                    _audioGraph.Start();
-                    StartAudioAnalysis();
+                    primary.AddOutgoingConnection(_deviceOutputNode);
+                    primary.AddOutgoingConnection(_frameOutputNode);
+                }
+                else
+                {
+                    instrumental.Seek(position);
+                    submix = ConnectStemNodes(graph, primary, instrumental, _deviceOutputNode, _frameOutputNode);
+                    ApplyStemMixGains(primary, instrumental, balance);
                 }
 
-                AppLog.Information($"StemDiag switch-main-to-stems-complete. PositionMs='{position.TotalMilliseconds:F0}', WasPlaying='{wasPlaying}'.");
-                LogStemDiagnostic("switch-main-to-stems-complete");
-            }
-            catch
-            {
-                RestoreMainTrackAfterFailedSwitch(previousMain, handoffPosition, wasPlaying);
-                throw;
-            }
-            finally
-            {
-                Volatile.Write(ref _isSourceSwitching, 0);
-            }
-        }
-        finally
-        {
-            _playbackTransitionLock.Release();
-        }
-    }
+                ReleaseInputNodes();
+                _audioInputNode = instrumental is null ? primary : null;
+                _vocalsInputNode = instrumental is null ? null : primary;
+                _instrumentalInputNode = instrumental;
+                _stemSubmixNode = submix;
+                primary = null;
+                instrumental = null;
+                submix = null;
+                frozen = false; // Source ownership has transferred to the player.
 
-    private async Task SwitchStemMixToMainAsync(string path, TimeSpan? requestedPosition)
-    {
-        await _playbackTransitionLock.WaitAsync();
-        try
-        {
-            var vocals = _vocalsInputNode
-                ?? throw new InvalidOperationException("There is no vocal stem node to switch from.");
-            var instrumental = _instrumentalInputNode
-                ?? throw new InvalidOperationException("There is no instrumental stem node to switch from.");
-            var wasPlaying = _playState == AudioPlayerState.Playing;
-            var handoffPosition = FreezeTimelineForSourceSwitch();
-
-            try
-            {
-                var source = await CreateMediaSourceAsync(path);
-                var result = await _audioGraph.CreateMediaSourceAudioInputNodeAsync(source);
-                if (result.Status != MediaSourceAudioInputNodeCreationStatus.Success)
-                    throw new InvalidOperationException("Unable to create the main-track node during source switch.");
-
-                var main = result.Node;
-                main.AddOutgoingConnection(_deviceOutputNode);
-                main.AddOutgoingConnection(_frameOutputNode);
-                TrackDuration = source.Duration ?? main.Duration;
-                var position = ClampPosition(handoffPosition, TrackDuration);
-                main.Seek(position);
-
-                vocals.OutgoingGain = 0f;
-                instrumental.OutgoingGain = 0f;
-                DisposeInputNode(vocals);
-                DisposeInputNode(instrumental);
-                DisposeStemSubmixNode();
-                ClearStemMixSources();
-                _audioInputNode = main;
                 _currentTrackPath = path;
+                _instrumentalSourcePath = instrumentalPath;
+                _stemMixBalance = balance;
+                TrackDuration = duration;
+                _sampleRate = (int)graph.EncodingProperties.SampleRate;
+                _channelCount = (int)graph.EncodingProperties.ChannelCount;
                 SetTimelineAfterSourceSwitch(position);
+                Volatile.Write(ref _isSourceSwitching, 0);
 
-                if (wasPlaying)
+                if (!preservePlayback || previousState == AudioPlayerState.Playing)
                 {
-                    _audioGraph.Start();
+                    _deviceOutputNode.OutgoingGain = Volume;
+                    graph.Start();
                     StartAudioAnalysis();
+                    _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
+                    if (previousState != AudioPlayerState.Playing)
+                        SetPlayState(AudioPlayerState.Playing);
+                    UpdateTaskbarProgress(position, force: true);
                 }
-
-                AppLog.Information($"StemDiag switch-stems-to-main-complete. PositionMs='{position.TotalMilliseconds:F0}', WasPlaying='{wasPlaying}'.");
-            }
-            catch
-            {
-                RestoreStemMixAfterFailedSwitch(vocals, instrumental, handoffPosition, wasPlaying);
-                throw;
+                UpdateSmtcTimeline(position);
+                PositionUpdated?.Invoke(this, new PositionUpdatedEventArgs(position));
             }
             finally
             {
+                DisposeInputNode(primary);
+                DisposeInputNode(instrumental);
+                submix?.Dispose();
+
                 Volatile.Write(ref _isSourceSwitching, 0);
+                if (frozen && previousState == AudioPlayerState.Playing && Volatile.Read(ref _disposed) == 0)
+                {
+                    graph.Start();
+                    StartAudioAnalysis();
+                }
             }
         }
         finally
         {
             _playbackTransitionLock.Release();
+        }
+    }
+
+    private static async Task<MediaSourceAudioInputNode> CreateInputNodeAsync(AudioGraph graph, string path)
+    {
+        var source = await CreateMediaSourceAsync(path);
+        try
+        {
+            var result = await graph.CreateMediaSourceAudioInputNodeAsync(source);
+            if (result.Status != MediaSourceAudioInputNodeCreationStatus.Success)
+                throw new InvalidOperationException($"Unable to open the audio source: {result.Status}.");
+            return result.Node;
+        }
+        catch
+        {
+            source.Dispose();
+            throw;
         }
     }
 
@@ -752,7 +550,6 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         StopAudioAnalysis();
         _audioGraph.Stop();
         ResetFrameOutputNode();
-        AppLog.Information($"StemDiag source-switch-frozen. HandoffMs='{handoffPosition.TotalMilliseconds:F0}', State='{_playState}'.");
         return handoffPosition;
     }
 
@@ -762,7 +559,6 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         {
             _lastPosition = position;
             _totalSamplesProcessed = (long)(position.TotalSeconds * _sampleRate);
-            _lastStemDiagnosticSecond = (int)position.TotalSeconds;
         }
     }
 
@@ -778,122 +574,29 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         }
     }
 
-    private void RestoreMainTrackAfterFailedSwitch(
-        MediaSourceAudioInputNode previousMain,
-        TimeSpan handoffPosition,
-        bool wasPlaying)
+    private static AudioSubmixNode ConnectStemNodes(AudioGraph graph, MediaSourceAudioInputNode vocals,
+        MediaSourceAudioInputNode instrumental, AudioDeviceOutputNode device, AudioFrameOutputNode frames)
     {
-        DisposeInputNode(_vocalsInputNode);
-        DisposeInputNode(_instrumentalInputNode);
-        DisposeStemSubmixNode();
-        ClearStemMixSources();
-        _audioInputNode = previousMain;
-        previousMain.OutgoingGain = 1f;
-        previousMain.Seek(handoffPosition);
-        SetTimelineAfterSourceSwitch(handoffPosition);
-
-        if (wasPlaying)
-        {
-            _audioGraph.Start();
-            StartAudioAnalysis();
-        }
-    }
-
-    private void RestoreStemMixAfterFailedSwitch(
-        MediaSourceAudioInputNode vocals,
-        MediaSourceAudioInputNode instrumental,
-        TimeSpan handoffPosition,
-        bool wasPlaying)
-    {
-        _vocalsInputNode = vocals;
-        _instrumentalInputNode = instrumental;
-        vocals.Seek(handoffPosition);
-        instrumental.Seek(handoffPosition);
-        ApplyStemMixGains();
-        SetTimelineAfterSourceSwitch(handoffPosition);
-
-        if (wasPlaying)
-        {
-            _audioGraph.Start();
-            StartAudioAnalysis();
-        }
-    }
-
-    private void DisposeStemSubmixNode()
-    {
-        if (_stemSubmixNode is null)
-            return;
-
+        var submix = graph.CreateSubmixNode();
         try
         {
-            _stemSubmixNode.Dispose();
+            vocals.AddOutgoingConnection(submix);
+            instrumental.AddOutgoingConnection(submix);
+            submix.AddOutgoingConnection(device);
+            submix.AddOutgoingConnection(frames);
+            return submix;
         }
-        catch (Exception exception)
+        catch
         {
-            AppLog.Error("Unable to dispose the stem submix node.", exception);
-        }
-        finally
-        {
-            _stemSubmixNode = null;
+            submix.Dispose();
+            throw;
         }
     }
 
-    private void ConnectStemNodes()
+    private static void ApplyStemMixGains(MediaSourceAudioInputNode vocals, MediaSourceAudioInputNode instrumental, double balance)
     {
-        _stemSubmixNode = _audioGraph.CreateSubmixNode();
-        _vocalsInputNode!.AddOutgoingConnection(_stemSubmixNode);
-        _instrumentalInputNode!.AddOutgoingConnection(_stemSubmixNode);
-        _stemSubmixNode.AddOutgoingConnection(_deviceOutputNode);
-        _stemSubmixNode.AddOutgoingConnection(_frameOutputNode);
-    }
-
-    private void ApplyStemMixGains()
-    {
-        var balance = Math.Clamp(_stemMixBalance, -1d, 1d);
-        if (_vocalsInputNode is not null)
-            _vocalsInputNode.OutgoingGain = (float)Math.Min(1d, 1d + balance);
-        if (_instrumentalInputNode is not null)
-            _instrumentalInputNode.OutgoingGain = (float)Math.Min(1d, 1d - balance);
-
-        LogStemDiagnostic("gain-applied");
-    }
-
-    private void LogStemDiagnostic(string reason)
-    {
-        if (!IsStemMixing || Volatile.Read(ref _disposed) != 0)
-            return;
-
-        AppLog.Information(
-            $"StemDiag {reason}. GraphGeneration='{_audioGraphGeneration}', State='{_playState}', TimelineMs='{_lastPosition.TotalMilliseconds:F0}', " +
-            $"VocalsMs='{_vocalsInputNode!.Position.TotalMilliseconds:F0}', " +
-            $"InstrumentalMs='{_instrumentalInputNode!.Position.TotalMilliseconds:F0}', " +
-            $"Balance='{_stemMixBalance:F3}', VocalsGain='{_vocalsInputNode.OutgoingGain:F3}', " +
-            $"InstrumentalGain='{_instrumentalInputNode.OutgoingGain:F3}', DeviceGain='{_deviceOutputNode?.OutgoingGain:F3}', " +
-            $"Samples='{_totalSamplesProcessed}', SampleRate='{_sampleRate}', AnalysisRunning='{_analysisRunning}'.");
-    }
-
-    private void ScheduleStemDiagnosticSnapshots()
-    {
-        var sessionId = Interlocked.Increment(ref _stemDiagnosticSessionId);
-        foreach (var delay in new[] { 250, 500, 1000, 2000, 5000 })
-        {
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(delay);
-                if (sessionId == Interlocked.Read(ref _stemDiagnosticSessionId))
-                    LogStemDiagnostic($"post-switch-snapshot-{delay}ms");
-            });
-        }
-    }
-
-    private void LogAudioGraphState(string reason)
-    {
-        AppLog.Information(
-            $"AudioGraphDiag {reason}. Generation='{_audioGraphGeneration}', State='{_playState}', " +
-            $"MainNode='{_audioInputNode is not null}', MainMs='{_audioInputNode?.Position.TotalMilliseconds:F0}', " +
-            $"VocalsNode='{_vocalsInputNode is not null}', VocalsMs='{_vocalsInputNode?.Position.TotalMilliseconds:F0}', " +
-            $"InstrumentalNode='{_instrumentalInputNode is not null}', InstrumentalMs='{_instrumentalInputNode?.Position.TotalMilliseconds:F0}', " +
-            $"SubmixNode='{_stemSubmixNode is not null}', Track='{_currentTrackPath}'.");
+        vocals.OutgoingGain = Math.Min(1d, 1d + balance);
+        instrumental.OutgoingGain = Math.Min(1d, 1d - balance);
     }
 
     private static TimeSpan GetShortestDuration(TimeSpan first, TimeSpan second)
@@ -905,45 +608,18 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         return first <= second ? first : second;
     }
 
-    private void SetInitialPlaybackPosition(MediaSourceAudioInputNode node, TimeSpan? startPosition)
-    {
-        var position = startPosition.GetValueOrDefault();
-        if (position < TimeSpan.Zero)
-            position = TimeSpan.Zero;
-
-        if (TrackDuration != TimeSpan.Zero && position > TrackDuration)
-            position = TrackDuration;
-
-        node.Seek(position);
-        lock (_timelineSynchronization)
-        {
-            _totalSamplesProcessed = (long)(position.TotalSeconds * _sampleRate);
-            _lastPosition = position;
-            _lastStemDiagnosticSecond = (int)position.TotalSeconds;
-        }
-    }
-
-    private void ClearStemMixSources()
-    {
-        _vocalsInputNode = null;
-        _instrumentalInputNode = null;
-        _vocalsSourcePath = null;
-        _instrumentalSourcePath = null;
-    }
-
     private void ReleaseInputNodes()
     {
-        // Explicitly release old sources before creating a new graph input. This avoids
-        // a previous main-track source remaining audible after changing to stem mixing.
-        LogAudioGraphState("release-input-nodes-before-dispose");
         DisposeInputNode(_audioInputNode);
         DisposeInputNode(_vocalsInputNode);
         DisposeInputNode(_instrumentalInputNode);
-        DisposeStemSubmixNode();
-
+        try { _stemSubmixNode?.Dispose(); }
+        catch (Exception exception) { AppLog.Error("Unable to release the stem submix node.", exception); }
         _audioInputNode = null;
-        ClearStemMixSources();
-        LogAudioGraphState("release-input-nodes-after-dispose");
+        _vocalsInputNode = null;
+        _instrumentalInputNode = null;
+        _stemSubmixNode = null;
+        _reverbEffectDefinition = null;
     }
 
     private static void DisposeInputNode(MediaSourceAudioInputNode? node)
@@ -953,7 +629,7 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
 
         try
         {
-            node.Stop();
+            using var source = node.MediaSource;
             node.Dispose();
         }
         catch (Exception exception)
@@ -962,94 +638,18 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         }
     }
 
-    private async Task FadeVolumeAsync(
-    float from,
-    float to,
-    int durationMs,
-    CancellationToken token)
+    private void SetDeviceGain(double volume)
     {
-        const int steps = 30;
-        int delay = durationMs / steps;
-
-        for (int i = 0; i <= steps; i++)
-        {
-            token.ThrowIfCancellationRequested();
-
-            float t = (float)i / steps;
-            float value = from + (to - from) * t;
-
-            if (_deviceOutputNode != null)
-                _deviceOutputNode.OutgoingGain = value;
-
-            await Task.Delay(delay, token);
-        }
-    }
-
-    private async Task FadeInAsync(float targetVolume)
-    {
-        // Temporary diagnostic bypass: keep the output at its target gain and remove
-        // every asynchronous fade from the playback transition.
         if (_deviceOutputNode is not null)
-            _deviceOutputNode.OutgoingGain = targetVolume;
-        await Task.CompletedTask;
-        return;
-
-        await _fadeTransitionLock.WaitAsync();
-        try
-        {
-            LogStemDiagnostic($"fade-in-begin-target-{targetVolume:F3}");
-            if (_deviceOutputNode != null)
-                _deviceOutputNode.OutgoingGain = 0f;
-
-            await FadeVolumeAsync(
-                from: 0f,
-                to: targetVolume,
-                durationMs: FadeDurationMs,
-                token: CancellationToken.None);
-            LogStemDiagnostic("fade-in-complete");
-        }
-        finally
-        {
-            _fadeTransitionLock.Release();
-        }
+            _deviceOutputNode.OutgoingGain = volume;
     }
-
-    private async Task FadeOutAsync()
-    {
-        // Temporary diagnostic bypass: source switching must not wait for or be
-        // affected by a device-output fade.
-        if (_deviceOutputNode is not null)
-            _deviceOutputNode.OutgoingGain = 0f;
-        await Task.CompletedTask;
-        return;
-
-        await _fadeTransitionLock.WaitAsync();
-        try
-        {
-            float current = ((float?)_deviceOutputNode?.OutgoingGain) ?? 0f;
-            LogStemDiagnostic($"fade-out-begin-current-{current:F3}");
-
-            await FadeVolumeAsync(
-                from: current,
-                to: 0f,
-                durationMs: FadeDurationMs,
-                token: CancellationToken.None);
-            LogStemDiagnostic("fade-out-complete");
-        }
-        finally
-        {
-            _fadeTransitionLock.Release();
-        }
-    }
-
-    private double _lastVolume { get; set; }
 
     public async Task PauseAsync()
     {
         await _playbackTransitionLock.WaitAsync();
         try
         {
-            await PauseCoreAsync();
+            PauseCore();
         }
         finally
         {
@@ -1057,15 +657,13 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         }
     }
 
-    private async Task PauseCoreAsync()
+    private void PauseCore()
     {
         if (_playState != AudioPlayerState.Playing)
             return;
 
-        LogStemDiagnostic("pause-before");
-        _lastVolume = Volume;
         SetPlayState(AudioPlayerState.Paused);
-        await FadeOutAsync();
+        SetDeviceGain(0);
 
         _audioGraph.Stop();
         StopAudioAnalysis();
@@ -1080,7 +678,6 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
             _taskbarService.SetProgress(percentage, TaskbarProgressState.Paused);
         }
 
-        LogStemDiagnostic("pause-after");
 
     }
 
@@ -1117,7 +714,7 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         await _playbackTransitionLock.WaitAsync();
         try
         {
-            await StopCoreAsync();
+            StopCore();
         }
         finally
         {
@@ -1125,47 +722,18 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         }
     }
 
-    private async Task<TimeSpan?> StopForSourceSwitchAsync()
-    {
-        await _playbackTransitionLock.WaitAsync();
-        try
-        {
-            return await StopCoreAsync(preserveHandoffPosition: true);
-        }
-        finally
-        {
-            _playbackTransitionLock.Release();
-        }
-    }
-
-    private async Task<TimeSpan?> StopCoreAsync(bool preserveHandoffPosition = false)
+    private void StopCore()
     {
         if (_playState == AudioPlayerState.Idle && _audioInputNode is null && !IsStemMixing)
-            return null;
+            return;
 
-        _lastVolume = Volume;
-        LogAudioGraphState("stop-before-fade");
-
-        await FadeOutAsync();
-
-        // Read it after FadeOutAsync: this is the final position that was rendered by
-        // the outgoing source, not the older UI value from the click event.
-        // Audio input-node positions are decoder cursors and can be substantially
-        // different from the audible output. The frame-output clock is authoritative.
-        var handoffPosition = _lastPosition;
-        AppLog.Information($"StemDiag source-switch-handoff. Preserve='{preserveHandoffPosition}', HandoffMs='{handoffPosition.TotalMilliseconds:F0}', LastTimelineMs='{_lastPosition.TotalMilliseconds:F0}'.");
+        SetDeviceGain(0);
 
         StopAudioAnalysis();
         _audioGraph.Stop();
         ReleaseInputNodes();
         _audioGraph.ResetAllNodes();
-        LogAudioGraphState("stop-after-reset");
-
-        if (!preserveHandoffPosition)
-        {
-            _lastPosition = TimeSpan.Zero;
-            _totalSamplesProcessed = 0;
-        }
+        SetTimelineAfterSourceSwitch(TimeSpan.Zero);
 
         _smtc.PlaybackStatus = MediaPlaybackStatus.Stopped;
 
@@ -1173,7 +741,6 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
 
         // Clear taskbar progress on stop
         _taskbarService.ClearProgress();
-        return preserveHandoffPosition ? handoffPosition : null;
     }
 
     public async Task ChangeOutputDeviceAsync(DeviceInformation newDevice)
@@ -1181,15 +748,15 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         ArgumentNullException.ThrowIfNull(newDevice);
 
         AppLog.Information($"Audio output change requested. Name='{newDevice.Name}', Id='{newDevice.Id}', State='{_playState}'.");
-        await _outputDeviceChangeLock.WaitAsync();
+        await _playbackTransitionLock.WaitAsync();
         try
         {
             var previousState = _playState;
             var currentSource = _currentTrackPath;
             var wasStemMixing = IsStemMixing;
-            var vocalsSourcePath = _vocalsSourcePath;
             var instrumentalSourcePath = _instrumentalSourcePath;
-            var resumePosition = _lastPosition;
+            var resumePosition = Position;
+            var duration = TrackDuration;
             var previousGraph = _audioGraph;
 
             var settings = new AudioGraphSettings(AudioRenderCategory.Media)
@@ -1222,60 +789,50 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
 
                 if (previousState != AudioPlayerState.Idle && !string.IsNullOrWhiteSpace(currentSource))
                 {
-                    if (wasStemMixing && vocalsSourcePath is not null && instrumentalSourcePath is not null)
+                    if (wasStemMixing && instrumentalSourcePath is not null)
                     {
-                        var vocalsSource = await CreateMediaSourceAsync(vocalsSourcePath);
-                        var instrumentalSource = await CreateMediaSourceAsync(instrumentalSourcePath);
-                        var vocalsResult = await newGraph.CreateMediaSourceAudioInputNodeAsync(vocalsSource);
-                        var instrumentalResult = await newGraph.CreateMediaSourceAudioInputNodeAsync(instrumentalSource);
-                        if (vocalsResult.Status != MediaSourceAudioInputNodeCreationStatus.Success ||
-                            instrumentalResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
-                            throw new InvalidOperationException("Unable to restore the audio stems on the selected device.");
-
-                        newVocalsInputNode = vocalsResult.Node;
-                        newInstrumentalInputNode = instrumentalResult.Node;
-                        newStemSubmixNode = newGraph.CreateSubmixNode();
-                        newVocalsInputNode.AddOutgoingConnection(newStemSubmixNode);
-                        newInstrumentalInputNode.AddOutgoingConnection(newStemSubmixNode);
-                        newStemSubmixNode.AddOutgoingConnection(newOutputNode);
-                        newStemSubmixNode.AddOutgoingConnection(newFrameNode);
-                        newVocalsInputNode.OutgoingGain = (float)Math.Min(1d, 1d + _stemMixBalance);
-                        newInstrumentalInputNode.OutgoingGain = (float)Math.Min(1d, 1d - _stemMixBalance);
-                        TrackDuration = GetShortestDuration(vocalsSource.Duration ?? newVocalsInputNode.Duration,
-                            instrumentalSource.Duration ?? newInstrumentalInputNode.Duration);
-                        resumePosition = ClampPosition(resumePosition, TrackDuration);
-                        newVocalsInputNode.Seek(resumePosition);
-                        newInstrumentalInputNode.Seek(resumePosition);
+                        newVocalsInputNode = await CreateInputNodeAsync(newGraph, currentSource);
+                        newInstrumentalInputNode = await CreateInputNodeAsync(newGraph, instrumentalSourcePath);
+                        newStemSubmixNode = ConnectStemNodes(newGraph, newVocalsInputNode, newInstrumentalInputNode, newOutputNode, newFrameNode);
+                        duration = GetShortestDuration(newVocalsInputNode.Duration, newInstrumentalInputNode.Duration);
                     }
                     else
                     {
-                        var source = await CreateMediaSourceAsync(currentSource);
-                        var inputResult = await newGraph.CreateMediaSourceAudioInputNodeAsync(source);
-                        if (inputResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
-                            throw new InvalidOperationException("Unable to restore the current track on the selected device.");
-
-                        newInputNode = inputResult.Node;
+                        newInputNode = await CreateInputNodeAsync(newGraph, currentSource);
                         newInputNode.AddOutgoingConnection(newOutputNode);
                         newInputNode.AddOutgoingConnection(newFrameNode);
-                        TrackDuration = source.Duration ?? newInputNode.Duration;
-                        resumePosition = ClampPosition(resumePosition, newInputNode.Duration);
-                        newInputNode.Seek(resumePosition);
+                        duration = newInputNode.Duration;
                     }
+                }
+
+                ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+                resumePosition = ClampPosition(Position, duration);
+                newInputNode?.Seek(resumePosition);
+                if (newVocalsInputNode is not null && newInstrumentalInputNode is not null)
+                {
+                    newVocalsInputNode.Seek(resumePosition);
+                    newInstrumentalInputNode.Seek(resumePosition);
+                    ApplyStemMixGains(newVocalsInputNode, newInstrumentalInputNode, _stemMixBalance);
                 }
             }
             catch
             {
+                DisposeInputNode(newInputNode);
+                DisposeInputNode(newVocalsInputNode);
+                DisposeInputNode(newInstrumentalInputNode);
+                newStemSubmixNode?.Dispose();
                 newGraph.Dispose();
                 throw;
             }
 
             if (previousState == AudioPlayerState.Playing)
-                await FadeOutAsync();
+                SetDeviceGain(0);
 
             StopAudioAnalysis();
             if (previousGraph is not null)
                 previousGraph.QuantumStarted -= AudioGraph_QuantumStarted;
             previousGraph?.Stop();
+            ReleaseInputNodes();
             previousGraph?.Dispose();
 
             _audioGraph = newGraph;
@@ -1286,10 +843,10 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
             _vocalsInputNode = newVocalsInputNode;
             _instrumentalInputNode = newInstrumentalInputNode;
             _stemSubmixNode = newStemSubmixNode;
-            _lastPosition = resumePosition;
-            _totalSamplesProcessed = (long)(resumePosition.TotalSeconds * _audioGraph.EncodingProperties.SampleRate);
+            TrackDuration = duration;
             _sampleRate = (int)_audioGraph.EncodingProperties.SampleRate;
             _channelCount = (int)_audioGraph.EncodingProperties.ChannelCount;
+            SetTimelineAfterSourceSwitch(resumePosition);
 
             await InitializeSmtcAsync();
 
@@ -1303,13 +860,13 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
             {
                 _audioGraph.Start();
                 StartAudioAnalysis();
-        _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
+                _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
                 SetPlayState(AudioPlayerState.Playing);
-                await FadeInAsync((float)Volume);
+                SetDeviceGain(Volume);
             }
             else
             {
-        _smtc.PlaybackStatus = MediaPlaybackStatus.Paused;
+                _smtc.PlaybackStatus = MediaPlaybackStatus.Paused;
                 SetPlayState(AudioPlayerState.Paused);
             }
 
@@ -1323,7 +880,7 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         }
         finally
         {
-            _outputDeviceChangeLock.Release();
+            _playbackTransitionLock.Release();
         }
     }
 
@@ -1393,7 +950,6 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
     {
         if (Volatile.Read(ref _isSourceSwitching) != 0)
         {
-            AppLog.Information($"StemDiag seek-ignored-during-source-switch. TargetMs='{position.TotalMilliseconds:F0}'.");
             return;
         }
 
@@ -1403,10 +959,8 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         if (position < TimeSpan.Zero)
             position = TimeSpan.Zero;
 
-        if (position > TrackDuration)
-            position = TrackDuration;
+        position = ClampPosition(position, TrackDuration);
 
-        AppLog.Information($"StemDiag seek-request. TargetMs='{position.TotalMilliseconds:F0}', State='{_playState}', IsStemMixing='{IsStemMixing}'.");
         lock (_timelineSynchronization)
         {
             if (Volatile.Read(ref _isSourceSwitching) != 0)
@@ -1418,12 +972,10 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
             ResetFrameOutputNode();
             _lastPosition = position;
             _totalSamplesProcessed = (long)(position.TotalSeconds * _sampleRate);
-            _lastStemDiagnosticSecond = (int)position.TotalSeconds;
         }
 
         UpdateSmtcTimeline(position);
         UpdateTaskbarProgress(position);
-        LogStemDiagnostic("seek-applied");
     }
 
     private void StartAudioAnalysis()
@@ -1477,16 +1029,6 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
             // presence, logging or UI observers cannot delay a render quantum,
             // and timer ticks do not accumulate stale position notifications.
             var position = Position;
-            if (IsStemMixing)
-            {
-                var wholeSecond = (int)position.TotalSeconds;
-                if (wholeSecond != _lastStemDiagnosticSecond)
-                {
-                    _lastStemDiagnosticSecond = wholeSecond;
-                    LogStemDiagnostic("render-tick");
-                }
-            }
-
             UpdateTaskbarProgress(position);
             UpdateSmtcTimeline(position);
             PositionUpdated?.Invoke(this, new PositionUpdatedEventArgs(position));
@@ -1541,7 +1083,8 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
             return;
 
         _lastTaskbarProgressUpdate = now;
-        _taskbarService.SetProgress(percentage, TaskbarProgressState.Normal);
+        _taskbarService.SetProgress(percentage, _playState == AudioPlayerState.Paused
+            ? TaskbarProgressState.Paused : TaskbarProgressState.Normal);
 
         // فقط وقتی پخش واقعاً تمام می‌شود progress تسک‌بار را پاک کن.
         // در حالت RepeatOne، آهنگ فوراً از ابتدا ادامه پیدا می‌کند.
@@ -1571,7 +1114,7 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
             uint capacity;
             byteAccess.GetBuffer(out dataInBytes, out capacity);
 
-            int floatCount = (int)capacity / sizeof(float);
+            int floatCount = (int)Math.Min(buffer.Length, capacity) / sizeof(float);
             samplesPerChannel = floatCount / _channelCount;
         }
 
@@ -1644,6 +1187,7 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         {
             try
             {
+                ReleaseInputNodes();
                 graph.Dispose();
             }
             catch (Exception exception)

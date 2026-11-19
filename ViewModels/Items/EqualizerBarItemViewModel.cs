@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media;
 
 namespace Mizon.Windows.ViewModels.Items;
 
@@ -28,22 +28,4 @@ public class EqualizerBarItemViewModel : ViewModelBase
         set => SetField(ref field, value);
     } = null!;
 
-
-    public bool IsPlayed
-    {
-        get => field;
-        set => SetField(ref field, value);
-    }
-
-    public bool IsHover
-    {
-        get => field;
-        set => SetField(ref field, value);
-    }
-
-    public bool IsBottomHover
-    {
-        get => field;
-        set => SetField(ref field, value);
-    }
 }

@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using Microsoft.UI.Xaml.Media;
 using System;
 
@@ -46,6 +47,10 @@ public sealed class MusicListenerMarkerItemViewModel : ViewModelBase
     public string DisplayName => string.IsNullOrWhiteSpace(Username)
         ? $"{FirstName} {LastName}".Trim()
         : Username;
+
+    public LocalizationService Localization => LocalizationService.Current;
+    public string PlaybackLabel(int revision, bool playing) =>
+        Localization.Format(playing ? "MusicDetails/ListeningNow" : "MusicDetails/ListenerPaused", DisplayName);
 
     private static readonly SolidColorBrush PlayingBorderBrush = new(global::Windows.UI.Color.FromArgb(230, 0, 180, 255));
     private static readonly SolidColorBrush PausedBorderBrush = new(global::Windows.UI.Color.FromArgb(180, 230, 255, 13));

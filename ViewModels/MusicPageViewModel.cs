@@ -4,6 +4,7 @@ using Symbol = FluentIcons.Common.Symbol;
 using Mizon.API;
 using Mizon.API.Client.Operations.Musics;
 using Mizon.API.Client.Requests.Musics;
+using Mizon.API.Client.Responses.Musics;
 using Mizon.Windows.Pages;
 using Mizon.Windows.Common;
 using Mizon.Windows.Services;
@@ -47,6 +48,8 @@ public partial class MusicPageViewModel : MainViewModel
     private DeviceWatcher? _audioRenderDeviceWatcher;
     private readonly DispatcherQueueTimer _audioDeviceDetailsTimer;
     private readonly DispatcherQueueTimer _musicListenerPositionTimer;
+    private (AudioDeviceItemViewModel Device, int Percentage)? _pendingEndpointVolume;
+    private AudioDeviceItemViewModel? _writingEndpointVolumeDevice;
     private bool _isAudioRenderWatcherRunning;
     private bool _isAudioDeviceDetailsRefreshing;
     private bool _audioDeviceDetailsRefreshPending;
@@ -72,7 +75,6 @@ public partial class MusicPageViewModel : MainViewModel
     private MediaResponse? _musicMediaResponse;
     private bool _isPlaybackTransitioning;
     private bool _isStemMixerSwitching;
-    private int _stemMixBalanceUpdateVersion;
     private Guid? _vocalsMediaPublicId;
     private Guid? _instrumentalMediaPublicId;
     private string? _vocalsCachedPath;
@@ -218,17 +220,51 @@ public partial class MusicPageViewModel : MainViewModel
         }
     } = 100;
 
-    public bool IsStemMixAvailable
+    public MusicVideoResponse? MusicVideo
+    {
+        get => field;
+        private set
+        {
+            if (SetField(ref field, value))
+                OnPropertyChanged(nameof(HasMusicVideo));
+        }
+    }
+
+    public bool HasMusicVideo => MusicVideo is { } video && video.PublicId != Guid.Empty && video.MediaPublicId != Guid.Empty;
+
+    public ImageSource? MusicVideoCover
     {
         get => field;
         private set => SetField(ref field, value);
     }
 
+    public bool IsStemMixAvailable
+    {
+        get => field;
+        private set
+        {
+            if (!SetField(ref field, value)) return;
+            OnPropertyChanged(nameof(CanToggleStemMixer));
+            OnPropertyChanged(nameof(ShowLyricsOrStemMixer));
+        }
+    }
+
     public bool IsStemMixerLoading
     {
         get => field;
-        private set => SetField(ref field, value);
+        private set
+        {
+            if (SetField(ref field, value))
+                OnPropertyChanged(nameof(CanToggleStemMixer));
+        }
     }
+
+    public bool CanToggleStemMixer => IsStemMixAvailable && !IsStemMixerLoading;
+    public bool ShowLyricsOrStemMixer => HasLyrics || IsStemMixAvailable;
+
+    private bool HasCurrentTrackSource => _musicPublicId != Guid.Empty && _playingMusicPublicId == _musicPublicId;
+    internal bool IsStemMixerActive => HasCurrentTrackSource && _audioPlayerService.IsStemMixing &&
+        _audioPlayerService.AudioPlayerState != AudioPlayerState.Idle;
 
     private bool _isStemMixerEnabled;
     public bool IsStemMixerEnabled
@@ -236,39 +272,32 @@ public partial class MusicPageViewModel : MainViewModel
         get => _isStemMixerEnabled;
         set
         {
-            if (!SetField(ref _isStemMixerEnabled, value) || _musicPublicId == Guid.Empty)
+            if (value == _isStemMixerEnabled)
                 return;
 
-            _ = SwitchStemMixerAsync(value, _musicPublicId);
+            if (!CanToggleStemMixer || _isPlaybackTransitioning || _isStemMixerSwitching)
+            {
+                OnPropertyChanged(nameof(IsStemMixerEnabled));
+                return;
+            }
+
+            SetStemMixerEnabled(value);
+            if (HasCurrentTrackSource && _audioPlayerService.AudioPlayerState != AudioPlayerState.Idle)
+                _ = SwitchStemMixerAsync(value, _musicPublicId, _musicLoadCancellationTokenSource?.Token ?? CancellationToken.None);
         }
     }
+
+    private void SetStemMixerEnabled(bool value) => SetField(ref _isStemMixerEnabled, value, nameof(IsStemMixerEnabled));
 
     public double StemMixBalance
     {
         get => field;
         set
         {
-            if (SetField(ref field, value))
-                QueueStemMixBalanceUpdate(value);
+            if (double.IsFinite(value) && SetField(ref field, Math.Clamp(value, -100d, 100d)) &&
+                IsStemMixerEnabled && IsStemMixerActive)
+                _audioPlayerService.StemMixBalance = field / 100d;
         }
-    }
-
-    private void QueueStemMixBalanceUpdate(double value)
-    {
-        var version = Interlocked.Increment(ref _stemMixBalanceUpdateVersion);
-        _ = ApplyStemMixBalanceAsync(value, version);
-    }
-
-    private async Task ApplyStemMixBalanceAsync(double value, int version)
-    {
-        // Slider bindings update for every pointer pixel. Coalescing prevents a rapid
-        // stream of cross-thread AudioGraph gain changes while preserving the last value.
-        await Task.Delay(TimeSpan.FromMilliseconds(33));
-        if (version != Volatile.Read(ref _stemMixBalanceUpdateVersion))
-            return;
-
-        AppLog.Information($"StemDiag slider-apply. Value='{value:F2}', Version='{version}', MusicPublicId='{_musicPublicId}'.");
-        _audioPlayerService.StemMixBalance = value / 100d;
     }
 
     public bool IsReverbEffectDefinitionEnabled
@@ -348,17 +377,11 @@ public partial class MusicPageViewModel : MainViewModel
             if (e.AudioPlayerState == AudioPlayerState.Playing)
             {
                 _rgbMusicLightingService.Resume();
-                IsPlaying = true;
-                PlayType = PlayState.Playing;
-                _lastPlayedBar = _lastQueuedPositionSecond = -1;
+                _lastPositionSecond = -1;
             }
             else
             {
-                IsPlaying = false;
                 ServerWaveformIntensity = 0f;
-                PlayType = e.AudioPlayerState == AudioPlayerState.Paused
-                    ? PlayState.Paused
-                    : PlayState.Idle;
 
                 if (e.AudioPlayerState == AudioPlayerState.Paused)
                     _rgbMusicLightingService.SetPaused();
@@ -366,75 +389,75 @@ public partial class MusicPageViewModel : MainViewModel
                     _rgbMusicLightingService.SetIdle();
             }
 
-            UpdateColors();
+            UpdateTrackPlaybackPresentation();
         });
 
     }
 
-    private int _lastPlayedBar = -1;
     private int _paintedPlayedBar = -1;
     private int _paintedHoverBar = -1;
-    private int _lastQueuedPositionSecond = -1;
+    private int _paintedBottomHoverBar = -1;
+    private int _lastPositionSecond = -1;
     private int _lastLyricPositionInMilliseconds = -1;
     private MusicLyricLineItemViewModel? _activeLyricLine;
     private MusicLyricWordItemViewModel? _activeLyricWord;
 
     private void AudioPlayerService_PositionUpdated(object? sender, PositionUpdatedEventArgs e)
     {
-        // Use high-resolution position (milliseconds) and map to Bars index for smooth sync.
-        var position = e.Position;
+        if (_dispatcherQueue.HasThreadAccess)
+        {
+            UpdatePlaybackPosition(e.Position);
+            return;
+        }
+
+        var musicId = _musicPublicId;
+        _dispatcherQueue.TryEnqueue(() =>
+        {
+            if (_musicPublicId == musicId)
+                UpdatePlaybackPosition(_audioPlayerService.Position);
+        });
+    }
+
+    private void UpdatePlaybackPosition(TimeSpan position)
+    {
+        if (!HasCurrentTrackSource)
+            return;
+
         _lastMusicPosition = position;
         _rgbMusicLightingService.Update(position, IsPlaying);
         UpdateCoverPulseFromServerWaveform(position);
         PublishMusicPlaybackPresence(position, force: false);
 
-        var lyricPositionInMilliseconds = (int)Math.Max(0, position.TotalMilliseconds);
-        if (Math.Abs(lyricPositionInMilliseconds - _lastLyricPositionInMilliseconds) >= 50)
+        var positionMilliseconds = (int)Math.Max(0, position.TotalMilliseconds);
+        if (Math.Abs(positionMilliseconds - _lastLyricPositionInMilliseconds) >= 50)
         {
-            _lastLyricPositionInMilliseconds = lyricPositionInMilliseconds;
-            _dispatcherQueue.TryEnqueue(() => UpdateLyricPlaybackState(lyricPositionInMilliseconds));
+            _lastLyricPositionInMilliseconds = positionMilliseconds;
+            UpdateLyricPlaybackState(positionMilliseconds);
         }
 
-        // If track duration is available, compute progress-based index.
-        int playedIndex = 0;
-
-        if (_audioPlayerService.TrackDuration != TimeSpan.Zero)
+        var duration = _audioPlayerService.TrackDuration;
+        var playedBar = -1;
+        if (duration > TimeSpan.Zero)
         {
-            double totalMs = _audioPlayerService.TrackDuration.TotalMilliseconds;
-            double posMs = position.TotalMilliseconds;
-
-            double progress = totalMs > 0 ? (posMs / totalMs) : 0.0;
-            progress = Math.Clamp(progress, 0.0, 1.0);
-
-            playedIndex = (int)Math.Round(progress * (BarCount - 1));
+            var ratio = Math.Clamp((double)position.Ticks / duration.Ticks, 0d, 1d);
+            playedBar = MusicWaveformTimeline.GetBarIndex(ratio * WaveformContentWidth, Bars.Count);
         }
-        else if (_waveforms is { Count: > 0 } waveform)
+        else if (_waveforms is { Count: > 0 } waveform && Bars.Count != 0)
         {
-            var index = FindWaveformIndex(waveform, (int)Math.Max(0d, position.TotalMilliseconds));
-            if (waveform[index].OffsetInMilliseconds < position.TotalMilliseconds)
-                index = Math.Min(index + 1, waveform.Count - 1);
-            playedIndex = Math.Min(BarCount - 1, (int)((long)index * BarCount / waveform.Count));
+            var frame = FindWaveformIndex(waveform, positionMilliseconds);
+            playedBar = (int)((long)frame * Bars.Count / waveform.Count);
         }
 
-        // Status text and waveform update independently. Long tracks can spend
-        // several seconds on a single bar without freezing the displayed time.
+        UpdatePlayedPosition(playedBar);
         var second = (int)position.TotalSeconds;
-        var timeChanged = second != _lastQueuedPositionSecond;
-        var barChanged = playedIndex != _lastPlayedBar;
-        if (!timeChanged && !barChanged) return;
-
-        _lastQueuedPositionSecond = second;
-        _lastPlayedBar = playedIndex;
-        var musicId = _musicPublicId;
-        _dispatcherQueue.TryEnqueue(() =>
+        if (_lastPositionSecond != second)
         {
-            if (musicId != _musicPublicId) return;
-            if (timeChanged) CurrentPosition = position.ToString(@"h\:mm\:ss");
-            if (barChanged) UpdatePlayedPosition(playedIndex);
-        });
+            _lastPositionSecond = second;
+            CurrentPosition = position.ToString(@"h\:mm\:ss");
+        }
     }
-    private const double WaveformContentWidth = 1500d;
-    private const double CommentMarkerSize = 28d;
+    private const double WaveformContentWidth = MusicWaveformTimeline.Width;
+
     private const double MusicListenerMarkerSize = 28d;
     private const double TopBarMarkerCanvasTop = 22d;
 
@@ -486,36 +509,24 @@ public partial class MusicPageViewModel : MainViewModel
             position,
             _audioPlayerService.AudioPlayerState == AudioPlayerState.Playing);
     }
-    private int _maxZIndex = 0;
-
-    public void EqualizerCommentBringToFront(EqualizerCommentItemViewModel equalizerCommentItemViewModel)
-    {
-        foreach (var btn in EqualizerComments)
-        {
-            if (btn != equalizerCommentItemViewModel)
-            {
-                btn.ZIndex--;
-            }
-        }
-
-        _maxZIndex++;
-        equalizerCommentItemViewModel.ZIndex = _maxZIndex;
-    }
     public AudioDeviceItemViewModel? SelectedAudioDevice
     {
         get => field;
-        set
-        {
-            if (SetField(ref field, value) && value is not null)
-                _ = ChangeOutputDeviceAsync(value);
-        }
+        private set => SetField(ref field, value);
     }
 
 
+
+    internal bool IsAudioDeviceSwitchPending
+    {
+        get => field;
+        private set => SetField(ref field, value);
+    }
 
     public ObservableCollection<AudioDeviceItemViewModel> AudioDevices { get; } = [];
     public ObservableCollection<EqualizerBarItemViewModel> Bars { get; } = [];
     public ObservableCollection<EqualizerCommentItemViewModel> EqualizerComments { get; } = [];
+    private readonly Dictionary<TimeSpan, int> _commentStacks = [];
     public ObservableCollection<MusicListenerMarkerItemViewModel> MusicListeners { get; } = [];
     public ObservableCollection<MusicVocalSegmentItemViewModel> VocalSegments { get; } = [];
     public ObservableCollection<MusicGenreItemViewModel> Genres { get; } = [];
@@ -574,7 +585,11 @@ public partial class MusicPageViewModel : MainViewModel
     public bool HasLyrics
     {
         get => field;
-        private set => SetField(ref field, value);
+        private set
+        {
+            if (SetField(ref field, value))
+                OnPropertyChanged(nameof(ShowLyricsOrStemMixer));
+        }
     }
 
     public string CurrentLyricText
@@ -667,137 +682,130 @@ public partial class MusicPageViewModel : MainViewModel
 
     private void UpdateColors()
     {
-        foreach (var bar in Bars) RefreshBarColor(bar);
+        for (var index = 0; index < Bars.Count; index++)
+            RefreshBarColor(index);
     }
 
-    private void RefreshBarColor(EqualizerBarItemViewModel bar) =>
-        bar.TopColor = bar.IsHover ? HoverBrush : !bar.IsPlayed ? NormalBrush
+    private void RefreshBarColor(int index) =>
+        Bars[index].TopColor = index <= _paintedHoverBar ? HoverBrush : index > _paintedPlayedBar ? NormalBrush
             : PlayType == PlayState.Playing ? PlayedBrush : PausedBrush;
 
-    public void UpdateHoverPreview(int hoverIndex)
+    private void RefreshChangedBars(int previous, int current)
     {
-        hoverIndex = Math.Clamp(hoverIndex, -1, Bars.Count - 1);
-        var previous = _paintedHoverBar;
-        for (var index = Math.Min(previous, hoverIndex) + 1; index <= Math.Max(previous, hoverIndex); index++)
-        {
-            var bar = Bars[index];
-            bar.IsHover = index <= hoverIndex;
-            RefreshBarColor(bar);
-        }
-        _paintedHoverBar = hoverIndex;
+        for (var index = Math.Min(previous, current) + 1; index <= Math.Max(previous, current); index++)
+            RefreshBarColor(index);
     }
 
-    public void ClearHoverPreview() => UpdateHoverPreview(-1);
-
-    public void UpdateBottomBarHover(EqualizerBarItemViewModel? hoveredBar)
+    internal void UpdateWaveformHover(double contentX, bool commentLane)
     {
-        foreach (var bar in Bars)
-        {
-            var isHovered = ReferenceEquals(bar, hoveredBar);
-            if (bar.IsBottomHover == isHovered)
-                continue;
-
-            bar.IsBottomHover = isHovered;
-            bar.BottomColor = isHovered ? BottomHoverBrush : BottomNormalBrush;
-        }
+        var index = MusicWaveformTimeline.GetBarIndex(contentX, Bars.Count);
+        SetTopBarHover(commentLane ? -1 : index);
+        SetBottomBarHover(commentLane ? index : -1);
     }
 
-    public TimeSpan GetCommentTimestampForBarIndex(int index)
+    internal void ClearWaveformHover()
     {
-        var duration = _audioPlayerService.TrackDuration > TimeSpan.Zero
-            ? _audioPlayerService.TrackDuration
-            : _musicDuration;
-
-        if (duration <= TimeSpan.Zero || Bars.Count <= 1)
-            return TimeSpan.Zero;
-
-        var clampedIndex = Math.Clamp(index, 0, Bars.Count - 1);
-        var progress = (double)clampedIndex / (Bars.Count - 1);
-        return TimeSpan.FromMilliseconds(duration.TotalMilliseconds * progress);
+        SetTopBarHover(-1);
+        SetBottomBarHover(-1);
     }
 
-    public async Task<bool> CreateMusicCommentAsync(string text, int barIndex, CancellationToken cancellationToken = default)
+    private void SetTopBarHover(int index)
     {
+        var oldIndex = _paintedHoverBar;
+        _paintedHoverBar = index;
+        RefreshChangedBars(oldIndex, index);
+    }
+
+    private void SetBottomBarHover(int index)
+    {
+        if (index == _paintedBottomHoverBar) return;
+
+        if (_paintedBottomHoverBar >= 0)
+            Bars[_paintedBottomHoverBar].BottomColor = BottomNormalBrush;
+        if (index >= 0)
+            Bars[index].BottomColor = BottomHoverBrush;
+        _paintedBottomHoverBar = index;
+    }
+
+    internal TimeSpan? GetWaveformCommentTimestamp(double contentX) =>
+        MusicWaveformTimeline.GetTimestamp(contentX, _musicDuration);
+
+    internal async Task<bool> CreateMusicCommentAsync(Guid musicPublicId, string text, TimeSpan timestamp, ImageSource? avatar)
+    {
+        var token = _musicLoadCancellationTokenSource?.Token ?? CancellationToken.None;
         var trimmedText = text.Trim();
-        var musicPublicId = _musicPublicId;
-        if (musicPublicId == Guid.Empty || string.IsNullOrWhiteSpace(trimmedText))
+        if (!IsCurrentMusicLoad(musicPublicId, token) || musicPublicId == Guid.Empty ||
+            string.IsNullOrWhiteSpace(trimmedText) || timestamp < TimeSpan.Zero || timestamp > _musicDuration)
             return false;
 
         var response = await MizonApi.SendRequestAsync(new MusicCommentCreateOperation(new()
         {
             MusicPublicId = musicPublicId,
             Text = trimmedText,
-            Timestamp = GetCommentTimestampForBarIndex(barIndex)
-        }), cancellationToken);
+            Timestamp = timestamp
+        }), token);
 
-        if (!response.IsSuccess || _musicPublicId != musicPublicId)
+        if (!response.IsSuccess || response.Content is not { } created || !IsCurrentMusicLoad(musicPublicId, token))
             return false;
 
-        await GetMusicCommentsAsync(musicPublicId, cancellationToken);
+        // Place the confirmed comment immediately, even if the list or avatar request is slow.
+        if (!EqualizerComments.Any(marker => marker.PublicId == created.MusicCommentPublicId))
+        {
+            var marker = AddWaveformComment(created.MusicCommentPublicId, timestamp, trimmedText);
+            marker.ImageSource = avatar;
+            if (avatar is null)
+                _ = LoadPostedCommentAvatarAsync(musicPublicId, marker, token);
+        }
         return true;
     }
+
     internal bool SeekRelative(int seconds)
     {
         var duration = _audioPlayerService.TrackDuration;
-        if (duration <= TimeSpan.Zero || _audioPlayerService.AudioPlayerState is not (AudioPlayerState.Playing or AudioPlayerState.Paused))
+        if (!HasCurrentTrackSource || duration <= TimeSpan.Zero ||
+            _audioPlayerService.AudioPlayerState is not (AudioPlayerState.Playing or AudioPlayerState.Paused))
             return false;
 
         var ticks = Math.Clamp(_audioPlayerService.Position.Ticks + seconds * TimeSpan.TicksPerSecond, 0, duration.Ticks);
-        var bar = (int)Math.Round(ticks / (double)duration.Ticks * (BarCount - 1));
-        ApplyMusicSeek(TimeSpan.FromTicks(ticks), bar);
+        ApplyMusicSeek(TimeSpan.FromTicks(ticks));
         return true;
     }
 
-    public void SeekByProgress(int index)
+    internal void SeekWaveform(double contentX)
     {
-        // Compute correct target position based on bar index to ensure sync.
-        if (_audioPlayerService.TrackDuration != TimeSpan.Zero)
+        if (!HasCurrentTrackSource) return;
+
+        var index = MusicWaveformTimeline.GetBarIndex(contentX, Bars.Count);
+        if (index < 0) return;
+
+        var duration = _audioPlayerService.TrackDuration;
+        if (MusicWaveformTimeline.GetTimestamp(contentX, duration) is { } target)
         {
-            int clampedIndex = Math.Max(0, Math.Min(index, BarCount - 1));
-            double progress = (double)clampedIndex / Math.Max(1, BarCount - 1);
-            var target = TimeSpan.FromMilliseconds(_audioPlayerService.TrackDuration.TotalMilliseconds * progress);
-            ApplyMusicSeek(target, clampedIndex);
-            return;
+            ApplyMusicSeek(target);
         }
-
-        // Fallback: if we have waveform offsets, map bar index to nearest waveform offset
-        if (_waveforms is { Count: > 0 })
+        else if (_waveforms is { Count: > 0 } waveform)
         {
-            int clampedIndex = Math.Max(0, Math.Min(index, BarCount - 1));
-            int wfIndex = (int)((double)clampedIndex * _waveforms.Count / Math.Max(1, BarCount));
-            if (wfIndex >= _waveforms.Count) wfIndex = _waveforms.Count - 1;
-
-            var offsetMs = _waveforms[wfIndex].OffsetInMilliseconds;
-            var target = TimeSpan.FromMilliseconds(offsetMs);
-            ApplyMusicSeek(target, clampedIndex);
-            return;
+            var frame = (int)((long)index * waveform.Count / Bars.Count);
+            ApplyMusicSeek(TimeSpan.FromMilliseconds(waveform[frame].OffsetInMilliseconds));
         }
-
-        // If no duration and no waveform data, do nothing.
     }
 
-    private void ApplyMusicSeek(TimeSpan position, int bar)
+    private void ApplyMusicSeek(TimeSpan position)
     {
         _audioPlayerService.SeekTo(position);
-        UpdatePlayedPosition(bar);
+        UpdatePlaybackPosition(_audioPlayerService.Position);
     }
 
-    private void UpdatePlayedPosition(int playedIndex)
+    private void UpdatePlayedPosition(int index)
     {
-        playedIndex = Math.Clamp(playedIndex, -1, Bars.Count - 1);
-        var previous = _paintedPlayedBar;
-        for (var index = Math.Min(previous, playedIndex) + 1; index <= Math.Max(previous, playedIndex); index++)
-        {
-            var bar = Bars[index];
-            bar.IsPlayed = index <= playedIndex;
-            RefreshBarColor(bar);
-        }
-        _paintedPlayedBar = playedIndex;
+        var oldIndex = _paintedPlayedBar;
+        _paintedPlayedBar = index;
+        RefreshChangedBars(oldIndex, index);
     }
 
     private void ClearWaveformBars()
     {
-        _paintedPlayedBar = _paintedHoverBar = _lastPlayedBar = -1;
+        _paintedPlayedBar = _paintedHoverBar = _paintedBottomHoverBar = -1;
         Bars.Clear();
     }
 
@@ -874,6 +882,9 @@ public partial class MusicPageViewModel : MainViewModel
             await GetMusicFileWaveformAsync(musicPublicId, _musicFilePublicId, cancellationToken);
             if (!IsCurrentMusicLoad(musicPublicId, cancellationToken))
                 return;
+
+            if (HasCurrentTrackSource)
+                UpdatePlaybackPosition(_audioPlayerService.Position);
 
             if (NavigationService.CurrentInternalPage is MusicsPage)
             {
@@ -1086,6 +1097,8 @@ public partial class MusicPageViewModel : MainViewModel
     {
         IsMusicDownloading = false;
         MusicDownloadProgress = 0;
+        MusicVideo = null;
+        MusicVideoCover = null;
         _musicFilePublicId = Guid.Empty;
         _musicMediaPublicId = Guid.Empty;
         _musicDuration = TimeSpan.Zero;
@@ -1095,12 +1108,12 @@ public partial class MusicPageViewModel : MainViewModel
         _vocalsCachedPath = null;
         _instrumentalCachedPath = null;
         IsStemMixAvailable = false;
-        SetField(ref _isStemMixerEnabled, false, nameof(IsStemMixerEnabled));
+        SetStemMixerEnabled(false);
         IsStemMixerLoading = false;
         StemMixBalance = 0;
         // Playback callbacks may still be reading the previous track's samples.
         _waveforms = [];
-        _lastPlayedBar = _lastQueuedPositionSecond = -1;
+        _lastPositionSecond = -1;
         _lastLyricPositionInMilliseconds = -1;
         _lastMusicPosition = TimeSpan.Zero;
         _lastMusicPresencePublishTick = 0;
@@ -1143,6 +1156,7 @@ public partial class MusicPageViewModel : MainViewModel
         _activeLyricLine = null;
         _activeLyricWord = null;
         ClearWaveformBars();
+        _commentStacks.Clear();
         EqualizerComments.Clear();
         MusicListeners.Clear();
         VocalSegments.Clear();
@@ -1327,12 +1341,16 @@ public partial class MusicPageViewModel : MainViewModel
         try
         {
             await _shortcutService.CreateMusicDesktopShortcutAsync(musicId, Title, PersianTitle, CoverImagePath);
-            _teachingTipService.ShowMessage("ایجاد شد", "شورتکات این آهنگ در دسکتاپ شما ساخته شد.", "باشه!");
+            var language = LocalizationService.Current;
+            _teachingTipService.ShowMessage(language.GetString("MusicDetails/ShortcutCreated"),
+                language.GetString("MusicDetails/ShortcutCreatedMessage"), language.GetString("MusicDetails/Dismiss"));
         }
         catch (Exception exception)
         {
             AppLog.Error($"Music desktop shortcut could not be created. MusicPublicId='{musicId}'.", exception);
-            _teachingTipService.ShowMessage("خطا", "ساخت شورتکات روی دسکتاپ انجام نشد.", "باشه!");
+            var language = LocalizationService.Current;
+            _teachingTipService.ShowMessage(language.GetString("MusicDetails/ShortcutFailed"),
+                language.GetString("MusicDetails/ShortcutFailedMessage"), language.GetString("MusicDetails/Dismiss"));
         }
         finally
         {
@@ -1608,66 +1626,48 @@ public partial class MusicPageViewModel : MainViewModel
 
     private async Task PlayAsync(object? parameter, CancellationToken cancellationToken)
     {
-        if (_isPlaybackTransitioning)
+        if (_isPlaybackTransitioning || _isStemMixerSwitching || _musicPublicId == Guid.Empty)
             return;
 
         var musicPublicId = _musicPublicId;
         _isPlaybackTransitioning = true;
-
         try
         {
-            var startingTrack = _audioPlayerService.AudioPlayerState == AudioPlayerState.Idle;
-            switch (_audioPlayerService.AudioPlayerState)
+            if (HasCurrentTrackSource)
             {
-                case AudioPlayerState.Playing:
-                    await _audioPlayerService.PauseAsync();
-                    break;
-
-                case AudioPlayerState.Paused:
-                    await _audioPlayerService.ResumeAsync();
-                    break;
-
-                case AudioPlayerState.Idle:
-                    if (IsStemMixerEnabled && IsStemMixAvailable)
-                    {
-                        var stemMixStarted = await PlayStemMixAsync(TimeSpan.Zero, AudioPlayerState.Playing, cancellationToken);
-                        if (stemMixStarted)
-                            break;
-                    }
-
-                    var mediaResponse = await GetMusicMediaAsync(cancellationToken);
-                    if (mediaResponse is null)
-                        return;
-
-                    var cachedFilePath = _mediaDownloader.GetCachedFilePath(mediaResponse);
-                    if (File.Exists(cachedFilePath))
-                    {
-                        await _audioPlayerService.PlayAsync(cachedFilePath);
-                        break;
-                    }
-
-                    _ = EnsureMusicDownloadAsync(mediaResponse);
-                    var storageUri = new Uri(mediaResponse.StoragePath);
-                    if (storageUri.IsFile)
-                        await _audioPlayerService.PlayAsync(storageUri.LocalPath);
-                    else
-                        await _audioPlayerService.PlayAsync(storageUri);
-
-                    break;
-            }
-
-            if (startingTrack && _audioPlayerService.AudioPlayerState == AudioPlayerState.Playing)
-            {
-                // Node creation is asynchronous; navigation may have changed the page meanwhile.
-                if (_musicPublicId != musicPublicId)
+                switch (_audioPlayerService.AudioPlayerState)
                 {
-                    await _audioPlayerService.StopAsync();
-                    return;
+                    case AudioPlayerState.Playing:
+                        await _audioPlayerService.PauseAsync();
+                        return;
+                    case AudioPlayerState.Paused:
+                        await _audioPlayerService.ResumeAsync();
+                        return;
                 }
-                _playingMusicPublicId = musicPublicId;
-                _playbackActivity.RecordStarted(_playingMusicPublicId);
             }
-            UpdateColors();
+
+            if (!IsStemMixerEnabled || !await TryStartStemMixAsync(musicPublicId, cancellationToken))
+            {
+                var media = await GetMusicMediaAsync(cancellationToken);
+                if (media is null || !IsCurrentMusicLoad(musicPublicId, cancellationToken))
+                    return;
+
+                _ = EnsureMusicDownloadAsync(media);
+                await _audioPlayerService.PlayAsync(GetMainSourcePath(media), TimeSpan.Zero);
+            }
+
+            if (_audioPlayerService.AudioPlayerState != AudioPlayerState.Playing)
+                return;
+
+            if (!IsCurrentMusicLoad(musicPublicId, cancellationToken))
+            {
+                await _audioPlayerService.StopAsync();
+                return;
+            }
+
+            _playingMusicPublicId = musicPublicId;
+            UpdateTrackPlaybackPresentation();
+            _playbackActivity.RecordStarted(musicPublicId);
         }
         finally
         {
@@ -1675,7 +1675,18 @@ public partial class MusicPageViewModel : MainViewModel
         }
     }
 
-
+    private void UpdateTrackPlaybackPresentation()
+    {
+        var state = HasCurrentTrackSource ? _audioPlayerService.AudioPlayerState : AudioPlayerState.Idle;
+        IsPlaying = state == AudioPlayerState.Playing;
+        PlayType = state switch
+        {
+            AudioPlayerState.Playing => PlayState.Playing,
+            AudioPlayerState.Paused => PlayState.Paused,
+            _ => PlayState.Idle
+        };
+        UpdateColors();
+    }
 
     public async Task LoadMusicPlaylistsAsync(bool preserveExistingItems = false, CancellationToken cancellationToken = default)
     {
@@ -2012,7 +2023,8 @@ public partial class MusicPageViewModel : MainViewModel
                     var volumeTasks = devices.Select(async device => new
                     {
                         Device = device,
-                        VolumePercentage = await Task.Run(() => AudioEndpointVolumeReader.TryGetVolumePercentage(device.Id)),
+                        VolumeRevision = device.VolumeRevision,
+                        Volume = await Task.Run(() => AudioEndpointVolumeReader.TryGetState(device.Id)),
                         BatteryLevel = await TryReadBatteryLevelAsync(device, bluetoothBatteryDevices, watcher)
                     });
 
@@ -2025,14 +2037,17 @@ public partial class MusicPageViewModel : MainViewModel
                         if (!AudioDevices.Contains(result.Device))
                             continue;
 
-                        var volumeChanged = result.Device.VolumePercentage != result.VolumePercentage;
+                        var canApplyVolume = result.VolumeRevision == result.Device.VolumeRevision &&
+                            !ReferenceEquals(_writingEndpointVolumeDevice, result.Device);
+                        var volumeChanged = canApplyVolume && result.Device.OutputVolume != result.Volume;
                         var batteryChanged = result.BatteryLevel.HasValue && result.Device.BatteryLevel != result.BatteryLevel;
-                        result.Device.VolumePercentage = result.VolumePercentage;
+                        if (canApplyVolume && result.Volume is not null)
+                            result.Device.OutputVolume = result.Volume;
                         if (result.BatteryLevel.HasValue)
                             result.Device.BatteryLevel = result.BatteryLevel;
 
                         if (volumeChanged || batteryChanged)
-                            AppLog.Information($"Audio device details. Name='{result.Device.Title}', Volume={result.VolumePercentage?.ToString() ?? "unavailable"}, Battery={result.BatteryLevel?.ToString() ?? "unavailable"}.");
+                            AppLog.Information($"Audio device details. Name='{result.Device.Title}', Volume={result.Device.OutputVolume?.Percentage.ToString() ?? "unavailable"}, Battery={result.BatteryLevel?.ToString() ?? "unavailable"}.");
                     }
                 }
                 catch (Exception exception)
@@ -2065,21 +2080,84 @@ public partial class MusicPageViewModel : MainViewModel
 
     private void SelectDefaultAudioDevice()
     {
-        SelectedAudioDevice = AudioDevices.FirstOrDefault();
+        var systemDefaultId = MediaDevice.GetDefaultAudioRenderId(AudioDeviceRole.Default);
+        var device = AudioDevices.FirstOrDefault(item => item.Id == systemDefaultId) ?? AudioDevices.FirstOrDefault();
+        if (device is null)
+            SelectedAudioDevice = null;
+        else
+            _ = SelectAudioDeviceAsync(device);
     }
 
-    private async Task ChangeOutputDeviceAsync(AudioDeviceItemViewModel device)
+    internal async Task<bool> SelectAudioDeviceAsync(AudioDeviceItemViewModel device)
     {
+        if (IsAudioDeviceSwitchPending || !AudioDevices.Contains(device))
+            return false;
+        if (SelectedAudioDevice?.Id == device.Id)
+            return true;
+
+        IsAudioDeviceSwitchPending = true;
         try
         {
             await _audioPlayerService.ChangeOutputDeviceAsync(device.DeviceInformation);
+            var stillConnected = AudioDevices.Contains(device);
+            SelectedAudioDevice = stillConnected ? device : null;
+            return stillConnected;
         }
         catch (Exception exception)
         {
-            Debug.WriteLine($"Unable to switch the audio output device: {exception}");
-            AppLog.Error($"Unable to switch audio output from the music page. Device='{device.Title}', Id='{device.Id}'.", exception);
+            AppLog.Error("Unable to switch audio output from the music page.", exception);
+            return false;
+        }
+        finally
+        {
+            IsAudioDeviceSwitchPending = false;
         }
     }
+
+    internal void QueueSelectedOutputVolume(int percentage)
+    {
+        if (!IsAudioDeviceSwitchPending && SelectedAudioDevice is { OutputVolume: not null } device)
+        {
+            device.VolumeRevision++;
+            _pendingEndpointVolume = (device, Math.Clamp(percentage, 0, 100));
+            if (_writingEndpointVolumeDevice is null)
+                _ = ApplyOutputVolumeChangesAsync();
+        }
+    }
+
+    private async Task ApplyOutputVolumeChangesAsync()
+    {
+        while (_pendingEndpointVolume is { } request)
+        {
+            _pendingEndpointVolume = null;
+            if (!ReferenceEquals(SelectedAudioDevice, request.Device) || !AudioDevices.Contains(request.Device))
+                continue;
+
+            _writingEndpointVolumeDevice = request.Device;
+            try
+            {
+                var state = await Task.Run(() =>
+                    AudioEndpointVolumeReader.TrySetVolumePercentage(request.Device.Id, request.Percentage));
+                request.Device.VolumeRevision++;
+                if (_pendingEndpointVolume is null && ReferenceEquals(SelectedAudioDevice, request.Device))
+                {
+                    if (state is { } value)
+                        request.Device.OutputVolume = value;
+                    else
+                        OutputVolumeChangeFailed?.Invoke(this, EventArgs.Empty);
+                }
+
+                // Coalesce fast dragging or a held gamepad direction without losing the final value.
+                await Task.Delay(35);
+            }
+            finally
+            {
+                _writingEndpointVolumeDevice = null;
+            }
+        }
+    }
+
+    internal event EventHandler? OutputVolumeChangeFailed;
 
     private async Task<bool> GetMusicAsync(Guid musicPublicId, CancellationToken cancellationToken)
     {
@@ -2091,6 +2169,9 @@ public partial class MusicPageViewModel : MainViewModel
         if (baseApiResponse.IsSuccess && IsCurrentMusicLoad(musicPublicId, cancellationToken))
         {
             var musicResponse = baseApiResponse.Content!;
+            MusicVideo = musicResponse.MusicVideo;
+            if (HasMusicVideo && MusicVideo?.CoverMediaPublicId is Guid coverId && coverId != Guid.Empty)
+                _ = LoadMusicVideoCoverAsync(musicPublicId, coverId, cancellationToken);
 
             Title = musicResponse.Title;
             PrimaryAccentColor = musicResponse.MusicCover?.PrimaryAccentColor;
@@ -2179,148 +2260,136 @@ public partial class MusicPageViewModel : MainViewModel
         if (!response.IsSuccess || response.Content is null || !IsCurrentMusicLoad(musicPublicId, cancellationToken))
             return;
 
-        IsStemMixAvailable = response.Content.IsAvailable &&
-            response.Content.VocalsMediaPublicId is not null &&
-            response.Content.InstrumentalMediaPublicId is not null;
-        _vocalsMediaPublicId = response.Content.VocalsMediaPublicId;
-        _instrumentalMediaPublicId = response.Content.InstrumentalMediaPublicId;
-    }
+        var stems = response.Content;
+        // The two stems and the original must use the same recording and timeline.
+        IsStemMixAvailable = stems.IsAvailable && _musicFilePublicId != Guid.Empty &&
+            stems.MusicFilePublicId == _musicFilePublicId &&
+            stems.VocalsMediaPublicId.GetValueOrDefault() != Guid.Empty &&
+            stems.InstrumentalMediaPublicId.GetValueOrDefault() != Guid.Empty &&
+            stems.VocalsMediaPublicId != stems.InstrumentalMediaPublicId;
 
-    private async Task SwitchStemMixerAsync(bool enable, Guid musicPublicId)
-    {
-        if (_isStemMixerSwitching || !IsCurrentMusicLoad(musicPublicId, CancellationToken.None))
+        if (!IsStemMixAvailable)
             return;
 
+        _vocalsMediaPublicId = stems.VocalsMediaPublicId;
+        _instrumentalMediaPublicId = stems.InstrumentalMediaPublicId;
+
+        if (IsStemMixerActive)
+        {
+            StemMixBalance = _audioPlayerService.StemMixBalance * 100d;
+            SetStemMixerEnabled(true);
+        }
+    }
+
+    private async Task SwitchStemMixerAsync(bool enable, Guid musicPublicId, CancellationToken token)
+    {
         _isStemMixerSwitching = true;
         IsStemMixerLoading = true;
-        AppLog.Information($"StemDiag mixer-switch-request. Enabled='{enable}', MusicPublicId='{musicPublicId}', State='{_audioPlayerService.AudioPlayerState}', PositionMs='{_lastMusicPosition.TotalMilliseconds:F0}'.");
-
         try
         {
-            var stateBeforeSwitch = _audioPlayerService.AudioPlayerState;
-            var positionBeforeSwitch = _lastMusicPosition;
-
             if (enable)
             {
-                if (!IsStemMixAvailable)
+                var paths = await GetStemCachedPathsAsync(musicPublicId, token);
+                if (paths is not null && IsCurrentMusicLoad(musicPublicId, token) && HasCurrentTrackSource)
                 {
-                    IsStemMixerEnabled = false;
-                    return;
+                    await _audioPlayerService.SwitchStemMixAsync(paths.Value.VocalsPath, paths.Value.InstrumentalPath,
+                        StemMixBalance / 100d, token);
+                    if (IsCurrentMusicLoad(musicPublicId, token) && IsStemMixerActive)
+                        _audioPlayerService.StemMixBalance = StemMixBalance / 100d;
                 }
-
-                var paths = await GetStemCachedPathsAsync(CancellationToken.None);
-                if (paths is null)
-                {
-                    IsStemMixerEnabled = false;
-                    return;
-                }
-
-                if (stateBeforeSwitch != AudioPlayerState.Idle)
-                    await PlayStemMixFromPathsAsync(paths.Value, positionBeforeSwitch, stateBeforeSwitch);
             }
-            else if (_audioPlayerService.IsStemMixing && stateBeforeSwitch != AudioPlayerState.Idle)
+            else
             {
-                var media = await GetMusicMediaAsync(CancellationToken.None);
-                if (media is null)
-                    return;
-
-                await PlayMainMusicAsync(media, positionBeforeSwitch, stateBeforeSwitch, CancellationToken.None);
+                var media = await GetMusicMediaAsync(token);
+                if (media is not null && IsCurrentMusicLoad(musicPublicId, token) && IsStemMixerActive)
+                    await _audioPlayerService.SwitchToMainAsync(GetMainSourcePath(media), token);
             }
         }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception exception)
         {
-            AppLog.Error($"Stem mixer switch failed. MusicPublicId='{musicPublicId}', Enabled='{enable}'.", exception);
-            if (enable && IsCurrentMusicLoad(musicPublicId, CancellationToken.None))
-                IsStemMixerEnabled = false;
+            AppLog.Error("Unable to switch the active track's stem mix.", exception);
         }
         finally
         {
-            AppLog.Information($"StemDiag mixer-switch-finished. Enabled='{IsStemMixerEnabled}', IsMixing='{_audioPlayerService.IsStemMixing}', State='{_audioPlayerService.AudioPlayerState}', PositionMs='{_lastMusicPosition.TotalMilliseconds:F0}'.");
-            IsStemMixerLoading = false;
+            if (IsCurrentMusicLoad(musicPublicId, token))
+                SetStemMixerEnabled(IsStemMixerActive);
             _isStemMixerSwitching = false;
+            IsStemMixerLoading = false;
         }
     }
 
-    private async Task<bool> PlayStemMixAsync(TimeSpan position, AudioPlayerState desiredState, CancellationToken cancellationToken)
+    private async Task<bool> TryStartStemMixAsync(Guid musicPublicId, CancellationToken token)
     {
-        var paths = await GetStemCachedPathsAsync(cancellationToken);
-        if (paths is null)
-            return false;
+        IsStemMixerLoading = true;
+        try
+        {
+            var paths = await GetStemCachedPathsAsync(musicPublicId, token);
+            token.ThrowIfCancellationRequested();
+            if (paths is not null && IsCurrentMusicLoad(musicPublicId, token))
+            {
+                await _audioPlayerService.PlayStemMixAsync(paths.Value.VocalsPath, paths.Value.InstrumentalPath,
+                    StemMixBalance / 100d, token);
+                return true;
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            AppLog.Error("Unable to start the track's stem mix.", exception);
+        }
 
-        await PlayStemMixFromPathsAsync(paths.Value, position, desiredState);
-        return true;
+        finally
+        {
+            IsStemMixerLoading = false;
+        }
+
+        if (IsCurrentMusicLoad(musicPublicId, token))
+            SetStemMixerEnabled(false);
+        return false;
     }
 
-    private async Task PlayStemMixFromPathsAsync(
-        (string VocalsPath, string InstrumentalPath) paths,
-        TimeSpan position,
-        AudioPlayerState desiredState)
-    {
-        await _audioPlayerService.PlayStemMixAsync(paths.VocalsPath, paths.InstrumentalPath, position);
-
-        if (desiredState == AudioPlayerState.Paused)
-            await _audioPlayerService.PauseAsync();
-    }
-
-    private async Task<(string VocalsPath, string InstrumentalPath)?> GetStemCachedPathsAsync(CancellationToken cancellationToken)
+    private async Task<(string VocalsPath, string InstrumentalPath)?> GetStemCachedPathsAsync(Guid musicPublicId, CancellationToken token)
     {
         if (_vocalsCachedPath is not null && _instrumentalCachedPath is not null &&
             File.Exists(_vocalsCachedPath) && File.Exists(_instrumentalCachedPath))
             return (_vocalsCachedPath, _instrumentalCachedPath);
 
-        if (_vocalsMediaPublicId is null || _instrumentalMediaPublicId is null)
+        if (_vocalsMediaPublicId is not { } vocalsId || _instrumentalMediaPublicId is not { } instrumentalId)
             return null;
 
-        var vocalsTask = MizonApi.SendRequestAsync(new MediaOperation(new MediaRequest
-        {
-            MediaPublicId = _vocalsMediaPublicId.Value
-        }), cancellationToken).AsTask();
-        var instrumentalTask = MizonApi.SendRequestAsync(new MediaOperation(new MediaRequest
-        {
-            MediaPublicId = _instrumentalMediaPublicId.Value
-        }), cancellationToken).AsTask();
+        var vocalsTask = DownloadStemAsync(vocalsId, token);
+        var instrumentalTask = DownloadStemAsync(instrumentalId, token);
         await Task.WhenAll(vocalsTask, instrumentalTask);
 
-        var vocals = await vocalsTask;
-        var instrumental = await instrumentalTask;
-        if (!vocals.IsSuccess || vocals.Content is null || !instrumental.IsSuccess || instrumental.Content is null)
+        if (!IsCurrentMusicLoad(musicPublicId, token) || await vocalsTask is not { } vocalsPath ||
+            await instrumentalTask is not { } instrumentalPath ||
+            string.Equals(vocalsPath, instrumentalPath, StringComparison.OrdinalIgnoreCase))
             return null;
 
-        if (!Uri.TryCreate(vocals.Content.StoragePath, UriKind.Absolute, out var vocalsUri) ||
-            !Uri.TryCreate(instrumental.Content.StoragePath, UriKind.Absolute, out var instrumentalUri))
-            return null;
-
-        var vocalsPathTask = _mediaDownloader.DownloadToCacheAsync(vocals.Content, vocalsUri, cancellationToken: cancellationToken).AsTask();
-        var instrumentalPathTask = _mediaDownloader.DownloadToCacheAsync(instrumental.Content, instrumentalUri, cancellationToken: cancellationToken).AsTask();
-        await Task.WhenAll(vocalsPathTask, instrumentalPathTask);
-
-        _vocalsCachedPath = await vocalsPathTask;
-        _instrumentalCachedPath = await instrumentalPathTask;
-        return (_vocalsCachedPath, _instrumentalCachedPath);
+        _vocalsCachedPath = vocalsPath;
+        _instrumentalCachedPath = instrumentalPath;
+        return (vocalsPath, instrumentalPath);
     }
 
-    private async Task PlayMainMusicAsync(
-        MediaResponse media,
-        TimeSpan position,
-        AudioPlayerState desiredState,
-        CancellationToken cancellationToken)
+    private async Task<string?> DownloadStemAsync(Guid mediaId, CancellationToken token)
+    {
+        var response = await MizonApi.SendRequestAsync(new MediaOperation(new MediaRequest { MediaPublicId = mediaId }), token);
+        if (!response.IsSuccess || response.Content is not { } media ||
+            !Uri.TryCreate(media.StoragePath, UriKind.Absolute, out var uri))
+            return null;
+
+        var path = await _mediaDownloader.DownloadToCacheAsync(media, uri, cancellationToken: token);
+        return File.Exists(path) ? path : null;
+    }
+
+    private string GetMainSourcePath(MediaResponse media)
     {
         var cachedPath = _mediaDownloader.GetCachedFilePath(media);
         if (File.Exists(cachedPath))
-        {
-            await _audioPlayerService.PlayAsync(cachedPath, position);
-        }
-        else
-        {
-            var storageUri = new Uri(media.StoragePath);
-            if (storageUri.IsFile)
-                await _audioPlayerService.PlayAsync(storageUri.LocalPath, position);
-            else
-                await _audioPlayerService.PlayAsync(storageUri, position);
-        }
+            return cachedPath;
 
-        if (desiredState == AudioPlayerState.Paused)
-            await _audioPlayerService.PauseAsync();
+        var uri = new Uri(media.StoragePath);
+        return uri.IsFile ? uri.LocalPath : uri.AbsoluteUri;
     }
 
     private async Task<MediaResponse?> GetMusicMediaAsync(CancellationToken cancellationToken)
@@ -2328,18 +2397,21 @@ public partial class MusicPageViewModel : MainViewModel
         if (_musicMediaResponse is not null)
             return _musicMediaResponse;
 
+        var musicPublicId = _musicPublicId;
         if (_musicMediaPublicId == Guid.Empty)
         {
-            await GetMusicFileAsync(_musicPublicId, cancellationToken);
-            if (_musicMediaPublicId == Guid.Empty)
+            await GetMusicFileAsync(musicPublicId, cancellationToken);
+            if (!IsCurrentMusicLoad(musicPublicId, cancellationToken) || _musicMediaPublicId == Guid.Empty)
                 return null;
+            if (_musicMediaResponse is not null)
+                return _musicMediaResponse;
         }
 
         var baseApiResponse = await MizonApi.SendRequestAsync(
             new MediaOperation(new MediaRequest { MediaPublicId = _musicMediaPublicId }),
             cancellationToken);
 
-        if (!baseApiResponse.IsSuccess)
+        if (!baseApiResponse.IsSuccess || !IsCurrentMusicLoad(musicPublicId, cancellationToken))
             return null;
 
         _musicMediaResponse = baseApiResponse.Content!;
@@ -2401,6 +2473,21 @@ public partial class MusicPageViewModel : MainViewModel
         }
     }
 
+    private async Task LoadMusicVideoCoverAsync(Guid musicPublicId, Guid coverId, CancellationToken token)
+    {
+        try
+        {
+            var cover = await ProfileImageLoader.LoadAsync(MizonApi, _mediaDownloader, coverId, token);
+            if (IsCurrentMusicLoad(musicPublicId, token))
+                MusicVideoCover = cover.Image;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch (Exception error)
+        {
+            AppLog.Error("Unable to load the small music-video cover.", error);
+        }
+    }
+
     private async Task GetMusicFileWaveformAsync(Guid musicPublicId, Guid musicFilePublicId, CancellationToken cancellationToken)
     {
         var baseResponse = await MizonApi.SendRequestAsync(new MusicFileWaveformOperation(new MusicFileWaveformRequest
@@ -2459,79 +2546,86 @@ public partial class MusicPageViewModel : MainViewModel
         GenerateFallbackBars();
     }
 
-    private async Task GetMusicCommentsAsync(Guid musicPublicId, CancellationToken cancellationToken)
+    private async Task GetMusicCommentsAsync(Guid musicPublicId, CancellationToken token)
     {
-        var baseResponse = await MizonApi.SendRequestAsync(new MusicCommentsOperation(new()
+        var response = await MizonApi.SendRequestAsync(new MusicCommentsOperation(new()
         {
-            MusicPublicId = _musicPublicId
-        }), cancellationToken);
+            MusicPublicId = musicPublicId
+        }), token);
 
-        if (!baseResponse.IsSuccess)
+        if (!response.IsSuccess || response.Content is not { } content || !IsCurrentMusicLoad(musicPublicId, token))
             return;
 
-        // کامنت‌ها پیش از شروع پخش هم لود می‌شوند؛ در آن لحظه TrackDuration هنوز
-        // صفر است. مدت پاسخ MusicFile همان مرجع پایدار موقعیت‌گذاری است.
-        var duration = _audioPlayerService.TrackDuration > TimeSpan.Zero
-            ? _audioPlayerService.TrackDuration
-            : _musicDuration;
-        var comments = baseResponse.Content!.MusicComments;
-
-        _dispatcherQueue.TryEnqueue(() => EqualizerComments.Clear());
-
-        for (var index = 0; index < comments.Count; index++)
+        var loadedIds = EqualizerComments.Select(marker => marker.PublicId).ToHashSet();
+        foreach (var comment in content.MusicComments)
         {
-            var comment = comments[index];
-            var horizontalPosition = CalculateCommentCanvasLeft(comment.Timestamp, duration, index);
-            var marker = new EqualizerCommentItemViewModel
-            {
-                PublicId = comment.PublicId,
-                Timestamp = comment.Timestamp,
-                Text = comment.Text,
-                CanvasLeft = horizontalPosition,
-                Y = BottomBarMarkerCenterY,
-                Command = PlayCommand
-            };
+            if (!loadedIds.Add(comment.PublicId))
+                continue;
 
-            _dispatcherQueue.TryEnqueue(() => EqualizerComments.Add(marker));
-
-            if (comment.ProfileMediaPublicId is not null)
-                _ = LoadCommentAvatarAsync(marker, comment.ProfileMediaPublicId.Value, cancellationToken);
+            var marker = AddWaveformComment(comment.PublicId, comment.Timestamp, comment.Text);
+            if (comment.ProfileMediaPublicId.GetValueOrDefault() != Guid.Empty)
+                _ = LoadCommentAvatarAsync(musicPublicId, marker, comment.ProfileMediaPublicId!.Value, token);
         }
     }
 
-    private static double CalculateCommentCanvasLeft(TimeSpan? timestamp, TimeSpan duration, int fallbackIndex)
+    private EqualizerCommentItemViewModel AddWaveformComment(Guid id, TimeSpan? timestamp, string text)
     {
-        if (timestamp is null)
-            return 16 + (fallbackIndex * 32);
+        var stackIndex = 0;
+        if (timestamp is { } position)
+        {
+            _commentStacks.TryGetValue(position, out stackIndex);
+            _commentStacks[position] = stackIndex + 1;
+        }
 
-        if (duration <= TimeSpan.Zero)
-            return 16;
+        var marker = new EqualizerCommentItemViewModel
+        {
+            PublicId = id,
+            Timestamp = timestamp,
+            Text = text,
+            CanvasLeft = MusicWaveformTimeline.GetMarkerLeft(timestamp, _musicDuration, EqualizerComments.Count),
+            Y = BottomBarMarkerCenterY + MusicWaveformTimeline.GetCommentStackOffset(stackIndex),
+            Command = PlayCommand
+        };
 
-        var ratio = Math.Clamp(timestamp.Value.TotalMilliseconds / duration.TotalMilliseconds, 0d, 1d);
-        // Canvas.Left لبهٔ چپ کنترل است؛ نصف عرض را کم می‌کنیم تا مرکز آواتار
-        // دقیقاً با ثانیهٔ کامنت هم‌راستا شود.
-        return Math.Clamp(
-            (ratio * WaveformContentWidth) - (CommentMarkerSize / 2d),
-            0d,
-            WaveformContentWidth - CommentMarkerSize);
+        EqualizerComments.Add(marker);
+        return marker;
     }
 
-    private async Task LoadCommentAvatarAsync(EqualizerCommentItemViewModel marker, Guid mediaPublicId, CancellationToken cancellationToken)
+    private async Task LoadPostedCommentAvatarAsync(Guid musicPublicId, EqualizerCommentItemViewModel marker, CancellationToken token)
     {
-        var mediaResponse = await MizonApi.SendRequestAsync(new MediaOperation(new MediaRequest
+        try
         {
-            MediaPublicId = mediaPublicId
-        }), cancellationToken);
+            var response = await MizonApi.SendRequestAsync(new MusicCommentsOperation(new()
+            {
+                MusicPublicId = musicPublicId,
+                MusicCommentPublicId = marker.PublicId
+            }), token);
 
-        if (!mediaResponse.IsSuccess)
-            return;
+            var comment = response.IsSuccess ? response.Content?.MusicComments.FirstOrDefault() : null;
+            if (comment?.ProfileMediaPublicId is Guid mediaId && mediaId != Guid.Empty &&
+                IsCurrentMusicLoad(musicPublicId, token))
+                await LoadCommentAvatarAsync(musicPublicId, marker, mediaId, token);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch (Exception exception)
+        {
+            AppLog.Error("Unable to load the new waveform comment's portrait.", exception);
+        }
+    }
 
-        var imagePath = await _mediaDownloader.DownloadToCacheAsync(
-            mediaResponse.Content!,
-            new Uri(mediaResponse.Content!.StoragePath),
-            cancellationToken: cancellationToken);
-
-        _dispatcherQueue.TryEnqueue(() => marker.ImageSource = imagePath);
+    private async Task LoadCommentAvatarAsync(Guid musicPublicId, EqualizerCommentItemViewModel marker, Guid mediaId, CancellationToken token)
+    {
+        try
+        {
+            var profile = await ProfileImageLoader.LoadAsync(MizonApi, _mediaDownloader, mediaId, token);
+            if (IsCurrentMusicLoad(musicPublicId, token))
+                marker.ImageSource = profile.Image;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch (Exception exception)
+        {
+            AppLog.Error("Unable to load a waveform comment portrait.", exception);
+        }
     }
 
     private async Task GetMusicLyricAsync(Guid musicPublicId, CancellationToken cancellationToken)

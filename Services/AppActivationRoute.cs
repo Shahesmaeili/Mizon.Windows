@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Mizon.Windows.Services;
 
-internal enum MusicActivationAction { Details, Play, Download }
+internal enum MusicActivationAction { Details, Play, Download, Video }
 
 internal sealed partial record AppActivationRequest(
     string? Destination = null,
@@ -43,6 +43,7 @@ internal sealed partial record AppActivationRequest(
                     MusicActivationAction.Details => "music-details",
                     MusicActivationAction.Play => "music-play",
                     MusicActivationAction.Download => "music-download",
+                    MusicActivationAction.Video => "music-video",
                     _ => null
                 };
             }
@@ -64,6 +65,7 @@ internal sealed partial record AppActivationRequest(
         "music-details" => $"mizon://music/{MusicPublicId:D}",
         "music-play" => $"mizon://music/{MusicPublicId:D}?action=play",
         "music-download" => $"mizon://music/{MusicPublicId:D}?action=download",
+        "music-video" => $"mizon://music/{MusicPublicId:D}?action=video",
         "music-comment" => $"mizon://music/{MusicPublicId:D}/comments/{MusicCommentPublicId:D}",
         "playlist" => $"mizon://playlist/{PlaylistPublicId:D}",
         "client" => $"mizon://client/{ClientPublicId:D}",
@@ -216,6 +218,7 @@ internal sealed partial record AppActivationRequest(
         if (value.Equals("details", StringComparison.OrdinalIgnoreCase)) return true;
         if (value.Equals("play", StringComparison.OrdinalIgnoreCase)) { action = MusicActivationAction.Play; return true; }
         if (value.Equals("download", StringComparison.OrdinalIgnoreCase)) { action = MusicActivationAction.Download; return true; }
+        if (value.Equals("video", StringComparison.OrdinalIgnoreCase)) { action = MusicActivationAction.Video; return true; }
         return false;
     }
 }

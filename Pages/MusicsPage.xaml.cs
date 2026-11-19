@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Hosting;
@@ -35,10 +36,27 @@ namespace Mizon.Windows.Pages
     public sealed partial class MusicsPage : Page
     {
         private MusicPageViewModel ViewModel { get; }
+        private ContentDialog? _waveformCommentDialog;
         public LocalizationService Localization => LocalizationService.Current;
         private string Text(string key, int revision) => Localization.GetString("MusicDetails/" + key, revision);
+        private string Text(string key) => Localization.GetString("MusicDetails/" + key);
+        private string PrimaryTrackTitle(string title, string? persian, int revision) =>
+            Localization.IsPersian && !string.IsNullOrWhiteSpace(persian) ? persian.Trim('(', ')') : title;
+        private string? AlternateTrackTitle(string title, string? persian, int revision) =>
+            string.IsNullOrWhiteSpace(persian) ? null : Localization.IsPersian ? $"({title})" : persian;
         private string ViewsLabel(int total, int live, int revision) =>
             Localization.Format("MusicDetails/ViewsStatus", total, live);
+        private void OpenMusicVideo_Click(object sender, RoutedEventArgs args)
+        {
+            if (!IsMusicDetailsActive || !ViewModel.HasMusicVideo || ViewModel.MusicVideo is not { } video) return;
+
+            ViewModel.NavigationService.InternalNavigate(typeof(MusicVideoPage), new()
+            {
+                [PageConstants.MUSIC_ID] = MusicPublicId,
+                [PageConstants.MUSIC_VIDEO] = new MusicVideoNavigationData(video, ViewModel.Title, ViewModel.PersianTitle?.Trim('(', ')'))
+            });
+        }
+
         private async void PictureInPicture_Click(object sender, RoutedEventArgs args)
         {
             try { await ((App)App.Current).Services.GetRequiredService<PictureInPictureService>().ShowMusicAsync(); }
@@ -46,7 +64,7 @@ namespace Mizon.Windows.Pages
             {
                 AppLog.Error("Unable to open the picture-in-picture player.", error);
                 ((App)App.Current).Services.GetRequiredService<TeachingTipService>()
-                    .ShowMessage("پلیر شناور", "باز کردن پنجرهٔ شناور ممکن نشد.", "باشه");
+                    .ShowMessage(Text("FloatingPlayer"), Text("FloatingPlayerFailed"), Text("Dismiss"));
             }
         }
         private Compositor _compositor = App.MainMizonWindow!.Compositor;
@@ -233,7 +251,9 @@ namespace Mizon.Windows.Pages
         {
             try
             {
+                var musicId = MusicPublicId;
                 await ViewModel.LoadMusicPlaylistsAsync();
+                if (!IsMusicDetailsActive || MusicPublicId != musicId) return;
 
                 while (MusicPlaylistsMenuFlyout.Items.Count > 1)
                     MusicPlaylistsMenuFlyout.Items.RemoveAt(1);
@@ -313,6 +333,9 @@ namespace Mizon.Windows.Pages
             return new MenuFlyoutItem
             {
                 DataContext = playlist,
+                Language = Localization.LanguageTag,
+                FlowDirection = Localization.FlowDirection,
+                FontFamily = Localization.TextFontFamily,
                 Template = (ControlTemplate)Resources["MusicPlaylistMenuFlyoutItemTemplate"]
             };
         }
@@ -321,23 +344,22 @@ namespace Mizon.Windows.Pages
         {
             MusicPlaylistsMenuFlyout.Hide();
 
-            var titleTextBox = new TextBox
-            {
-                MaxLength = 60,
-                PlaceholderText = "عنوان پلی‌لیست"
-            };
-
+            var titleTextBox = new TextBox { MaxLength = 60 };
             var dialog = new ContentDialog
             {
                 XamlRoot = XamlRoot,
-                Title = "ساخت پلی‌لیست",
                 Content = titleTextBox,
-                PrimaryButtonText = "ساخت و افزودن آهنگ",
-                CloseButtonText = "انصراف",
                 DefaultButton = ContentDialogButton.Primary
             };
 
-            if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            if (await ShowLocalizedTrackDialogAsync(dialog, () =>
+            {
+                titleTextBox.PlaceholderText = Text("PlaylistTitle");
+                AutomationProperties.SetName(titleTextBox, Text("PlaylistTitle"));
+                dialog.Title = Text("NewPlaylist");
+                dialog.PrimaryButtonText = Text("CreateAndAddTrack");
+                dialog.CloseButtonText = Text("Cancel");
+            }) != ContentDialogResult.Primary)
                 return;
 
             try
@@ -391,6 +413,9 @@ namespace Mizon.Windows.Pages
             AttachInsightsPresentation();
             ApplyDetailLayout(ActualWidth);
             ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+            Localization.PropertyChanged -= TrackDetailsLanguageChanged;
+            Localization.PropertyChanged += TrackDetailsLanguageChanged;
+            ObserveSelectedAudioOutput();
             MusicBorder.SizeChanged += MusicBorder_SizeChanged;
             InitializeCoverVisual();
             DispatcherQueue.TryEnqueue(async () =>
@@ -406,9 +431,16 @@ namespace Mizon.Windows.Pages
         {
             if (IsLoaded || !_pageActive) return;
             _pageActive = false;
+            _waveformCommentDialog?.Hide();
+            if (_audioOutputMenuOpen) AudioRenderMenuFlyout.Hide();
+            CloseAudioOutputMenu();
+            UnobserveSelectedAudioOutput();
+            Localization.PropertyChanged -= TrackDetailsLanguageChanged;
             DetachInsightsPresentation();
             CancelCommentNavigation();
             ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+            ViewModel.ClearWaveformHover();
+            ClearWaveformCommentEmphasis();
             ClearCoverTransition();
             MusicBorder.SizeChanged -= MusicBorder_SizeChanged;
             _storyViewer?.Close();
@@ -425,12 +457,31 @@ namespace Mizon.Windows.Pages
         {
             if (e.PropertyName == nameof(ViewModel.ServerWaveformIntensity))
                 CreateOrUpdateSpringAnimation(ViewModel.ServerWaveformIntensity);
+            else if (e.PropertyName is nameof(ViewModel.SelectedAudioDevice) or nameof(ViewModel.IsAudioDeviceSwitchPending))
+            {
+                if (e.PropertyName == nameof(ViewModel.SelectedAudioDevice))
+                    ObserveSelectedAudioOutput();
+                else
+                    SyncSelectedOutputVolume();
+                SyncAudioOutputMenu();
+            }
         }
 
-        private void Waveform_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
+        private async void Waveform_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
         {
             if (!IsMusicDetailsActive || _isCoverPreviewOpen ||
-                FocusManager.GetFocusedElement(XamlRoot) != WaveformScroller) return;
+                !ReferenceEquals(FocusManager.GetFocusedElement(XamlRoot), WaveformScroller)) return;
+
+            if (e.OriginalKey is VirtualKey.GamepadA or VirtualKey.Enter)
+            {
+                e.Handled = true;
+                if (!e.KeyStatus.WasKeyDown)
+                {
+                    var contentX = WaveformScroller.HorizontalOffset + WaveformScroller.ViewportWidth / 2;
+                    await ShowWaveformCommentAsync(contentX);
+                }
+                return;
+            }
 
             var seconds = e.OriginalKey switch
             {
@@ -457,12 +508,12 @@ namespace Mizon.Windows.Pages
                 var options = new FolderLauncherOptions();
                 options.ItemsToSelect.Add(file);
                 if (!await Launcher.LaunchFolderAsync(folder, options))
-                    throw new InvalidOperationException("پوشهٔ فایل دانلودشده باز نشد.");
+                    throw new InvalidOperationException(Text("DownloadFolderFailed"));
                 var peer = Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer.FromElement(button)
                     ?? Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer.CreatePeerForElement(button);
                 peer?.RaiseNotificationEvent(Microsoft.UI.Xaml.Automation.Peers.AutomationNotificationKind.ActionCompleted,
                     Microsoft.UI.Xaml.Automation.Peers.AutomationNotificationProcessing.ImportantMostRecent,
-                    "دانلود آهنگ کامل شد؛ فایل در پوشه نمایش داده شد.", "MusicDownload");
+                    Text("DownloadCompleted"), "MusicDownload");
             }
             catch (OperationCanceledException) { }
             catch (Exception error)
@@ -472,14 +523,13 @@ namespace Mizon.Windows.Pages
                 {
                     try
                     {
-                        await new ContentDialog
+                        var dialog = new ContentDialog { XamlRoot = XamlRoot };
+                        await ShowLocalizedTrackDialogAsync(dialog, () =>
                         {
-                            XamlRoot = XamlRoot,
-                            Title = "دانلود آهنگ انجام نشد",
-                            Content = "اتصال و دسترسی به فایل را بررسی کنید و دوباره تلاش کنید.",
-                            CloseButtonText = "بستن",
-                            FlowDirection = FlowDirection.RightToLeft
-                        }.ShowAsync();
+                            dialog.Title = Text("DownloadFailed");
+                            dialog.Content = Text("DownloadRetry");
+                            dialog.CloseButtonText = Text("Close");
+                        });
                     }
                     catch (Exception dialogError) { AppLog.Error("Download error dialog could not be displayed.", dialogError); }
                 }
@@ -625,97 +675,140 @@ namespace Mizon.Windows.Pages
             }
         }
 
-        private void TopEqualizerGrid_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private void WaveformTimeline_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
-            if (sender is FrameworkElement fe &&
-            fe.DataContext is EqualizerBarItemViewModel item)
+            if (!_pageActive || e.Pointer.PointerDeviceType == Microsoft.UI.Input.PointerDeviceType.Touch) return;
+
+            var position = e.GetCurrentPoint(WaveformTimeline).Position;
+            if (!IsInsideWaveform(position))
             {
-                int index = ViewModel.Bars.IndexOf(item);
-                ViewModel.UpdateHoverPreview(index);
+                ViewModel.ClearWaveformHover();
+                return;
             }
+
+            ViewModel.UpdateWaveformHover(position.X, position.Y >= WaveformSeekRow.ActualHeight);
         }
 
-        private void TopEqualizerGrid_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private bool IsInsideWaveform(global::Windows.Foundation.Point position) =>
+            position.X >= 0 && position.X < WaveformTimeline.ActualWidth &&
+            position.Y >= 0 && position.Y < WaveformTimeline.ActualHeight;
+
+        private void WaveformTimeline_PointerExited(object sender, PointerRoutedEventArgs e)
         {
-            ViewModel.ClearHoverPreview();
+            if (!IsInsideWaveform(e.GetCurrentPoint(WaveformTimeline).Position) ||
+                ReferenceEquals(e.OriginalSource, WaveformTimeline))
+                ViewModel.ClearWaveformHover();
         }
 
-        private void TopEqualizerGrid_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private void WaveformScroller_PointerExited(object sender, PointerRoutedEventArgs e)
         {
-            var point = e.GetCurrentPoint(sender as UIElement);
+            var point = e.GetCurrentPoint(WaveformScroller).Position;
+            if (ReferenceEquals(e.OriginalSource, WaveformScroller) ||
+                point.X < 0 || point.Y < 0 ||
+                point.X >= WaveformScroller.ActualWidth || point.Y >= WaveformScroller.ActualHeight)
+                ViewModel.ClearWaveformHover();
+        }
 
+        private void WaveformTimeline_PointerCanceled(object sender, PointerRoutedEventArgs e) =>
+            ViewModel.ClearWaveformHover();
+
+        private void TopEqualizerGrid_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            var point = e.GetCurrentPoint(WaveformTimeline);
+            if (!point.Properties.IsLeftButtonPressed) return;
+
+            ViewModel.SeekWaveform(point.Position.X);
+            e.Handled = true;
+        }
+
+        private async void BottomEqualizerGrid_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            var point = e.GetCurrentPoint(WaveformTimeline);
             if (!point.Properties.IsLeftButtonPressed)
                 return;
 
-            if (sender is Grid grid && grid.DataContext is EqualizerBarItemViewModel item)
-            {
-                int index = ViewModel.Bars.IndexOf(item);
-
-                ViewModel.SeekByProgress(index);
-                e.Handled = true;
-            }
-        }
-
-        private void BottomEqualizerGrid_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            if (sender is FrameworkElement { DataContext: EqualizerBarItemViewModel item })
-                ViewModel.UpdateBottomBarHover(item);
-        }
-
-        private void BottomEqualizerGrid_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            if (sender is FrameworkElement { DataContext: EqualizerBarItemViewModel item } && item.IsBottomHover)
-                ViewModel.UpdateBottomBarHover(null);
-        }
-
-        private async void BottomEqualizerGrid_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            if (!e.GetCurrentPoint(sender as UIElement).Properties.IsLeftButtonPressed)
-                return;
-
-            if (sender is not FrameworkElement { DataContext: EqualizerBarItemViewModel item })
-                return;
-
-            var index = ViewModel.Bars.IndexOf(item);
-            if (index < 0)
-                return;
-
             e.Handled = true;
-            var timestamp = ViewModel.GetCommentTimestampForBarIndex(index);
-            var commentTextBox = new TextBox
+            await ShowWaveformCommentAsync(point.Position.X);
+        }
+
+        private async Task ShowWaveformCommentAsync(double contentX)
+        {
+            if (!IsMusicDetailsActive || _waveformCommentDialog is not null ||
+                ViewModel.GetWaveformCommentTimestamp(contentX) is not { } timestamp || XamlRoot is not { } root)
+                return;
+
+            var musicPublicId = MusicPublicId;
+            var textBox = new TextBox
             {
                 AcceptsReturn = true,
                 MinHeight = 92,
                 TextWrapping = TextWrapping.Wrap,
-                PlaceholderText = $"نظر شما در {timestamp:mm\\:ss}",
                 MaxLength = 1000
             };
-
             var dialog = new ContentDialog
             {
-                XamlRoot = XamlRoot,
-                Title = $"ثبت نظر در {timestamp:mm\\:ss}",
-                Content = commentTextBox,
-                PrimaryButtonText = "ثبت نظر",
-                CloseButtonText = "انصراف",
+                XamlRoot = root,
+                Content = textBox,
                 DefaultButton = ContentDialogButton.Primary,
                 IsPrimaryButtonEnabled = false
             };
-
-            commentTextBox.TextChanged += (_, _) =>
-                dialog.IsPrimaryButtonEnabled = !string.IsNullOrWhiteSpace(commentTextBox.Text);
-
-            if (await dialog.ShowAsync() != ContentDialogResult.Primary)
-                return;
-
+            _waveformCommentDialog = dialog;
+            textBox.TextChanged += UpdateSubmitState;
             try
             {
-                await ViewModel.CreateMusicCommentAsync(commentTextBox.Text, index);
+                if (await ShowLocalizedTrackDialogAsync(dialog, () =>
+                    {
+                        var caption = Localization.Format("MusicDetails/WaveformCommentAt", timestamp.ToString(@"h\:mm\:ss"));
+                        textBox.PlaceholderText = caption;
+                        AutomationProperties.SetName(textBox, caption);
+                        dialog.Title = caption;
+                        dialog.PrimaryButtonText = Text("PostWaveformComment");
+                        dialog.CloseButtonText = Text("Cancel");
+                    }) != ContentDialogResult.Primary ||
+                    !IsMusicDetailsActive || MusicPublicId != musicPublicId)
+                    return;
+
+                var avatar = ((App)App.Current).Services.GetRequiredService<HomePageViewModel>().ProfileImage;
+                if (await ViewModel.CreateMusicCommentAsync(musicPublicId, textBox.Text, timestamp, avatar) &&
+                    IsMusicDetailsActive && MusicPublicId == musicPublicId)
+                    AccessibilityAnnouncements.Announce(WaveformScroller, Text("WaveformCommentPosted", Localization.Revision), "WaveformCommentPosted");
             }
+            catch (OperationCanceledException) { }
             catch (Exception exception)
             {
                 AppLog.Error("Music comment could not be created.", exception);
             }
+            finally
+            {
+                textBox.TextChanged -= UpdateSubmitState;
+                if (ReferenceEquals(_waveformCommentDialog, dialog))
+                    _waveformCommentDialog = null;
+            }
+
+            void UpdateSubmitState(object sender, TextChangedEventArgs args) =>
+                dialog.IsPrimaryButtonEnabled = !string.IsNullOrWhiteSpace(textBox.Text);
+        }
+
+        private async Task<ContentDialogResult> ShowLocalizedTrackDialogAsync(ContentDialog dialog, Action applyText)
+        {
+            void ApplyLanguage()
+            {
+                dialog.FlowDirection = Localization.FlowDirection;
+                dialog.FontFamily = Localization.TextFontFamily;
+                dialog.Language = Localization.LanguageTag;
+                applyText();
+            }
+
+            void LanguageChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+            {
+                if (args.PropertyName == nameof(LocalizationService.Revision))
+                    ApplyLanguage();
+            }
+
+            ApplyLanguage();
+            Localization.PropertyChanged += LanguageChanged;
+            try { return await dialog.ShowAsync(); }
+            finally { Localization.PropertyChanged -= LanguageChanged; }
         }
 
         private void InitializeCoverVisual()
@@ -739,12 +832,6 @@ namespace Mizon.Windows.Pages
                 (float)MusicBorder.ActualHeight / 2f,
                 0f
             );
-        }
-
-        private void Button_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            var button = (Button)sender;
-            ViewModel.EqualizerCommentBringToFront((EqualizerCommentItemViewModel)button.DataContext);
         }
 
         private async void StoryCard_Click(object sender, RoutedEventArgs e)

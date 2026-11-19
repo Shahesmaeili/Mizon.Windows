@@ -14,6 +14,7 @@ namespace Mizon.Windows.Pages;
 public sealed partial class MusicsPage
 {
     private Guid _pendingCommentPublicId;
+    private string? _commentNoticeKey;
     private CancellationTokenSource? _commentNavigationCancellation;
     private int _commentNavigationVersion;
     private TaskCompletionSource? _coverNavigationSettled;
@@ -53,7 +54,7 @@ public sealed partial class MusicsPage
             if (!IsCurrent()) return false;
             if (!found)
             {
-                ShowCommentNavigationMessage("این نظر دیگر در دسترس نیست یا دریافت آن انجام نشد.");
+                ShowCommentNavigationMessage("SelectedCommentUnavailable");
                 return false;
             }
 
@@ -74,7 +75,7 @@ public sealed partial class MusicsPage
                 VerticalAlignmentRatio = 0.25,
                 HorizontalAlignmentRatio = 0.5
             });
-            AccessibilityAnnouncements.Announce(element, "نظر موردنظر نمایش داده شد. " + item.AutomationName, "FollowingComment");
+            AccessibilityAnnouncements.Announce(element, Text("SelectedCommentOpened") + " " + item.AutomationName(Localization.Revision), "FollowingComment");
             return true;
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
@@ -87,7 +88,7 @@ public sealed partial class MusicsPage
                 {
                     if (_coverNavigationSettled is { Task.IsCompleted: false } cover)
                         await cover.Task.WaitAsync(token);
-                    if (IsCurrent()) ShowCommentNavigationMessage("باز کردن نظر انجام نشد؛ دوباره تلاش کن.");
+                    if (IsCurrent()) ShowCommentNavigationMessage("SelectedCommentRetry");
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested) { }
             }
@@ -113,7 +114,8 @@ public sealed partial class MusicsPage
 
     private void ShowCommentNavigationMessage(string text)
     {
-        CommentNavigationNotice.Message = text;
+        _commentNoticeKey = text;
+        CommentNavigationNotice.Message = Text(text);
         CommentNavigationNotice.IsOpen = true;
         CommentNavigationNotice.StartBringIntoView(new BringIntoViewOptions
         {
@@ -140,7 +142,7 @@ public sealed partial class MusicsPage
         catch (Exception exception)
         {
             AppLog.Error("Music comments could not be loaded.", exception);
-            if (_pageActive) ShowCommentNavigationMessage("دریافت نظرات انجام نشد؛ دوباره تلاش کن.");
+            if (_pageActive) ShowCommentNavigationMessage("CommentsRetry");
         }
     }
 }

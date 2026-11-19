@@ -46,7 +46,7 @@ public sealed partial class MusicTransportControl : UserControl
             var device = CanvasDevice.GetSharedDevice();
             // Match the fixed control template so resize never recreates the clip.
             using var face = CanvasGeometry.CreateRectangle(device, 0, 0, 60, 60);
-            using var notch = CanvasGeometry.CreateCircle(device, 51, 57, 18);
+            using var notch = CanvasGeometry.CreateCircle(device, 51, 57, 22);
             _notchedSurface = face.CombineWith(notch, Matrix3x2.Identity, CanvasGeometryCombine.Exclude);
             _path = visual.Compositor.CreatePathGeometry();
             _path.Path = new CompositionPath(_notchedSurface);

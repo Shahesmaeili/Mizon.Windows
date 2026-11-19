@@ -22,7 +22,7 @@ internal sealed class McpNavigationService(IAppDeepLinkNavigation navigation) : 
         if (input is null || input.Destination is "music-play" or "music-download"
             || !AppDeepLinkCatalog.TryCreate(input.Destination, input.PublicId, input.CommentPublicId,
                 input.SearchQuery, input.SettingsSection, out var destination)
-            || destination.MusicAction != MusicActivationAction.Details)
+            || destination.MusicAction is not (MusicActivationAction.Details or MusicActivationAction.Video))
             return new() { Code = "invalid_destination", Message = "Choose a supported destination and only its documented parameters." };
         if (destination.RequiresAuthentication && !navigation.GetState().HasSession)
             return new() { Code = "requires_sign_in", Message = "Sign in before opening this destination. No navigation was queued." };

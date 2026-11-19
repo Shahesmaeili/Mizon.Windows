@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using System;
 
 namespace Mizon.Windows.ViewModels.Items;
@@ -15,7 +16,8 @@ public sealed class MusicPlaylistItemViewModel : ViewModelBase
                 OnPropertyChanged(nameof(MusicsCountText));
         }
     }
-    public string MusicsCountText => $"{MusicsCount} آهنگ";
+    public string MusicsCountText => LocalizationService.Current.Format("MusicDetails/PlaylistTrackCount", MusicsCount);
+    internal void RefreshLanguage() => OnPropertyChanged(nameof(MusicsCountText));
     public bool ContainsCurrentMusic { get => field; set => SetField(ref field, value); }
     public Guid? LastMusicCoverMediaPublicId { get => field; set => SetField(ref field, value); }
     public string? LastMusicCoverImagePath { get => field; set => SetField(ref field, value); }

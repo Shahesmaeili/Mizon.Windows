@@ -1,3 +1,4 @@
+using Mizon.Windows.Services;
 using System;
 using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.Common;
@@ -24,7 +25,10 @@ public sealed class MusicDetailsCommentItemViewModel : ViewModelBase
         }
     }
     public double ActivityHighlightOpacity => IsActivityTarget ? 1 : 0;
-    public string AutomationName => $"نظر {FullName}، {Text}، {TimestampText}";
+    public LocalizationService Localization => LocalizationService.Current;
+    public string AutomationName(int revision) => Timestamp is null
+        ? Localization.Format("MusicDetails/CommentBy", FullName, Text)
+        : Localization.Format("MusicDetails/TimedCommentBy", FullName, Text, TimestampText);
 
     public string FullName => $"{FirstName} {LastName}".Trim();
     public string TimestampText => Timestamp is null ? string.Empty : Timestamp.Value.ToString(@"m\:ss");

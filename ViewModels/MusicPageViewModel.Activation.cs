@@ -53,15 +53,14 @@ public partial class MusicPageViewModel
         _isPlaybackTransitioning = true;
         try
         {
-            await _audioPlayerService.StopAsync();
             token.ThrowIfCancellationRequested();
             var mixed = IsStemMixerEnabled && IsStemMixAvailable
-                && await PlayStemMixAsync(TimeSpan.Zero, AudioPlayerState.Playing, token);
+                && await TryStartStemMixAsync(musicPublicId, token);
             if (!mixed)
             {
                 token.ThrowIfCancellationRequested();
                 _ = EnsureMusicDownloadAsync(media);
-                await PlayMainMusicAsync(media, TimeSpan.Zero, AudioPlayerState.Playing, token);
+                await _audioPlayerService.PlayAsync(GetMainSourcePath(media), TimeSpan.Zero);
             }
             // Native AudioGraph node creation itself cannot be cancelled. Retire a late
             // source before a newer activation gets the playback guard.
@@ -74,7 +73,7 @@ public partial class MusicPageViewModel
             _playingMusicPublicId = musicPublicId;
             if (_audioPlayerService.AudioPlayerState == AudioPlayerState.Playing)
                 _playbackActivity.RecordStarted(musicPublicId);
-            UpdateColors();
+            UpdateTrackPlaybackPresentation();
             return _audioPlayerService.AudioPlayerState == AudioPlayerState.Playing;
         }
         finally { _isPlaybackTransitioning = false; }

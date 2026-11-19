@@ -1,0 +1,36 @@
+<Page
+    x:Class="Mizon.Windows.Pages.MusicVideoPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icon="using:FluentIcons.WinUI"
+    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+    Language="{x:Bind Localization.LanguageTag, Mode=OneWay}"
+    FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
+    <ScrollViewer HorizontalScrollMode="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="1400" Margin="20,16" Spacing="14" XYFocusKeyboardNavigation="Enabled">
+            <StackPanel Orientation="Horizontal" Spacing="10" Margin="6,0">
+                <icon:SymbolIcon Symbol="Video" FontSize="22" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                 VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
+                <StackPanel>
+                    <TextBlock Text="{x:Bind Text('MusicVideo', Localization.Revision), Mode=OneWay}" FontSize="13"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock x:Name="TrackTitle" Style="{ThemeResource TitleTextBlockStyle}" TextWrapping="Wrap"
+                               TextReadingOrder="DetectFromContent" AutomationProperties.HeadingLevel="Level1"/>
+                </StackPanel>
+            </StackPanel>
+            <Border x:Name="VideoSurface" CornerRadius="16" MinHeight="180"
+                    Background="{ThemeResource CardBackgroundFillColorSecondary}" SizeChanged="VideoSurface_SizeChanged">
+                <Grid>
+                    <MediaPlayerElement x:Name="VideoPlayer" AreTransportControlsEnabled="True" AutoPlay="False"
+                                        FlowDirection="LeftToRight" Visibility="Collapsed" Stretch="Uniform"
+                                        AutomationProperties.Name="{x:Bind Text('MusicVideo', Localization.Revision), Mode=OneWay}"/>
+                    <ProgressRing x:Name="VideoLoading" Width="34" Height="34"
+                                  AutomationProperties.Name="{x:Bind Text('MusicVideoLoading', Localization.Revision), Mode=OneWay}"/>
+                    <TextBlock x:Name="VideoMessage" FontSize="14" TextWrapping="Wrap" TextAlignment="Center"
+                               Margin="20" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               AutomationProperties.LiveSetting="Polite" Visibility="Collapsed"/>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

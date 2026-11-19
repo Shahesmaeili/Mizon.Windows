@@ -113,6 +113,7 @@ public sealed partial class MainWindow : Window
             HomePage => navigation.CurrentInternalPage switch
             {
                 MusicsPage => "جزئیات آهنگ",
+                MusicVideoPage => LocalizationService.Current.GetString("MusicDetails/MusicVideo"),
                 MusicPlaylistsPage => "پلی‌لیست‌های تو",
                 FollowingActivitiesPage => "فعالیت دنبال‌شده‌ها",
                 MusicPlaylistPage => "جزئیات پلی‌لیست",

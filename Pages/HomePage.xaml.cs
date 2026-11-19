@@ -1,4 +1,4 @@
-﻿using DevWinUI;
+using DevWinUI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
@@ -640,6 +640,15 @@ namespace Mizon.Windows.Pages
                 }
                 if (request.MusicPublicId is Guid musicId)
                 {
+                    if (request.MusicAction == MusicActivationAction.Video)
+                    {
+                        NavigateActivation(() => navigation.InternalNavigate(typeof(MusicVideoPage), new()
+                        {
+                            [PageConstants.MUSIC_ID] = musicId
+                        }));
+                        return navigation.CurrentInternalPage is MusicVideoPage video && video.MusicPublicId == musicId;
+                    }
+
                     if (request.MusicCommentPublicId is Guid commentId)
                     {
                         NavigateActivation(() => navigation.InternalNavigate(typeof(MusicsPage), new()

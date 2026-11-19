@@ -4,7 +4,12 @@ using System.Runtime.InteropServices;
 
 namespace Mizon.Windows.Services;
 
-/// <summary>Reads the Windows master volume of an individual render endpoint.</summary>
+internal readonly record struct AudioEndpointVolumeState(int Percentage, bool IsMuted)
+{
+    internal bool IsSilent => IsMuted || Percentage == 0;
+}
+
+/// <summary>Reads and adjusts the Windows master volume of an individual render endpoint.</summary>
 internal static partial class AudioEndpointVolumeReader
 {
     private static readonly ConcurrentDictionary<string, byte> LoggedFailures = new(StringComparer.Ordinal);
@@ -18,9 +23,19 @@ internal static partial class AudioEndpointVolumeReader
     // IUnknown occupies slots 0–2. These indices match mmdeviceapi.h and endpointvolume.h.
     private const int GetDeviceSlot = 5;
     private const int ActivateSlot = 3;
+    private const int SetMasterVolumeLevelScalarSlot = 7;
     private const int GetMasterVolumeLevelScalarSlot = 9;
+    private const int SetMuteSlot = 14;
+    private const int GetMuteSlot = 15;
 
-    public static unsafe int? TryGetVolumePercentage(string deviceId)
+    public static int? TryGetVolumePercentage(string deviceId) => TryGetState(deviceId)?.Percentage;
+
+    public static AudioEndpointVolumeState? TryGetState(string deviceId) => AccessEndpoint(deviceId, null);
+
+    public static AudioEndpointVolumeState? TrySetVolumePercentage(string deviceId, int percentage) =>
+        percentage is >= 0 and <= 100 ? AccessEndpoint(deviceId, percentage) : null;
+
+    private static unsafe AudioEndpointVolumeState? AccessEndpoint(string deviceId, int? requestedPercentage)
     {
         nint enumerator = 0, device = 0, endpointVolume = 0;
         var apartment = CoInitializeEx(0, 0); // COINIT_MULTITHREADED
@@ -40,14 +55,31 @@ internal static partial class AudioEndpointVolumeReader
             var activate = (delegate* unmanaged[Stdcall]<nint, Guid*, uint, nint, nint*, int>)Method(device, ActivateSlot);
             Marshal.ThrowExceptionForHR(activate(device, &volumeId, ClassContextAll, 0, &endpointVolume));
 
+            var getMute = (delegate* unmanaged[Stdcall]<nint, int*, int>)Method(endpointVolume, GetMuteSlot);
+            int muted = 0;
+            Marshal.ThrowExceptionForHR(getMute(endpointVolume, &muted));
+
+            if (requestedPercentage is { } requested)
+            {
+                var setLevel = (delegate* unmanaged[Stdcall]<nint, float, nint, int>)Method(endpointVolume, SetMasterVolumeLevelScalarSlot);
+                Marshal.ThrowExceptionForHR(setLevel(endpointVolume, requested / 100f, 0));
+                if (requested > 0 && muted != 0)
+                {
+                    var setMute = (delegate* unmanaged[Stdcall]<nint, int, nint, int>)Method(endpointVolume, SetMuteSlot);
+                    Marshal.ThrowExceptionForHR(setMute(endpointVolume, 0, 0));
+                    muted = 0;
+                }
+            }
+
             var getLevel = (delegate* unmanaged[Stdcall]<nint, float*, int>)Method(endpointVolume, GetMasterVolumeLevelScalarSlot);
             float level = 0;
             Marshal.ThrowExceptionForHR(getLevel(endpointVolume, &level));
-            return (int)Math.Round(Math.Clamp(level, 0f, 1f) * 100f, MidpointRounding.AwayFromZero);
+            var percentage = (int)Math.Round(Math.Clamp(level, 0f, 1f) * 100f, MidpointRounding.AwayFromZero);
+            return new(percentage, muted != 0);
         }
         catch (Exception error) when (error is COMException or ArgumentException or UnauthorizedAccessException or InvalidCastException)
         {
-            LogFailureOnce(deviceId, "Unable to read endpoint volume", error);
+            LogFailureOnce(deviceId, requestedPercentage.HasValue ? "Unable to set endpoint volume" : "Unable to read endpoint volume", error);
             return null;
         }
         finally

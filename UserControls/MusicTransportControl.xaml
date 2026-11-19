@@ -4,8 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:common="using:Mizon.Windows.Common"
     xmlns:controls="using:Mizon.Windows.Controls"
-    xmlns:dev="using:DevWinUI"
+    xmlns:trackControls="using:Mizon.Windows.Controls.TrackDetails"
     xmlns:icon="using:FluentIcons.WinUI">
+    <UserControl.Resources>
+        <ResourceDictionary Source="ms-appx:///Controls/TrackDetails/WaveProgressBar.xaml"/>
+    </UserControl.Resources>
     <Grid Width="66" Height="72" FlowDirection="LeftToRight">
         <Button x:Name="PlaybackButton" Width="60" Height="60" HorizontalAlignment="Left" VerticalAlignment="Top"
                 Padding="0" CornerRadius="30" Command="{x:Bind Model.PlayCommand, Mode=OneWay}"
@@ -13,8 +16,8 @@
                 AutomationProperties.Name="{x:Bind PlaybackLabel(Model.IsPlaying, Localization.Revision), Mode=OneWay}"
                 ToolTipService.ToolTip="{x:Bind PlaybackLabel(Model.IsPlaying, Localization.Revision), Mode=OneWay}">
             <Grid>
-                <dev:WaveProgressBar x:Load="{x:Bind Model.IsMusicDownloading, Mode=OneWay}" x:Name="DownloadProgress"
-                    Value="{x:Bind Model.MusicDownloadProgress, Mode=OneWay}" BorderThickness="0" WaveThickness="0"
+                <trackControls:WaveProgressBar x:Load="{x:Bind Model.IsMusicDownloading, Mode=OneWay}" x:Name="DownloadProgress"
+                    Value="{x:Bind Model.MusicDownloadProgress, Mode=OneWay}" Style="{StaticResource DefaultWaveProgressBarStyle}" BorderThickness="0" WaveThickness="0"
                     Background="Transparent" Width="60" Height="60" ShowText="False" IsHitTestVisible="False"/>
                 <controls:MorphingGeometry Width="30" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center"
                     AnimationDuration="0:0:0.5" FillColor="{ThemeResource TextFillColorPrimary}"

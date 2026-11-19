@@ -27,6 +27,7 @@
   <data name="ZoomOut" xml:space="preserve"><value>کوچک کردن کاور</value></data>
   <data name="Volume" xml:space="preserve"><value>بلندی صدای پخش</value></data>
   <data name="MixBalance" xml:space="preserve"><value>تعادل صدای موسیقی و خواننده</value></data>
+  <data name="MixBalanceHint" xml:space="preserve"><value>چپ: فقط ساز. وسط: ساز و خواننده. راست: فقط صدای خواننده.</value></data>
   <data name="StemMixer" xml:space="preserve"><value>میکس صدای موسیقی و خواننده</value></data>
   <data name="Reactions" xml:space="preserve"><value>واکنش‌های آهنگ</value></data>
   <data name="ViewsStatus" xml:space="preserve"><value>{0:N0} بازدید، {1:N0} نفر در حال مشاهده</value></data>
@@ -40,8 +41,65 @@
   <data name="PulseTrend" xml:space="preserve"><value>روند ضربان قلب</value></data>
   <data name="AiSummary" xml:space="preserve"><value>خلاصهٔ هوش مصنوعی</value></data>
   <data name="Waveform" xml:space="preserve"><value>موج صدای آهنگ</value></data>
-  <data name="WaveformControls" xml:space="preserve"><value>با پیج‌آپ یا تریگر چپ، پنج ثانیه عقب بروید. با پیج‌داون یا تریگر راست، پنج ثانیه جلو بروید.</value></data>
+  <data name="WaveformControls" xml:space="preserve"><value>با پیج‌آپ یا تریگر چپ، پنج ثانیه عقب بروید. با پیج‌داون یا تریگر راست، پنج ثانیه جلو بروید. با دکمهٔ A یا اینتر، در مرکز بخش قابل مشاهدهٔ موج صدا نظر بدهید.</value></data>
   <data name="InsightViewLabel" xml:space="preserve"><value>دیدگاه کاربران:</value></data>
   <data name="InsightSatisfactionLabel" xml:space="preserve"><value>میزان رضایت:</value></data>
   <data name="InsightCommentCountLabel" xml:space="preserve"><value>تعداد دیدگاه ها:</value></data>
+  <data name="WaveformCommentAt" xml:space="preserve"><value>ثبت نظر در {0}</value></data>
+  <data name="PostWaveformComment" xml:space="preserve"><value>ثبت نظر</value></data>
+  <data name="WaveformCommentPosted" xml:space="preserve"><value>نظر روی موج صدا ثبت شد.</value></data>
+  <data name="NewPlaylist" xml:space="preserve"><value>ساخت پلی‌لیست جدید</value></data>
+  <data name="AudioOutput" xml:space="preserve"><value>دستگاه پخش</value></data>
+  <data name="NoAudioOutputs" xml:space="preserve"><value>دستگاه پخشی پیدا نشد</value></data>
+  <data name="AudioOutputVolume" xml:space="preserve"><value>صدا {0}٪</value></data>
+  <data name="AudioOutputBattery" xml:space="preserve"><value>باتری {0}٪</value></data>
+  <data name="AudioOutputFailed" xml:space="preserve"><value>تغییر دستگاه پخش انجام نشد.</value></data>
+  <data name="Doughnut" xml:space="preserve"><value>دونات</value></data>
+  <data name="Reverb" xml:space="preserve"><value>طنین</value></data>
+  <data name="Bass" xml:space="preserve"><value>بیس</value></data>
+  <data name="SpatialSound" xml:space="preserve"><value>صدای فضایی</value></data>
+  <data name="Echo" xml:space="preserve"><value>اکو</value></data>
+  <data name="Mute" xml:space="preserve"><value>بی‌صدا</value></data>
+  <data name="Lyrics" xml:space="preserve"><value>متن آهنگ</value></data>
+  <data name="AddStory" xml:space="preserve"><value>افزودن استوری</value></data>
+  <data name="SelectedComment" xml:space="preserve"><value>نظر موردنظر</value></data>
+  <data name="ShowAllComments" xml:space="preserve"><value>نمایش همهٔ نظرات</value></data>
+  <data name="SelectedCommentUnavailable" xml:space="preserve"><value>این نظر در دسترس نیست یا دریافت آن انجام نشد.</value></data>
+  <data name="SelectedCommentRetry" xml:space="preserve"><value>باز کردن نظر انجام نشد. دوباره تلاش کنید.</value></data>
+  <data name="CommentsRetry" xml:space="preserve"><value>دریافت نظرات انجام نشد. دوباره تلاش کنید.</value></data>
+  <data name="SelectedCommentOpened" xml:space="preserve"><value>نظر موردنظر نمایش داده شد.</value></data>
+  <data name="CommentBy" xml:space="preserve"><value>نظر {0}، {1}</value></data>
+  <data name="TimedCommentBy" xml:space="preserve"><value>نظر {0} در {2}، {1}</value></data>
+  <data name="PlaylistTitle" xml:space="preserve"><value>عنوان پلی‌لیست</value></data>
+  <data name="CreateAndAddTrack" xml:space="preserve"><value>ساخت و افزودن آهنگ</value></data>
+  <data name="PlaylistTrackCount" xml:space="preserve"><value>{0:N0} آهنگ</value></data>
+  <data name="Cancel" xml:space="preserve"><value>انصراف</value></data>
+  <data name="Close" xml:space="preserve"><value>بستن</value></data>
+  <data name="FloatingPlayerFailed" xml:space="preserve"><value>باز کردن پنجرهٔ پلیر شناور انجام نشد.</value></data>
+  <data name="DownloadFolderFailed" xml:space="preserve"><value>پوشهٔ فایل دانلودشده باز نشد.</value></data>
+  <data name="DownloadCompleted" xml:space="preserve"><value>دانلود آهنگ کامل شد. فایل در پوشه انتخاب شد.</value></data>
+  <data name="DownloadFailed" xml:space="preserve"><value>دانلود آهنگ انجام نشد</value></data>
+  <data name="DownloadRetry" xml:space="preserve"><value>اتصال و دسترسی به فایل را بررسی کنید و دوباره تلاش کنید.</value></data>
+  <data name="ShortcutCreated" xml:space="preserve"><value>میان‌بر ساخته شد</value></data>
+  <data name="ShortcutCreatedMessage" xml:space="preserve"><value>میان‌بر آهنگ در دسکتاپ قرار گرفت.</value></data>
+  <data name="ShortcutFailed" xml:space="preserve"><value>ساخت میان‌بر انجام نشد</value></data>
+  <data name="ShortcutFailedMessage" xml:space="preserve"><value>میان‌بر آهنگ روی دسکتاپ ساخته نشد.</value></data>
+  <data name="ListeningNow" xml:space="preserve"><value>{0} در حال شنیدن است</value></data>
+  <data name="ListenerPaused" xml:space="preserve"><value>{0} پخش را متوقف کرده است</value></data>
+  <data name="RoleLeadVocal" xml:space="preserve"><value>خوانندهٔ اصلی</value></data>
+  <data name="RoleFeaturedVocal" xml:space="preserve"><value>خوانندهٔ مهمان</value></data>
+  <data name="RoleMixingEngineer" xml:space="preserve"><value>مهندس میکس</value></data>
+  <data name="RoleMasteringEngineer" xml:space="preserve"><value>مهندس مسترینگ</value></data>
+  <data name="RoleRecordingEngineer" xml:space="preserve"><value>مهندس ضبط</value></data>
+  <data name="AudioOutputMuted" xml:space="preserve"><value>بی‌صدا</value></data>
+  <data name="AudioOutputSilent" xml:space="preserve"><value>صدا روی صفر است</value></data>
+  <data name="AudioOutputVolumeLabel" xml:space="preserve"><value>صدای دستگاه</value></data>
+  <data name="AudioOutputVolumeUnavailable" xml:space="preserve"><value>صدای دستگاه انتخاب‌شده در دسترس نیست.</value></data>
+  <data name="AudioOutputVolumeFailed" xml:space="preserve"><value>تغییر صدای دستگاه انجام نشد.</value></data>
+  <data name="AudioOutputPercent" xml:space="preserve"><value>{0}٪</value></data>
+  <data name="MusicVideo" xml:space="preserve"><value>موزیک‌ویدیو</value></data>
+  <data name="OpenMusicVideo" xml:space="preserve"><value>باز کردن موزیک‌ویدیوی این آهنگ</value></data>
+  <data name="MusicVideoLoading" xml:space="preserve"><value>در حال آماده‌سازی موزیک‌ویدیو</value></data>
+  <data name="MusicVideoUnavailable" xml:space="preserve"><value>موزیک‌ویدیوی این آهنگ در دسترس نیست.</value></data>
+  <data name="MusicVideoPlaybackFailed" xml:space="preserve"><value>پخش موزیک‌ویدیو انجام نشد.</value></data>
 </root>
