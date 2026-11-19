@@ -21,6 +21,10 @@ public sealed partial class SettingsCardPanel : Panel
         nameof(Spacing), typeof(double), typeof(SettingsCardPanel),
         new PropertyMetadata(14d, LayoutPropertyChanged));
 
+    public static readonly DependencyProperty UseEvenColumnCountProperty = DependencyProperty.Register(
+        nameof(UseEvenColumnCount), typeof(bool), typeof(SettingsCardPanel),
+        new PropertyMetadata(false, LayoutPropertyChanged));
+
     public static readonly DependencyProperty ColumnSpanProperty = DependencyProperty.RegisterAttached(
         "ColumnSpan", typeof(int), typeof(SettingsCardPanel),
         new PropertyMetadata(1, static (sender, _) =>
@@ -34,6 +38,7 @@ public sealed partial class SettingsCardPanel : Panel
     public double MinColumnWidth { get => (double)GetValue(MinColumnWidthProperty); set => SetValue(MinColumnWidthProperty, value); }
     public int MaxColumns { get => (int)GetValue(MaxColumnsProperty); set => SetValue(MaxColumnsProperty, value); }
     public double Spacing { get => (double)GetValue(SpacingProperty); set => SetValue(SpacingProperty, value); }
+    public bool UseEvenColumnCount { get => (bool)GetValue(UseEvenColumnCountProperty); set => SetValue(UseEvenColumnCountProperty, value); }
 
     public static int GetColumnSpan(DependencyObject element) => (int)element.GetValue(ColumnSpanProperty);
     public static void SetColumnSpan(DependencyObject element, int value) => element.SetValue(ColumnSpanProperty, value);
@@ -131,7 +136,8 @@ public sealed partial class SettingsCardPanel : Panel
             return 1;
 
         var count = Math.Floor((width + spacing) / (minimum + spacing));
-        return double.IsFinite(count) ? (int)Math.Clamp(count, 1, Math.Max(1, MaxColumns)) : 1;
+        var columns = double.IsFinite(count) ? (int)Math.Clamp(count, 1, Math.Max(1, MaxColumns)) : 1;
+        return UseEvenColumnCount && columns > 1 && columns % 2 != 0 ? columns - 1 : columns;
     }
 
     private void ArrangeRow(int start, int end, int columns, double columnWidth, double spacing, double top, double height)

@@ -10,8 +10,10 @@ The header measures the title and its action group before placing them. The
 four actions share the title row whenever their natural widths fit. At smaller
 widths, the group moves below and can wrap internally. The four lower cards
 retain the original sample heart rate, listener feedback, heart-rate trend and
-AI summary. They share the responsive card panel. The trend draws the original
-sample series with XAML geometry.
+AI summary. The four cards use a pulse dial, a listener quote and satisfaction
+bar, a gridded trend chart, and an AI summary with native XAML illustrations.
+The trend draws the original sample series. The section fits one, two or four
+columns with no visible sample caption.
 
 The transport exposes native Play/Pause and Repeat controls with independent
 focus stops. Only the original waveform is shown for seeking. With focus on
@@ -55,5 +57,9 @@ Verification:
   Dark using substitute glyphs and system brush values. A separate 14-case
   probe exercised the waveform's production keyboard and controller handler
   with synthetic focus and audio.
+- The four-widget redesign was checked in offscreen WinUI at 260, 725, 1000
+  and 1320 pixels. The middle widths use two balanced columns, the widest
+  fits four, and the narrow layout shows one. The fixture also verified there
+  is no sample caption in Persian or English.
 - Packaged-page visuals and animations, physical Xbox hardware and live
   Narrator output were not exercised.

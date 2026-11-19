@@ -30,7 +30,6 @@
   <data name="StemMixer" xml:space="preserve"><value>میکس صدای موسیقی و خواننده</value></data>
   <data name="Reactions" xml:space="preserve"><value>واکنش‌های آهنگ</value></data>
   <data name="ViewsStatus" xml:space="preserve"><value>{0:N0} بازدید، {1:N0} نفر در حال مشاهده</value></data>
-  <data name="SampleInsights" xml:space="preserve"><value>داده‌های نمونهٔ شنیدن</value></data>
   <data name="HeartRate" xml:space="preserve"><value>ضربان قلب</value></data>
   <data name="HeartRateValue" xml:space="preserve"><value>۶۷ ضربان در دقیقه</value></data>
   <data name="HeartRateChange" xml:space="preserve"><value>افزایش ۱۷ درصدی ضربان قلب</value></data>

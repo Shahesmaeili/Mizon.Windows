@@ -30,7 +30,6 @@
   <data name="StemMixer" xml:space="preserve"><value>Mix accompaniment and vocals</value></data>
   <data name="Reactions" xml:space="preserve"><value>Track reactions</value></data>
   <data name="ViewsStatus" xml:space="preserve"><value>{0:N0} total views, {1:N0} watching now</value></data>
-  <data name="SampleInsights" xml:space="preserve"><value>Sample listening insights</value></data>
   <data name="HeartRate" xml:space="preserve"><value>Heart rate</value></data>
   <data name="HeartRateValue" xml:space="preserve"><value>67 beats per minute</value></data>
   <data name="HeartRateChange" xml:space="preserve"><value>Heart rate increased by 17 percent</value></data>
