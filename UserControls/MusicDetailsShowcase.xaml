@@ -3,308 +3,172 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:dev="using:DevWinUI"
     xmlns:icon="using:FluentIcons.WinUI"
-    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.WinUI"
     Language="{x:Bind Localization.LanguageTag, Mode=OneWay}"
-    FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
-    <UserControl.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Default">
-                    <SolidColorBrush x:Key="PulseInk" Color="#FFADB8"/>
-                    <SolidColorBrush x:Key="PulseEdge" Color="#916172"/>
-                    <SolidColorBrush x:Key="PulseTint" Color="#52DC526F"/>
-                    <LinearGradientBrush x:Key="PulseSurface" StartPoint="1,0" EndPoint="0,1">
-                        <GradientStop Color="#33241827" Offset="0"/>
-                        <GradientStop Color="#D72F1A2F" Offset="1"/>
-                    </LinearGradientBrush>
-                    <SolidColorBrush x:Key="VoicesInk" Color="#83EBD1"/>
-                    <SolidColorBrush x:Key="VoicesEdge" Color="#477B74"/>
-                    <SolidColorBrush x:Key="VoicesTint" Color="#5296EACD"/>
-                    <LinearGradientBrush x:Key="VoicesSurface" StartPoint="1,0" EndPoint="0,1">
-                        <GradientStop Color="#33202C30" Offset="0"/>
-                        <GradientStop Color="#D711302D" Offset="1"/>
-                    </LinearGradientBrush>
-                    <SolidColorBrush x:Key="TrendInk" Color="#C1CAFF"/>
-                    <SolidColorBrush x:Key="TrendEdge" Color="#6077AC"/>
-                    <SolidColorBrush x:Key="TrendTint" Color="#53798CEF"/>
-                    <LinearGradientBrush x:Key="TrendSurface" StartPoint="1,0" EndPoint="0,1">
-                        <GradientStop Color="#33202442" Offset="0"/>
-                        <GradientStop Color="#D71D2343" Offset="1"/>
-                    </LinearGradientBrush>
-                    <SolidColorBrush x:Key="SummaryInk" Color="#F8CB97"/>
-                    <SolidColorBrush x:Key="SummaryEdge" Color="#94714E"/>
-                    <SolidColorBrush x:Key="SummaryTint" Color="#4BE7AE77"/>
-                    <LinearGradientBrush x:Key="SummarySurface" StartPoint="1,0" EndPoint="0,1">
-                        <GradientStop Color="#332F2234" Offset="0"/>
-                        <GradientStop Color="#D72D2435" Offset="1"/>
-                    </LinearGradientBrush>
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="PulseInk" Color="#902744"/>
-                    <SolidColorBrush x:Key="PulseEdge" Color="#A9556C"/>
-                    <SolidColorBrush x:Key="PulseTint" Color="#30E16686"/>
-                    <LinearGradientBrush x:Key="PulseSurface" StartPoint="1,0" EndPoint="0,1">
-                        <GradientStop Color="#EAFFF7F9" Offset="0"/>
-                        <GradientStop Color="#F3F4DEEA" Offset="1"/>
-                    </LinearGradientBrush>
-                    <SolidColorBrush x:Key="VoicesInk" Color="#165E53"/>
-                    <SolidColorBrush x:Key="VoicesEdge" Color="#478F80"/>
-                    <SolidColorBrush x:Key="VoicesTint" Color="#3097D7C4"/>
-                    <LinearGradientBrush x:Key="VoicesSurface" StartPoint="1,0" EndPoint="0,1">
-                        <GradientStop Color="#ECF4FFFA" Offset="0"/>
-                        <GradientStop Color="#F1D9F0EF" Offset="1"/>
-                    </LinearGradientBrush>
-                    <SolidColorBrush x:Key="TrendInk" Color="#384E9B"/>
-                    <SolidColorBrush x:Key="TrendEdge" Color="#6276B7"/>
-                    <SolidColorBrush x:Key="TrendTint" Color="#329CAFF2"/>
-                    <LinearGradientBrush x:Key="TrendSurface" StartPoint="1,0" EndPoint="0,1">
-                        <GradientStop Color="#EDF9F9FF" Offset="0"/>
-                        <GradientStop Color="#F1DFE9FF" Offset="1"/>
-                    </LinearGradientBrush>
-                    <SolidColorBrush x:Key="SummaryInk" Color="#855323"/>
-                    <SolidColorBrush x:Key="SummaryEdge" Color="#98704C"/>
-                    <SolidColorBrush x:Key="SummaryTint" Color="#35EDBD86"/>
-                    <LinearGradientBrush x:Key="SummarySurface" StartPoint="1,0" EndPoint="0,1">
-                        <GradientStop Color="#EDFFF9F4" Offset="0"/>
-                        <GradientStop Color="#F1F3E6FF" Offset="1"/>
-                    </LinearGradientBrush>
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="HighContrast">
-                    <SolidColorBrush x:Key="PulseInk" Color="{ThemeResource SystemColorWindowTextColor}"/>
-                    <SolidColorBrush x:Key="PulseEdge" Color="{ThemeResource SystemColorWindowTextColor}"/>
-                    <SolidColorBrush x:Key="PulseTint" Color="{ThemeResource SystemColorWindowColor}"/>
-                    <SolidColorBrush x:Key="PulseSurface" Color="{ThemeResource SystemColorWindowColor}"/>
-                    <SolidColorBrush x:Key="VoicesInk" Color="{ThemeResource SystemColorWindowTextColor}"/>
-                    <SolidColorBrush x:Key="VoicesEdge" Color="{ThemeResource SystemColorWindowTextColor}"/>
-                    <SolidColorBrush x:Key="VoicesTint" Color="{ThemeResource SystemColorWindowColor}"/>
-                    <SolidColorBrush x:Key="VoicesSurface" Color="{ThemeResource SystemColorWindowColor}"/>
-                    <SolidColorBrush x:Key="TrendInk" Color="{ThemeResource SystemColorWindowTextColor}"/>
-                    <SolidColorBrush x:Key="TrendEdge" Color="{ThemeResource SystemColorWindowTextColor}"/>
-                    <SolidColorBrush x:Key="TrendTint" Color="{ThemeResource SystemColorWindowColor}"/>
-                    <SolidColorBrush x:Key="TrendSurface" Color="{ThemeResource SystemColorWindowColor}"/>
-                    <SolidColorBrush x:Key="SummaryInk" Color="{ThemeResource SystemColorWindowTextColor}"/>
-                    <SolidColorBrush x:Key="SummaryEdge" Color="{ThemeResource SystemColorWindowTextColor}"/>
-                    <SolidColorBrush x:Key="SummaryTint" Color="{ThemeResource SystemColorWindowColor}"/>
-                    <SolidColorBrush x:Key="SummarySurface" Color="{ThemeResource SystemColorWindowColor}"/>
-                </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
-            <Style x:Key="ShowcaseCard" TargetType="Border">
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="CornerRadius" Value="21"/>
-                <Setter Property="Padding" Value="17,15"/>
-                <Setter Property="MinHeight" Value="235"/>
-            </Style>
-            <Style x:Key="ShowcaseBadge" TargetType="Border">
-                <Setter Property="Width" Value="31"/>
-                <Setter Property="Height" Value="31"/>
-                <Setter Property="CornerRadius" Value="10"/>
-                <Setter Property="AutomationProperties.AccessibilityView" Value="Raw"/>
-            </Style>
-            <Style x:Key="ShowcaseHeading" TargetType="TextBlock">
-                <Setter Property="FontSize" Value="14"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
-                <Setter Property="VerticalAlignment" Value="Center"/>
-                <Setter Property="TextWrapping" Value="Wrap"/>
-                <Setter Property="AutomationProperties.HeadingLevel" Value="Level2"/>
-            </Style>
-            <Style x:Key="ShowcaseNote" TargetType="TextBlock">
-                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
-                <Setter Property="FontSize" Value="12"/>
-                <Setter Property="TextWrapping" Value="Wrap"/>
-            </Style>
-            <Style x:Key="ShowcaseMetric" TargetType="Border">
-                <Setter Property="Background" Value="{ThemeResource ControlFillColorSecondaryBrush}"/>
-                <Setter Property="CornerRadius" Value="10"/>
-                <Setter Property="Padding" Value="10,6"/>
-            </Style>
-        </ResourceDictionary>
-    </UserControl.Resources>
-
-    <controls:SettingsCardPanel MinColumnWidth="284" MaxColumns="4" Spacing="14" UseEvenColumnCount="True">
-        <Border Style="{StaticResource ShowcaseCard}" Background="{ThemeResource PulseSurface}" BorderBrush="{ThemeResource PulseEdge}">
-            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10">
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="9">
-                    <Border Style="{StaticResource ShowcaseBadge}" Background="{ThemeResource PulseTint}">
-                        <icon:SymbolIcon Symbol="Heart" FontSize="16" Foreground="{ThemeResource PulseInk}" AutomationProperties.AccessibilityView="Raw"/>
-                    </Border>
-                    <TextBlock Grid.Column="1" Style="{StaticResource ShowcaseHeading}" Text="{x:Bind Text('HeartRate', Localization.Revision), Mode=OneWay}"/>
-                    <Border Grid.Column="2" Width="17" Height="2" CornerRadius="1" Background="{ThemeResource PulseInk}" Opacity="0.72"
-                            VerticalAlignment="Center" IsHitTestVisible="False"/>
-                </Grid>
-
-                <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="3" VerticalAlignment="Center">
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="67" FontSize="48" FontWeight="SemiBold" CharacterSpacing="-45" Foreground="{ThemeResource PulseInk}"
-                                   AutomationProperties.Name="{x:Bind Text('HeartRateValue', Localization.Revision), Mode=OneWay}"/>
-                        <TextBlock Margin="1,-5,0,0" FontSize="10" FontWeight="SemiBold" CharacterSpacing="110" Text="BPM"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw"/>
-                    </StackPanel>
-                    <!-- Static instrument face with some of the sample heartbeat trace. -->
-                    <Viewbox Grid.Column="1" Width="105" Height="105" Stretch="Uniform" FlowDirection="LeftToRight"
-                             IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
-                        <Canvas Width="112" Height="112">
-                            <Ellipse Canvas.Left="12" Canvas.Top="12" Width="88" Height="88" Fill="{ThemeResource PulseTint}" Opacity="0.43"/>
-                            <Ellipse Canvas.Left="14" Canvas.Top="14" Width="84" Height="84" Stroke="{ThemeResource PulseInk}" StrokeThickness="1" Opacity="0.28"/>
-                            <Ellipse Canvas.Left="5" Canvas.Top="5" Width="102" Height="102" Stroke="{ThemeResource PulseInk}" StrokeThickness="2"
-                                     StrokeDashArray="1,3.7" Opacity="0.45"/>
-                            <Path Data="M 12,38 A 47,47 0 0 1 93,28" Stroke="{ThemeResource PulseInk}" StrokeThickness="2"
-                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                            <Path Data="M 20,56 H 41 L 47,46 L 53,66 L 63,35 L 70,56 H 93"
-                                  Stroke="{ThemeResource PulseTint}" StrokeThickness="8" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                            <Path Data="M 20,56 H 41 L 47,46 L 53,66 L 63,35 L 70,56 H 93"
-                                  Stroke="{ThemeResource PulseInk}" StrokeThickness="2.2" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                            <Ellipse Canvas.Left="90" Canvas.Top="53" Width="6" Height="6" Fill="{ThemeResource PulseInk}"/>
-                        </Canvas>
-                    </Viewbox>
-                </Grid>
-
-                <Grid Grid.Row="2" ColumnDefinitions="*,*,Auto" ColumnSpacing="6">
-                    <Border Style="{StaticResource ShowcaseMetric}">
-                        <TextBlock Text="VR  29" FlowDirection="LeftToRight" TextAlignment="Center" FontSize="12" FontWeight="SemiBold"/>
-                    </Border>
-                    <Border Grid.Column="1" Style="{StaticResource ShowcaseMetric}">
-                        <TextBlock Text="SW  11" FlowDirection="LeftToRight" TextAlignment="Center" FontSize="12" FontWeight="SemiBold"/>
-                    </Border>
-                    <Border Grid.Column="2" Background="{ThemeResource PulseTint}" CornerRadius="9" Padding="9,6" FlowDirection="LeftToRight">
-                        <TextBlock Text="+17%" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource PulseInk}"
-                                   AutomationProperties.Name="{x:Bind Text('HeartRateChange', Localization.Revision), Mode=OneWay}"/>
-                    </Border>
-                </Grid>
-            </Grid>
-        </Border>
-
-        <Border Style="{StaticResource ShowcaseCard}" Background="{ThemeResource VoicesSurface}" BorderBrush="{ThemeResource VoicesEdge}">
-            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10">
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="9">
-                    <Border Style="{StaticResource ShowcaseBadge}" Background="{ThemeResource VoicesTint}">
-                        <icon:SymbolIcon Symbol="Comment" FontSize="16" Foreground="{ThemeResource VoicesInk}" AutomationProperties.AccessibilityView="Raw"/>
-                    </Border>
-                    <TextBlock Grid.Column="1" Style="{StaticResource ShowcaseHeading}" Text="{x:Bind Text('ListenerVoices', Localization.Revision), Mode=OneWay}"/>
-                    <Border Grid.Column="2" Width="17" Height="2" CornerRadius="1" Background="{ThemeResource VoicesInk}" Opacity="0.72"
-                            VerticalAlignment="Center" IsHitTestVisible="False"/>
-                </Grid>
-
-                <Grid Grid.Row="1" MinHeight="90" VerticalAlignment="Center">
-                    <Grid Width="96" Height="70" HorizontalAlignment="Right" VerticalAlignment="Top"
-                          IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
-                        <Viewbox Stretch="Uniform">
-                            <Canvas Width="96" Height="70">
-                                <Path Data="M 34,7 H 73 Q 86,7 86,20 V 36 Q 86,49 73,49 H 70 L 59,59 V 49 H 34 Q 21,49 21,36 V 20 Q 21,7 34,7 Z"
-                                      StrokeThickness="1" Stroke="{ThemeResource VoicesInk}" Fill="{ThemeResource VoicesTint}" Opacity="0.33"/>
-                                <Path Data="M 44,19 H 80 Q 92,19 92,31 V 45 Q 92,56 80,56 H 77 L 66,66 V 56 H 44 Q 33,56 33,45 V 31 Q 33,19 44,19 Z"
-                                      StrokeThickness="1" Stroke="{ThemeResource VoicesInk}" Opacity="0.27"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Grid>
-                    <StackPanel VerticalAlignment="Center" Spacing="7">
-                        <Border Width="18" Height="2" CornerRadius="1" HorizontalAlignment="Left" Background="{ThemeResource VoicesInk}"/>
-                        <TextBlock FontSize="25" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{ThemeResource VoicesInk}"
-                                   Text="{x:Bind Text('SampleListenerQuote', Localization.Revision), Mode=OneWay}"/>
-                    </StackPanel>
-                </Grid>
-
-                <Border Grid.Row="2" Style="{StaticResource ShowcaseMetric}" Padding="10,7">
-                    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="8" RowSpacing="7">
-                        <TextBlock Style="{StaticResource ShowcaseNote}" FontWeight="SemiBold" Foreground="{ThemeResource VoicesInk}"
-                                   Text="{x:Bind Text('SampleSatisfaction', Localization.Revision), Mode=OneWay}"/>
-                        <TextBlock Grid.Column="1" Style="{StaticResource ShowcaseNote}"
-                                   Text="{x:Bind Text('SampleComments', Localization.Revision), Mode=OneWay}"/>
-                        <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="79*,21*" ColumnSpacing="2" Height="4"
-                              IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
-                            <Border Background="{ThemeResource VoicesInk}" CornerRadius="2"/>
-                            <Border Grid.Column="1" Background="{ThemeResource VoicesTint}" CornerRadius="2"/>
-                        </Grid>
-                    </Grid>
-                </Border>
-            </Grid>
-        </Border>
-
-        <Border Style="{StaticResource ShowcaseCard}" Background="{ThemeResource TrendSurface}" BorderBrush="{ThemeResource TrendEdge}">
-            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10">
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="9">
-                    <Border Style="{StaticResource ShowcaseBadge}" Background="{ThemeResource TrendTint}">
-                        <icon:SymbolIcon Symbol="SlideTextSparkle" FontSize="16" Foreground="{ThemeResource TrendInk}" AutomationProperties.AccessibilityView="Raw"/>
-                    </Border>
-                    <TextBlock Grid.Column="1" Style="{StaticResource ShowcaseHeading}" Text="{x:Bind Text('PulseTrend', Localization.Revision), Mode=OneWay}"/>
-                    <Border Grid.Column="2" Width="17" Height="2" CornerRadius="1" Background="{ThemeResource TrendInk}" Opacity="0.72"
-                            VerticalAlignment="Center" IsHitTestVisible="False"/>
-                </Grid>
-
-                <Grid Grid.Row="1" Height="108">
-                    <Border CornerRadius="12" Background="{ThemeResource TrendTint}" Opacity="0.24"/>
-                    <Viewbox Margin="8,5" Stretch="Fill" FlowDirection="LeftToRight"
-                             IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
-                        <Canvas Width="264" Height="100">
-                            <Path Data="M 9,23 H 255 M 9,45 H 255 M 9,67 H 255 M 9,89 H 255"
-                                  Stroke="{ThemeResource TrendInk}" Opacity="0.26" StrokeThickness="1" StrokeDashArray="3,4"/>
-                            <Path Data="M 9,9 V 89 M 50,9 V 89 M 91,9 V 89 M 132,9 V 89 M 173,9 V 89 M 214,9 V 89"
-                                  Stroke="{ThemeResource TrendInk}" Opacity="0.12" StrokeThickness="1"/>
-                            <!-- Original ordered sample: 2, 1, 3, 4, 3, 4, 6. -->
-                            <Path Data="M 9,68 C 25,68 34,80 50,80 C 66,80 75,56 91,56 C 107,56 116,44 132,44 C 148,44 157,56 173,56 C 189,56 198,44 214,44 C 230,44 239,20 255,20 V 89 H 9 Z"
-                                  Fill="{ThemeResource TrendTint}" Opacity="0.83"/>
-                            <Path Data="M 9,68 C 25,68 34,80 50,80 C 66,80 75,56 91,56 C 107,56 116,44 132,44 C 148,44 157,56 173,56 C 189,56 198,44 214,44 C 230,44 239,20 255,20"
-                                  Stroke="{ThemeResource TrendInk}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                            <Path Data="M 255,20 V 90" Stroke="{ThemeResource TrendInk}" StrokeThickness="1" Opacity="0.45" StrokeDashArray="2,2"/>
-                            <Ellipse Canvas.Left="248" Canvas.Top="13" Width="14" Height="14" Stroke="{ThemeResource TrendInk}" Opacity="0.5" StrokeThickness="1"/>
-                            <Ellipse Canvas.Left="252" Canvas.Top="17" Width="6" Height="6" Fill="{ThemeResource TrendInk}"/>
-                        </Canvas>
-                    </Viewbox>
-                </Grid>
-
-                <Border Grid.Row="2" CornerRadius="9" Padding="9,7" Background="{ThemeResource TrendTint}" HorizontalAlignment="Left">
-                    <TextBlock Style="{StaticResource ShowcaseNote}" Foreground="{ThemeResource TrendInk}" FontWeight="SemiBold"
-                               Text="{x:Bind Text('HeartRateChange', Localization.Revision), Mode=OneWay}"/>
-                </Border>
-            </Grid>
-        </Border>
-
-        <Border Style="{StaticResource ShowcaseCard}" Background="{ThemeResource SummarySurface}" BorderBrush="{ThemeResource SummaryEdge}">
-            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10">
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="9">
-                    <Border Style="{StaticResource ShowcaseBadge}" Background="{ThemeResource SummaryTint}">
-                        <icon:SymbolIcon Symbol="Agents" FontSize="16" Foreground="{ThemeResource SummaryInk}" AutomationProperties.AccessibilityView="Raw"/>
-                    </Border>
-                    <TextBlock Grid.Column="1" Style="{StaticResource ShowcaseHeading}" Text="{x:Bind Text('AiSummary', Localization.Revision), Mode=OneWay}"/>
-                    <Border Grid.Column="2" Width="17" Height="2" CornerRadius="1" Background="{ThemeResource SummaryInk}" Opacity="0.72"
-                            VerticalAlignment="Center" IsHitTestVisible="False"/>
-                </Grid>
-
-                <Grid Grid.Row="1" ColumnSpacing="10" MinHeight="94" VerticalAlignment="Center">
+    Loaded="Showcase_Loaded"
+    Unloaded="Showcase_Unloaded">
+    <controls:TrackInsightsPanel>
+        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid Width="300" Height="100" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondary}"
+                  AutomationProperties.Name="{x:Bind Text('HeartRate', Localization.Revision), Mode=OneWay}">
+                <Grid>
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="0.43*" MaxWidth="72"/>
+                        <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock VerticalAlignment="Center" FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap"
-                               Foreground="{ThemeResource SummaryInk}" Text="{x:Bind Text('SampleAiQuote', Localization.Revision), Mode=OneWay}"/>
-                    <Viewbox Grid.Column="1" MaxWidth="72" Height="78" VerticalAlignment="Center" Stretch="Uniform" FlowDirection="LeftToRight"
-                             IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
-                        <Canvas Width="84" Height="87">
-                            <Path Data="M 4,47 C 12,19 63,13 79,34 C 93,54 44,78 22,72 C 0,67 1,56 4,47 Z"
-                                  Stroke="{ThemeResource SummaryInk}" StrokeThickness="1" Opacity="0.35"/>
-                            <Path Data="M 42,8 C 62,10 70,66 50,78 C 25,94 15,48 23,25 C 27,13 33,8 42,8 Z"
-                                  Stroke="{ThemeResource SummaryInk}" StrokeThickness="1" Opacity="0.32"/>
-                            <Path Data="M 41,17 L 50,35 L 69,44 L 50,53 L 41,71 L 32,53 L 13,44 L 32,35 Z"
-                                  Stroke="{ThemeResource SummaryInk}" Fill="{ThemeResource SummaryTint}" StrokeThickness="1.4" StrokeLineJoin="Round"/>
-                            <Path Data="M 41,29 L 46,39 L 56,44 L 46,49 L 41,59 L 36,49 L 26,44 L 36,39 Z"
-                                  Fill="{ThemeResource SummaryInk}" Opacity="0.66"/>
-                            <Ellipse Canvas.Left="66" Canvas.Top="15" Width="5" Height="5" Fill="{ThemeResource SummaryInk}"/>
-                            <Ellipse Canvas.Left="12" Canvas.Top="65" Width="4" Height="4" Fill="{ThemeResource SummaryInk}"/>
-                        </Canvas>
-                    </Viewbox>
-                </Grid>
-
-                <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="6">
-                    <Border Style="{StaticResource ShowcaseMetric}">
-                        <TextBlock Style="{StaticResource ShowcaseNote}" Foreground="{ThemeResource SummaryInk}"
-                                   Text="{x:Bind Text('SampleSatisfaction', Localization.Revision), Mode=OneWay}"/>
-                    </Border>
-                    <Border Grid.Column="1" Style="{StaticResource ShowcaseMetric}">
-                        <TextBlock Style="{StaticResource ShowcaseNote}"
-                                   Text="{x:Bind Text('SampleComments', Localization.Revision), Mode=OneWay}"/>
-                    </Border>
+                    <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="{ThemeResource TextFillColorPrimaryBrush}" IconVariant="Color" FontSize="40" Symbol="Heart"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Vertical">
+                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                            <StackPanel Margin="6,4" Orientation="Vertical">
+                                <Grid>
+                                    <dev:StorageRing AutomationProperties.AccessibilityView="Raw" PercentCritical="50" Value="67" ValueRingThickness="3" Height="34" Width="34" TrackRingThickness="1"/>
+                                    <TextBlock FontSize="10" Opacity="0.8" Text="67" AutomationProperties.Name="{x:Bind Text('HeartRateValue', Localization.Revision), Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Grid>
+                                <TextBlock HorizontalAlignment="Center" Opacity="0.8" Margin="0,4,0,0" Text="HR"/>
+                            </StackPanel>
+                            <StackPanel Margin="6,4" Orientation="Vertical">
+                                <Grid>
+                                    <dev:StorageRing AutomationProperties.AccessibilityView="Raw" PercentCritical="50" Value="29" ValueRingThickness="3" Height="34" Width="34" TrackRingThickness="1"/>
+                                    <TextBlock FontSize="10" Opacity="0.8" Text="29" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Grid>
+                                <TextBlock HorizontalAlignment="Center" Opacity="0.8" Margin="0,4,0,0" Text="VR"/>
+                            </StackPanel>
+                            <StackPanel Margin="6,4" Orientation="Vertical">
+                                <Grid>
+                                    <dev:StorageRing AutomationProperties.AccessibilityView="Raw" PercentCritical="50" Value="11" PercentCaution="0" ValueRingThickness="3" Height="34" Width="34" TrackRingThickness="1"/>
+                                    <TextBlock FontSize="10" Opacity="0.8" Text="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Grid>
+                                <TextBlock HorizontalAlignment="Center" Opacity="0.8" Margin="0,4,0,0" Text="SW"/>
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" HorizontalAlignment="Right" Orientation="Horizontal">
+                            <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Margin="16,0,0,0" Foreground="{ThemeResource TextFillColorPrimaryBrush}" FontSize="10" Symbol="Note"/>
+                            <TextBlock Margin="4,0,0,0" Opacity="0.6" FontSize="10" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('HeartRateChange', Localization.Revision), Mode=OneWay}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <Button Grid.Column="2" HorizontalAlignment="Right" CornerRadius="0,8,8,0" VerticalAlignment="Stretch"
+                            IsTabStop="False" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+                        <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" FontSize="12" Symbol="ArrowRight"/>
+                    </Button>
                 </Grid>
             </Grid>
-        </Border>
-    </controls:SettingsCardPanel>
+        </Viewbox>
+
+        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid Width="300" Height="100" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondary}"
+                  AutomationProperties.Name="{x:Bind Text('ListenerVoices', Localization.Revision), Mode=OneWay}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="auto"/>
+                    </Grid.ColumnDefinitions>
+                    <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="{ThemeResource TextFillColorPrimaryBrush}" IconVariant="Color" FontSize="40" Symbol="Comment"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Orientation="Vertical">
+                        <StackPanel Margin="2" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" HorizontalAlignment="Right" Orientation="Horizontal">
+                            <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="14" Symbol="Comment"/>
+                            <TextBlock Margin="4,0,0,0" Opacity="0.8" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('InsightViewLabel', Localization.Revision), Mode=OneWay}"/>
+                            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Opacity="0.7" FontSize="10" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('SampleListenerQuote', Localization.Revision), Mode=OneWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="2" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" HorizontalAlignment="Right" Orientation="Horizontal">
+                            <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="14" Symbol="Calendar"/>
+                            <TextBlock Margin="4,0,0,0" Opacity="0.8" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('InsightSatisfactionLabel', Localization.Revision), Mode=OneWay}"/>
+                            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Opacity="0.7" FontSize="10" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('SampleSatisfaction', Localization.Revision), Mode=OneWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="2" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" HorizontalAlignment="Right" Orientation="Horizontal">
+                            <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="14" Symbol="Sanitize"/>
+                            <TextBlock Margin="4,0,0,0" Opacity="0.8" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('InsightCommentCountLabel', Localization.Revision), Mode=OneWay}"/>
+                            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Opacity="0.7" FontSize="10" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('SampleComments', Localization.Revision), Mode=OneWay}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <Button Grid.Column="2" HorizontalAlignment="Right" CornerRadius="0,8,8,0" VerticalAlignment="Stretch"
+                            IsTabStop="False" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+                        <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" FontSize="12" Symbol="ArrowRight"/>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Viewbox>
+
+        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid Width="300" Height="100" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondary}"
+                  AutomationProperties.Name="{x:Bind Text('PulseTrend', Localization.Revision), Mode=OneWay}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="auto"/>
+                    </Grid.ColumnDefinitions>
+                    <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="{ThemeResource TextFillColorPrimaryBrush}" IconVariant="Color" FontSize="40" Symbol="SlideTextSparkle"/>
+                    <StackPanel Orientation="Vertical" Grid.Column="1" Margin="14" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                        <Grid MinHeight="60" EffectiveViewportChanged="TrendHost_EffectiveViewportChanged">
+                        <lvc:CartesianChart x:Name="MusicInsightsChart" x:Load="{x:Bind IsTrendLoaded, Mode=OneWay}" AnimationsSpeed="0:0:0"
+                                                    HorizontalAlignment="Stretch" MinHeight="60" VerticalAlignment="Stretch" Background="Transparent">
+                            <lvc:CartesianChart.XAxes>
+                                <lvc:AxesCollection>
+                                    <lvc:XamlAxis ShowSeparatorLines="False" Labels="{x:Null}" LabelsRotation="0" Labeler="{x:Bind EmptyAxisLabel}" LabelsPaint="{x:Null}" TicksPaint="{lvc:SolidColorPaint Color='#232323'}" SeparatorsPaint="{lvc:SolidColorPaint Color='#00000000'}"/>
+                                </lvc:AxesCollection>
+                            </lvc:CartesianChart.XAxes>
+                            <lvc:CartesianChart.YAxes>
+                                <lvc:AxesCollection>
+                                    <lvc:XamlAxis ShowSeparatorLines="False" Labels="{x:Null}" Labeler="{x:Bind EmptyAxisLabel}" LabelsPaint="{x:Null}" TicksPaint="{lvc:SolidColorPaint Color='#232323'}" SeparatorsPaint="{lvc:SolidColorPaint Color='#00000000'}"/>
+                                </lvc:AxesCollection>
+                            </lvc:CartesianChart.YAxes>
+                            <lvc:CartesianChart.Series>
+                                <lvc:SeriesCollection>
+                                    <lvc:XamlLineSeries Values="{x:Bind TrendValues}" Fill="{x:Null}" GeometrySize="4" LineSmoothness="30"/>
+                                </lvc:SeriesCollection>
+                            </lvc:CartesianChart.Series>
+                        </lvc:CartesianChart>
+                        </Grid>
+                        <StackPanel FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" HorizontalAlignment="Right" Orientation="Horizontal">
+                            <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Margin="16,0,0,0" Foreground="{ThemeResource TextFillColorPrimaryBrush}" FontSize="10" Symbol="Note"/>
+                            <TextBlock Margin="4,0,0,0" Opacity="0.6" FontSize="10" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('HeartRateChange', Localization.Revision), Mode=OneWay}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <Button Grid.Column="2" HorizontalAlignment="Right" CornerRadius="0,8,8,0" VerticalAlignment="Stretch"
+                            IsTabStop="False" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+                        <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" FontSize="12" Symbol="ArrowRight"/>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Viewbox>
+
+        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid Width="300" Height="100" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorSecondary}"
+                  AutomationProperties.Name="{x:Bind Text('AiSummary', Localization.Revision), Mode=OneWay}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="auto"/>
+                    </Grid.ColumnDefinitions>
+                    <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="{ThemeResource TextFillColorPrimaryBrush}" IconVariant="Color" FontSize="40" Symbol="Agents"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Orientation="Vertical">
+                        <StackPanel Margin="2" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" HorizontalAlignment="Right" Orientation="Horizontal">
+                            <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="14" Symbol="Comment"/>
+                            <TextBlock Margin="4,0,0,0" Opacity="0.8" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('InsightViewLabel', Localization.Revision), Mode=OneWay}"/>
+                            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Opacity="0.7" FontSize="10" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('SampleListenerQuote', Localization.Revision), Mode=OneWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="2" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" HorizontalAlignment="Right" Orientation="Horizontal">
+                            <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="14" Symbol="Calendar"/>
+                            <TextBlock Margin="4,0,0,0" Opacity="0.8" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('InsightSatisfactionLabel', Localization.Revision), Mode=OneWay}"/>
+                            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Opacity="0.7" FontSize="10" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('SampleSatisfaction', Localization.Revision), Mode=OneWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="2" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" HorizontalAlignment="Right" Orientation="Horizontal">
+                            <icon:SymbolIcon Opacity="0.9" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="14" Symbol="Sanitize"/>
+                            <TextBlock Margin="4,0,0,0" Opacity="0.8" FontSize="12" Foreground="{ThemeResource SystemAccentColor}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('InsightCommentCountLabel', Localization.Revision), Mode=OneWay}"/>
+                            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Opacity="0.7" FontSize="10" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind Text('SampleComments', Localization.Revision), Mode=OneWay}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <Button Grid.Column="2" HorizontalAlignment="Right" CornerRadius="0,8,8,0" VerticalAlignment="Stretch"
+                            IsTabStop="False" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+                        <icon:SymbolIcon Opacity="0.6" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" FontSize="12" Symbol="ArrowRight"/>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Viewbox>
+    </controls:TrackInsightsPanel>
 </UserControl>

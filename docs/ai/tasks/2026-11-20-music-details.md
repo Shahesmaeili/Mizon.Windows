@@ -10,10 +10,13 @@ The header measures the title and its action group before placing them. The
 four actions share the title row whenever their natural widths fit. At smaller
 widths, the group moves below and can wrap internally. The four lower cards
 retain the original sample heart rate, listener feedback, heart-rate trend and
-AI summary. The four cards use a pulse dial, a listener quote and satisfaction
-bar, a gridded trend chart, and an AI summary with native XAML illustrations.
-The trend draws the original sample series. The section fits one, two or four
-columns with no visible sample caption.
+AI summary. The four cards reuse the original compact 300-by-100 layout,
+colored icons, StorageRing values, arrow edges and line series. Their original
+16-unit spacing is preserved when they wrap. Below 300 units a card scales
+uniformly. The trend loads at low dispatcher priority when it enters the
+viewport, retains its instance while scrolling, and releases it on page
+detach. The XAML line series reads its seven samples from a shared read-only
+collection of boxed numbers. The sample caption remains absent.
 
 The transport exposes native Play/Pause and Repeat controls with independent
 focus stops. Only the original waveform is shown for seeking. With focus on
@@ -61,5 +64,13 @@ Verification:
   and 1320 pixels. The middle widths use two balanced columns, the widest
   fits four, and the narrow layout shows one. The fixture also verified there
   is no sample caption in Persian or English.
+- The original-layout restoration tested the actual compiled control in a
+  hidden WinUI scroller. It verified chart creation on visibility, retention
+  during scrolling, release on detach and recreation on return. It also
+  verified the original card offsets, 16-unit row spacing and fit at a
+  240-unit viewport. The existing MCP permission checks and the app's
+  Debug build and NativeAOT publication passed again. The separate native
+  fixture failed at startup because its linker inputs omitted WinRT.Runtime.
+  Chart lifecycle was exercised in the fixture's managed WinUI run.
 - Packaged-page visuals and animations, physical Xbox hardware and live
   Narrator output were not exercised.

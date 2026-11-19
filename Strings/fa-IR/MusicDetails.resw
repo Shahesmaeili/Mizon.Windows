@@ -32,14 +32,16 @@
   <data name="ViewsStatus" xml:space="preserve"><value>{0:N0} بازدید، {1:N0} نفر در حال مشاهده</value></data>
   <data name="HeartRate" xml:space="preserve"><value>ضربان قلب</value></data>
   <data name="HeartRateValue" xml:space="preserve"><value>۶۷ ضربان در دقیقه</value></data>
-  <data name="HeartRateChange" xml:space="preserve"><value>افزایش ۱۷ درصدی ضربان قلب</value></data>
+  <data name="HeartRateChange" xml:space="preserve"><value>افزایش 17 درصدی ضربان قلب</value></data>
   <data name="ListenerVoices" xml:space="preserve"><value>نظر شنونده‌ها</value></data>
-  <data name="SampleListenerQuote" xml:space="preserve"><value>«خیلی خفن»</value></data>
-  <data name="SampleSatisfaction" xml:space="preserve"><value>۷۹٪ رضایت</value></data>
-  <data name="SampleComments" xml:space="preserve"><value>۷۴۷ دیدگاه</value></data>
+  <data name="SampleListenerQuote" xml:space="preserve"><value>خیلی خفن</value></data>
+  <data name="SampleSatisfaction" xml:space="preserve"><value>79 درصد</value></data>
+  <data name="SampleComments" xml:space="preserve"><value>747 دیدگاه</value></data>
   <data name="PulseTrend" xml:space="preserve"><value>روند ضربان قلب</value></data>
   <data name="AiSummary" xml:space="preserve"><value>خلاصهٔ هوش مصنوعی</value></data>
-  <data name="SampleAiQuote" xml:space="preserve"><value>شنونده‌ها آهنگ را «خیلی خفن» توصیف کردند.</value></data>
   <data name="Waveform" xml:space="preserve"><value>موج صدای آهنگ</value></data>
   <data name="WaveformControls" xml:space="preserve"><value>با پیج‌آپ یا تریگر چپ، پنج ثانیه عقب بروید. با پیج‌داون یا تریگر راست، پنج ثانیه جلو بروید.</value></data>
+  <data name="InsightViewLabel" xml:space="preserve"><value>دیدگاه کاربران:</value></data>
+  <data name="InsightSatisfactionLabel" xml:space="preserve"><value>میزان رضایت:</value></data>
+  <data name="InsightCommentCountLabel" xml:space="preserve"><value>تعداد دیدگاه ها:</value></data>
 </root>

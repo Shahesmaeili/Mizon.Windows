@@ -34,12 +34,14 @@
   <data name="HeartRateValue" xml:space="preserve"><value>67 beats per minute</value></data>
   <data name="HeartRateChange" xml:space="preserve"><value>Heart rate increased by 17 percent</value></data>
   <data name="ListenerVoices" xml:space="preserve"><value>Listener feedback</value></data>
-  <data name="SampleListenerQuote" xml:space="preserve"><value>“Loved it”</value></data>
-  <data name="SampleSatisfaction" xml:space="preserve"><value>79% satisfaction</value></data>
+  <data name="SampleListenerQuote" xml:space="preserve"><value>Loved it</value></data>
+  <data name="SampleSatisfaction" xml:space="preserve"><value>79 percent</value></data>
   <data name="SampleComments" xml:space="preserve"><value>747 comments</value></data>
   <data name="PulseTrend" xml:space="preserve"><value>Heart rate trend</value></data>
   <data name="AiSummary" xml:space="preserve"><value>AI summary</value></data>
-  <data name="SampleAiQuote" xml:space="preserve"><value>Listeners said they loved this track.</value></data>
   <data name="Waveform" xml:space="preserve"><value>Playback waveform</value></data>
   <data name="WaveformControls" xml:space="preserve"><value>Use Page Up or the left trigger to go back five seconds, or Page Down or the right trigger to go forward five seconds.</value></data>
+  <data name="InsightViewLabel" xml:space="preserve"><value>Listener feedback:</value></data>
+  <data name="InsightSatisfactionLabel" xml:space="preserve"><value>Satisfaction:</value></data>
+  <data name="InsightCommentCountLabel" xml:space="preserve"><value>Comment count:</value></data>
 </root>
