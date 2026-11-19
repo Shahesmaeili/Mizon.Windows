@@ -46,15 +46,7 @@ public sealed partial class MusicsPage
             VolumeSlider.Margin = new Thickness(16, wide ? 0 : 24, 0, 0);
         }
 
-        // Keep the original positions when they fit; wrap only the groups that would overlap.
-        var sharedHeading = informationWidth >= 1000;
-        HeaderDock.ColumnDefinitions[1].Width = sharedHeading ? GridLength.Auto : new GridLength(0);
-        Grid.SetRow(UtilityActions, sharedHeading ? 0 : 1);
-        Grid.SetColumn(UtilityActions, sharedHeading ? 1 : 0);
-        Grid.SetColumnSpan(UtilityActions, sharedHeading ? 1 : 2);
-        UtilityActions.Margin = new Thickness(0, sharedHeading ? 0 : 8, 0, sharedHeading ? 0 : 8);
-        UtilityActions.VerticalAlignment = VerticalAlignment.Center;
-        var titleWidth = Math.Max(1, informationWidth - 76 - (sharedHeading ? 260 : 0));
+        var titleWidth = Math.Max(1, informationWidth - 82);
         TrackTitleText.MaxWidth = titleWidth;
         TrackPersianTitleText.MaxWidth = TrackAlbumText.MaxWidth = Math.Max(1, titleWidth - 8);
         GenreRail.MaxWidth = LabelLink.MaxWidth = titleWidth;
@@ -76,15 +68,5 @@ public sealed partial class MusicsPage
         Grid.SetColumnSpan(MixerControls, sharedLyrics ? 1 : 3);
         MixerControls.Margin = new Thickness(0, sharedLyrics ? 0 : 8, 0, 0);
         CurrentLyricText.MaxWidth = Math.Clamp(width - (sharedLyrics ? 484 : 224), 1, 420);
-
-        var available = Math.Max(1, width - 64);
-        foreach (var child in InsightsRail.Children)
-        {
-            if (child is not FrameworkElement card) continue;
-            var minimum = Math.Min(300, available);
-            if (card.MinWidth > minimum) card.MinWidth = minimum;
-            card.MaxWidth = available;
-            card.MinWidth = minimum;
-        }
     }
 }

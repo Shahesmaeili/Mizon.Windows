@@ -127,4 +127,12 @@
   <data name="ReadPersonProfile" xml:space="preserve"><value>Reading the artist profile</value></data>
   <data name="ChangePersonFollow" xml:space="preserve"><value>Updating artist follow status</value></data>
   <data name="BrowsePersonTracks" xml:space="preserve"><value>Browsing artist tracks</value></data>
+  <data name="MusicDetailsGroup" xml:space="preserve"><value>Track details</value></data>
+  <data name="MusicDetailsGroupHint" xml:space="preserve"><value>Applies to the track currently open in Mizon.</value></data>
+  <data name="PermissionMusicDetailsRead" xml:space="preserve"><value>Read track details</value></data>
+  <data name="PermissionMusicDetailsReadHint" xml:space="preserve"><value>Read track metadata, playback, cover and credit status.</value></data>
+  <data name="PermissionMusicDetailsControl" xml:space="preserve"><value>Control track details</value></data>
+  <data name="PermissionMusicDetailsControlHint" xml:space="preserve"><value>Open or close the cover preview and set repeat for the active track.</value></data>
+  <data name="ReadMusicDetails" xml:space="preserve"><value>Reading track details</value></data>
+  <data name="ChangeMusicDetails" xml:space="preserve"><value>Changing the cover preview or repeat</value></data>
 </root>

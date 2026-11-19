@@ -10,6 +10,9 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
     private const string EmptySchema = """{"type":"object","properties":{},"additionalProperties":false}""";
     private static readonly Tool[] Catalog =
     [
+        Define("mizon_get_music_details", "Track details state", "Read metadata and playback, cover, and contributor status for the active track. Requires independent Track details read consent.", EmptySchema, readOnly: true),
+        Define("mizon_set_music_details", "Set track details state", "Set repeat or open/close the cover preview on the active track. Supply exactly one desired boolean. Requires Track details control. State readback requires Track details read consent.",
+            """{"type":"object","properties":{"repeatEnabled":{"type":"boolean","description":"Desired repeat-one state."},"coverOpen":{"type":"boolean","description":"Whether the cover preview should be open."}},"oneOf":[{"required":["repeatEnabled"]},{"required":["coverOpen"]}],"additionalProperties":false}"""),
         Define("mizon_get_person_profile", "Artist profile state", "Read the active artist profile, counts and up to the most recently displayed 48 tracks. Requires Artist profile read consent.", EmptySchema, readOnly: true),
         Define("mizon_set_person_following", "Follow or unfollow an artist", "Set the desired follow state on the active artist profile for the signed-in account. Requires Artist profile control consent.",
             """{"type":"object","properties":{"following":{"type":"boolean"}},"required":["following"],"additionalProperties":false}""", openWorld: true),
@@ -86,6 +89,21 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
         var args = call.Arguments;
         switch (call.Name)
         {
+            case "mizon_get_music_details":
+                CheckKeys(args);
+                return new() { Operation = "get_music_details" };
+            case "mizon_set_music_details":
+                CheckKeys(args, "repeatEnabled", "coverOpen");
+                if (args is null || args.Count != 1) throw new ArgumentException();
+                var setRepeat = args.TryGetValue("repeatEnabled", out var detailValue);
+                if (!setRepeat && !args.TryGetValue("coverOpen", out detailValue)) throw new ArgumentException();
+                if (detailValue.ValueKind is not (JsonValueKind.True or JsonValueKind.False)) throw new ArgumentException();
+                return new()
+                {
+                    Operation = "set_music_details", MusicDetails = setRepeat
+                        ? new() { RepeatEnabled = detailValue.GetBoolean() }
+                        : new() { CoverOpen = detailValue.GetBoolean() }
+                };
             case "mizon_get_person_profile":
                 CheckKeys(args);
                 return new() { Operation = "get_person_profile" };

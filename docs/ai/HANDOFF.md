@@ -2,6 +2,13 @@
 
 Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Track detail layout, transport and input — 2026-11-20
+
+Track actions move below the heading only when their measured sizes no longer
+fit. The page uses native transport and cover actions, resolves credit portraits
+through the media cache, and exposes independent track-detail grants in MCP.
+See the [task record](tasks/2026-11-20-music-details.md).
+
 ## Welcome typography and profile entrance — 2026-11-18
 
 The Welcome labels, error actions and language tooltip bind to the current

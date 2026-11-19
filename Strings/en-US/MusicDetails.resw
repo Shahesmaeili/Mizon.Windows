@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Play" xml:space="preserve"><value>Play track</value></data>
+  <data name="Pause" xml:space="preserve"><value>Pause track</value></data>
+  <data name="Repeat" xml:space="preserve"><value>Repeat this track</value></data>
+  <data name="Cover" xml:space="preserve"><value>Open cover preview</value></data>
+  <data name="CloseCover" xml:space="preserve"><value>Close cover preview</value></data>
+  <data name="ResetZoom" xml:space="preserve"><value>Reset cover zoom</value></data>
+  <data name="Download" xml:space="preserve"><value>Download track</value></data>
+  <data name="Shortcut" xml:space="preserve"><value>Create desktop shortcut</value></data>
+  <data name="FloatingPlayer" xml:space="preserve"><value>Open floating player</value></data>
+  <data name="CopyLink" xml:space="preserve"><value>Copy track link</value></data>
+  <data name="Support" xml:space="preserve"><value>Support the artist</value></data>
+  <data name="SupportInfo" xml:space="preserve"><value>Share this track to help more listeners discover the artist. Donations are currently unavailable.</value></data>
+  <data name="Audience" xml:space="preserve"><value>Total views</value></data>
+  <data name="LiveAudience" xml:space="preserve"><value>{0:N0} watching now</value></data>
+  <data name="Runtime" xml:space="preserve"><value>Track length</value></data>
+  <data name="Release" xml:space="preserve"><value>Release</value></data>
+  <data name="StandaloneRelease" xml:space="preserve"><value>Single</value></data>
+  <data name="Credits" xml:space="preserve"><value>Credits</value></data>
+  <data name="CreditCaption" xml:space="preserve"><value>Contributing roles</value></data>
+  <data name="ReleaseDate" xml:space="preserve"><value>Released {0:d}</value></data>
+  <data name="ReleaseDateUnknown" xml:space="preserve"><value>Release date unavailable</value></data>
+  <data name="DurationUnknown" xml:space="preserve"><value>Unavailable</value></data>
+  <data name="CopiedTitle" xml:space="preserve"><value>Link copied</value></data>
+  <data name="CopiedMessage" xml:space="preserve"><value>The track link was copied to the clipboard.</value></data>
+  <data name="Dismiss" xml:space="preserve"><value>OK</value></data>
+  <data name="Remixes" xml:space="preserve"><value>Remixes</value></data>
+  <data name="ArtistTracks" xml:space="preserve"><value>More tracks from these artists</value></data>
+  <data name="Comments" xml:space="preserve"><value>Comments</value></data>
+  <data name="AddToPlaylist" xml:space="preserve"><value>Add to playlist</value></data>
+  <data name="ZoomIn" xml:space="preserve"><value>Zoom into cover</value></data>
+  <data name="ZoomOut" xml:space="preserve"><value>Zoom out of cover</value></data>
+  <data name="Seek" xml:space="preserve"><value>Playback position</value></data>
+  <data name="SeekHint" xml:space="preserve"><value>Changes the position within the track, from zero to one hundred percent.</value></data>
+  <data name="Volume" xml:space="preserve"><value>Playback volume</value></data>
+  <data name="MixBalance" xml:space="preserve"><value>Balance between accompaniment and vocals</value></data>
+  <data name="StemMixer" xml:space="preserve"><value>Mix accompaniment and vocals</value></data>
+  <data name="Reactions" xml:space="preserve"><value>Track reactions</value></data>
+  <data name="ViewsStatus" xml:space="preserve"><value>{0:N0} total views, {1:N0} watching now</value></data>
+</root>

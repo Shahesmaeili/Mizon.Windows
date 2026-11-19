@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Play" xml:space="preserve"><value>پخش آهنگ</value></data>
+  <data name="Pause" xml:space="preserve"><value>مکث آهنگ</value></data>
+  <data name="Repeat" xml:space="preserve"><value>تکرار این آهنگ</value></data>
+  <data name="Cover" xml:space="preserve"><value>باز کردن پیش‌نمایش کاور</value></data>
+  <data name="CloseCover" xml:space="preserve"><value>بستن پیش‌نمایش کاور</value></data>
+  <data name="ResetZoom" xml:space="preserve"><value>بازنشانی بزرگ‌نمایی کاور</value></data>
+  <data name="Download" xml:space="preserve"><value>دانلود آهنگ</value></data>
+  <data name="Shortcut" xml:space="preserve"><value>ساخت میان‌بر روی دسکتاپ</value></data>
+  <data name="FloatingPlayer" xml:space="preserve"><value>باز کردن پلیر شناور</value></data>
+  <data name="CopyLink" xml:space="preserve"><value>کپی لینک آهنگ</value></data>
+  <data name="Support" xml:space="preserve"><value>حمایت از هنرمند</value></data>
+  <data name="SupportInfo" xml:space="preserve"><value>با اشتراک‌گذاری آهنگ، به شنونده‌های بیشتری کمک کن این هنرمند را پیدا کنند. حمایت مالی فعلاً در دسترس نیست.</value></data>
+  <data name="Audience" xml:space="preserve"><value>کل بازدیدها</value></data>
+  <data name="LiveAudience" xml:space="preserve"><value>{0:N0} نفر در حال مشاهده</value></data>
+  <data name="Runtime" xml:space="preserve"><value>مدت آهنگ</value></data>
+  <data name="Release" xml:space="preserve"><value>انتشار</value></data>
+  <data name="StandaloneRelease" xml:space="preserve"><value>تک‌آهنگ</value></data>
+  <data name="Credits" xml:space="preserve"><value>سازندگان</value></data>
+  <data name="CreditCaption" xml:space="preserve"><value>نقش‌های ثبت‌شده</value></data>
+  <data name="ReleaseDate" xml:space="preserve"><value>انتشار {0:d}</value></data>
+  <data name="ReleaseDateUnknown" xml:space="preserve"><value>تاریخ انتشار ثبت نشده</value></data>
+  <data name="DurationUnknown" xml:space="preserve"><value>نامشخص</value></data>
+  <data name="CopiedTitle" xml:space="preserve"><value>لینک کپی شد</value></data>
+  <data name="CopiedMessage" xml:space="preserve"><value>لینک آهنگ در کلیپ‌بورد قرار گرفت.</value></data>
+  <data name="Dismiss" xml:space="preserve"><value>باشه</value></data>
+  <data name="Remixes" xml:space="preserve"><value>ریمیکس‌ها</value></data>
+  <data name="ArtistTracks" xml:space="preserve"><value>دیگر آهنگ‌های خواننده‌ها</value></data>
+  <data name="Comments" xml:space="preserve"><value>نظرات</value></data>
+  <data name="AddToPlaylist" xml:space="preserve"><value>افزودن به پلی‌لیست</value></data>
+  <data name="ZoomIn" xml:space="preserve"><value>بزرگ کردن کاور</value></data>
+  <data name="ZoomOut" xml:space="preserve"><value>کوچک کردن کاور</value></data>
+  <data name="Seek" xml:space="preserve"><value>موقعیت پخش</value></data>
+  <data name="SeekHint" xml:space="preserve"><value>جای پخش آهنگ را از صفر تا صد درصد تغییر می‌دهد.</value></data>
+  <data name="Volume" xml:space="preserve"><value>بلندی صدای پخش</value></data>
+  <data name="MixBalance" xml:space="preserve"><value>تعادل صدای موسیقی و خواننده</value></data>
+  <data name="StemMixer" xml:space="preserve"><value>میکس صدای موسیقی و خواننده</value></data>
+  <data name="Reactions" xml:space="preserve"><value>واکنش‌های آهنگ</value></data>
+  <data name="ViewsStatus" xml:space="preserve"><value>{0:N0} بازدید، {1:N0} نفر در حال مشاهده</value></data>
+</root>

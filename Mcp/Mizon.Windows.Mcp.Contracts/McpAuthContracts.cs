@@ -20,6 +20,7 @@ public sealed record McpRequest
     public bool? FullScreen { get; init; }
     public McpVpnRequest? Vpn { get; init; }
     public McpPersonProfileRequest? PersonProfile { get; init; }
+    public McpMusicDetailsRequest? MusicDetails { get; init; }
 }
 
 // Input only. Never include this object in a response, diagnostic or exception log.
@@ -49,6 +50,7 @@ public sealed record McpResponse
     public McpWindowPresentationState? Window { get; init; }
     public McpVpnState? Vpn { get; init; }
     public McpPersonProfileState? PersonProfile { get; init; }
+    public McpMusicDetailsState? MusicDetails { get; init; }
     public McpConnectionStatus? Connection { get; init; }
 }
 
@@ -76,6 +78,8 @@ public sealed record McpConnectionStatus
     public bool AllowVpnControl { get; init; }
     public bool AllowPersonProfileRead { get; init; }
     public bool AllowPersonProfileControl { get; init; }
+    public bool AllowMusicDetailsRead { get; init; }
+    public bool AllowMusicDetailsControl { get; init; }
     public bool IsRemembered { get; init; }
     public bool IsConnected { get; init; }
 }

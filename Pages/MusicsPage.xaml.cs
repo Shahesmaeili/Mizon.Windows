@@ -1,6 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -23,6 +21,7 @@ using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System;
+using Microsoft.UI.Xaml.Input;
 using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -35,7 +34,20 @@ namespace Mizon.Windows.Pages
     /// </summary>
     public sealed partial class MusicsPage : Page
     {
-        private MusicPageViewModel ViewModel => (MusicPageViewModel)DataContext;
+        private MusicPageViewModel ViewModel { get; }
+        public LocalizationService Localization => LocalizationService.Current;
+        private string Text(string key, int revision) => Localization.GetString("MusicDetails/" + key, revision);
+        private string LiveAudienceLabel(int count, int revision) =>
+            Localization.Format("MusicDetails/LiveAudience", count);
+        private string ViewsLabel(int total, int live, int revision) =>
+            Localization.Format("MusicDetails/ViewsStatus", total, live);
+        private string ReleaseTitle(string? album, string? label, int revision) =>
+            album ?? label ?? Text("StandaloneRelease", revision);
+        private string ReleaseDateLabel(DateTimeOffset? date, int revision) =>
+            date is { } release ? Localization.Format("MusicDetails/ReleaseDate", release.Date)
+                : Text("ReleaseDateUnknown", revision);
+        private string DurationLabel(string? duration, int revision) =>
+            string.IsNullOrWhiteSpace(duration) ? Text("DurationUnknown", revision) : duration;
         private async void PictureInPicture_Click(object sender, RoutedEventArgs args)
         {
             try { await ((App)App.Current).Services.GetRequiredService<PictureInPictureService>().ShowMusicAsync(); }
@@ -57,18 +69,17 @@ namespace Mizon.Windows.Pages
         private Microsoft.UI.Dispatching.DispatcherQueueTimer? _coverTransitionTimeout;
         private bool _coverTransitionStarted, _coverTransitionCompleted, _destinationCoverReady;
         private CancellationTokenSource? _coverPreviewCancellation;
+        private Microsoft.UI.Dispatching.DispatcherQueueTimer? _coverPreviewCloseTimer;
+        private bool _isCoverPreviewOpen;
         private bool _navigationPreviewReady;
-        private bool _insightsCreated, _insightsQueued;
         private UserControls.StoryViewer? _storyViewer;
         private Button? _storySource;
-        private CompositionGeometricClip? _playClip, _likesClip;
-        private CompositionPathGeometry? _playClipGeometry, _likesClipGeometry;
-        private CanvasGeometry? _playClipSource, _likesClipSource;
     public MusicsPage()
         {
             var started = System.Diagnostics.Stopwatch.GetTimestamp();
-            this.InitializeComponent();
-            DataContext = ((App)App.Current).Services.GetRequiredService<MusicPageViewModel>();
+            ViewModel = ((App)App.Current).Services.GetRequiredService<MusicPageViewModel>();
+            InitializeComponent();
+            DataContext = ViewModel;
             System.Diagnostics.Debug.WriteLine($"[MusicNavigation] Page construction: {System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds:F1} ms");
         }
 
@@ -141,13 +152,14 @@ namespace Mizon.Windows.Pages
         protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs args)
         {
             CancelCommentNavigation();
+            ResetCoverPreview();
             ClearCoverTransition();
             base.OnNavigatedFrom(args);
         }
 
         internal MusicCoverTransition? PrepareReturnCover()
         {
-            var source = _navigationPreviewReady && NavigationCoverImage.Opacity > 0 ? NavigationCoverImage : CoverImage;
+            var source = PrepareReturnSource();
             if (source.Opacity <= 0) return null;
             return MusicCoverTransition.Prepare(source);
         }
@@ -179,7 +191,6 @@ namespace Mizon.Windows.Pages
             if (!ReferenceEquals(_coverTransition?.Animation, sender)) return;
             _coverTransitionCompleted = true;
             _coverNavigationSettled?.TrySetResult();
-            QueueInsightsCreation();
             StopCoverTransitionTimeout();
             _destinationCoverReady = HasCurrentDestinationCover();
             if (_destinationCoverReady) ClearCoverTransition();
@@ -215,23 +226,6 @@ namespace Mizon.Windows.Pages
             NavigationCoverImage.Visibility = Visibility.Collapsed;
             _navigationPreviewReady = false;
             _coverTransitionStarted = _coverTransitionCompleted = _destinationCoverReady = false;
-            QueueInsightsCreation();
-        }
-
-        private void QueueInsightsCreation()
-        {
-            if (!_pageActive || !IsLoaded || _insightsCreated || _insightsQueued
-                || (_coverTransition is not null && !_coverTransitionCompleted)) return;
-            _insightsQueued = true;
-            if (!DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
-            {
-                _insightsQueued = false;
-                if (!_pageActive || !IsLoaded || _insightsCreated
-                    || (_coverTransition is not null && !_coverTransitionCompleted)) return;
-                // The fixed-height host remains in layout; initializing Skia must
-                // not delay the first frame or the connected cover animation.
-                _insightsCreated = FindName("MusicInsightsChart") is not null;
-            })) _insightsQueued = false;
         }
 
         private void StopCoverTransitionTimeout()
@@ -265,31 +259,39 @@ namespace Mizon.Windows.Pages
             }
         }
 
-        private async void AlbumDetailsTab_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+        private async void DetailsTab_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs e)
         {
-            CancelCommentNavigation();
-            CommentNavigationNotice.IsOpen = false;
-            await ViewModel.SelectAlbumDetailsAsync();
-        }
-
-        private async void ContributorDetailsTab_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
-        {
-            CancelCommentNavigation();
-            CommentNavigationNotice.IsOpen = false;
-            await ViewModel.SelectContributorDetailsAsync();
-        }
-
-        private async void CommentsDetailsTab_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
-        {
-            CancelCommentNavigation();
-            CommentNavigationNotice.IsOpen = false;
-            await ViewModel.SelectCommentsDetailsAsync();
+            if (!_pageActive || ViewModel.CurrentMusicPublicId != MusicPublicId) return;
+            try
+            {
+                if (sender.SelectedItem == AlbumDetailsTab && !ViewModel.IsAlbumDetailsSelected)
+                {
+                    CancelCommentNavigation();
+                    CommentNavigationNotice.IsOpen = false;
+                    await ViewModel.SelectAlbumDetailsAsync();
+                }
+                else if (sender.SelectedItem == ContributorDetailsTab && !ViewModel.IsContributorDetailsSelected)
+                {
+                    CancelCommentNavigation();
+                    CommentNavigationNotice.IsOpen = false;
+                    await ViewModel.SelectContributorDetailsAsync();
+                }
+                else if (sender.SelectedItem == CommentsDetailsTab && !ViewModel.IsCommentsDetailsSelected)
+                {
+                    CancelCommentNavigation();
+                    CommentNavigationNotice.IsOpen = false;
+                    await ViewModel.SelectCommentsDetailsAsync();
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception error) { AppLog.Error("Music details tab could not be loaded.", error); }
         }
 
         private void ContributorProfile_Click(object sender, RoutedEventArgs e)
         {
             if (sender is FrameworkElement { DataContext: MusicContributorItemViewModel person })
-                ViewModel.NavigationService.OpenPersonProfile(person.PersonPublicId);
+                ViewModel.NavigationService.OpenPersonProfile(person.PersonPublicId,
+                    sender is Button { Content: StackPanel content } && content.Children[0] is PersonPicture portrait ? portrait : null);
         }
 
         private void MusicDetailsMusicCard_Click(object sender, RoutedEventArgs e)
@@ -396,47 +398,17 @@ namespace Mizon.Windows.Pages
             if (_pageActive) return;
             _pageActive = true;
             ApplyDetailLayout(ActualWidth);
+            UpdateSeekSlider();
             ViewModel.PropertyChanged += ViewModel_PropertyChanged;
             MusicBorder.SizeChanged += MusicBorder_SizeChanged;
-            PlayPauseButton.SizeChanged += PlayerButton_SizeChanged;
-            LikesButton.SizeChanged += LikesButton_SizeChanged;
             InitializeCoverVisual();
             DispatcherQueue.TryEnqueue(async () =>
             {
                 if (!_pageActive) return;
                 TryStartCoverAnimation();
-                QueueInsightsCreation();
-                try { await ApplyButtonHalfCircleClip(); }
-                catch (Exception error) { AppLog.Error("Music play-button clipping failed.", error); }
                 if (_pendingCommentPublicId != Guid.Empty) await OpenCommentAsync(_pendingCommentPublicId);
             });
 
-
-            //      StorageFile file = await StorageFile.GetFileFromApplicationUriAsync(
-            //new Uri("ms-appx:///Assets/image1.jpeg"));
-
-            //      using IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.Read);
-
-            //      BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
-
-            //      SoftwareBitmap bitmap = await decoder.GetSoftwareBitmapAsync(
-            //          BitmapPixelFormat.Bgra8,
-            //          BitmapAlphaMode.Premultiplied);
-
-            //     var asdasd= BlurHash.Encode(bitmap);
-
-
-
-            //      var bmp = 
-            // BlurHash.Decode(asdasd, 128, 128);
-
-            //      var source = new SoftwareBitmapSource();
-
-
-
-            //      await source.SetBitmapAsync(bmp);
-
-            //      CoverImage.Source = source;
         }
 
         private void MusicPage_Unloaded(object sender, RoutedEventArgs e)
@@ -447,8 +419,6 @@ namespace Mizon.Windows.Pages
             ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
             ClearCoverTransition();
             MusicBorder.SizeChanged -= MusicBorder_SizeChanged;
-            PlayPauseButton.SizeChanged -= PlayerButton_SizeChanged;
-            LikesButton.SizeChanged -= LikesButton_SizeChanged;
             _storyViewer?.Close();
             _musicVisual?.StopAnimation("Scale");
             if (_musicVisual is not null) _musicVisual.Scale = Vector3.One;
@@ -456,27 +426,34 @@ namespace Mizon.Windows.Pages
             _musicSpringVector3NaturalMotionAnimation = null;
             _musicVisual = null;
             shadow.Receivers.Clear();
-            ElementCompositionPreview.GetElementVisual(PlayPauseButton).Clip = null;
-            ElementCompositionPreview.GetElementVisual(LikesButton).Clip = null;
-            _playClip?.Dispose(); _playClip = null;
-            _likesClip?.Dispose(); _likesClip = null;
-            _playClipGeometry?.Dispose(); _playClipGeometry = null;
-            _likesClipGeometry?.Dispose(); _likesClipGeometry = null;
-            _playClipSource?.Dispose(); _playClipSource = null;
-            _likesClipSource?.Dispose(); _likesClipSource = null;
-            ConnectedAnimationService.GetForCurrentView().GetAnimation("ImageToPopup")?.Cancel();
-            ConnectedAnimationService.GetForCurrentView().GetAnimation("PopupToImage")?.Cancel();
-            SmokeGrid.Visibility = Visibility.Collapsed;
-            SmokeGrid.Opacity = 0;
+            ResetCoverPreview();
         }
 
         private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(ViewModel.ServerWaveformIntensity))
-            {
                 CreateOrUpdateSpringAnimation(ViewModel.ServerWaveformIntensity);
-            }
+            else if (e.PropertyName is nameof(ViewModel.Duration) or nameof(ViewModel.CurrentPosition))
+                UpdateSeekSlider();
+        }
 
+        private bool _settingSeekPosition;
+
+        private void UpdateSeekSlider()
+        {
+            _settingSeekPosition = true;
+            try
+            {
+                SeekSlider.IsEnabled = ViewModel.DurationInSeconds > 0;
+                SeekSlider.Value = ViewModel.PlaybackPercent;
+            }
+            finally { _settingSeekPosition = false; }
+        }
+
+        private void SeekSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            if (!_pageActive || _settingSeekPosition || !IsMusicDetailsActive) return;
+            ViewModel.SeekToPercent(e.NewValue);
         }
 
         private async void Button_Click(object sender, RoutedEventArgs e)
@@ -523,75 +500,143 @@ namespace Mizon.Windows.Pages
             }
             finally { button.IsEnabled = true; }
         }
-        private void Image_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private void CoverButton_Click(object sender, RoutedEventArgs e) => SetCoverPreview(true, restoreFocus: true);
+
+        private bool SetCoverPreview(bool open, bool restoreFocus = false)
         {
-            if (string.IsNullOrWhiteSpace(ViewModel.CoverImagePath))
-                return;
+            if (!_pageActive) return false;
+            if (open == _isCoverPreviewOpen) return true;
+            if (open && (ViewModel.CurrentMusicPublicId != MusicPublicId ||
+                         string.IsNullOrWhiteSpace(ViewModel.CoverImagePath))) return false;
 
-            var connectedAnimationService = ConnectedAnimationService
-           .GetForCurrentView();
-            connectedAnimationService.DefaultDuration = TimeSpan.FromSeconds(0.8);
+            _isCoverPreviewOpen = open;
+            StopCoverPreviewClose();
+            CancelPreviewAnimation();
+            var activeCover = PrepareReturnSource();
+            var useMotion = new global::Windows.UI.ViewManagement.UISettings().AnimationsEnabled;
+            SmokeGrid.OpacityTransition = useMotion ? CoverPreviewFade : null;
+            if (open)
+            {
+                var animation = useMotion ? PreparePreviewAnimation(activeCover, "MusicCoverToPreview") : null;
+                SmokeGrid.IsHitTestVisible = true;
+                SmokeGrid.Visibility = Visibility.Visible;
+                SmokeGrid.Opacity = 1;
+                CoverPreviewScrollViewer.ChangeView(null, null, 1f, true);
+                if (restoreFocus) CloseCoverButton.Focus(FocusState.Programmatic);
+                DetailsScroller.IsEnabled = false;
+                StartPreviewAnimation(animation, ExpandedCoverImage);
+                return true;
+            }
 
-            // آماده‌سازی انیمیشن از عکس
-            var animation = connectedAnimationService
-               .PrepareToAnimate("ImageToPopup", CoverImage);
-
-            // نمایش لایهٔ بزرگ کاور با همان تصویر دانلود/کش‌شدهٔ موسیقی.
-            SmokeGrid.Visibility = Visibility.Visible;
-            SmokeGrid.Opacity = 1;
-            SmokeGrid.Focus(FocusState.Programmatic);
-            animation.Configuration = new BasicConnectedAnimationConfiguration();
-            CoverPreviewScrollViewer.ChangeView(null, null, 1f, true);
-
-            // شروع انیمیشن روی خود Image مقصد، نه یک Border یا تصویر نمونه.
-            animation.TryStart(ExpandedCoverImage);
-
-
-
-        }
-
-        private void BackButton_Click(object sender, RoutedEventArgs e)
-        {
-            CloseCoverPreview();
-        }
-
-        private void ResetCoverZoomButton_Click(object sender, RoutedEventArgs e)
-        {
-            CoverPreviewScrollViewer.ChangeView(null, null, 1f, false);
-        }
-
-        private void SmokeGrid_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
-        {
-            if (e.Key != VirtualKey.Escape)
-                return;
-
-            e.Handled = true;
-            CloseCoverPreview();
-        }
-
-        private void CloseCoverPreview()
-        {
-            if (SmokeGrid.Visibility != Visibility.Visible)
-                return;
-
-            var connectedAnimationService = ConnectedAnimationService
-           .GetForCurrentView();
-            connectedAnimationService.DefaultDuration = TimeSpan.FromSeconds(0.8);
-
-            var animation = connectedAnimationService
-       .PrepareToAnimate("PopupToImage", ExpandedCoverImage);
-            animation.Configuration = new BasicConnectedAnimationConfiguration();
-
+            var exit = useMotion ? PreparePreviewAnimation(ExpandedCoverImage, "MusicCoverFromPreview") : null;
+            DetailsScroller.IsEnabled = true;
+            SmokeGrid.IsHitTestVisible = false;
             SmokeGrid.Opacity = 0;
-
-            animation.TryStart(CoverImage);
-            animation.Completed += Animation_Completed;
+            if (restoreFocus) CoverButton.Focus(FocusState.Programmatic);
+            StartPreviewAnimation(exit, activeCover);
+            if (useMotion)
+            {
+                _coverPreviewCloseTimer = DispatcherQueue.CreateTimer();
+                _coverPreviewCloseTimer.IsRepeating = false;
+                _coverPreviewCloseTimer.Interval = CoverPreviewFade.Duration;
+                _coverPreviewCloseTimer.Tick += CoverPreviewClose_Tick;
+                _coverPreviewCloseTimer.Start();
+            }
+            else SmokeGrid.Visibility = Visibility.Collapsed;
+            return true;
         }
 
-        private void Animation_Completed(ConnectedAnimation sender, object args)
+        private Image PrepareReturnSource() =>
+            _navigationPreviewReady && NavigationCoverImage.Opacity > 0 ? NavigationCoverImage : CoverImage;
+
+        private ConnectedAnimation? PreparePreviewAnimation(Image image, string key)
         {
-            sender.Completed -= Animation_Completed;
+            if (image.Opacity == 0 || image.Source is null || image.ActualWidth <= 0 || image.ActualHeight <= 0)
+                return null;
+            var animation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate(key, image);
+            animation.Configuration = new BasicConnectedAnimationConfiguration();
+            return animation;
+        }
+
+        private static void StartPreviewAnimation(ConnectedAnimation? animation, Image destination)
+        {
+            if (animation is null) return;
+            try
+            {
+                if (!animation.TryStart(destination)) animation.Cancel();
+            }
+            catch (COMException error)
+            {
+                animation.Cancel();
+                AppLog.Error("The cover preview animation could not be started.", error);
+            }
+        }
+
+        private void StopCoverPreviewClose()
+        {
+            if (_coverPreviewCloseTimer is not { } timer) return;
+            _coverPreviewCloseTimer = null;
+            timer.Stop();
+            timer.Tick -= CoverPreviewClose_Tick;
+        }
+
+        private void CoverPreviewClose_Tick(Microsoft.UI.Dispatching.DispatcherQueueTimer sender, object args)
+        {
+            StopCoverPreviewClose();
+            if (!_isCoverPreviewOpen) SmokeGrid.Visibility = Visibility.Collapsed;
+        }
+
+        private void CancelPreviewAnimation()
+        {
+            var animations = ConnectedAnimationService.GetForCurrentView();
+            animations.GetAnimation("MusicCoverToPreview")?.Cancel();
+            animations.GetAnimation("MusicCoverFromPreview")?.Cancel();
+        }
+
+        private void ResetCoverPreview()
+        {
+            _isCoverPreviewOpen = false;
+            StopCoverPreviewClose();
+            CancelPreviewAnimation();
+            DetailsScroller.IsEnabled = true;
+            SmokeGrid.IsHitTestVisible = false;
             SmokeGrid.Visibility = Visibility.Collapsed;
+            SmokeGrid.Opacity = 0;
+        }
+
+        private void BackButton_Click(object sender, RoutedEventArgs e) => SetCoverPreview(false, restoreFocus: true);
+
+        private void ResetCoverZoomButton_Click(object sender, RoutedEventArgs e) =>
+            CoverPreviewScrollViewer.ChangeView(null, null, 1f, false);
+
+        private void ZoomInCover_Click(object sender, RoutedEventArgs e) => AdjustCoverZoom(1.25f);
+
+        private void ZoomOutCover_Click(object sender, RoutedEventArgs e) => AdjustCoverZoom(0.8f);
+
+        private void AdjustCoverZoom(float factor) => CoverPreviewScrollViewer.ChangeView(null, null,
+            Math.Clamp(CoverPreviewScrollViewer.ZoomFactor * factor, CoverPreviewScrollViewer.MinZoomFactor,
+                CoverPreviewScrollViewer.MaxZoomFactor), false);
+
+        private void MusicDetails_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            var gamepadBack = e.OriginalKey == VirtualKey.GamepadB;
+            if (!gamepadBack && e.Key != VirtualKey.Escape) return;
+            if (e.KeyStatus.WasKeyDown)
+            {
+                // A held B can close the preview or go back, but must not do both.
+                e.Handled = gamepadBack || _isCoverPreviewOpen;
+                return;
+            }
+            if (_isCoverPreviewOpen)
+            {
+                e.Handled = SetCoverPreview(false, restoreFocus: true);
+                return;
+            }
+            if (gamepadBack && Frame?.CanGoBack == true)
+            {
+                e.Handled = true;
+                Frame.GoBack();
+            }
         }
 
         private void TopEqualizerGrid_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
@@ -620,7 +665,7 @@ namespace Mizon.Windows.Pages
             {
                 int index = ViewModel.Bars.IndexOf(item);
 
-                ViewModel.SeekByProgress(TimeSpan.FromSeconds(index), index);
+                ViewModel.SeekByProgress(index);
                 e.Handled = true;
             }
         }
@@ -687,97 +732,6 @@ namespace Mizon.Windows.Pages
             }
         }
 
-        private void PlayerButton_SizeChanged(object sender, SizeChangedEventArgs e) => _ = ApplyButtonHalfCircleClip();
-        private void LikesButton_SizeChanged(object sender, SizeChangedEventArgs e) => _ = ApplyLikeButtonHalfCircleClip();
-
-        private Task ApplyButtonHalfCircleClip()
-        {
-            if (!_pageActive || PlayPauseButton.ActualWidth <= 0 || PlayPauseButton.ActualHeight <= 0)
-                return Task.CompletedTask;
-            var visual = ElementCompositionPreview.GetElementVisual(PlayPauseButton);
-            var compositor = visual.Compositor;
-
-            float width = (float)PlayPauseButton.ActualWidth;
-            float height = (float)PlayPauseButton.ActualHeight;
-
-            // شعاع دایره برای حفره
-            float radius = Math.Min(width, height) / 4; // یک چهارم کوچکترین بعد
-
-            // مرکز
-            float centerX = width / 2;
-            float centerY = height / 2;
-
-            var device = CanvasDevice.GetSharedDevice();
-
-            // ۱. ایجاد مستطیل کامل عکس
-            using var fullRect = CanvasGeometry.CreateRectangle(device, 0, 0, width, height);
-
-            // ۲. ایجاد دایره برای حفره
-            using var circle = CanvasGeometry.CreateCircle(device, 48, 52, 20);
-
-            // ۳. دایره را از مستطیل حذف کنید (Exclude = ایجاد سوراخ)
-            var geometryWithHole = fullRect.CombineWith(
-                circle,
-                Matrix3x2.Identity,
-                CanvasGeometryCombine.Exclude);
-
-            var compositionPath = new CompositionPath(geometryWithHole);
-            visual.Clip = null;
-            _playClip?.Dispose();
-            _playClipGeometry?.Dispose();
-            _playClipSource?.Dispose();
-            _playClipSource = geometryWithHole;
-            _playClipGeometry = compositor.CreatePathGeometry();
-            _playClipGeometry.Path = compositionPath;
-            _playClip = compositor.CreateGeometricClip(_playClipGeometry);
-            visual.Clip = _playClip;
-            return Task.CompletedTask;
-        }
-
-
-        private Task ApplyLikeButtonHalfCircleClip()
-        {
-            if (!_pageActive || LikesButton.ActualWidth <= 0 || LikesButton.ActualHeight <= 0)
-                return Task.CompletedTask;
-            var visual = ElementCompositionPreview.GetElementVisual(LikesButton);
-            var compositor = visual.Compositor;
-
-            float width = (float)LikesButton.ActualWidth;
-            float height = (float)LikesButton.ActualHeight;
-
-
-            var device = CanvasDevice.GetSharedDevice();
-
-            // ۱. ایجاد مستطیل کامل عکس
-            using var fullRect = CanvasGeometry.CreateRectangle(device, 0, 0, width, height);
-
-            // ۲. ایجاد دایره برای حفره
-            using var circle = CanvasGeometry.CreateCircle(device, -16, height / 2, 24);
-
-            // ۳. دایره را از مستطیل حذف کنید (Exclude = ایجاد سوراخ)
-            var geometryWithHole = fullRect.CombineWith(
-                circle,
-                Matrix3x2.Identity,
-                CanvasGeometryCombine.Exclude);
-
-            var compositionPath = new CompositionPath(geometryWithHole);
-            visual.Clip = null;
-            _likesClip?.Dispose();
-            _likesClipGeometry?.Dispose();
-            _likesClipSource?.Dispose();
-            _likesClipSource = geometryWithHole;
-            _likesClipGeometry = compositor.CreatePathGeometry();
-            _likesClipGeometry.Path = compositionPath;
-            _likesClip = compositor.CreateGeometricClip(_likesClipGeometry);
-            visual.Clip = _likesClip;
-            return Task.CompletedTask;
-        }
-
-        private void MusicBorder_Loaded(object sender, RoutedEventArgs e)
-        {
-            InitializeCoverVisual();
-        }
-
         private void InitializeCoverVisual()
         {
             if (!shadow.Receivers.Contains(ShadowCastGrid)) shadow.Receivers.Add(ShadowCastGrid);
@@ -805,11 +759,6 @@ namespace Mizon.Windows.Pages
         {
             var button = (Button)sender;
             ViewModel.EqualizerCommentBringToFront((EqualizerCommentItemViewModel)button.DataContext);
-        }
-
-        private async void LikeButton_Click(object sender, RoutedEventArgs e)
-        {
-            await ApplyLikeButtonHalfCircleClip();
         }
 
         private async void StoryCard_Click(object sender, RoutedEventArgs e)

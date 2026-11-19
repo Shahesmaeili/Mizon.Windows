@@ -5,6 +5,7 @@ using Mizon.API;
 using Mizon.API.Client.Operations.Musics;
 using Mizon.API.Client.Requests.Musics;
 using Mizon.Windows.Pages;
+using Mizon.Windows.Common;
 using Mizon.Windows.Services;
 using Mizon.Windows.ViewModels.Items;
 using System;
@@ -26,6 +27,7 @@ using System.Buffers;
 using Mizon.API.Client.Requests.Media;
 using Mizon.API.Client.Operations.Stories;
 using Mizon.API.Client.Requests.Stories;
+using WaveformResponse = Mizon.API.Client.Responses.Musics.WaveformResponse;
 
 namespace Mizon.Windows.ViewModels;
 
@@ -101,7 +103,7 @@ public partial class MusicPageViewModel : MainViewModel
     {
         get => field;
         set => SetField(ref field, value);
-    }
+    } = string.Empty;
 
     public string? PersianTitle
     {
@@ -161,6 +163,12 @@ public partial class MusicPageViewModel : MainViewModel
         set => SetField(ref field, value);
     }
 
+    public DateTimeOffset? ReleaseDateTime
+    {
+        get => field;
+        private set => SetField(ref field, value);
+    }
+
     public int ViewsCount
     {
         get => field;
@@ -201,7 +209,7 @@ public partial class MusicPageViewModel : MainViewModel
     {
         get => field;
         set => SetField(ref field, value);
-    }
+    } = string.Empty;
 
     public float ServerWaveformIntensity
     {
@@ -351,7 +359,7 @@ public partial class MusicPageViewModel : MainViewModel
                 _rgbMusicLightingService.Resume();
                 IsPlaying = true;
                 PlayType = PlayState.Playing;
-                _lastSecond = -1;
+                _lastPlayedBar = _lastQueuedPositionSecond = -1;
             }
             else
             {
@@ -372,7 +380,10 @@ public partial class MusicPageViewModel : MainViewModel
 
     }
 
-    private int _lastSecond = -1;
+    private int _lastPlayedBar = -1;
+    private int _paintedPlayedBar = -1;
+    private int _paintedHoverBar = -1;
+    private int _lastQueuedPositionSecond = -1;
     private int _lastLyricPositionInMilliseconds = -1;
     private MusicLyricLineItemViewModel? _activeLyricLine;
     private MusicLyricWordItemViewModel? _activeLyricWord;
@@ -406,25 +417,29 @@ public partial class MusicPageViewModel : MainViewModel
 
             playedIndex = (int)Math.Round(progress * (BarCount - 1));
         }
-        else if (_waveforms?.Count > 0)
+        else if (_waveforms is { Count: > 0 } waveform)
         {
-            // Fallback: map to waveform offsets if TrackDuration missing
-            int idx = _waveforms.FindIndex(w => w.OffsetInMilliseconds >= position.TotalMilliseconds);
-            if (idx < 0) idx = _waveforms.Count - 1;
-
-            playedIndex = (int)((double)idx * BarCount / Math.Max(1, _waveforms.Count) );
+            var index = FindWaveformIndex(waveform, (int)Math.Max(0d, position.TotalMilliseconds));
+            if (waveform[index].OffsetInMilliseconds < position.TotalMilliseconds)
+                index = Math.Min(index + 1, waveform.Count - 1);
+            playedIndex = Math.Min(BarCount - 1, (int)((long)index * BarCount / waveform.Count));
         }
 
-        // Avoid flooding UI thread: only update if index changed
-        if (playedIndex == _lastSecond)
-            return;
+        // Status text and waveform update independently. Long tracks can spend
+        // several seconds on a single bar without freezing the displayed time.
+        var second = (int)position.TotalSeconds;
+        var timeChanged = second != _lastQueuedPositionSecond;
+        var barChanged = playedIndex != _lastPlayedBar;
+        if (!timeChanged && !barChanged) return;
 
-        _lastSecond = playedIndex;
-
+        _lastQueuedPositionSecond = second;
+        _lastPlayedBar = playedIndex;
+        var musicId = _musicPublicId;
         _dispatcherQueue.TryEnqueue(() =>
         {
-            CurrentPosition = position.ToString(@"h\:mm\:ss");
-            UpdatePlayedPosition(playedIndex);
+            if (musicId != _musicPublicId) return;
+            if (timeChanged) CurrentPosition = position.ToString(@"h\:mm\:ss");
+            if (barChanged) UpdatePlayedPosition(playedIndex);
         });
     }
     private const double WaveformContentWidth = 1500d;
@@ -600,12 +615,12 @@ public partial class MusicPageViewModel : MainViewModel
         new(Color.FromArgb(220, 255, 77, 109));
 
     // Cached waveform frames fetched from server (used to map play position to bar index)
-    private List<Mizon.API.Client.Responses.Musics.WaveformResponse> _waveforms = new();
+    private List<WaveformResponse> _waveforms = [];
     private long _lastCoverPulseUpdateTick;
 
     private void UpdateCoverPulseFromServerWaveform(TimeSpan position)
     {
-        if (!IsPlaying || _waveforms.Count == 0)
+        if (!IsPlaying || _waveforms is not { Count: > 0 } waveforms)
             return;
 
         var tick = Environment.TickCount64;
@@ -613,7 +628,7 @@ public partial class MusicPageViewModel : MainViewModel
             return;
 
         _lastCoverPulseUpdateTick = tick;
-        var waveform = _waveforms[FindWaveformIndex((int)Math.Max(0d, position.TotalMilliseconds))];
+        var waveform = waveforms[FindWaveformIndex(waveforms, (int)Math.Max(0d, position.TotalMilliseconds))];
         // Keep the original cover-motion amplitude: it was driven by a raw RMS value.
         // Only the source changed; it now comes from the server waveform frame.
         var intensity = Math.Clamp(Math.Abs(waveform.RMS), 0f, 1f);
@@ -621,14 +636,14 @@ public partial class MusicPageViewModel : MainViewModel
         _dispatcherQueue.TryEnqueue(() => ServerWaveformIntensity = intensity);
     }
 
-    private int FindWaveformIndex(int offsetInMilliseconds)
+    private static int FindWaveformIndex(List<WaveformResponse> waveforms, int offsetInMilliseconds)
     {
         var low = 0;
-        var high = _waveforms.Count - 1;
+        var high = waveforms.Count - 1;
         while (low < high)
         {
             var middle = low + ((high - low + 1) / 2);
-            if (_waveforms[middle].OffsetInMilliseconds <= offsetInMilliseconds)
+            if (waveforms[middle].OffsetInMilliseconds <= offsetInMilliseconds)
                 low = middle;
             else
                 high = middle - 1;
@@ -641,7 +656,7 @@ public partial class MusicPageViewModel : MainViewModel
 
     private void GenerateFallbackBars()
     {
-        Bars.Clear();
+        ClearWaveformBars();
         var random = new Random();
 
         for (int i = 0; i < BarCount; i++)
@@ -661,37 +676,27 @@ public partial class MusicPageViewModel : MainViewModel
 
     private void UpdateColors()
     {
-        foreach (var bar in Bars)
-        {
-            if (bar.IsHover)
-                bar.TopColor = HoverBrush;
-            else if (bar.IsPlayed)
-            {
-                if (PlayType == PlayState.Playing)
-                    bar.TopColor = PlayedBrush;
-                else bar.TopColor = PausedBrush;
-            }
-
-            else
-                bar.TopColor = NormalBrush;
-        }
+        foreach (var bar in Bars) RefreshBarColor(bar);
     }
+
+    private void RefreshBarColor(EqualizerBarItemViewModel bar) =>
+        bar.TopColor = bar.IsHover ? HoverBrush : !bar.IsPlayed ? NormalBrush
+            : PlayType == PlayState.Playing ? PlayedBrush : PausedBrush;
 
     public void UpdateHoverPreview(int hoverIndex)
     {
-        for (int i = 0; i < Bars.Count; i++)
-            Bars[i].IsHover = i <= hoverIndex;
-
-        UpdateColors();
+        hoverIndex = Math.Clamp(hoverIndex, -1, Bars.Count - 1);
+        var previous = _paintedHoverBar;
+        for (var index = Math.Min(previous, hoverIndex) + 1; index <= Math.Max(previous, hoverIndex); index++)
+        {
+            var bar = Bars[index];
+            bar.IsHover = index <= hoverIndex;
+            RefreshBarColor(bar);
+        }
+        _paintedHoverBar = hoverIndex;
     }
 
-    public void ClearHoverPreview()
-    {
-        foreach (var bar in Bars)
-            bar.IsHover = false;
-
-        UpdateColors();
-    }
+    public void ClearHoverPreview() => UpdateHoverPreview(-1);
 
     public void UpdateBottomBarHover(EqualizerBarItemViewModel? hoveredBar)
     {
@@ -740,7 +745,14 @@ public partial class MusicPageViewModel : MainViewModel
         await GetMusicCommentsAsync(musicPublicId, cancellationToken);
         return true;
     }
-    public void SeekByProgress(TimeSpan position, int index)
+    internal double DurationInSeconds => _musicDuration.TotalSeconds;
+    internal double PlaybackPercent => DurationInSeconds > 0
+        ? Math.Clamp(_lastMusicPosition.TotalSeconds / DurationInSeconds * 100, 0, 100) : 0;
+
+    internal void SeekToPercent(double percent) =>
+        SeekByProgress((int)Math.Round(Math.Clamp(percent, 0, 100) / 100 * (BarCount - 1)));
+
+    public void SeekByProgress(int index)
     {
         // Compute correct target position based on bar index to ensure sync.
         if (_audioPlayerService.TrackDuration != TimeSpan.Zero)
@@ -772,10 +784,21 @@ public partial class MusicPageViewModel : MainViewModel
 
     private void UpdatePlayedPosition(int playedIndex)
     {
-        for (int i = 0; i < Bars.Count; i++)
-            Bars[i].IsPlayed = i <= playedIndex;
+        playedIndex = Math.Clamp(playedIndex, -1, Bars.Count - 1);
+        var previous = _paintedPlayedBar;
+        for (var index = Math.Min(previous, playedIndex) + 1; index <= Math.Max(previous, playedIndex); index++)
+        {
+            var bar = Bars[index];
+            bar.IsPlayed = index <= playedIndex;
+            RefreshBarColor(bar);
+        }
+        _paintedPlayedBar = playedIndex;
+    }
 
-        UpdateColors();
+    private void ClearWaveformBars()
+    {
+        _paintedPlayedBar = _paintedHoverBar = _lastPlayedBar = -1;
+        Bars.Clear();
     }
 
     private void NavigationService_NavigationChanged(object? sender, NavigationChangedEventArgs e)
@@ -1075,8 +1098,9 @@ public partial class MusicPageViewModel : MainViewModel
         SetField(ref _isStemMixerEnabled, false, nameof(IsStemMixerEnabled));
         IsStemMixerLoading = false;
         StemMixBalance = 0;
-        _waveforms.Clear();
-        _lastSecond = -1;
+        // Playback callbacks may still be reading the previous track's samples.
+        _waveforms = [];
+        _lastPlayedBar = _lastQueuedPositionSecond = -1;
         _lastLyricPositionInMilliseconds = -1;
         _lastMusicPosition = TimeSpan.Zero;
         _lastMusicPresencePublishTick = 0;
@@ -1093,6 +1117,7 @@ public partial class MusicPageViewModel : MainViewModel
         CoverDownloadSpeed = 0;
         Duration = string.Empty;
         CurrentPosition = "0:00:00";
+        ReleaseDateTime = null;
         ViewsCount = 0;
         LiveViewsCount = 0;
         LikesCount = 0;
@@ -1117,7 +1142,7 @@ public partial class MusicPageViewModel : MainViewModel
         CurrentLyricText = string.Empty;
         _activeLyricLine = null;
         _activeLyricWord = null;
-        Bars.Clear();
+        ClearWaveformBars();
         EqualizerComments.Clear();
         MusicListeners.Clear();
         VocalSegments.Clear();
@@ -1275,17 +1300,20 @@ public partial class MusicPageViewModel : MainViewModel
         }
     }
 
-    private async Task CopyLinkAsync(object? parameter, CancellationToken cancellationToken)
+    private Task CopyLinkAsync(object? parameter, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!AppDeepLinkCatalog.TryCreate("music-details", _musicPublicId, null, null, null, out var route) ||
+            route.ToUri() is not { } link) return Task.CompletedTask;
 
-        var dataPackage = new DataPackage();
+        var data = new DataPackage();
+        data.SetText(link);
+        Clipboard.SetContent(data);
 
-
-        dataPackage.SetUri(new Uri("https://www.example.com"));
-
-        Clipboard.SetContent(dataPackage);
-
-        _teachingTipService.ShowMessage("کپی شد", "لینک این آهنگ کپی شد.", "باشه!");
+        var localization = LocalizationService.Current;
+        _teachingTipService.ShowMessage(localization.GetString("MusicDetails/CopiedTitle"),
+            localization.GetString("MusicDetails/CopiedMessage"), localization.GetString("MusicDetails/Dismiss"));
+        return Task.CompletedTask;
     }
 
     private async Task DesktopShortcutAsync(object? parameter, CancellationToken cancellationToken)
@@ -1505,54 +1533,62 @@ public partial class MusicPageViewModel : MainViewModel
 
     private async Task GetMusicContributorsAsync(Guid musicPublicId, CancellationToken cancellationToken)
     {
-        Contributors.Clear();
-
-        var baseApiResponse = await MizonApi.SendRequestAsync(new MusicContributorsOperation(new()
+        try
         {
-            MusicPublicId = _musicPublicId,
-        }), cancellationToken);
+            var response = await MizonApi.SendRequestAsync(new MusicContributorsOperation(new()
+            {
+                MusicPublicId = musicPublicId,
+            }), cancellationToken);
+            if (!response.IsSuccess || response.Content is not { } credits ||
+                !IsCurrentMusicLoad(musicPublicId, cancellationToken)) return;
 
-        if (baseApiResponse.IsSuccess)
-        {
-            var response = baseApiResponse.Content;
-
-            foreach (var c in response!.Contributors)
+            Contributors.Clear();
+            foreach (var credit in credits.Contributors)
             {
                 Contributors.Add(new()
                 {
-                    PersonPublicId = c.PersonPublicId,
-                    FirstName = c.FirstName,
-                    LastName = c.LastName,
-                    ProfileMediaPublicId = c.ProfileMediaPublicId,
-                    MusicContributorTypePublicId = c.MusicContributorTypePublicId,
-                    MusicContributorTypeTitle = c.MusicContributorTypeTitle,
-                    MusicContributorTypePersianTitle = c.MusicContributorTypePersianTitle,
+                    PersonPublicId = credit.PersonPublicId,
+                    FirstName = credit.FirstName,
+                    LastName = credit.LastName,
+                    ProfileMediaPublicId = credit.ProfileMediaPublicId,
+                    MusicContributorTypePublicId = credit.MusicContributorTypePublicId,
+                    MusicContributorTypeTitle = credit.MusicContributorTypeTitle,
+                    MusicContributorTypePersianTitle = credit.MusicContributorTypePersianTitle,
                 });
-
-                if (c.ProfileMediaPublicId is Guid profileMediaPublicId)
-                    _ = LoadContributorProfileImageAsync(Contributors[^1], profileMediaPublicId, cancellationToken);
             }
 
-            await UpdateNowPlayingMetadataAsync();
+            // One artist can be credited multiple times. Download and decode once per
+            // portrait and assign it to all of that artist's roles.
+            await Task.WhenAll(Contributors.Where(credit => credit.ProfileMediaPublicId.GetValueOrDefault() != Guid.Empty)
+                .GroupBy(credit => credit.ProfileMediaPublicId!.Value)
+                .Select(group => LoadContributorProfileImageAsync(group, musicPublicId, cancellationToken))
+                .Append(UpdateNowPlayingMetadataAsync()));
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+        catch (Exception error) { AppLog.Error("Music credits could not be loaded.", error); }
     }
 
-    private async Task LoadContributorProfileImageAsync(MusicContributorItemViewModel contributor, Guid mediaPublicId, CancellationToken cancellationToken)
+    private async Task LoadContributorProfileImageAsync(IGrouping<Guid, MusicContributorItemViewModel> credits,
+        Guid musicPublicId, CancellationToken cancellationToken)
     {
-        var mediaResponse = await MizonApi.SendRequestAsync(new MediaOperation(new MediaRequest
+        try
         {
-            MediaPublicId = mediaPublicId
-        }), cancellationToken);
+            var response = await MizonApi.SendRequestAsync(new MediaOperation(new MediaRequest
+            {
+                MediaPublicId = credits.Key
+            }), cancellationToken);
 
-        if (!mediaResponse.IsSuccess || mediaResponse.Content is null)
-            return;
+            if (!response.IsSuccess || response.Content is not { } media ||
+                !Uri.TryCreate(media.StoragePath, UriKind.Absolute, out var uri) ||
+                !IsCurrentMusicLoad(musicPublicId, cancellationToken)) return;
 
-        var profileImagePath = await _mediaDownloader.DownloadToCacheAsync(
-            mediaResponse.Content,
-            new Uri(mediaResponse.Content.StoragePath),
-            cancellationToken: cancellationToken);
-
-        _dispatcherQueue.TryEnqueue(() => contributor.ImageSource = profileImagePath);
+            var path = await _mediaDownloader.DownloadToCacheAsync(media, uri, cancellationToken: cancellationToken);
+            var portrait = await ImageSourceFactory.LoadNavigationCoverAsync(path, 72, cancellationToken);
+            if (!IsCurrentMusicLoad(musicPublicId, cancellationToken)) return;
+            foreach (var credit in credits) credit.Portrait = portrait;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+        catch (Exception error) { AppLog.Error("A music contributor portrait could not be loaded.", error); }
     }
 
     private Task UpdateNowPlayingMetadataAsync()
@@ -2062,6 +2098,7 @@ public partial class MusicPageViewModel : MainViewModel
             if (!string.IsNullOrWhiteSpace(musicResponse.PersianTitle))
                 PersianTitle = $"({musicResponse.PersianTitle})";
 
+            ReleaseDateTime = musicResponse.ReleaseDateTime;
             ViewsCount = musicResponse.ViewsCount;
             LikesCount = musicResponse.LikesCount;
             AlbumTitle = musicResponse.MusicAlbum?.Title;
@@ -2367,13 +2404,13 @@ public partial class MusicPageViewModel : MainViewModel
 
     private async Task GetMusicFileWaveformAsync(Guid musicPublicId, Guid musicFilePublicId, CancellationToken cancellationToken)
     {
-        Bars.Clear();
-
         var baseResponse = await MizonApi.SendRequestAsync(new MusicFileWaveformOperation(new MusicFileWaveformRequest
         {
-            MusicFilePublicId = _musicFilePublicId
+            MusicFilePublicId = musicFilePublicId
         }), cancellationToken);
+        if (!IsCurrentMusicLoad(musicPublicId, cancellationToken)) return;
 
+        ClearWaveformBars();
         if (baseResponse.IsSuccess)
         {
             var waveformResponse = baseResponse.Content!;

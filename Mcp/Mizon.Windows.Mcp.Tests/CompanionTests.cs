@@ -18,7 +18,7 @@ internal static class CompanionTests
         "mizon_get_music_home", "mizon_refresh_music_home", "mizon_music_home_action", "mizon_get_presence_state",
         "mizon_get_window_state", "mizon_set_fullscreen",
         "mizon_get_vpn_state", "mizon_set_vpn_particles", "mizon_open_vpn_settings",
-        "mizon_get_person_profile", "mizon_set_person_following", "mizon_load_person_tracks", "mizon_open_person_track"
+        "mizon_get_music_details", "mizon_set_music_details", "mizon_get_person_profile", "mizon_set_person_following", "mizon_load_person_tracks", "mizon_open_person_track"
     ];
 
     public static async Task Run(string executable, IReadOnlyList<string>? serverArguments = null, bool catalogOnly = false)
@@ -47,12 +47,12 @@ internal static class CompanionTests
             var output = definition.OutputSchema!.Value;
             Check.That(output.GetProperty("type").GetString() == "object", "Tool result schema must be an object.");
             var properties = output.GetProperty("properties");
-            foreach (var name in new[] { "success", "code", "message", "state", "appearance", "navigation", "taskbarPin", "musicHome", "presence", "window", "vpn", "personProfile", "connection" })
+            foreach (var name in new[] { "success", "code", "message", "state", "appearance", "navigation", "taskbarPin", "musicHome", "presence", "window", "vpn", "personProfile", "musicDetails", "connection" })
                 Check.That(properties.TryGetProperty(name, out _), "Output schema does not describe all response fields.");
             var state = properties.GetProperty("state").GetProperty("properties");
             Check.That(!state.TryGetProperty("password", out _) && !state.TryGetProperty("accessToken", out _), "Output schema exposes a secret.");
             Check.That(state.GetProperty("hasSession").GetProperty("description").GetString()!.Contains("not proof", StringComparison.Ordinal), "Session presence must not claim server verification.");
-            Check.That(definition.Annotations?.ReadOnlyHint == (tool.Name is "mizon_get_connection" or "mizon_get_auth_state" or "mizon_get_appearance" or "mizon_get_navigation" or "mizon_get_taskbar_pin_state" or "mizon_get_music_home" or "mizon_get_presence_state" or "mizon_get_window_state" or "mizon_get_vpn_state" or "mizon_get_person_profile"), "A modifying tool is incorrectly marked read-only.");
+            Check.That(definition.Annotations?.ReadOnlyHint == (tool.Name is "mizon_get_connection" or "mizon_get_auth_state" or "mizon_get_appearance" or "mizon_get_navigation" or "mizon_get_taskbar_pin_state" or "mizon_get_music_home" or "mizon_get_presence_state" or "mizon_get_window_state" or "mizon_get_vpn_state" or "mizon_get_person_profile" or "mizon_get_music_details"), "A modifying tool is incorrectly marked read-only.");
             if (tool.Name is "mizon_submit_auth_form" or "mizon_retry_welcome" or "mizon_request_taskbar_pin" or "mizon_refresh_music_home" or "mizon_music_home_action" or "mizon_auth_gamepad_action" or "mizon_load_person_tracks")
                 Check.That(definition.Annotations?.IdempotentHint == false, "A non-idempotent operation is marked safe to repeat.");
 
@@ -64,6 +64,22 @@ internal static class CompanionTests
                 Arguments = new Dictionary<string, JsonElement> { ["unexpected"] = JsonString(SecretSentinel) }
             }, cancellationToken: timeout.Token);
             AssertResult(invalid, output, "invalid_arguments");
+        }
+
+        var detailsTool = tools.Single(tool => tool.Name == "mizon_set_music_details").ProtocolTool;
+        Check.That(detailsTool.InputSchema.GetProperty("oneOf").GetArrayLength() == 2,
+            "Track details must advertise mutually exclusive repeat and preview options.");
+        using var enabled = JsonDocument.Parse("true");
+        using var disabled = JsonDocument.Parse("false");
+        foreach (var arguments in new Dictionary<string, JsonElement>[]
+        {
+            [], new() { ["repeatEnabled"] = JsonString("true") },
+            new() { ["repeatEnabled"] = enabled.RootElement, ["coverOpen"] = disabled.RootElement }
+        })
+        {
+            var invalid = await client.CallToolAsync(new CallToolRequestParams { Name = detailsTool.Name, Arguments = arguments },
+                cancellationToken: timeout.Token);
+            AssertResult(invalid, detailsTool.OutputSchema!.Value, "invalid_arguments");
         }
 
         var form = tools.Single(tool => tool.Name == "mizon_set_auth_form").ProtocolTool.InputSchema

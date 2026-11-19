@@ -42,6 +42,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
     private IMcpWindowPresentationService? _windowPresentation;
     private IMcpVpnService? _vpn;
     private McpPersonProfileService? _personProfile;
+    private McpMusicDetailsService? _musicDetails;
     private volatile bool _enabled = true;
     private volatile bool _disposed;
     private string? _pipeName;
@@ -85,7 +86,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         IMcpNavigationService? navigation = null, IMcpTaskbarPinService? taskbar = null,
         IMcpMusicHomeService? musicHome = null, IMcpPresenceService? presence = null,
         IMcpWindowPresentationService? windowPresentation = null, IMcpVpnService? vpn = null,
-        McpPersonProfileService? personProfile = null)
+        McpPersonProfileService? personProfile = null, McpMusicDetailsService? musicDetails = null)
     {
         if (_dispatcher is not null || _disposed) return;
         _dispatcher = dispatcher;
@@ -98,6 +99,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         _windowPresentation = windowPresentation;
         _vpn = vpn;
         _personProfile = personProfile;
+        _musicDetails = musicDetails;
         try
         {
             _enabled = ApplicationData.GetDefault().LocalSettings.Values.TryGetValue("Mcp.Enabled", out var saved)
@@ -140,7 +142,8 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
             AllowPresenceRead = item.AllowPresenceRead,
             AllowWindowRead = item.AllowWindowRead, AllowWindowControl = item.AllowWindowControl,
             AllowVpnRead = item.AllowVpnRead, AllowVpnControl = item.AllowVpnControl,
-            AllowPersonProfileRead = item.AllowPersonProfileRead, AllowPersonProfileControl = item.AllowPersonProfileControl
+            AllowPersonProfileRead = item.AllowPersonProfileRead, AllowPersonProfileControl = item.AllowPersonProfileControl,
+            AllowMusicDetailsRead = item.AllowMusicDetailsRead, AllowMusicDetailsControl = item.AllowMusicDetailsControl
         } : null;
         item.BeginSaving();
         var entered = false;
@@ -427,8 +430,10 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         {
             if (request.Operation == "connection_status") return Status(connection);
             if (!_enabled || !connection.CanExecute(request.Operation)) return Denied(connection);
+            if (request.MusicDetails is not null && request.Operation is not ("get_music_details" or "set_music_details"))
+                return new() { Code = "invalid_arguments", Message = "Unexpected track details arguments.", Connection = connection.Snapshot() };
             using var authorized = CancellationTokenSource.CreateLinkedTokenSource(token, connection.AuthorizationToken);
-            var mutation = request.Operation is not ("get_state" or "get_appearance" or "get_navigation" or "get_taskbar_pin_state" or "get_music_home" or "get_presence_state" or "get_window_state" or "get_vpn_state" or "get_person_profile");
+            var mutation = request.Operation is not ("get_state" or "get_appearance" or "get_navigation" or "get_taskbar_pin_state" or "get_music_home" or "get_presence_state" or "get_window_state" or "get_vpn_state" or "get_person_profile" or "get_music_details");
             var enteredGate = false;
             var started = false;
             try
@@ -457,6 +462,8 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                     "get_presence_state" => _presence is not null
                         ? await _presence.ExecuteAsync(request, authorized.Token)
                         : new McpResponse { Code = "unavailable", Message = "The presence service is unavailable." },
+                    "get_music_details" or "set_music_details" => _musicDetails?.Execute(request, authorized.Token)
+                        ?? new() { Code = "page_unavailable", Message = "Open track details in Mizon first." },
                     "get_person_profile" or "set_person_following" or "load_person_tracks" or "open_person_track" => _personProfile is not null
                         ? await _personProfile.ExecuteAsync(request, authorized.Token)
                         : new McpResponse { Code = "page_unavailable", Message = "The artist profile service is unavailable." },
@@ -486,6 +493,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                     Presence = connection.CanExecute("get_presence_state") ? result.Presence : null,
                     Window = connection.CanExecute("get_window_state") ? result.Window : null,
                     Vpn = connection.CanExecute("get_vpn_state") ? result.Vpn : null,
+                    MusicDetails = connection.CanExecute("get_music_details") ? result.MusicDetails : null,
                     PersonProfile = connection.CanExecute("get_person_profile") ? result.PersonProfile : null,
                     Connection = connection.Snapshot()
                 };
@@ -617,6 +625,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         (_windowPresentation as IDisposable)?.Dispose();
         (_vpn as IDisposable)?.Dispose();
         _personProfile?.Dispose();
+        _musicDetails = null;
         // No synchronous UI-thread wait: active operations need that dispatcher
         // for their cancellation/finally blocks before shared resources can close.
         _shutdownTask = CompleteDisposalAsync();

@@ -285,7 +285,11 @@ public partial class App : Application
                 () => !string.IsNullOrWhiteSpace(localStorageService.GetJwtToken())),
             personProfile: new McpPersonProfileService(
                 () => navigationService.CurrentMainPage is Pages.HomePage { ViewModel.IsSigningOut: false }
-                    ? navigationService.CurrentInternalPage as IMcpPersonProfilePage : null));
+                    ? navigationService.CurrentInternalPage as IMcpPersonProfilePage : null),
+            musicDetails: new McpMusicDetailsService(
+                () => navigationService.CurrentMainPage is Pages.HomePage { ViewModel.IsSigningOut: false }
+                    && navigationService.CurrentInternalPage is Pages.MusicsPage { IsMusicDetailsActive: true } details
+                        ? details : null));
         MainMizonWindow.Closed += MainWindow_Closed;
         if (_pendingResultActivation is { } pendingResult)
         {

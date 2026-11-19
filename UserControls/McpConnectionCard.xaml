@@ -148,6 +148,20 @@
                     <TextBlock Text="{x:Bind Text('PermissionPersonProfileControlHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
                 </StackPanel>
             </CheckBox>
+            <TextBlock Text="{x:Bind Text('MusicDetailsGroup', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold"/>
+            <TextBlock Text="{x:Bind Text('MusicDetailsGroupHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+            <CheckBox IsChecked="{x:Bind ViewModel.AllowMusicDetailsRead, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionMusicDetailsRead', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionMusicDetailsReadHint', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('PermissionMusicDetailsRead', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                    <TextBlock Text="{x:Bind Text('PermissionMusicDetailsReadHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+            </CheckBox>
+            <CheckBox IsChecked="{x:Bind ViewModel.AllowMusicDetailsControl, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionMusicDetailsControl', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionMusicDetailsControlHint', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('PermissionMusicDetailsControl', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                    <TextBlock Text="{x:Bind Text('PermissionMusicDetailsControlHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+            </CheckBox>
             <TextBlock Text="{x:Bind Text('PresenceGroup', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold"/>
             <TextBlock Text="{x:Bind Text('PresenceGroupHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
             <CheckBox IsChecked="{x:Bind ViewModel.AllowPresenceRead, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionPresenceRead', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionPresenceReadHint', Localization.Revision), Mode=OneWay}">

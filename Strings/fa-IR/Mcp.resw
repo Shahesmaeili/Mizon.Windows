@@ -127,4 +127,12 @@
   <data name="ReadPersonProfile" xml:space="preserve"><value>خواندن پروفایل هنرمند</value></data>
   <data name="ChangePersonFollow" xml:space="preserve"><value>به‌روزرسانی وضعیت دنبال‌کردن هنرمند</value></data>
   <data name="BrowsePersonTracks" xml:space="preserve"><value>مرور آهنگ‌های هنرمند</value></data>
+  <data name="MusicDetailsGroup" xml:space="preserve"><value>جزئیات آهنگ</value></data>
+  <data name="MusicDetailsGroupHint" xml:space="preserve"><value>این مجوز برای آهنگی است که اکنون در میزون باز است.</value></data>
+  <data name="PermissionMusicDetailsRead" xml:space="preserve"><value>خواندن جزئیات آهنگ</value></data>
+  <data name="PermissionMusicDetailsReadHint" xml:space="preserve"><value>اطلاعات آهنگ، وضعیت پخش، کاور و مشارکت‌کننده‌ها را بخواند.</value></data>
+  <data name="PermissionMusicDetailsControl" xml:space="preserve"><value>کنترل جزئیات آهنگ</value></data>
+  <data name="PermissionMusicDetailsControlHint" xml:space="preserve"><value>پیش‌نمایش کاور آهنگ را باز یا بسته کند و تکرار را تنظیم کند.</value></data>
+  <data name="ReadMusicDetails" xml:space="preserve"><value>خواندن جزئیات آهنگ</value></data>
+  <data name="ChangeMusicDetails" xml:space="preserve"><value>تغییر وضعیت پیش‌نمایش کاور یا تکرار</value></data>
 </root>

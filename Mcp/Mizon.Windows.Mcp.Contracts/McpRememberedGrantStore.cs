@@ -30,6 +30,8 @@ public sealed record McpRememberedGrant
     public bool AllowVpnControl { get; init; }
     public bool AllowPersonProfileRead { get; init; }
     public bool AllowPersonProfileControl { get; init; }
+    public bool AllowMusicDetailsRead { get; init; }
+    public bool AllowMusicDetailsControl { get; init; }
     public DateTimeOffset ApprovedAt { get; init; }
 }
 

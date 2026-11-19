@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Microsoft.UI.Xaml.Media;
 
 namespace Mizon.Windows.ViewModels.Items;
 
@@ -6,7 +7,7 @@ public sealed class MusicContributorItemViewModel : ViewModelBase
 {
     public Guid PersonPublicId { get; init; }
     public Guid? ProfileMediaPublicId { get; init; }
-    public string? ImageSource
+    public ImageSource? Portrait
     {
         get => field;
         set => SetField(ref field, value);
