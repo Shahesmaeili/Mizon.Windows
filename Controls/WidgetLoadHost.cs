@@ -54,7 +54,8 @@ public sealed partial class WidgetLoadHost : Grid
     {
         _status = new TextBlock
         {
-            FontSize = 11, TextAlignment = TextAlignment.Start, Opacity = .7,
+            FontSize = 11, TextAlignment = TextAlignment.Start,
+            Style = (Style)Application.Current.Resources["DiscoveryLoadingStatusStyle"],
             TextReadingOrder = TextReadingOrder.UseFlowDirection, TextWrapping = TextWrapping.Wrap,
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
@@ -65,7 +66,7 @@ public sealed partial class WidgetLoadHost : Grid
         _skeleton = new Border
         {
             CornerRadius = new CornerRadius(16), Padding = new Thickness(16),
-            Background = new SolidColorBrush(global::Windows.UI.Color.FromArgb(7, 255, 255, 255))
+            Style = (Style)Application.Current.Resources["DiscoverySkeletonSurfaceStyle"]
         };
         Children.Add(_body);
         Children.Add(_skeleton);
@@ -123,7 +124,7 @@ public sealed partial class WidgetLoadHost : Grid
     private static Border Block(double width, double height, double radius) => new()
     {
         Width = width, Height = height, CornerRadius = new CornerRadius(radius),
-        Background = new SolidColorBrush(global::Windows.UI.Color.FromArgb(22, 255, 255, 255))
+        Style = (Style)Application.Current.Resources["DiscoverySkeletonBlockStyle"]
     };
 
     private static void Changed(DependencyObject sender, DependencyPropertyChangedEventArgs args) => ((WidgetLoadHost)sender).ApplyState();

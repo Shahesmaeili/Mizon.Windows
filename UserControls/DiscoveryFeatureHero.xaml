@@ -62,6 +62,7 @@
         Value="-5,0,0,0" />
     </Style>
     <Style x:Key="HeroTransportButton" TargetType="Button" BasedOn="{StaticResource DiscoveryWidgetButton}">
+      <Setter Property="Foreground" Value="White" />
       <Setter Property="Height" Value="32" />
       <Setter Property="Padding" Value="10,0" />
       <Setter Property="CornerRadius" Value="8" />
@@ -168,6 +169,7 @@
       AutomationProperties.AccessibilityView="Raw" />
     <Grid
       x:Name="HeroRoot"
+      RequestedTheme="Dark"
       CornerRadius="12"
       Background="Transparent">
       <Grid x:Name="HeroVideoStage" Visibility="Collapsed" Background="#FF090C0F">
@@ -271,7 +273,7 @@
             <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
               x:Name="TopCaption"
               FontSize="8"
-              Foreground="#FF8B9299"
+              Foreground="#FFB6C0CC"
               Text="MIZON SELECT" />
             <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
               x:Name="HeaderDuration"
@@ -349,7 +351,7 @@
             x:Name="GenreText"
             FontSize="9"
             CharacterSpacing="65"
-            Foreground="#FF787F87"
+            Foreground="#FFB6C0CC"
             TextTrimming="CharacterEllipsis" />
           <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
             x:Name="MainTitle"
@@ -368,7 +370,7 @@
           <TextBlock FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
             x:Name="PersianTitle"
             FontSize="10"
-            Foreground="#FFA0A2A6"
+            Foreground="#FFB6C0CC"
             MaxWidth="165"
             TextTrimming="CharacterEllipsis"
             FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
@@ -403,7 +405,7 @@
             Text="{x:Bind Localization.GetString('MusicHome/ArtistLabel', Localization.Revision), Mode=OneWay}"
             FontSize="9"
             CharacterSpacing="65"
-            Foreground="#FF787F87"
+            Foreground="#FFB6C0CC"
             HorizontalAlignment="Right" />
           <TextBlock
             x:Name="ArtistName"
@@ -505,7 +507,7 @@
               x:Name="AudienceCaption"
               Text="{x:Bind Localization.GetString('MusicHome/WithYou', Localization.Revision), Mode=OneWay}"
               FontSize="9"
-              Foreground="#FF92989F"
+              Foreground="#FFB6C0CC"
               FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
               VerticalAlignment="Center" />
           </StackPanel>
@@ -538,7 +540,7 @@
             <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
               x:Name="PageNumber"
               FontSize="9"
-              Foreground="#FF868D94"
+              Foreground="#FFB6C0CC"
               VerticalAlignment="Center" />
           </StackPanel>
         </controls:FeatureButton>

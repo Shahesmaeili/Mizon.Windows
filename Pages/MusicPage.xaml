@@ -22,9 +22,7 @@
       <Setter
         Property="FontSize"
         Value="10" />
-      <Setter
-        Property="Opacity"
-        Value="0.55" />
+      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
       <Setter
         Property="TextWrapping"
         Value="Wrap" />
@@ -294,7 +292,7 @@
                 FontSize="9"
                 CharacterSpacing="160"
                 TextWrapping="Wrap"
-                Opacity="0.3" />
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
               <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
                 Grid.Column="1"
                 Text="{x:Bind Localization.GetString('MusicHome/DemoFooter', Localization.Revision), Mode=OneWay}"

@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:icon="using:FluentIcons.WinUI"
-    Loaded="Card_Loaded" Unloaded="Card_Unloaded"
+    Loaded="Card_Loaded" Unloaded="Card_Unloaded" ActualThemeChanged="CardThemeChanged"
     IsTabStop="False" FlowDirection="LeftToRight" Language="en-US"
     AutomationProperties.AccessibilityView="Raw">
     <!-- All three collages share the reference's coordinate scale. The parent
@@ -14,7 +14,9 @@
              become a new hover target as they move underneath the pointer. -->
         <Canvas Width="480" Height="520" IsHitTestVisible="False">
             <TextBlock x:Name="Edition" FontFamily="/Assets/Fonts/BodoniModa.ttf#Bodoni Moda"
-                       FontSize="88" TextLineBounds="Tight" RenderTransformOrigin="0,0"/>
+                       FontSize="88" TextLineBounds="Tight" RenderTransformOrigin="0,0">
+                <TextBlock.Foreground><SolidColorBrush x:Name="EditionInk"/></TextBlock.Foreground>
+            </TextBlock>
             <!-- The outer paper edge is traced independently of the photograph.
                  Its translucent fill retains the window material between the edges. -->
             <Grid x:Name="Contour" Width="480" Height="520">
@@ -45,7 +47,7 @@
                  its clipping geometry, as in the reference. -->
             <Grid x:Name="Headline" RenderTransformOrigin="0,0">
                 <Grid x:Name="TitleShadowHost"/>
-                <TextBlock x:Name="TitleText" Text="{x:Bind Title, Mode=OneWay}" Foreground="White"
+                <TextBlock x:Name="TitleText" Text="{x:Bind Title, Mode=OneWay}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                            FontFamily="/Assets/Fonts/BodoniModa.ttf#Bodoni Moda" FontSize="102"
                            FontWeight="Normal" TextLineBounds="Tight" TextWrapping="NoWrap" TextTrimming="None"/>
             </Grid>

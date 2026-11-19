@@ -275,6 +275,7 @@ See [implementation, dependencies and limits](tasks/2026-11-11-profile-presence.
 
 ## Music home localization, MCP and artwork — 2026-11-11
 
+- Music home uses Light, Dark and High Contrast resources for widget ink, captions and loading surfaces. Artist and section accents follow the local theme, editorial story text adapts where it extends beyond photos, and the hero's dark media overlays use matching transport foregrounds. Managed and NativeAOT WinUI checks exercised the palette and skeleton brushes through a Light–Dark–Light round trip. Full-page visual inspection in the installed app was not performed.
 The current music home (`MusicPage`, not details `MusicsPage`) now uses live
 Persian/English resources for center cards, five widgets, story viewer and profile/
 demo previews, with language-specific direction/fonts and Narrator labels.

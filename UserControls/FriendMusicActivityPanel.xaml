@@ -14,11 +14,11 @@
         <SolidColorBrush x:Key="FriendAccent" Color="#9DCEC4" />
         <Style x:Key="ActivityCaption" TargetType="TextBlock" BasedOn="{StaticResource DiscoveryWidgetCaption}" />
         <Style x:Key="ActivityButton" TargetType="Button" BasedOn="{StaticResource DiscoveryWidgetButton}">
-            <Setter Property="FocusVisualPrimaryBrush" Value="{StaticResource FriendAccent}" />
+            <Setter Property="FocusVisualPrimaryBrush" Value="{ThemeResource DiscoveryFriendsInk}" />
         </Style>
         <DataTemplate x:Key="ActivityTemplate" x:DataType="items:FriendMusicActivityItemViewModel">
             <Button x:Name="ActivityCard" Style="{StaticResource ActivityButton}" Tag="{x:Bind}" Click="Activity_Click" IsEnabled="{x:Bind CanOpen, Mode=OneWay}" AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}" AutomationProperties.HelpText="{x:Bind NavigationHelpText, Mode=OneWay}" ToolTipService.ToolTip="{x:Bind AutomationName, Mode=OneWay}">
-                <Grid CornerRadius="11" BorderBrush="#0DFFFFFF" BorderThickness="1" Background="#06FFFFFF">
+                <Grid CornerRadius="11" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Background="{ThemeResource DiscoveryInsetBrush}">
                     <Border CornerRadius="10" Opacity="0.08" IsHitTestVisible="False">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
@@ -58,18 +58,14 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="64" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="4" VerticalAlignment="Center">
                                 <TextBlock Text="{x:Bind ContentTitle, Mode=OneWay}"  FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"  TextReadingOrder="UseFlowDirection" HorizontalAlignment="Stretch"  FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
-                                <TextBlock x:Name="ContentSubtitle" Text="{x:Bind Subtitle, Mode=OneWay}"  FontSize="9" TextTrimming="CharacterEllipsis"  TextReadingOrder="UseFlowDirection" HorizontalAlignment="Stretch"  Opacity="0.55" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                                <TextBlock x:Name="ContentSubtitle" Text="{x:Bind Subtitle, Mode=OneWay}"  FontSize="9" TextTrimming="CharacterEllipsis"  TextReadingOrder="UseFlowDirection" HorizontalAlignment="Stretch"  Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                                 <Grid HorizontalAlignment="Right" Margin="0,2,0,0" ColumnSpacing="5">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                    <TextBlock Text="{x:Bind ContentKindTitle, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="8" Opacity="0.9" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
-                                        <TextBlock.Foreground><SolidColorBrush Color="{x:Bind AccentColor, Mode=OneWay}" /></TextBlock.Foreground>
-                                    </TextBlock>
-                                    <icon:SymbolIcon Grid.Column="1" Symbol="{x:Bind ActionSymbol, Mode=OneWay}" FontSize="10" VerticalAlignment="Center">
-                                        <icon:SymbolIcon.Foreground><SolidColorBrush Color="{x:Bind AccentColor, Mode=OneWay}" /></icon:SymbolIcon.Foreground>
-                                    </icon:SymbolIcon>
+                                    <TextBlock Text="{x:Bind ContentKindTitle, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="8" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Foreground="{ThemeResource DiscoveryFriendsInk}" />
+                                    <icon:SymbolIcon Grid.Column="1" Symbol="{x:Bind ActionSymbol, Mode=OneWay}" FontSize="10" VerticalAlignment="Center" Foreground="{ThemeResource DiscoveryFriendsInk}" />
                                 </Grid>
                             </StackPanel>
-                            <Grid Grid.Column="1" x:Name="CoverHost" Width="64" Height="64" CornerRadius="10" Background="#14FFFFFF" VerticalAlignment="Center">
+                            <Grid Grid.Column="1" x:Name="CoverHost" Width="64" Height="64" CornerRadius="10" Background="{ThemeResource DiscoveryInsetBrush}" VerticalAlignment="Center">
                                 <icon:SymbolIcon Symbol="MusicNote1" FontSize="24" Opacity="0.25" HorizontalAlignment="Center" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
                                 <Image x:Name="CardArtwork" Source="{x:Bind CoverImage, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
                                 <Border VerticalAlignment="Bottom" Height="28">
@@ -85,7 +81,7 @@
                                 </Border>
                             </Grid>
                         </Grid>
-                        <TextBlock Grid.Row="3" Text="{x:Bind TimeText, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="9" Opacity="0.5" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                        <TextBlock Grid.Row="3" Text="{x:Bind TimeText, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="9" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </Grid>
                 </Grid>
             </Button>
@@ -99,7 +95,7 @@
                 <Grid ColumnSpacing="8">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                     <Border Padding="6,2" CornerRadius="5" Background="#0E9DCEC4" BorderBrush="#159DCEC4" BorderThickness="1">
-                        <TextBlock x:Name="CountText" FontSize="9" Foreground="{StaticResource FriendAccent}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                        <TextBlock x:Name="CountText" FontSize="9" Foreground="{ThemeResource DiscoveryFriendsInk}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </Border>
                     <TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('MusicWidgets/FollowingSubtitle', Localization.Revision), Mode=OneWay}" Style="{StaticResource ActivityCaption}" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                 </Grid>
@@ -111,15 +107,15 @@
                 </Grid>
                 <Border Padding="12,18" CornerRadius="11" BorderBrush="#189DCEC4" BorderThickness="1" Visibility="{x:Bind ViewModel.EmptyVisibility, Mode=OneWay}">
                     <StackPanel Spacing="10">
-                        <icon:SymbolIcon Symbol="People" FontSize="28" Foreground="{StaticResource FriendAccent}" Opacity="0.8" HorizontalAlignment="Right" AutomationProperties.AccessibilityView="Raw" />
+                        <icon:SymbolIcon Symbol="People" FontSize="28" Foreground="{ThemeResource DiscoveryFriendsInk}" Opacity="0.8" HorizontalAlignment="Right" AutomationProperties.AccessibilityView="Raw" />
                         <TextBlock Text="{x:Bind ViewModel.EmptyTitle, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="12" FontWeight="SemiBold" Opacity="1" TextWrapping="Wrap" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                         <TextBlock Text="{x:Bind ViewModel.EmptyDescription, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="11" TextWrapping="Wrap" TextTrimming="None" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </StackPanel>
                 </Border>
                 <StackPanel Grid.Row="1" Spacing="12" Padding="10" Visibility="{x:Bind ViewModel.ErrorVisibility, Mode=OneWay}">
                     <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="11" TextWrapping="Wrap" TextTrimming="None" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
-                    <Button Style="{StaticResource DiscoveryWidgetFooterButton}" Click="Refresh_Click" Background="#079DCEC4" FocusVisualPrimaryBrush="{StaticResource FriendAccent}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/FollowingRetry', Localization.Revision), Mode=OneWay}">
-                        <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/Retry', Localization.Revision), Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="11" TextAlignment="Center" Foreground="{StaticResource FriendAccent}" Opacity="1" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                    <Button Style="{StaticResource DiscoveryWidgetFooterButton}" Click="Refresh_Click" Background="#079DCEC4" FocusVisualPrimaryBrush="{ThemeResource DiscoveryFriendsInk}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/FollowingRetry', Localization.Revision), Mode=OneWay}">
+                        <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/Retry', Localization.Revision), Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="11" TextAlignment="Center" Foreground="{ThemeResource DiscoveryFriendsInk}" Opacity="1" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </Button>
                 </StackPanel>
             </Grid>
@@ -129,11 +125,11 @@
                     <Border Height="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('MusicWidgets/FollowingFooter', Localization.Revision), Mode=OneWay}" Style="{StaticResource DiscoveryWidgetFooterCaption}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                 </Grid>
-                <Button Style="{StaticResource DiscoveryWidgetFooterButton}" Click="More_Click" Visibility="{x:Bind ViewModel.MoreVisibility, Mode=OneWay}" Background="#079DCEC4" FocusVisualPrimaryBrush="{StaticResource FriendAccent}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/FollowingMoreHelp', Localization.Revision), Mode=OneWay}">
+                <Button Style="{StaticResource DiscoveryWidgetFooterButton}" Click="More_Click" Visibility="{x:Bind ViewModel.MoreVisibility, Mode=OneWay}" Background="#079DCEC4" FocusVisualPrimaryBrush="{ThemeResource DiscoveryFriendsInk}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/FollowingMoreHelp', Localization.Revision), Mode=OneWay}">
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <icon:SymbolIcon Symbol="{x:Bind ForwardSymbol(Localization.IsPersian), Mode=OneWay}" FontSize="13" Foreground="{StaticResource FriendAccent}" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('MusicWidgets/FollowingMore', Localization.Revision), Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="11" Foreground="{StaticResource FriendAccent}" Opacity="1" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                        <icon:SymbolIcon Symbol="{x:Bind ForwardSymbol(Localization.IsPersian), Mode=OneWay}" FontSize="13" Foreground="{ThemeResource DiscoveryFriendsInk}" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('MusicWidgets/FollowingMore', Localization.Revision), Mode=OneWay}" Style="{StaticResource ActivityCaption}" FontSize="11" Foreground="{ThemeResource DiscoveryFriendsInk}" Opacity="1" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </Grid>
                 </Button>
             </StackPanel>

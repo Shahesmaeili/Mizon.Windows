@@ -2,6 +2,7 @@ using Mizon.Windows.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Mizon.Windows.Common;
 using Windows.UI;
 
 namespace Mizon.Windows.UserControls;
@@ -16,15 +17,27 @@ public sealed partial class DiscoverySectionHeader : UserControl
         nameof(Icon), typeof(Symbol), typeof(DiscoverySectionHeader), new PropertyMetadata(Symbol.MusicNote1));
     public static readonly DependencyProperty AccentColorProperty = DependencyProperty.Register(
         nameof(AccentColor), typeof(Color), typeof(DiscoverySectionHeader),
-        new PropertyMetadata(Color.FromArgb(255, 126, 204, 246)));
+        new PropertyMetadata(Color.FromArgb(255, 126, 204, 246), AccentChanged));
     public static readonly DependencyProperty IsCompactProperty = DependencyProperty.Register(
         nameof(IsCompact), typeof(bool), typeof(DiscoverySectionHeader), new PropertyMetadata(false, CompactChanged));
 
     public DiscoverySectionHeader()
     {
         InitializeComponent();
+        UpdateHeadingInk();
         Loaded += LocalizationLoaded;
         Unloaded += LocalizationUnloaded;
+    }
+
+    private static void AccentChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args) =>
+        ((DiscoverySectionHeader)sender).UpdateHeadingInk();
+
+    private void HeadingThemeChanged(FrameworkElement sender, object args) => UpdateHeadingInk();
+
+    private void UpdateHeadingInk()
+    {
+        if (TitleAccent is null || IconInk is null) return;
+        TitleAccent.Color = IconInk.Color = DiscoveryAccentInk.ForTheme(AccentColor, ActualTheme);
     }
 
     private void LocalizationLoaded(object sender, RoutedEventArgs args) => Bindings.Update();

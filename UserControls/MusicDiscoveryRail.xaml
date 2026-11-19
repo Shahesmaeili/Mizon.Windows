@@ -68,7 +68,7 @@
         <Style x:Key="MusicCaption" TargetType="TextBlock" BasedOn="{StaticResource MusicTitle}">
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="Opacity" Value="0.6"/>
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
         </Style>
         <LinearGradientBrush x:Key="ArtworkVeil" StartPoint="0,0" EndPoint="0,1">
             <GradientStop Color="#28141B24" Offset="0"/>
@@ -88,12 +88,12 @@
                             <Image x:Name="CardArtwork" Source="{x:Bind CoverImage, Mode=OneWay}" Stretch="UniformToFill"/>
                             <Border Background="{StaticResource ArtworkVeil}" IsHitTestVisible="False"/>
                             <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10"
-                                Background="#A0141B24" CornerRadius="6" Padding="8,4" MaxWidth="130" AutomationProperties.AccessibilityView="Raw">
+                                Background="#DD141B24" CornerRadius="6" Padding="8,4" MaxWidth="130" AutomationProperties.AccessibilityView="Raw">
                                 <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind DisplayGenre, Mode=OneWay}" Style="{StaticResource MusicCaption}"
                                     Foreground="White" Opacity="0.95" FontSize="9"/>
                             </Border>
                             <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10"
-                                Background="#900D1420" CornerRadius="6" Padding="7,4">
+                                Background="#DB0D1420" CornerRadius="6" Padding="7,4">
                                 <StackPanel Orientation="Horizontal" Spacing="5" AutomationProperties.AccessibilityView="Raw">
                                     <icon:SymbolIcon Symbol="Headphones" FontSize="10" Foreground="White" Opacity="0.8" VerticalAlignment="Center"/>
                                     <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind DurationText}" FontSize="10" Foreground="White" FlowDirection="LeftToRight"/>
@@ -116,11 +116,11 @@
                         <Grid Grid.Row="2" ColumnSpacing="7">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" IsHitTestVisible="False">
-                                <icon:SymbolIcon Symbol="Heart" Foreground="#E58AA5" FontSize="11" VerticalAlignment="Center"/>
-                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind CompactLikesText}" FontSize="10" Opacity="0.7" FlowDirection="LeftToRight" VerticalAlignment="Center"/>
+                                <icon:SymbolIcon Symbol="Heart" Foreground="{ThemeResource DiscoveryRoseInk}" FontSize="11" VerticalAlignment="Center"/>
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind CompactLikesText}" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FlowDirection="LeftToRight" VerticalAlignment="Center"/>
                             </StackPanel>
                             <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Grid.Column="1" Text="{x:Bind Artist, Mode=OneWay}" Style="{StaticResource MusicCaption}" FontSize="10"
-                                Opacity="0.8" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" IsHitTestVisible="False"/>
                             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="1" VerticalAlignment="Center">
                                 <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Style="{StaticResource ProfileHitTarget}" Click="Profile_Click" Tag="{x:Bind SecondaryContributor}"
                                     Visibility="{x:Bind SecondaryArtistVisibility}" AutomationProperties.Name="{x:Bind SecondaryProfileAutomationName, Mode=OneWay}"
@@ -159,7 +159,7 @@
                         </StackPanel>
                         <Grid Grid.Row="1" ColumnSpacing="6" VerticalAlignment="Center">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Artist, Mode=OneWay}" Style="{StaticResource MusicCaption}" Opacity="0.8" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                            <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Text="{x:Bind Artist, Mode=OneWay}" Style="{StaticResource MusicCaption}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" IsHitTestVisible="False"/>
                             <controls:FeatureButton FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Grid.Column="1" Style="{StaticResource ProfileHitTarget}" Width="28" Height="28" Click="Profile_Click"
                                 Tag="{x:Bind PrimaryContributor}" Visibility="{x:Bind PrimaryArtistVisibility}"
                                 AutomationProperties.Name="{x:Bind PrimaryProfileAutomationName, Mode=OneWay}" ToolTipService.ToolTip="{x:Bind PrimaryProfileAutomationName, Mode=OneWay}">
@@ -170,8 +170,8 @@
                         <Grid Grid.Row="2" ColumnSpacing="8" IsHitTestVisible="False">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="4" AutomationProperties.AccessibilityView="Raw">
-                                <icon:SymbolIcon Symbol="Heart" FontSize="10" Foreground="#E58AA5" VerticalAlignment="Center"/>
-                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind CompactLikesText}" FontSize="9" Opacity="0.65" FlowDirection="LeftToRight" VerticalAlignment="Center"/>
+                                <icon:SymbolIcon Symbol="Heart" FontSize="10" Foreground="{ThemeResource DiscoveryRoseInk}" VerticalAlignment="Center"/>
+                                <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind CompactLikesText}" FontSize="9" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FlowDirection="LeftToRight" VerticalAlignment="Center"/>
                             </StackPanel>
                             <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" Grid.Column="1" Text="{x:Bind DisplayGenre, Mode=OneWay}" Style="{StaticResource MusicCaption}" FontSize="9" VerticalAlignment="Center"/>
                         </Grid>
@@ -181,7 +181,7 @@
                         <Image x:Name="RecentArtwork" Source="{x:Bind CoverImage, Mode=OneWay}" Stretch="UniformToFill"/>
                         <Border Background="{StaticResource ArtworkVeil}" IsHitTestVisible="False"/>
                         <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="5" Padding="5,2"
-                            CornerRadius="4" Background="#900D1420" AutomationProperties.AccessibilityView="Raw">
+                            CornerRadius="4" Background="#DB0D1420" AutomationProperties.AccessibilityView="Raw">
                             <TextBlock FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Text="{x:Bind DurationText}" FontSize="9" Foreground="White" FlowDirection="LeftToRight"/>
                         </Border>
                     </Grid>

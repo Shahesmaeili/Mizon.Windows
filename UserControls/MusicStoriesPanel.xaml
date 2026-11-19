@@ -99,7 +99,7 @@
                 Margin="8"
                 Padding="6,3"
                 CornerRadius="5"
-                Background="#A00D1624">
+                Background="#DC0D1624">
                 <StackPanel
                   Orientation="Horizontal"
                   Spacing="4">
@@ -122,7 +122,7 @@
                 Margin="8,0,8,24"
                 Padding="7,4"
                 CornerRadius="5"
-                Background="#A00D1624"
+                Background="#DC0D1624"
                 Visibility="{x:Bind Title, Converter={StaticResource NullOrEmptyToCollapsedConverter}}">
                 <TextBlock
                   Text="{x:Bind Title}"
@@ -258,7 +258,7 @@
                             Text="{x:Bind Localization.GetString('MusicHome/YourStory', Localization.Revision), Mode=OneWay}"
                             FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
                             FontSize="9"
-                            Opacity="0.5"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Top"
                             Margin="0,14,0,0" />
@@ -280,7 +280,7 @@
                                   Opacity="0.1" />
                                 <icon:SymbolIcon
                                   Symbol="AgentsAdd"
-                                  Foreground="{ThemeResource SystemAccentColor}"
+                                  Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                                   FontSize="20"
                                   HorizontalAlignment="Center"
                                   VerticalAlignment="Center" />
@@ -294,7 +294,7 @@
                           </StackPanel>
                           <icon:SymbolIcon
                             Symbol="Add"
-                            Foreground="{ThemeResource SystemAccentColor}"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                             FontSize="12"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Bottom"
@@ -310,7 +310,7 @@
                         <ItemsRepeater.Layout><StackLayout Orientation="Horizontal" Spacing="10"/></ItemsRepeater.Layout>
                     </ItemsRepeater>
                     <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.HomeStoriesMessage, Mode=OneWay}"
-                        FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FontSize="10" Opacity="0.55"
+                        FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextAlignment="Start" TextWrapping="Wrap"
                         MaxWidth="200" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
                 </Grid>

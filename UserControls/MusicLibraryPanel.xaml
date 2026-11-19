@@ -13,24 +13,24 @@
         <SolidColorBrush x:Key="LibraryAccent" Color="#C7A0F6" />
         <Style x:Key="LibraryCaption" TargetType="TextBlock" BasedOn="{StaticResource DiscoveryWidgetCaption}" />
         <Style x:Key="LibraryButton" TargetType="Button" BasedOn="{StaticResource DiscoveryWidgetButton}">
-            <Setter Property="FocusVisualPrimaryBrush" Value="{StaticResource LibraryAccent}" />
+            <Setter Property="FocusVisualPrimaryBrush" Value="{ThemeResource DiscoveryLibraryInk}" />
         </Style>
         <DataTemplate x:Key="PlaylistTemplate" x:DataType="items:MusicLibraryPlaylistItemViewModel">
             <Button Style="{StaticResource LibraryButton}" Tag="{x:Bind}" Click="Playlist_Click" ContextRequested="Playlist_ContextRequested" Padding="0" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" AutomationProperties.Name="{x:Bind AutomationName, Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Localization.GetString('MusicWidgets/LibraryPlaylistHelp', Localization.Revision), Mode=OneWay}">
-            <Grid MinHeight="68" Padding="9,8" ColumnSpacing="9" CornerRadius="11" Background="#06FFFFFF" BorderBrush="#0DFFFFFF" BorderThickness="1" ToolTipService.ToolTip="{x:Bind AutomationName, Mode=OneWay}">
+            <Grid MinHeight="68" Padding="9,8" ColumnSpacing="9" CornerRadius="11" Background="{ThemeResource DiscoveryInsetBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" ToolTipService.ToolTip="{x:Bind AutomationName, Mode=OneWay}">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="48" /></Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center" Spacing="5">
-                    <TextBlock Text="{x:Bind Title, Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="12" FontWeight="SemiBold" Opacity="1" TextWrapping="NoWrap" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind Title, Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextWrapping="NoWrap" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     <Grid ColumnSpacing="4">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                         <TextBlock Text="{x:Bind MusicsCountText, Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="10" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
-                        <icon:SymbolIcon Grid.Column="1" Symbol="MusicNote1" FontSize="10" Foreground="{StaticResource LibraryAccent}" VerticalAlignment="Center" Opacity="0.7" AutomationProperties.AccessibilityView="Raw" />
+                        <icon:SymbolIcon Grid.Column="1" Symbol="MusicNote1" FontSize="10" Foreground="{ThemeResource DiscoveryLibraryInk}" VerticalAlignment="Center" Opacity="0.7" AutomationProperties.AccessibilityView="Raw" />
                     </Grid>
                 </StackPanel>
                 <Grid Grid.Column="1" Width="48" Height="48" VerticalAlignment="Center">
                     <Border Width="39" Height="43" CornerRadius="7" Background="#21C7A0F6" BorderBrush="#24C7A0F6" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-3,0,0" />
                     <Grid Width="48" Height="48" CornerRadius="8" BorderBrush="#24C7A0F6" BorderThickness="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                        <icon:SymbolIcon Symbol="MusicNote1" Foreground="{StaticResource LibraryAccent}" FontSize="19" Opacity="0.5" HorizontalAlignment="Center" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                        <icon:SymbolIcon Symbol="MusicNote1" Foreground="{ThemeResource DiscoveryLibraryInk}" FontSize="19" Opacity="0.5" HorizontalAlignment="Center" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
                         <Image Source="{x:Bind CoverImage, Mode=OneWay}" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
                     </Grid>
                 </Grid>
@@ -61,43 +61,43 @@
                         <Grid ColumnSpacing="7">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="4" VerticalAlignment="Center" HorizontalAlignment="Left" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
-                                <Border Width="25" Height="2" CornerRadius="1" Background="{StaticResource LibraryAccent}" HorizontalAlignment="Left" />
+                                <Border Width="25" Height="2" CornerRadius="1" Background="{ThemeResource DiscoveryLibraryInk}" HorizontalAlignment="Left" />
                                 <Border Width="18" Height="2" CornerRadius="1" Background="#70C7A0F6" HorizontalAlignment="Left" />
                                 <Border Width="11" Height="2" CornerRadius="1" Background="#35C7A0F6" HorizontalAlignment="Left" />
                             </StackPanel>
-                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.PlaylistCountText, Mode=OneWay}" AutomationProperties.Name="{x:Bind ViewModel.PlaylistCountAutomationName, Mode=OneWay}" Foreground="{StaticResource LibraryAccent}" FontSize="35" FontWeight="Light" CharacterSpacing="-40" VerticalAlignment="Center" FlowDirection="LeftToRight" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.PlaylistCountText, Mode=OneWay}" AutomationProperties.Name="{x:Bind ViewModel.PlaylistCountAutomationName, Mode=OneWay}" Foreground="{ThemeResource DiscoveryLibraryInk}" FontSize="35" FontWeight="Light" CharacterSpacing="-40" VerticalAlignment="Center" FlowDirection="LeftToRight" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" />
                         </Grid>
-                        <TextBlock Grid.Row="1" Text="{x:Bind Localization.GetString('MusicWidgets/LibraryPersonal', Localization.Revision), Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="10" Opacity="0.85" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
-                        <TextBlock Grid.Row="2" Text="{x:Bind ViewModel.SummaryText, Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="10" Opacity="0.5" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                        <TextBlock Grid.Row="1" Text="{x:Bind Localization.GetString('MusicWidgets/LibraryPersonal', Localization.Revision), Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                        <TextBlock Grid.Row="2" Text="{x:Bind ViewModel.SummaryText, Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </Grid>
                 </Border>
                 <StackPanel x:Name="PlaylistArea" Grid.Row="1" Spacing="8">
-                    <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/LibraryUpdates', Localization.Revision), Mode=OneWay}" Style="{StaticResource LibraryCaption}" Opacity="0.55" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/LibraryUpdates', Localization.Revision), Mode=OneWay}" Style="{StaticResource LibraryCaption}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     <ItemsRepeater ItemsSource="{x:Bind ViewModel.VisiblePlaylists, Mode=OneWay}" ItemTemplate="{StaticResource PlaylistTemplate}" Visibility="{x:Bind ViewModel.PlaylistsVisibility, Mode=OneWay}">
                         <ItemsRepeater.Layout><StackLayout Orientation="Vertical" Spacing="6" /></ItemsRepeater.Layout>
                     </ItemsRepeater>
                     <Border Padding="9,13" CornerRadius="11" BorderBrush="#18C7A0F6" BorderThickness="1" Visibility="{x:Bind ViewModel.EmptyVisibility, Mode=OneWay}">
                         <StackPanel Spacing="8">
-                            <icon:SymbolIcon Symbol="MusicNote1" Foreground="{StaticResource LibraryAccent}" FontSize="24" Opacity="0.6" HorizontalAlignment="Right" AutomationProperties.AccessibilityView="Raw" />
-                            <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/LibraryEmpty', Localization.Revision), Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="11" Opacity="0.8" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                            <icon:SymbolIcon Symbol="MusicNote1" Foreground="{ThemeResource DiscoveryLibraryInk}" FontSize="24" Opacity="0.6" HorizontalAlignment="Right" AutomationProperties.AccessibilityView="Raw" />
+                            <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/LibraryEmpty', Localization.Revision), Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                             <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="10" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                         </StackPanel>
                     </Border>
                     <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.ErrorVisibility, Mode=OneWay}">
-                        <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="10" Foreground="#F0C0AC" Opacity="0.9" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
-                        <Button Style="{StaticResource DiscoveryWidgetFooterButton}" Click="Refresh_Click" Background="#07C7A0F6" FocusVisualPrimaryBrush="{StaticResource LibraryAccent}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/LibraryRetry', Localization.Revision), Mode=OneWay}">
-                            <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/Retry', Localization.Revision), Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="11" TextAlignment="Center" Foreground="{StaticResource LibraryAccent}" Opacity="1" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                        <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="10" Foreground="{ThemeResource DiscoveryTrendingInk}" Opacity="0.9" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                        <Button Style="{StaticResource DiscoveryWidgetFooterButton}" Click="Refresh_Click" Background="#07C7A0F6" FocusVisualPrimaryBrush="{ThemeResource DiscoveryLibraryInk}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/LibraryRetry', Localization.Revision), Mode=OneWay}">
+                            <TextBlock Text="{x:Bind Localization.GetString('MusicWidgets/Retry', Localization.Revision), Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="11" TextAlignment="Center" Foreground="{ThemeResource DiscoveryLibraryInk}" Opacity="1" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                         </Button>
                     </StackPanel>
                 </StackPanel>
             </Grid>
             <StackPanel Grid.Row="2" Style="{StaticResource DiscoveryWidgetFooter}">
                 <TextBlock x:Name="ActionStatus" Visibility="Collapsed" Style="{StaticResource LibraryCaption}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
-                <Button Style="{StaticResource DiscoveryWidgetFooterButton}" Click="Recent_Click" Background="#07C7A0F6" FocusVisualPrimaryBrush="{StaticResource LibraryAccent}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/LibraryRecentHelp', Localization.Revision), Mode=OneWay}">
+                <Button Style="{StaticResource DiscoveryWidgetFooterButton}" Click="Recent_Click" Background="#07C7A0F6" FocusVisualPrimaryBrush="{ThemeResource DiscoveryLibraryInk}" AutomationProperties.Name="{x:Bind Localization.GetString('MusicWidgets/LibraryRecentHelp', Localization.Revision), Mode=OneWay}">
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <icon:SymbolIcon Symbol="Clock" FontSize="13" Foreground="{StaticResource LibraryAccent}" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('MusicWidgets/LibraryRecent', Localization.Revision), Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="11" Foreground="{StaticResource LibraryAccent}" Opacity="1" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                        <icon:SymbolIcon Symbol="Clock" FontSize="13" Foreground="{ThemeResource DiscoveryLibraryInk}" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('MusicWidgets/LibraryRecent', Localization.Revision), Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="11" Foreground="{ThemeResource DiscoveryLibraryInk}" Opacity="1" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </Grid>
                 </Button>
                 <Grid ColumnSpacing="7">
@@ -105,11 +105,11 @@
                     <Border Height="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1" Text="{x:Bind Localization.GetString('MusicWidgets/LibraryFooter', Localization.Revision), Mode=OneWay}" Style="{StaticResource DiscoveryWidgetFooterCaption}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                 </Grid>
-                <Button Style="{StaticResource DiscoveryWidgetFooterButton}" Click="More_Click" Visibility="{x:Bind ViewModel.MoreVisibility, Mode=OneWay}" Background="#07C7A0F6" FocusVisualPrimaryBrush="{StaticResource LibraryAccent}" AutomationProperties.Name="{x:Bind ViewModel.MoreText, Mode=OneWay}">
+                <Button Style="{StaticResource DiscoveryWidgetFooterButton}" Click="More_Click" Visibility="{x:Bind ViewModel.MoreVisibility, Mode=OneWay}" Background="#07C7A0F6" FocusVisualPrimaryBrush="{ThemeResource DiscoveryLibraryInk}" AutomationProperties.Name="{x:Bind ViewModel.MoreText, Mode=OneWay}">
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <icon:SymbolIcon Symbol="{x:Bind ForwardSymbol(Localization.IsPersian), Mode=OneWay}" FontSize="13" Foreground="{StaticResource LibraryAccent}" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.MoreText, Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="11" Foreground="{StaticResource LibraryAccent}" Opacity="1" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
+                        <icon:SymbolIcon Symbol="{x:Bind ForwardSymbol(Localization.IsPersian), Mode=OneWay}" FontSize="13" Foreground="{ThemeResource DiscoveryLibraryInk}" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.MoreText, Mode=OneWay}" Style="{StaticResource LibraryCaption}" FontSize="11" Foreground="{ThemeResource DiscoveryLibraryInk}" Opacity="1" VerticalAlignment="Center" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" TextAlignment="{x:Bind Localization.TextAlignment, Mode=OneWay}" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" />
                     </Grid>
                 </Button>
             </StackPanel>

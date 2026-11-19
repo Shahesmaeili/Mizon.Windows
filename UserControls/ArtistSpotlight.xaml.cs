@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Mizon.Windows.Common;
 using Mizon.Windows.ViewModels.Items;
 using System;
 using System.Collections.Generic;
@@ -163,10 +164,22 @@ public sealed partial class ArtistSpotlight : UserControl
         UpdateListeningChart(artist);
         PageNumber.Text = $"{_index + 1:00} / {items.Count:00}";
         ((SolidColorBrush)Resources["SpotlightAccent"]).Color = artist.AccentColor;
+        UpdateSpotlightInk(artist.AccentColor);
         UpdateModelGlow();
         PreviousButton.IsEnabled = NextButton.IsEnabled = items.Count > 1;
         UpdateFollow();
         UpdateProfileAutomationName(artist.DisplayName);
+    }
+
+    private void SpotlightThemeChanged(FrameworkElement sender, object args)
+    {
+        if (_current is { } item) UpdateSpotlightInk(item.Artist.AccentColor);
+    }
+
+    private void UpdateSpotlightInk(global::Windows.UI.Color accent)
+    {
+        if (Resources.TryGetValue("SpotlightInk", out var resource) && resource is SolidColorBrush ink)
+            ink.Color = DiscoveryAccentInk.ForTheme(accent, ActualTheme);
     }
 
     private void UpdateListeningChart(TopArtistItemViewModel? artist)

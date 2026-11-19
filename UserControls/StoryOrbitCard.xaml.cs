@@ -101,7 +101,7 @@ public sealed partial class StoryOrbitCard : UserControl
         var ink = new SolidColorBrush(accent);
         MatteShape.Fill = Outline.Stroke = ink;
         Outline.Opacity = variant switch { 0 => .5, 1 => .16, _ => .44 };
-        Edition.Foreground = variant == 2 ? new SolidColorBrush(Color.FromArgb(255, 106, 66, 44)) : ink;
+        UpdateTitleContrast();
         Edition.Text = (variant + 22).ToString(System.Globalization.CultureInfo.InvariantCulture);
         RatingText.Text = variant switch { 0 => "5,0", 1 => "4,5", _ => "4,8" };
         ApplyReferenceLayout(variant);
@@ -180,14 +180,31 @@ public sealed partial class StoryOrbitCard : UserControl
 
         _titleShadow = compositor.CreateDropShadow();
         _titleShadow.Mask = TitleText.GetAlphaMask();
-        _titleShadow.Color = Color.FromArgb(255, 20, 24, 32);
         _titleShadow.BlurRadius = 12;
         _titleShadow.Offset = new Vector3(0, 3, 0);
-        _titleShadow.Opacity = .25f;
+        UpdateTitleContrast();
         _titleShadowVisual = compositor.CreateSpriteVisual();
         _titleShadowVisual.RelativeSizeAdjustment = Vector2.One;
         _titleShadowVisual.Shadow = _titleShadow;
         ElementCompositionPreview.SetElementChildVisual(TitleShadowHost, _titleShadowVisual);
+    }
+
+    private void CardThemeChanged(FrameworkElement sender, object args) => UpdateTitleContrast();
+
+    private void UpdateTitleContrast()
+    {
+        if (EditionInk is null || ArtworkColor is null) return;
+        var light = ActualTheme == ElementTheme.Light;
+        var accent = ArtworkColor.Color;
+        var ink = light ? DiscoveryAccentInk.ForTheme(accent, ActualTheme) : Variant switch
+        {
+            1 => Color.FromArgb(255, 144, 181, 255),
+            _ => accent
+        };
+        EditionInk.Color = ink;
+        if (_titleShadow is not { } shadow) return;
+        shadow.Color = light ? Color.FromArgb(255, 250, 247, 242) : Color.FromArgb(255, 20, 24, 32);
+        shadow.Opacity = light ? .7f : .25f;
     }
 
     private static PathGeometry CreateOutline(ReadOnlySpan<Vector2> points, Vector2 origin)

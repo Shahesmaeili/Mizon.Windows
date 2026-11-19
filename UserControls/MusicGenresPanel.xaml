@@ -11,7 +11,7 @@
     <UserControl.Resources>
         <Style x:Key="Caption" TargetType="TextBlock">
             <Setter Property="FontSize" Value="10"/>
-            <Setter Property="Opacity" Value="0.55"/>
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="TextAlignment" Value="Start"/>
         </Style>
@@ -124,7 +124,7 @@
                     Opacity="0.1" />
                   <icon:SymbolIcon
                     Symbol="{x:Bind IconSymbol}"
-                    Foreground="{x:Bind AccentBrush}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     FontSize="20"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center" />
@@ -144,7 +144,7 @@
                   FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" TextReadingOrder="DetectFromContent" TextAlignment="Start"
                   FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
                   FontSize="11"
-                  Opacity="0.7"
+                  Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                   TextTrimming="CharacterEllipsis" />
               </StackPanel>
               <Grid
@@ -165,13 +165,13 @@
                       Text="{x:Bind Localization.GetString('MusicHome/Track', Localization.Revision), Mode=OneWay}"
                       FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
                       FontSize="10"
-                      Opacity="0.6"
+                      Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                       VerticalAlignment="Center" />
                   </StackPanel>
                 </Border>
                 <icon:SymbolIcon
                   Symbol="ArrowUpRight"
-                  Foreground="{x:Bind AccentBrush}"
+                  Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                   FontSize="13"
                   HorizontalAlignment="Right"
                   VerticalAlignment="Center"
