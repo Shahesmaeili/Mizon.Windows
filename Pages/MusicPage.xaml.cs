@@ -56,6 +56,7 @@ public sealed partial class MusicPage : Page
         FeaturedArtists = new(api, downloader);
         InitializeComponent();
         FeatureHero.SpectrumPointerRoot = LayoutRoot;
+        FeatureHero.PresentationViewport = MainFeedScroll;
         _scrollPositions = new(LayoutRoot, MainFeedScroll, EditorialScroll, CommunityScroll, TopArtistsScroll,
             MusicStories.NavigationScrollViewer, FeaturedArtist.NavigationScrollViewer);
         // Let the hero shadow cross column boundaries, while keeping scrolled content inside the page.
@@ -70,7 +71,7 @@ public sealed partial class MusicPage : Page
         UpdateLayout(ActualWidth);
         if (_homeWidgetsActive)
         {
-            _scrollPositions.Restore();
+            RestoreHomeScroll();
             return;
         }
         _homeWidgetsActive = true;
@@ -104,7 +105,7 @@ public sealed partial class MusicPage : Page
             FeaturedMediaHost.ResetPresentation();
             FollowingActivitiesHost.ResetPresentation();
         }
-        _scrollPositions.Restore();
+        RestoreHomeScroll();
         // The signed-in shell owns the bounded feed. Let its initial request
         // finish once even if the user opens a detail before all widgets arrive.
         if (_homeDataRequested)
@@ -117,6 +118,12 @@ public sealed partial class MusicPage : Page
         ViewModel.NavigationService.PersonFollowingChanged += FeaturedFollowingChanged;
         await Task.WhenAll(ViewModel.RefreshHomeWidgetsAsync(), Library.RefreshAsync(),
             FollowingActivities.RefreshAsync(), Features.RefreshAsync(), FeaturedArtists.RefreshAsync());
+    }
+
+    private void RestoreHomeScroll()
+    {
+        _scrollPositions.Restore();
+        FeatureHero.QueuePresentationViewportRefresh();
     }
 
     private void MusicPage_Unloaded(object sender, RoutedEventArgs e)
@@ -193,7 +200,11 @@ public sealed partial class MusicPage : Page
     private void SideWidgets_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs args)
     {
         _sideWidgetGlow?.ViewportChanged();
-        if (ReferenceEquals(sender, MainFeedScroll)) FeatureHero.RefreshSpectrumProximity();
+        if (ReferenceEquals(sender, MainFeedScroll))
+        {
+            FeatureHero.RefreshSpectrumProximity();
+            if (!args.IsIntermediate) FeatureHero.QueuePresentationViewportRefresh();
+        }
     }
 
     private void MusicHomeLocalizationChanged(object? sender, PropertyChangedEventArgs args)

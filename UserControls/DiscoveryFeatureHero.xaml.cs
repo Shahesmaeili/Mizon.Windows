@@ -121,6 +121,8 @@ public sealed partial class DiscoveryFeatureHero : UserControl
         AttachViewModel();
         UpdateLayoutState(ActualWidth);
         RefreshItems();
+        RefreshPresentationViewport();
+        QueuePresentationViewportRefresh();
         UpdateActive();
     }
 
@@ -745,18 +747,11 @@ public sealed partial class DiscoveryFeatureHero : UserControl
             BuildThumbnails();
         }
     }
-    private void Hero_EffectiveViewportChanged(FrameworkElement sender, EffectiveViewportChangedEventArgs args)
-    {
-        var rect = args.EffectiveViewport;
-        var visible = rect.Width > 0 && rect.Height > 0 && rect.Right > 0 && rect.Bottom > 0 && rect.Left < ActualWidth && rect.Top < ActualHeight;
-        if (_inViewport == visible) return;
-        _inViewport = visible;
-        UpdateActive();
-    }
     private void Root_Changed(XamlRoot sender, XamlRootChangedEventArgs args)
     {
         if (_hostVisible == sender.IsHostVisible) return;
         _hostVisible = sender.IsHostVisible;
+        if (_hostVisible) QueuePresentationViewportRefresh();
         UpdateActive();
     }
     private void Hero_PointerEntered(object sender, PointerRoutedEventArgs args)
