@@ -5,8 +5,11 @@ Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion 
 ## Track detail layout, transport and input — 2026-11-20
 
 Track actions move below the heading only when their measured sizes no longer
-fit. The page uses native transport and cover actions, resolves credit portraits
-through the media cache, and exposes independent track-detail grants in MCP.
+fit. The waveform stays on its own and can seek from keyboard or Xbox focus.
+The original four sample insights have responsive cards, and the support
+button uses its own theme-aware native template. The page uses native transport
+and cover actions, resolves credit portraits through the media cache, and
+exposes independent track-detail grants in MCP.
 See the [task record](tasks/2026-11-20-music-details.md).
 
 ## Welcome typography and profile entrance — 2026-11-18

@@ -16,16 +16,6 @@
   <data name="CopyLink" xml:space="preserve"><value>Copy track link</value></data>
   <data name="Support" xml:space="preserve"><value>Support the artist</value></data>
   <data name="SupportInfo" xml:space="preserve"><value>Share this track to help more listeners discover the artist. Donations are currently unavailable.</value></data>
-  <data name="Audience" xml:space="preserve"><value>Total views</value></data>
-  <data name="LiveAudience" xml:space="preserve"><value>{0:N0} watching now</value></data>
-  <data name="Runtime" xml:space="preserve"><value>Track length</value></data>
-  <data name="Release" xml:space="preserve"><value>Release</value></data>
-  <data name="StandaloneRelease" xml:space="preserve"><value>Single</value></data>
-  <data name="Credits" xml:space="preserve"><value>Credits</value></data>
-  <data name="CreditCaption" xml:space="preserve"><value>Contributing roles</value></data>
-  <data name="ReleaseDate" xml:space="preserve"><value>Released {0:d}</value></data>
-  <data name="ReleaseDateUnknown" xml:space="preserve"><value>Release date unavailable</value></data>
-  <data name="DurationUnknown" xml:space="preserve"><value>Unavailable</value></data>
   <data name="CopiedTitle" xml:space="preserve"><value>Link copied</value></data>
   <data name="CopiedMessage" xml:space="preserve"><value>The track link was copied to the clipboard.</value></data>
   <data name="Dismiss" xml:space="preserve"><value>OK</value></data>
@@ -35,11 +25,22 @@
   <data name="AddToPlaylist" xml:space="preserve"><value>Add to playlist</value></data>
   <data name="ZoomIn" xml:space="preserve"><value>Zoom into cover</value></data>
   <data name="ZoomOut" xml:space="preserve"><value>Zoom out of cover</value></data>
-  <data name="Seek" xml:space="preserve"><value>Playback position</value></data>
-  <data name="SeekHint" xml:space="preserve"><value>Changes the position within the track, from zero to one hundred percent.</value></data>
   <data name="Volume" xml:space="preserve"><value>Playback volume</value></data>
   <data name="MixBalance" xml:space="preserve"><value>Balance between accompaniment and vocals</value></data>
   <data name="StemMixer" xml:space="preserve"><value>Mix accompaniment and vocals</value></data>
   <data name="Reactions" xml:space="preserve"><value>Track reactions</value></data>
   <data name="ViewsStatus" xml:space="preserve"><value>{0:N0} total views, {1:N0} watching now</value></data>
+  <data name="SampleInsights" xml:space="preserve"><value>Sample listening insights</value></data>
+  <data name="HeartRate" xml:space="preserve"><value>Heart rate</value></data>
+  <data name="HeartRateValue" xml:space="preserve"><value>67 beats per minute</value></data>
+  <data name="HeartRateChange" xml:space="preserve"><value>Heart rate increased by 17 percent</value></data>
+  <data name="ListenerVoices" xml:space="preserve"><value>Listener feedback</value></data>
+  <data name="SampleListenerQuote" xml:space="preserve"><value>“Loved it”</value></data>
+  <data name="SampleSatisfaction" xml:space="preserve"><value>79% satisfaction</value></data>
+  <data name="SampleComments" xml:space="preserve"><value>747 comments</value></data>
+  <data name="PulseTrend" xml:space="preserve"><value>Heart rate trend</value></data>
+  <data name="AiSummary" xml:space="preserve"><value>AI summary</value></data>
+  <data name="SampleAiQuote" xml:space="preserve"><value>Listeners said they loved this track.</value></data>
+  <data name="Waveform" xml:space="preserve"><value>Playback waveform</value></data>
+  <data name="WaveformControls" xml:space="preserve"><value>Use Page Up or the left trigger to go back five seconds, or Page Down or the right trigger to go forward five seconds.</value></data>
 </root>

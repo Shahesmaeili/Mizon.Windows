@@ -37,17 +37,8 @@ namespace Mizon.Windows.Pages
         private MusicPageViewModel ViewModel { get; }
         public LocalizationService Localization => LocalizationService.Current;
         private string Text(string key, int revision) => Localization.GetString("MusicDetails/" + key, revision);
-        private string LiveAudienceLabel(int count, int revision) =>
-            Localization.Format("MusicDetails/LiveAudience", count);
         private string ViewsLabel(int total, int live, int revision) =>
             Localization.Format("MusicDetails/ViewsStatus", total, live);
-        private string ReleaseTitle(string? album, string? label, int revision) =>
-            album ?? label ?? Text("StandaloneRelease", revision);
-        private string ReleaseDateLabel(DateTimeOffset? date, int revision) =>
-            date is { } release ? Localization.Format("MusicDetails/ReleaseDate", release.Date)
-                : Text("ReleaseDateUnknown", revision);
-        private string DurationLabel(string? duration, int revision) =>
-            string.IsNullOrWhiteSpace(duration) ? Text("DurationUnknown", revision) : duration;
         private async void PictureInPicture_Click(object sender, RoutedEventArgs args)
         {
             try { await ((App)App.Current).Services.GetRequiredService<PictureInPictureService>().ShowMusicAsync(); }
@@ -398,7 +389,6 @@ namespace Mizon.Windows.Pages
             if (_pageActive) return;
             _pageActive = true;
             ApplyDetailLayout(ActualWidth);
-            UpdateSeekSlider();
             ViewModel.PropertyChanged += ViewModel_PropertyChanged;
             MusicBorder.SizeChanged += MusicBorder_SizeChanged;
             InitializeCoverVisual();
@@ -433,27 +423,21 @@ namespace Mizon.Windows.Pages
         {
             if (e.PropertyName == nameof(ViewModel.ServerWaveformIntensity))
                 CreateOrUpdateSpringAnimation(ViewModel.ServerWaveformIntensity);
-            else if (e.PropertyName is nameof(ViewModel.Duration) or nameof(ViewModel.CurrentPosition))
-                UpdateSeekSlider();
         }
 
-        private bool _settingSeekPosition;
-
-        private void UpdateSeekSlider()
+        private void Waveform_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
         {
-            _settingSeekPosition = true;
-            try
+            if (!IsMusicDetailsActive || _isCoverPreviewOpen ||
+                FocusManager.GetFocusedElement(XamlRoot) != WaveformScroller) return;
+
+            var seconds = e.OriginalKey switch
             {
-                SeekSlider.IsEnabled = ViewModel.DurationInSeconds > 0;
-                SeekSlider.Value = ViewModel.PlaybackPercent;
-            }
-            finally { _settingSeekPosition = false; }
-        }
-
-        private void SeekSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-        {
-            if (!_pageActive || _settingSeekPosition || !IsMusicDetailsActive) return;
-            ViewModel.SeekToPercent(e.NewValue);
+                VirtualKey.GamepadLeftTrigger or VirtualKey.PageUp => -5,
+                VirtualKey.GamepadRightTrigger or VirtualKey.PageDown => 5,
+                _ => 0
+            };
+            if (seconds == 0) return;
+            e.Handled = e.KeyStatus.WasKeyDown || ViewModel.SeekRelative(seconds);
         }
 
         private async void Button_Click(object sender, RoutedEventArgs e)

@@ -63,7 +63,6 @@ public partial class MusicPageViewModel : MainViewModel
 
 
     private readonly DispatcherQueue _dispatcherQueue;
-    public Func<double, string> EmptyLabeler => _ => "";
 
     private Guid _musicPublicId { get; set; }
     private CancellationTokenSource? _musicLoadCancellationTokenSource;
@@ -97,8 +96,6 @@ public partial class MusicPageViewModel : MainViewModel
         set => SetField(ref field, value);
     }
 
-    public double[] Values { get; set; } =
-       [2, 1, 3, 4, 3, 4, 6];
     public string Title
     {
         get => field;
@@ -161,12 +158,6 @@ public partial class MusicPageViewModel : MainViewModel
     {
         get => field;
         set => SetField(ref field, value);
-    }
-
-    public DateTimeOffset? ReleaseDateTime
-    {
-        get => field;
-        private set => SetField(ref field, value);
     }
 
     public int ViewsCount
@@ -745,12 +736,17 @@ public partial class MusicPageViewModel : MainViewModel
         await GetMusicCommentsAsync(musicPublicId, cancellationToken);
         return true;
     }
-    internal double DurationInSeconds => _musicDuration.TotalSeconds;
-    internal double PlaybackPercent => DurationInSeconds > 0
-        ? Math.Clamp(_lastMusicPosition.TotalSeconds / DurationInSeconds * 100, 0, 100) : 0;
+    internal bool SeekRelative(int seconds)
+    {
+        var duration = _audioPlayerService.TrackDuration;
+        if (duration <= TimeSpan.Zero || _audioPlayerService.AudioPlayerState is not (AudioPlayerState.Playing or AudioPlayerState.Paused))
+            return false;
 
-    internal void SeekToPercent(double percent) =>
-        SeekByProgress((int)Math.Round(Math.Clamp(percent, 0, 100) / 100 * (BarCount - 1)));
+        var ticks = Math.Clamp(_audioPlayerService.Position.Ticks + seconds * TimeSpan.TicksPerSecond, 0, duration.Ticks);
+        var bar = (int)Math.Round(ticks / (double)duration.Ticks * (BarCount - 1));
+        ApplyMusicSeek(TimeSpan.FromTicks(ticks), bar);
+        return true;
+    }
 
     public void SeekByProgress(int index)
     {
@@ -760,8 +756,7 @@ public partial class MusicPageViewModel : MainViewModel
             int clampedIndex = Math.Max(0, Math.Min(index, BarCount - 1));
             double progress = (double)clampedIndex / Math.Max(1, BarCount - 1);
             var target = TimeSpan.FromMilliseconds(_audioPlayerService.TrackDuration.TotalMilliseconds * progress);
-            _audioPlayerService.SeekTo(target);
-            UpdatePlayedPosition(clampedIndex);
+            ApplyMusicSeek(target, clampedIndex);
             return;
         }
 
@@ -774,12 +769,17 @@ public partial class MusicPageViewModel : MainViewModel
 
             var offsetMs = _waveforms[wfIndex].OffsetInMilliseconds;
             var target = TimeSpan.FromMilliseconds(offsetMs);
-            _audioPlayerService.SeekTo(target);
-            UpdatePlayedPosition(clampedIndex);
+            ApplyMusicSeek(target, clampedIndex);
             return;
         }
 
         // If no duration and no waveform data, do nothing.
+    }
+
+    private void ApplyMusicSeek(TimeSpan position, int bar)
+    {
+        _audioPlayerService.SeekTo(position);
+        UpdatePlayedPosition(bar);
     }
 
     private void UpdatePlayedPosition(int playedIndex)
@@ -1117,7 +1117,7 @@ public partial class MusicPageViewModel : MainViewModel
         CoverDownloadSpeed = 0;
         Duration = string.Empty;
         CurrentPosition = "0:00:00";
-        ReleaseDateTime = null;
+
         ViewsCount = 0;
         LiveViewsCount = 0;
         LikesCount = 0;
@@ -2098,7 +2098,6 @@ public partial class MusicPageViewModel : MainViewModel
             if (!string.IsNullOrWhiteSpace(musicResponse.PersianTitle))
                 PersianTitle = $"({musicResponse.PersianTitle})";
 
-            ReleaseDateTime = musicResponse.ReleaseDateTime;
             ViewsCount = musicResponse.ViewsCount;
             LikesCount = musicResponse.LikesCount;
             AlbumTitle = musicResponse.MusicAlbum?.Title;

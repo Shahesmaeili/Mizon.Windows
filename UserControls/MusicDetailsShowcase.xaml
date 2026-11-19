@@ -1,0 +1,162 @@
+<UserControl
+    x:Class="Mizon.Windows.UserControls.MusicDetailsShowcase"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:icon="using:FluentIcons.WinUI"
+    FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+    Language="{x:Bind Localization.LanguageTag, Mode=OneWay}"
+    FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="PulseInk" Color="#FF9BB0"/>
+                    <SolidColorBrush x:Key="PulseTint" Color="#24FF668C"/>
+                    <SolidColorBrush x:Key="ListenerInk" Color="#79E4C8"/>
+                    <SolidColorBrush x:Key="ListenerTint" Color="#2379E4C8"/>
+                    <SolidColorBrush x:Key="TrendInk" Color="#AABEFF"/>
+                    <SolidColorBrush x:Key="TrendTint" Color="#2A879FFF"/>
+                    <SolidColorBrush x:Key="SummaryInk" Color="#F4CA8D"/>
+                    <SolidColorBrush x:Key="SummaryTint" Color="#25F4CA8D"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="PulseInk" Color="#9E284E"/>
+                    <SolidColorBrush x:Key="PulseTint" Color="#16A63256"/>
+                    <SolidColorBrush x:Key="ListenerInk" Color="#176752"/>
+                    <SolidColorBrush x:Key="ListenerTint" Color="#1B26866C"/>
+                    <SolidColorBrush x:Key="TrendInk" Color="#354E9F"/>
+                    <SolidColorBrush x:Key="TrendTint" Color="#254D66C5"/>
+                    <SolidColorBrush x:Key="SummaryInk" Color="#774C16"/>
+                    <SolidColorBrush x:Key="SummaryTint" Color="#20956125"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <SolidColorBrush x:Key="PulseInk" Color="{ThemeResource SystemColorWindowTextColor}"/>
+                    <SolidColorBrush x:Key="PulseTint" Color="{ThemeResource SystemColorWindowColor}"/>
+                    <SolidColorBrush x:Key="ListenerInk" Color="{ThemeResource SystemColorWindowTextColor}"/>
+                    <SolidColorBrush x:Key="ListenerTint" Color="{ThemeResource SystemColorWindowColor}"/>
+                    <SolidColorBrush x:Key="TrendInk" Color="{ThemeResource SystemColorWindowTextColor}"/>
+                    <SolidColorBrush x:Key="TrendTint" Color="{ThemeResource SystemColorWindowColor}"/>
+                    <SolidColorBrush x:Key="SummaryInk" Color="{ThemeResource SystemColorWindowTextColor}"/>
+                    <SolidColorBrush x:Key="SummaryTint" Color="{ThemeResource SystemColorWindowColor}"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+            <Style x:Key="ShowcaseCard" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}"/>
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="16"/>
+                <Setter Property="Padding" Value="13,12"/>
+                <Setter Property="MinHeight" Value="167"/>
+            </Style>
+            <Style x:Key="ShowcaseBadge" TargetType="Border">
+                <Setter Property="Width" Value="30"/>
+                <Setter Property="Height" Value="30"/>
+                <Setter Property="CornerRadius" Value="10"/>
+            </Style>
+            <Style x:Key="ShowcaseHeading" TargetType="TextBlock">
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="AutomationProperties.HeadingLevel" Value="Level2"/>
+            </Style>
+            <Style x:Key="ShowcaseNote" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Spacing="10">
+        <TextBlock Style="{StaticResource ShowcaseNote}" Text="{x:Bind Text('SampleInsights', Localization.Revision), Mode=OneWay}"/>
+        <controls:SettingsCardPanel MinColumnWidth="188" MaxColumns="4" Spacing="12">
+            <Border Style="{StaticResource ShowcaseCard}">
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="7">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <Border Style="{StaticResource ShowcaseBadge}" Background="{ThemeResource PulseTint}">
+                            <icon:SymbolIcon Symbol="Heart" FontSize="16" Foreground="{ThemeResource PulseInk}" AutomationProperties.AccessibilityView="Raw"/>
+                        </Border>
+                        <TextBlock Grid.Column="1" Style="{StaticResource ShowcaseHeading}" Text="{x:Bind Text('HeartRate', Localization.Revision), Mode=OneWay}"/>
+                    </Grid>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Text="67" FontSize="32" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   AutomationProperties.Name="{x:Bind Text('HeartRateValue', Localization.Revision), Mode=OneWay}"/>
+                        <Border Background="{ThemeResource PulseTint}" CornerRadius="7" Padding="6,3" VerticalAlignment="Center" FlowDirection="LeftToRight">
+                            <TextBlock Text="+17%" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource PulseInk}"
+                                       AutomationProperties.Name="{x:Bind Text('HeartRateChange', Localization.Revision), Mode=OneWay}"/>
+                        </Border>
+                    </StackPanel>
+                    <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <TextBlock Text="VR  29" Style="{StaticResource ShowcaseNote}" FlowDirection="LeftToRight" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="SW  11" Style="{StaticResource ShowcaseNote}" FlowDirection="LeftToRight" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource ShowcaseCard}">
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="7">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <Border Style="{StaticResource ShowcaseBadge}" Background="{ThemeResource ListenerTint}">
+                            <icon:SymbolIcon Symbol="Comment" FontSize="16" Foreground="{ThemeResource ListenerInk}" AutomationProperties.AccessibilityView="Raw"/>
+                        </Border>
+                        <TextBlock Grid.Column="1" Style="{StaticResource ShowcaseHeading}" Text="{x:Bind Text('ListenerVoices', Localization.Revision), Mode=OneWay}"/>
+                    </Grid>
+                    <Border Grid.Row="1" Padding="8,5" CornerRadius="9" VerticalAlignment="Center" Background="{ThemeResource ListenerTint}">
+                        <TextBlock FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{ThemeResource ListenerInk}"
+                                   Text="{x:Bind Text('SampleListenerQuote', Localization.Revision), Mode=OneWay}"/>
+                    </Border>
+                    <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <TextBlock Style="{StaticResource ShowcaseNote}" Text="{x:Bind Text('SampleSatisfaction', Localization.Revision), Mode=OneWay}"/>
+                        <TextBlock Grid.Column="1" Style="{StaticResource ShowcaseNote}" Text="{x:Bind Text('SampleComments', Localization.Revision), Mode=OneWay}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource ShowcaseCard}">
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="7">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <Border Style="{StaticResource ShowcaseBadge}" Background="{ThemeResource TrendTint}">
+                            <icon:SymbolIcon Symbol="SlideTextSparkle" FontSize="16" Foreground="{ThemeResource TrendInk}" AutomationProperties.AccessibilityView="Raw"/>
+                        </Border>
+                        <TextBlock Grid.Column="1" Style="{StaticResource ShowcaseHeading}" Text="{x:Bind Text('PulseTrend', Localization.Revision), Mode=OneWay}"/>
+                    </Grid>
+                    <Border Grid.Row="1" Padding="2,3" Background="{ThemeResource TrendTint}" CornerRadius="9" Height="47" VerticalAlignment="Center">
+                        <Viewbox Stretch="Fill" FlowDirection="LeftToRight" AutomationProperties.AccessibilityView="Raw" IsHitTestVisible="False">
+                            <Canvas Width="156" Height="42">
+                                <!-- Original sample series: 2, 1, 3, 4, 3, 4, 6. -->
+                                <Path Data="M 3,31 L 28,37 L 53,25 L 78,19 L 103,25 L 128,19 L 153,7 L 153,40 L 3,40 Z"
+                                      Fill="{ThemeResource TrendInk}" Opacity="0.14"/>
+                                <Path Data="M 3,31 L 28,37 L 53,25 L 78,19 L 103,25 L 128,19 L 153,7"
+                                      Stroke="{ThemeResource TrendInk}" StrokeThickness="1.8" StrokeLineJoin="Round"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <Ellipse Width="4" Height="4" Canvas.Left="151" Canvas.Top="5" Fill="{ThemeResource TrendInk}"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Border>
+                    <TextBlock Grid.Row="2" Style="{StaticResource ShowcaseNote}" Text="{x:Bind Text('HeartRateChange', Localization.Revision), Mode=OneWay}"/>
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource ShowcaseCard}">
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="7">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <Border Style="{StaticResource ShowcaseBadge}" Background="{ThemeResource SummaryTint}">
+                            <icon:SymbolIcon Symbol="Agents" FontSize="16" Foreground="{ThemeResource SummaryInk}" AutomationProperties.AccessibilityView="Raw"/>
+                        </Border>
+                        <TextBlock Grid.Column="1" Style="{StaticResource ShowcaseHeading}" Text="{x:Bind Text('AiSummary', Localization.Revision), Mode=OneWay}"/>
+                    </Grid>
+                    <Grid Grid.Row="1" ColumnDefinitions="3,*" ColumnSpacing="8" VerticalAlignment="Center">
+                        <Border CornerRadius="2" Background="{ThemeResource SummaryInk}" Opacity="0.65"/>
+                        <TextBlock Grid.Column="1" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{ThemeResource SummaryInk}"
+                                   Text="{x:Bind Text('SampleAiQuote', Localization.Revision), Mode=OneWay}"/>
+                    </Grid>
+                    <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <TextBlock Style="{StaticResource ShowcaseNote}" Text="{x:Bind Text('SampleSatisfaction', Localization.Revision), Mode=OneWay}"/>
+                        <TextBlock Grid.Column="1" Style="{StaticResource ShowcaseNote}" Text="{x:Bind Text('SampleComments', Localization.Revision), Mode=OneWay}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </controls:SettingsCardPanel>
+    </StackPanel>
+</UserControl>
