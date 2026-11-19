@@ -102,7 +102,6 @@ public sealed partial class MusicsPage
 
     private void ApplyAudioMenuLanguage(Control item)
     {
-        item.FlowDirection = Localization.FlowDirection;
         item.Language = Localization.LanguageTag;
         item.FontFamily = Localization.TextFontFamily;
     }

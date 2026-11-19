@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Page FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Language="{x:Bind Localization.LanguageTag, Mode=OneWay}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="using:Mizon.Windows.Pages" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:common="using:Mizon.Windows.Common" xmlns:controls="using:Mizon.Windows.Controls" xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:icon="using:FluentIcons.WinUI" xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml" xmlns:trackControls="using:Mizon.Windows.Controls.TrackDetails" xmlns:media="using:CommunityToolkit.WinUI.Media" xmlns:toolkit="using:CommunityToolkit.WinUI" xmlns:lottie="using:CommunityToolkit.WinUI.Lottie" xmlns:viewmodels="using:Mizon.Windows.ViewModels" xmlns:viewmodelsItems="using:Mizon.Windows.ViewModels.Items" xmlns:converters="using:Mizon.Windows.Converters" xmlns:detail="using:Mizon.Windows.UserControls" x:Class="Mizon.Windows.Pages.MusicsPage" NavigationCacheMode="Enabled" mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=viewmodels:MusicPageViewModel}" Loaded="MainWindow_Loaded" SizeChanged="Page_SizeChanged" Unloaded="MusicPage_Unloaded">
+<Page FlowDirection="LeftToRight" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}" Language="{x:Bind Localization.LanguageTag, Mode=OneWay}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="using:Mizon.Windows.Pages" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:common="using:Mizon.Windows.Common" xmlns:controls="using:Mizon.Windows.Controls" xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:icon="using:FluentIcons.WinUI" xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml" xmlns:trackControls="using:Mizon.Windows.Controls.TrackDetails" xmlns:media="using:CommunityToolkit.WinUI.Media" xmlns:toolkit="using:CommunityToolkit.WinUI" xmlns:lottie="using:CommunityToolkit.WinUI.Lottie" xmlns:viewmodels="using:Mizon.Windows.ViewModels" xmlns:viewmodelsItems="using:Mizon.Windows.ViewModels.Items" xmlns:converters="using:Mizon.Windows.Converters" xmlns:detail="using:Mizon.Windows.UserControls" x:Class="Mizon.Windows.Pages.MusicsPage" NavigationCacheMode="Enabled" mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=viewmodels:MusicPageViewModel}" Loaded="MainWindow_Loaded" SizeChanged="Page_SizeChanged" Unloaded="MusicPage_Unloaded">
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -359,7 +359,6 @@
                                                 <MenuFlyout x:Name="MusicPlaylistsMenuFlyout" Placement="Bottom" Opened="MusicPlaylistsFlyout_Opened">
                                                     <MenuFlyoutItem Text="{x:Bind Text('NewPlaylist', Localization.Revision), Mode=OneWay}"
                                                                     FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
-                                                                    FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
                                                                     Click="CreateMusicPlaylistButton_Click">
                                                         <MenuFlyoutItem.Icon>
                                                             <icon:SymbolIcon Symbol="Add"/>
@@ -388,7 +387,7 @@
                                                         </Style>
                                                     </Flyout.FlyoutPresenterStyle>
                                                     <StackPanel Width="272" Spacing="8" XYFocusKeyboardNavigation="Enabled"
-                                                                FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+                                                                FlowDirection="LeftToRight"
                                                                 Language="{x:Bind Localization.LanguageTag, Mode=OneWay}">
                                                         <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="200">
                                                             <StackPanel x:Name="AudioOutputItemsPanel" Spacing="2"/>

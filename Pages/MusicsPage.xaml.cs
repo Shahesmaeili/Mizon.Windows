@@ -334,7 +334,6 @@ namespace Mizon.Windows.Pages
             {
                 DataContext = playlist,
                 Language = Localization.LanguageTag,
-                FlowDirection = Localization.FlowDirection,
                 FontFamily = Localization.TextFontFamily,
                 Template = (ControlTemplate)Resources["MusicPlaylistMenuFlyoutItemTemplate"]
             };
@@ -793,7 +792,6 @@ namespace Mizon.Windows.Pages
         {
             void ApplyLanguage()
             {
-                dialog.FlowDirection = Localization.FlowDirection;
                 dialog.FontFamily = Localization.TextFontFamily;
                 dialog.Language = Localization.LanguageTag;
                 applyText();
