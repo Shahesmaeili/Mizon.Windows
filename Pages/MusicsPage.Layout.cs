@@ -1,3 +1,4 @@
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
@@ -7,6 +8,34 @@ namespace Mizon.Windows.Pages;
 public sealed partial class MusicsPage
 {
     private bool? _detailWide;
+    private AppWindow? _insightsWindow;
+
+    private void AttachInsightsPresentation()
+    {
+        if (App.MainMizonWindow is not MainWindow window) return;
+        var appWindow = window.AppWindow;
+        _insightsWindow = appWindow;
+        appWindow.Changed += InsightsPresentation_Changed;
+        TrackInsights.SetFullScreenLayout(window.IsFullScreen);
+    }
+
+    private void DetachInsightsPresentation()
+    {
+        if (_insightsWindow is not { } window) return;
+        _insightsWindow = null;
+        window.Changed -= InsightsPresentation_Changed;
+    }
+
+    private void InsightsPresentation_Changed(AppWindow sender, AppWindowChangedEventArgs args)
+    {
+        if (!args.DidPresenterChange) return;
+        // SetPresenter can raise Changed before the native transition has completed.
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (ReferenceEquals(_insightsWindow, sender) && App.MainMizonWindow is MainWindow window)
+                TrackInsights.SetFullScreenLayout(window.IsFullScreen);
+        });
+    }
 
     private void ApplyDetailLayout(double width)
     {

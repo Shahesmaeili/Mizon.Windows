@@ -6,9 +6,9 @@ Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion 
 
 Track actions move below the heading only when their measured sizes no longer
 fit. The waveform stays on its own and can seek from keyboard or Xbox focus.
-The four insights use the original compact artwork, colored icons, rings,
-and LiveCharts series. Their original spacing wraps with the viewport, and the
-chart is deferred until its host enters view. The support button uses its own
+The four insights retain the compact design, with native XAML rings and a
+seven-point chart. Cards fill the section width in one, two or four columns.
+Full-screen presentation allows four columns at a narrower viewport. The support button uses its own
 theme-aware native template. The page uses native transport
 and cover actions, resolves credit portraits through the media cache, and
 exposes independent track-detail grants in MCP.

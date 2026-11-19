@@ -4,42 +4,59 @@ using Windows.Foundation;
 
 namespace Mizon.Windows.Controls;
 
-/// <summary>Packs the original 300 by 100 insight cards in reading order.</summary>
+/// <summary>Spreads the compact insight cards across the available width.</summary>
 public sealed partial class TrackInsightsPanel : Panel
 {
-    private const double CardWidth = 300;
+    private const double PreferredCardWidth = 300;
+    private const double MinimumColumnWidth = 232;
+    private const double FullScreenMinimumColumnWidth = 168;
     private const double CardHeight = 100;
     private const double Spacing = 16;
 
-    private double _cardWidth;
-    private double _cardHeight;
     private int _columns = 1;
+
+    internal bool PreferSingleRow
+    {
+        get => field;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            InvalidateMeasure();
+        }
+    }
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        var width = double.IsFinite(availableSize.Width)
-            ? availableSize.Width : CardWidth * Children.Count + Spacing * Math.Max(0, Children.Count - 1);
-        _cardWidth = Math.Min(CardWidth, width);
-        _cardHeight = _cardWidth * (CardHeight / CardWidth);
-        _columns = Math.Max(1, (int)Math.Floor((width + Spacing) / (CardWidth + Spacing)));
+        var count = Children.Count;
+        if (count == 0) return default;
 
-        var size = new Size(_cardWidth, _cardHeight);
+        var width = double.IsFinite(availableSize.Width)
+            ? availableSize.Width : PreferredCardWidth * count + Spacing * (count - 1);
+        var fourColumnWidth = PreferSingleRow ? FullScreenMinimumColumnWidth : MinimumColumnWidth;
+        _columns = count >= 4 && width >= 4 * fourColumnWidth + 3 * Spacing ? 4
+            : count >= 2 && width >= 2 * MinimumColumnWidth + Spacing ? 2 : 1;
+
+        var size = new Size(GetCardWidth(width), CardHeight);
         foreach (var card in Children)
             card.Measure(size);
 
-        var rows = (Children.Count + _columns - 1) / _columns;
-        return new Size(width, rows * _cardHeight + Math.Max(0, rows - 1) * Spacing);
+        var rows = (count + _columns - 1) / _columns;
+        return new Size(width, rows * CardHeight + (rows - 1) * Spacing);
     }
 
     protected override Size ArrangeOverride(Size finalSize)
     {
+        var cardWidth = GetCardWidth(finalSize.Width);
         for (var index = 0; index < Children.Count; index++)
         {
-            var x = index % _columns * (_cardWidth + Spacing);
-            var y = index / _columns * (_cardHeight + Spacing);
-            Children[index].Arrange(new Rect(x, y, _cardWidth, _cardHeight));
+            var x = index % _columns * (cardWidth + Spacing);
+            var y = index / _columns * (CardHeight + Spacing);
+            Children[index].Arrange(new Rect(x, y, cardWidth, CardHeight));
         }
 
         return finalSize;
     }
+
+    private double GetCardWidth(double width) => Math.Max(0, (width - (_columns - 1) * Spacing) / _columns);
 }

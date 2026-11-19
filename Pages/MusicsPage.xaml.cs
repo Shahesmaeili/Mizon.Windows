@@ -388,6 +388,7 @@ namespace Mizon.Windows.Pages
         {
             if (_pageActive) return;
             _pageActive = true;
+            AttachInsightsPresentation();
             ApplyDetailLayout(ActualWidth);
             ViewModel.PropertyChanged += ViewModel_PropertyChanged;
             MusicBorder.SizeChanged += MusicBorder_SizeChanged;
@@ -405,6 +406,7 @@ namespace Mizon.Windows.Pages
         {
             if (IsLoaded || !_pageActive) return;
             _pageActive = false;
+            DetachInsightsPresentation();
             CancelCommentNavigation();
             ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
             ClearCoverTransition();

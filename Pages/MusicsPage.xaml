@@ -651,7 +651,7 @@
                 </Grid>
                 <Grid Grid.Row="1">
                     <Grid Margin="32,16,32,0">
-                        <detail:MusicDetailsShowcase/>
+                        <detail:MusicDetailsShowcase x:Name="TrackInsights"/>
                     </Grid>
                 </Grid>
                 <Grid Grid.Row="2" Margin="32,0,0,0">

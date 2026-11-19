@@ -207,7 +207,6 @@
 		<PackageReference Include="DevWinUI" Version="10.4.1" />
 		<PackageReference Include="DevWinUI.Shader" Version="10.1.0" />
 		<PackageReference Include="FluentIcons.WinUI" Version="2.2.345" />
-		<PackageReference Include="LiveChartsCore.SkiaSharpView.WinUI" Version="2.1.0-dev-798" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="11.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="11.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="11.0.0" />

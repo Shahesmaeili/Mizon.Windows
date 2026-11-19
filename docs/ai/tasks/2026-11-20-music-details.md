@@ -10,13 +10,13 @@ The header measures the title and its action group before placing them. The
 four actions share the title row whenever their natural widths fit. At smaller
 widths, the group moves below and can wrap internally. The four lower cards
 retain the original sample heart rate, listener feedback, heart-rate trend and
-AI summary. The four cards reuse the original compact 300-by-100 layout,
-colored icons, StorageRing values, arrow edges and line series. Their original
-16-unit spacing is preserved when they wrap. Below 300 units a card scales
-uniformly. The trend loads at low dispatcher priority when it enters the
-viewport, retains its instance while scrolling, and releases it on page
-detach. The XAML line series reads its seven samples from a shared read-only
-collection of boxed numbers. The sample caption remains absent.
+AI summary. The four cards keep the original compact height, colored icons,
+rings, arrow edges and line series. Native XAML shapes draw the three rings
+and seven original trend samples without the chart engine, load callbacks,
+or composition animations. Cards fill the available width and retain the
+16-unit gap when wrapping into one, two or four columns. The fullscreen
+presenter uses a more compact four-column threshold. In narrow cards only the
+middle content scales down. The sample caption remains absent.
 
 The transport exposes native Play/Pause and Repeat controls with independent
 focus stops. Only the original waveform is shown for seeking. With focus on
@@ -72,5 +72,11 @@ Verification:
   Debug build and NativeAOT publication passed again. The separate native
   fixture failed at startup because its linker inputs omitted WinRT.Runtime.
   Chart lifecycle was exercised in the fixture's managed WinUI run.
+- The follow-up Windows event reported a native CoreMessagingXP failure at
+  track-page entry without a corresponding managed exception. It did not
+  identify the exact failing control. The replacement native-shape widgets
+  passed an isolated compiled WinUI test across 11 widths or presentation
+  combinations and 24 attach, resize and detach cycles. The fixture verified
+  that the last card reaches the end of the available row at each width.
 - Packaged-page visuals and animations, physical Xbox hardware and live
   Narrator output were not exercised.
