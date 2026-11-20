@@ -7,7 +7,10 @@ claim that existing features are already covered.
 
 Current implemented coverage is **Welcome, Login, Registration, Appearance, declared page navigation,
 Mizon taskbar pinning, the active music home and track detail pages, current-user online presence, main-window presentation, the active VPN page and the active artist profile**.
-Track details has independent read/control grants. See the
+Track details has independent read/control grants. Read includes the current
+loading stages and bounded audience counts. Control can open or close the live
+listeners and views panels on the active track. Individual listener identities
+and sample history are not included in MCP responses. See the
 [track detail handoff](../docs/ai/tasks/2026-11-20-music-details.md) for the
 bounded state and cover/repeat operations.
 VPN has independent read/control grants; [VPN.md](VPN.md) documents its bounded

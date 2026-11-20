@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml.Media;
+using Mizon.Windows.Services;
 
 using System;
 
@@ -9,23 +10,12 @@ public class EqualizerCommentItemViewModel : ViewModelBase
     public Guid PublicId { get; init; }
     public TimeSpan? Timestamp { get; init; }
     public string Text { get; init; } = string.Empty;
-    public double X
-    {
-        get; set;
-    }
+    public double CanvasTop { get; init; }
+    public bool IsOwnComment { get; init; }
+    public LocalizationService Localization => LocalizationService.Current;
 
-    public double Y
-    {
-        get; set;
-    }
-
-    public double Width { get; set; } = 28;
-
-    public double Height { get; set; } = 28;
-
-    // موقعیت‌های محاسبه شده برای Canvas
-    //public double CanvasLeft => X - (Width / 2);
-    public double CanvasTop => Y - (Height / 2);
+    public string OwnerHint(int revision) =>
+        IsOwnComment ? Localization.GetString("MusicDetails/OwnWaveformComment", revision) : string.Empty;
 
 
     public double CanvasLeft

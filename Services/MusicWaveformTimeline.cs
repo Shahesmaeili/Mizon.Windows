@@ -5,8 +5,11 @@ namespace Mizon.Windows.Services;
 internal static class MusicWaveformTimeline
 {
     internal const double Width = 1500d;
+    internal const double Height = 110d;
+    internal const double MarkerSize = 28d;
     private const double BarStrokeWidth = 2d;
-    private const double MarkerRadius = 14d;
+    private const double MarkerTop = Height * 2 / 3 + 2;
+    private const int MarkerStackLevels = 5;
 
     internal static int GetBarIndex(double contentX, int barCount) =>
         !double.IsFinite(contentX) || contentX < 0 || contentX > Width || barCount <= 0
@@ -23,14 +26,14 @@ internal static class MusicWaveformTimeline
         return GetBarIndex(contentX - leadingGap, barCount);
     }
 
-    internal static double GetCommentStackOffset(int stackIndex) => (stackIndex % 5) switch
+    internal static double GetCommentMarkerTop(int stackIndex)
     {
-        0 => 0,
-        1 => -6,
-        2 => 4,
-        3 => -12,
-        _ => -18
-    };
+        const double step = (Height - MarkerSize - MarkerTop) / (MarkerStackLevels - 1);
+        return MarkerTop + stackIndex % MarkerStackLevels * step;
+    }
+
+    internal static bool IsOwnComment(Guid authorId, Guid? currentClientId) =>
+        authorId != Guid.Empty && authorId == currentClientId;
 
     internal static TimeSpan? GetTimestamp(double contentX, TimeSpan duration)
     {
@@ -49,6 +52,6 @@ internal static class MusicWaveformTimeline
             return 16;
 
         var ratio = Math.Clamp((double)timestamp.Value.Ticks / duration.Ticks, 0d, 1d);
-        return ratio * Width - MarkerRadius;
+        return ratio * Width - MarkerSize / 2;
     }
 }

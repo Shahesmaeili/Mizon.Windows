@@ -8,6 +8,23 @@
                 <ResourceDictionary Source="ms-appx:///Controls/TrackDetails/EdgeLighting.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <converters:BoolToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <Style x:Key="TrackMenuButtonStyle" TargetType="DropDownButton">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Margin" Value="4,0"/>
+            </Style>
+            <DataTemplate x:Key="TrackAudienceRowTemplate" x:DataType="viewmodelsItems:TrackAudienceItemViewModel">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" Padding="8" CornerRadius="8"
+                      Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                    <PersonPicture Width="32" Height="32" DisplayName="{x:Bind Name, Mode=OneWay}"
+                                   ProfilePicture="{x:Bind Portrait, Mode=OneWay}" AutomationProperties.AccessibilityView="Raw"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
+                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" FontWeight="SemiBold" FontSize="13"
+                                   TextReadingOrder="DetectFromContent" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{x:Bind Details, Mode=OneWay}" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
             <ControlTemplate x:Key="MusicPlaylistMenuFlyoutItemTemplate" TargetType="MenuFlyoutItem">
                 <CheckBox MinWidth="220" Margin="16,8" IsChecked="{Binding ContainsCurrentMusic, Mode=TwoWay}" Click="MusicPlaylistCheckBox_Click">
                     <Grid>
@@ -26,17 +43,12 @@
                 </CheckBox>
             </ControlTemplate>
             <DataTemplate x:Key="AudioOutputMenuItemTemplate" x:DataType="viewmodelsItems:AudioDeviceItemViewModel">
-                <Grid ColumnDefinitions="Auto,*">
-                    <Border CornerRadius="8" Width="48" Height="48" Background="{ThemeResource CardBackgroundFillColorSecondary}">
-                        <icon:SymbolIcon FontSize="21" Symbol="Speaker2" Opacity="0.7" AutomationProperties.AccessibilityView="Raw"/>
-                    </Border>
-                    <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="12,0">
-                        <TextBlock FontSize="12" Opacity="0.9" Text="{x:Bind Title, Mode=OneWay}"
-                                   TextReadingOrder="DetectFromContent" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock FontSize="10" Opacity="0.7" FontStyle="Italic"
-                                   Text="{x:Bind MenuDetails, Mode=OneWay}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                </Grid>
+                <StackPanel VerticalAlignment="Center" Spacing="2">
+                    <TextBlock FontSize="12" Opacity="0.9" Text="{x:Bind Title, Mode=OneWay}"
+                               TextReadingOrder="DetectFromContent" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock FontSize="10" Opacity="0.7" FontStyle="Italic"
+                               Text="{x:Bind MenuDetails, Mode=OneWay}" TextWrapping="Wrap"/>
+                </StackPanel>
             </DataTemplate>
             <DataTemplate x:Key="MusicDetailsCardTemplate" x:DataType="viewmodelsItems:MusicDetailsMusicItemViewModel">
                 <trackControls:OffsetBox ShowShadowOnHover="False">
@@ -112,6 +124,9 @@
                                         AutomationProperties.Name="{x:Bind Text('Cover', Localization.Revision), Mode=OneWay}"
                                         ToolTipService.ToolTip="{x:Bind Text('Cover', Localization.Revision), Mode=OneWay}">
                                     <Grid>
+                                        <Border x:Name="TrackCoverSkeleton" CornerRadius="8"
+                                                Style="{StaticResource DiscoverySkeletonBlockStyle}"
+                                                IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw"/>
                                         <Image Stretch="Fill" Opacity="0" x:Name="CoverImage"
                                                Source="{Binding CoverImagePath, Mode=OneWay}" ImageOpened="CoverImage_ImageOpened">
                                             <Image.Lights>
@@ -139,70 +154,124 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <detail:MusicTransportControl Model="{x:Bind ViewModel, Mode=OneWay}" VerticalAlignment="Top"/>
-                                        <StackPanel Margin="16,0,0,0" VerticalAlignment="Center" Grid.Column="1">
-                                            <WrapPanel LineSpacing="6">
-                                                <TextBlock TextTrimming="CharacterEllipsis" IsTextSelectionEnabled="True" FontWeight="Bold" FontSize="24" TextReadingOrder="DetectFromContent" x:Name="TrackTitleText"/>
-                                                <TextBlock TextTrimming="CharacterEllipsis" IsTextSelectionEnabled="True" FontSize="22" Margin="8,0,0,0" TextReadingOrder="DetectFromContent" Visibility="Collapsed" x:Name="TrackPersianTitleText"/>
-                                                <TextBlock TextTrimming="CharacterEllipsis" Margin="8,0,0,0" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" common:CursorExtensions.Cursor="Hand" FontSize="20" Text="{Binding AlbumTitle, Mode=OneWay}" Visibility="{Binding AlbumPublicId, Mode=OneWay, Converter={StaticResource NullToCollapsedConverter}}" x:Name="TrackAlbumText"/>
-                                                <Button common:CursorExtensions.Cursor="Hand" BorderBrush="{ThemeResource SystemAccentColor}" CornerRadius="8" Margin="16,0,0,0" BorderThickness="1" VerticalAlignment="Center" x:Name="ViewsStatusButton" MinHeight="34"
-                                                        AutomationProperties.Name="{x:Bind ViewsLabel(ViewModel.ViewsCount, ViewModel.LiveViewsCount, Localization.Revision), Mode=OneWay}">
+                                        <Grid Margin="16,0,0,0" VerticalAlignment="Center" Grid.Column="1" MinHeight="66">
+                                            <StackPanel x:Name="TrackMetadataContent" Visibility="Collapsed" VerticalAlignment="Center">
+                                                <WrapPanel LineSpacing="6">
+                                                    <TextBlock TextTrimming="CharacterEllipsis" IsTextSelectionEnabled="True" FontWeight="Bold" FontSize="24" TextReadingOrder="DetectFromContent" x:Name="TrackTitleText"/>
+                                                    <TextBlock TextTrimming="CharacterEllipsis" IsTextSelectionEnabled="True" FontSize="22" Margin="8,0,0,0" TextReadingOrder="DetectFromContent" Visibility="Collapsed" x:Name="TrackPersianTitleText"/>
+                                                    <TextBlock TextTrimming="CharacterEllipsis" Margin="8,0,0,0" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center" common:CursorExtensions.Cursor="Hand" FontSize="20" Text="{Binding AlbumTitle, Mode=OneWay}" Visibility="{Binding AlbumPublicId, Mode=OneWay, Converter={StaticResource NullToCollapsedConverter}}" x:Name="TrackAlbumText"/>
+                                                    <Border x:Name="ViewsStatusButton" CornerRadius="9" Margin="16,0,0,0" BorderThickness="1"
+                                                            BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" VerticalAlignment="Center">
+                                                        <FlyoutBase.AttachedFlyout>
+                                                            <Flyout x:Name="TrackAudienceFlyout" Placement="Bottom" Opened="TrackAudienceFlyout_Opened"
+                                                                    Closed="TrackAudienceFlyout_Closed">
+                                                                <StackPanel x:Name="AudiencePopup" Width="280" Spacing="10"
+                                                                            XYFocusKeyboardNavigation="Enabled" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
+                                                                    <TextBlock x:Name="AudiencePopupTitle" FontSize="17" FontWeight="SemiBold"
+                                                                               FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"/>
+                                                                    <TextBlock x:Name="AudiencePopupNotice" FontSize="11" TextWrapping="Wrap"
+                                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                                               FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+                                                                               AutomationProperties.LiveSetting="Polite"/>
+                                                                    <StackPanel x:Name="MyAudienceHistoryPanel" Spacing="5" Visibility="Collapsed">
+                                                                        <TextBlock Text="{x:Bind Text('AudienceYou', Localization.Revision), Mode=OneWay}"
+                                                                                   FontSize="11" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                                                                   FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"/>
+                                                                        <ContentControl HorizontalContentAlignment="Stretch" IsTabStop="False"
+                                                                                        Content="{x:Bind MyAudienceHistory}"
+                                                                                        ContentTemplate="{StaticResource TrackAudienceRowTemplate}"/>
+                                                                    </StackPanel>
+                                                                    <ScrollViewer MaxHeight="240" IsTabStop="True" VerticalScrollBarVisibility="Auto"
+                                                                                  UseSystemFocusVisuals="True"
+                                                                                  AutomationProperties.Name="{x:Bind Text('AudienceList', Localization.Revision), Mode=OneWay}">
+                                                                        <ItemsRepeater ItemsSource="{x:Bind AudienceItems}" ItemTemplate="{StaticResource TrackAudienceRowTemplate}">
+                                                                            <ItemsRepeater.Layout>
+                                                                                <StackLayout Spacing="4"/>
+                                                                            </ItemsRepeater.Layout>
+                                                                        </ItemsRepeater>
+                                                                    </ScrollViewer>
+                                                                </StackPanel>
+                                                            </Flyout>
+                                                        </FlyoutBase.AttachedFlyout>
+                                                        <Grid ColumnDefinitions="Auto,1,Auto">
+                                                            <controls:FeatureButton x:Name="TrackViewsButton" Click="TrackViews_Click" MinHeight="34"
+                                                                                    Padding="9,0" BorderThickness="0" Background="Transparent"
+                                                                                    AutomationProperties.Name="{x:Bind AudienceButtonLabel('ViewsAudience', ViewModel.ViewsCount, Localization.Revision), Mode=OneWay}"
+                                                                                    ToolTipService.ToolTip="{x:Bind Text('ViewsAudience', Localization.Revision), Mode=OneWay}">
+                                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                                    <icon:SymbolIcon Symbol="Eye" FontSize="16" AutomationProperties.AccessibilityView="Raw"/>
+                                                                    <TextBlock Text="{x:Bind ViewModel.ViewsCount, Mode=OneWay}"/>
+                                                                </StackPanel>
+                                                            </controls:FeatureButton>
+                                                            <Border Grid.Column="1" Margin="0,7" Background="{ThemeResource ControlStrokeColorDefaultBrush}"/>
+                                                            <controls:FeatureButton x:Name="TrackLiveButton" Grid.Column="2" Click="TrackLive_Click" MinHeight="34"
+                                                                                    Padding="9,0" BorderThickness="0" Background="Transparent"
+                                                                                    AutomationProperties.Name="{x:Bind AudienceButtonLabel('LiveAudience', ViewModel.LiveViewsCount, Localization.Revision), Mode=OneWay}"
+                                                                                    ToolTipService.ToolTip="{x:Bind Text('LiveAudience', Localization.Revision), Mode=OneWay}">
+                                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                                    <Ellipse Width="5" Height="5" VerticalAlignment="Center"
+                                                                             Fill="{ThemeResource SystemFillColorSuccessBrush}" AutomationProperties.AccessibilityView="Raw"/>
+                                                                    <TextBlock Text="{x:Bind ViewModel.LiveViewsCount, Mode=OneWay}"/>
+                                                                </StackPanel>
+                                                            </controls:FeatureButton>
+                                                        </Grid>
+                                                    </Border>
+                                                    <!--<Button common:CursorExtensions.Cursor="Hand" BorderBrush="Gold" CornerRadius="8" Margin="8,0,0,0" BorderThickness="1" Height="34" VerticalAlignment="Center" >
                                                     <Button.Resources>
-                                                        <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{ThemeResource SystemAccentColorDark1}"/>
-                                                        <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{ThemeResource SystemAccentColorDark1}"/>
+                                                        <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Gold" />
+                                                        <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Gold" />
                                                     </Button.Resources>
-                                                    <WrapPanel LineSpacing="4">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <icon:SymbolIcon IconVariant="Regular" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="18" Symbol="Eye"/>
-                                                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="8,0,0,0" Text="{Binding ViewsCount, Mode=OneWay}"/>
-                                                        </StackPanel>
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <Grid Width="1" CornerRadius="1" Background="#80FFFFFF" Margin="8,2"/>
-                                                            <icon:SymbolIcon IconVariant="Regular" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="18" Symbol="EyeLines"/>
-                                                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="8,0,0,0" Text="{Binding LiveViewsCount, Mode=OneWay}"/>
-                                                        </StackPanel>
-                                                    </WrapPanel>
-                                                </Button>
-                                                <!--<Button common:CursorExtensions.Cursor="Hand" BorderBrush="Gold" CornerRadius="8" Margin="8,0,0,0" BorderThickness="1" Height="34" VerticalAlignment="Center" >
-                                                <Button.Resources>
-                                                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Gold" />
-                                                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Gold" />
-                                                </Button.Resources>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <icon:SymbolIcon IconVariant="Regular" Foreground="Gold" FontSize="18" Symbol="Scratchpad"/>
-                                                    <TextBlock Foreground="Gold" FontSize="12" Margin="8,0,0,0" Text="پیش نمایش"/>
-                                                </StackPanel>
-                                            </Button>-->
-                                            </WrapPanel>
-                                            <WrapPanel LineSpacing="4">
-                                                <HyperlinkButton Content="{Binding LableTitle, Mode=OneWay}" Visibility="{Binding LablePublicId, Mode=OneWay, Converter={StaticResource NullToCollapsedConverter}}" x:Name="LabelLink"/>
-                                                <ScrollViewer HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled" x:Name="GenreRail">
-                                                    <ItemsRepeater ItemsSource="{Binding Genres, Mode=OneWay}">
-                                                        <ItemsRepeater.Layout>
-                                                            <StackLayout Orientation="Horizontal" Spacing="4"/>
-                                                        </ItemsRepeater.Layout>
-                                                        <ItemsRepeater.ItemTemplate>
-                                                            <DataTemplate x:DataType="viewmodelsItems:MusicGenreItemViewModel">
-                                                                <Button Content="{x:Bind DisplayTitle(Localization.Revision), Mode=OneWay}" Padding="6,4" FontSize="10" CornerRadius="8" BorderThickness="0" Foreground="{ThemeResource TextFillColorSecondaryBrush}" common:CursorExtensions.Cursor="Hand"/>
-                                                            </DataTemplate>
-                                                        </ItemsRepeater.ItemTemplate>
-                                                    </ItemsRepeater>
-                                                </ScrollViewer>
-                                                <TextBlock Margin="8,0,0,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" FontSize="14" Text="{Binding Duration, Mode=OneWay}"/>
-                                            </WrapPanel>
-                                        </StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <icon:SymbolIcon IconVariant="Regular" Foreground="Gold" FontSize="18" Symbol="Scratchpad"/>
+                                                        <TextBlock Foreground="Gold" FontSize="12" Margin="8,0,0,0" Text="پیش نمایش"/>
+                                                    </StackPanel>
+                                                </Button>-->
+                                                </WrapPanel>
+                                                <WrapPanel LineSpacing="4">
+                                                    <HyperlinkButton Content="{Binding LableTitle, Mode=OneWay}" Visibility="{Binding LablePublicId, Mode=OneWay, Converter={StaticResource NullToCollapsedConverter}}" x:Name="LabelLink"/>
+                                                    <ScrollViewer HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled" x:Name="GenreRail">
+                                                        <ItemsRepeater ItemsSource="{Binding Genres, Mode=OneWay}">
+                                                            <ItemsRepeater.Layout>
+                                                                <StackLayout Orientation="Horizontal" Spacing="4"/>
+                                                            </ItemsRepeater.Layout>
+                                                            <ItemsRepeater.ItemTemplate>
+                                                                <DataTemplate x:DataType="viewmodelsItems:MusicGenreItemViewModel">
+                                                                    <Button Content="{x:Bind DisplayTitle(Localization.Revision), Mode=OneWay}" Padding="6,4" FontSize="10" CornerRadius="8" BorderThickness="0" Foreground="{ThemeResource TextFillColorSecondaryBrush}" common:CursorExtensions.Cursor="Hand"/>
+                                                                </DataTemplate>
+                                                            </ItemsRepeater.ItemTemplate>
+                                                        </ItemsRepeater>
+                                                    </ScrollViewer>
+                                                    <TextBlock Margin="8,0,0,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" FontSize="14" Text="{Binding Duration, Mode=OneWay}"/>
+                                                </WrapPanel>
+                                            </StackPanel>
+                                            <StackPanel x:Name="TrackMetadataSkeleton" Spacing="7" MaxWidth="220"
+                                                        HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                <Border Height="17" MinWidth="112" CornerRadius="5" Style="{StaticResource DiscoverySkeletonBlockStyle}"
+                                                        AutomationProperties.AccessibilityView="Raw"/>
+                                                <Border Height="9" Width="72" CornerRadius="4" HorizontalAlignment="Left"
+                                                        Style="{StaticResource DiscoverySkeletonBlockStyle}" AutomationProperties.AccessibilityView="Raw"/>
+                                                <TextBlock x:Name="TrackLoadingStatus" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                           Text="{x:Bind Text('LoadingTrack', Localization.Revision), Mode=OneWay}"
+                                                           AutomationProperties.LiveSetting="Polite"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="TrackMetadataError" Visibility="Collapsed" TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       Text="{x:Bind Text('TrackLoadFailed', Localization.Revision), Mode=OneWay}"
+                                                       VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
+                                        </Grid>
                                     </Grid>
                                     <WrapPanel LineSpacing="8" HorizontalAlignment="Right" ItemSpacing="4">
                                         <TextBlock Text="{Binding CurrentPosition, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="8,0" VerticalAlignment="Center"/>
-                                        <Button Margin="2,0" Background="{ThemeResource SystemAccentColor}" Padding="10" Click="Button_Click" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('Download', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Text('Download', Localization.Revision), Mode=OneWay}">
+                                        <Button Background="{ThemeResource SystemAccentColor}" Padding="10" Click="Button_Click" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('Download', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Text('Download', Localization.Revision), Mode=OneWay}">
                                             <icon:SymbolIcon Opacity="0.8" FontSize="16" Symbol="ArrowDownload"/>
                                         </Button>
-                                        <Button Margin="2,0" Padding="10" Command="{Binding DesktopShortcutCommand}" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('Shortcut', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Text('Shortcut', Localization.Revision), Mode=OneWay}">
+                                        <Button Padding="10" Command="{Binding DesktopShortcutCommand}" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('Shortcut', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Text('Shortcut', Localization.Revision), Mode=OneWay}">
                                             <icon:SymbolIcon Opacity="0.5" FontSize="16" Symbol="Desktop"/>
                                         </Button>
-                                        <Button Margin="2,0" Padding="10" Click="PictureInPicture_Click" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('FloatingPlayer', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Text('FloatingPlayer', Localization.Revision), Mode=OneWay}">
+                                        <Button Padding="10" Click="PictureInPicture_Click" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('FloatingPlayer', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Text('FloatingPlayer', Localization.Revision), Mode=OneWay}">
                                             <icon:SymbolIcon Opacity="0.5" FontSize="16" Symbol="PictureInPicture"/>
                                         </Button>
-                                        <Button Margin="2,0" Command="{Binding CopyLinkCommand}" Padding="10" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('CopyLink', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Text('CopyLink', Localization.Revision), Mode=OneWay}">
+                                        <Button Command="{Binding CopyLinkCommand}" Padding="10" common:CursorExtensions.Cursor="Hand" AutomationProperties.Name="{x:Bind Text('CopyLink', Localization.Revision), Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Text('CopyLink', Localization.Revision), Mode=OneWay}">
                                             <icon:SymbolIcon Opacity="0.5" FontSize="16" Symbol="Copy"/>
                                         </Button>
                                     </WrapPanel>
@@ -210,7 +279,7 @@
                                 <!--<ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled" HorizontalScrollMode="Enabled">
                                 <Canvas  Height="100" MinWidth="1000" HorizontalAlignment="Left" Margin="0,16" x:Name="EqualizerCanvas"/>
                             </ScrollViewer>-->
-                                <ScrollViewer x:Name="WaveformScroller" Grid.Row="1" IsTabStop="True" FlowDirection="LeftToRight"
+                                <ScrollViewer x:Name="WaveformScroller" Grid.Row="1" IsTabStop="False" FlowDirection="LeftToRight"
                                               UseSystemFocusVisuals="True" PreviewKeyDown="Waveform_PreviewKeyDown" PointerExited="WaveformScroller_PointerExited"
                                               HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled" HorizontalScrollMode="Enabled"
                                               AutomationProperties.Name="{x:Bind Text('Waveform', Localization.Revision), Mode=OneWay}"
@@ -223,31 +292,37 @@
                                             <RowDefinition Height="6*" x:Name="WaveformSeekRow"/>
                                             <RowDefinition Height="3*"/>
                                         </Grid.RowDefinitions>
-                                        <ItemsRepeater x:Name="WaveformBars" Grid.RowSpan="2" ItemsSource="{x:Bind ViewModel.Bars}"
-                                                       UseLayoutRounding="False">
-                                            <ItemsRepeater.ItemTemplate>
-                                                <DataTemplate x:DataType="viewmodelsItems:EqualizerBarItemViewModel">
-                                                    <!-- عرض 6 همان 2px bar به‌علاوهٔ فاصلهٔ دو طرف آن است؛
-                                                     بنابراین فضای بین barها هم hit-target همین item می‌ماند. -->
-                                                    <Grid x:Name="EqualizerGrid" Width="6" Background="Transparent" UseLayoutRounding="False"
-                                                          Loaded="WaveformBar_Loaded" Unloaded="WaveformBar_Unloaded">
-                                                        <Grid.RowDefinitions>
-                                                            <RowDefinition Height="6*"/>
-                                                            <RowDefinition Height="3*"/>
-                                                        </Grid.RowDefinitions>
-                                                        <Grid Background="Transparent" common:CursorExtensions.Cursor="Hand" PointerPressed="TopEqualizerGrid_PointerPressed">
-                                                            <Border x:Name="TopBar" Width="2" CornerRadius="1" Height="{x:Bind TopHeight, Mode=OneWay}" Background="{x:Bind TopColor, Mode=OneWay}" VerticalAlignment="Bottom"/>
+                                        <Path x:Name="TrackWaveformSkeleton" Grid.RowSpan="2" Stretch="Fill" Margin="0,19,0,19"
+                                              Stroke="{ThemeResource TextFillColorSecondaryBrush}" StrokeThickness="2" Opacity="0.19"
+                                              IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw"
+                                              Data="M0,27 L0,44 M4,18 L4,49 M8,4 L8,56 M12,12 L12,52 M16,24 L16,46 M20,16 L20,49 M24,3 L24,57 M28,10 L28,53 M32,21 L32,48 M36,28 L36,44 M40,19 L40,49 M44,6 L44,54 M48,15 L48,51 M52,24 L52,46 M56,6 L56,54 M60,2 L60,57 M64,13 L64,54 M68,20 L68,49 M72,27 L72,44 M76,16 L76,49 M80,4 L80,56 M84,8 L84,53 M88,21 L88,48 M92,15 L92,49 M96,7 L96,55 M100,13 L100,51 M104,22 L104,48 M108,10 L108,52 M112,6 L112,54 M116,15 L116,51 M120,26 L120,44 M124,20 L124,48 M128,12 L128,52 M132,4 L132,57 M136,10 L136,53 M140,21 L140,48 M144,26 L144,44 M148,18 L148,48 M152,8 L152,54 M156,15 L156,49 M160,26 L160,44 M164,18 L164,48 M168,5 L168,57 M172,11 L172,53 M176,23 L176,47 M180,16 L180,49 M184,5 L184,56 M188,13 L188,51 M192,25 L192,47 M196,22 L196,48 M200,9 L200,54 M204,20 L204,47 M208,26 L208,43"/>
+                                        <Grid x:Name="TrackWaveformLayer" Grid.RowSpan="2" UseLayoutRounding="False">
+                                            <ItemsRepeater x:Name="WaveformBars" ItemsSource="{x:Bind ViewModel.Bars}"
+                                                           UseLayoutRounding="False">
+                                                <ItemsRepeater.ItemTemplate>
+                                                    <DataTemplate x:DataType="viewmodelsItems:EqualizerBarItemViewModel">
+                                                        <!-- عرض 6 همان 2px bar به‌علاوهٔ فاصلهٔ دو طرف آن است؛
+                                                         بنابراین فضای بین barها هم hit-target همین item می‌ماند. -->
+                                                        <Grid x:Name="EqualizerGrid" Width="6" Background="Transparent" UseLayoutRounding="False"
+                                                              Loaded="WaveformBar_Loaded" Unloaded="WaveformBar_Unloaded">
+                                                            <Grid.RowDefinitions>
+                                                                <RowDefinition Height="6*"/>
+                                                                <RowDefinition Height="3*"/>
+                                                            </Grid.RowDefinitions>
+                                                            <Grid Background="Transparent" common:CursorExtensions.Cursor="Hand" PointerPressed="TopEqualizerGrid_PointerPressed">
+                                                                <Border x:Name="TopBar" Width="2" CornerRadius="1" Height="{x:Bind TopHeight, Mode=OneWay}" Background="{x:Bind TopColor, Mode=OneWay}" VerticalAlignment="Bottom"/>
+                                                            </Grid>
+                                                            <Grid Grid.Row="1" Background="Transparent" common:CursorExtensions.Cursor="Hand" PointerPressed="BottomEqualizerGrid_PointerPressed">
+                                                                <Border x:Name="BottomBar" Width="2" CornerRadius="1" Height="{x:Bind BottomHeight, Mode=OneWay}" Background="{x:Bind BottomColor, Mode=OneWay}" VerticalAlignment="Top" Margin="0,6,0,0"/>
+                                                            </Grid>
                                                         </Grid>
-                                                        <Grid Grid.Row="1" Background="Transparent" common:CursorExtensions.Cursor="Hand" PointerPressed="BottomEqualizerGrid_PointerPressed">
-                                                            <Border x:Name="BottomBar" Width="2" CornerRadius="1" Height="{x:Bind BottomHeight, Mode=OneWay}" Background="{x:Bind BottomColor, Mode=OneWay}" VerticalAlignment="Top" Margin="0,6,0,0"/>
-                                                        </Grid>
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </ItemsRepeater.ItemTemplate>
-                                            <ItemsRepeater.Layout>
-                                                <StackLayout Orientation="Horizontal"/>
-                                            </ItemsRepeater.Layout>
-                                        </ItemsRepeater>
+                                                    </DataTemplate>
+                                                </ItemsRepeater.ItemTemplate>
+                                                <ItemsRepeater.Layout>
+                                                    <StackLayout Orientation="Horizontal"/>
+                                                </ItemsRepeater.Layout>
+                                            </ItemsRepeater>
+                                        </Grid>
                                         <!-- خطوط بخش‌های خوانندگی؛ فعلاً دادهٔ نمایشی هاردکد شده است. -->
                                         <ItemsControl Grid.Row="1" ItemsSource="{Binding VocalSegments}" IsHitTestVisible="False">
                                             <ItemsControl.ItemsPanel>
@@ -289,29 +364,41 @@
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
                                         <!-- markerهای کامنت دقیقاً روی قسمت پایینی waveform قرار می‌گیرند. -->
-                                        <ItemsControl x:Name="WaveformCommentMarkers" Grid.RowSpan="2" ItemsSource="{x:Bind ViewModel.EqualizerComments}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <Canvas Width="1500" Height="110"/>
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="viewmodelsItems:EqualizerCommentItemViewModel">
-                                                    <Grid Width="28" Height="28">
-                                                        <Grid.RenderTransform>
-                                                            <TranslateTransform X="{x:Bind CanvasLeft, Mode=OneWay}" Y="{x:Bind CanvasTop}"/>
-                                                        </Grid.RenderTransform>
-                                                        <Button Width="28" Height="28" Opacity="0.5" BorderBrush="White" CornerRadius="14" Padding="0"
-                                                                AutomationProperties.Name="{x:Bind Text}" Command="{x:Bind Command}" UseSystemFocusVisuals="True"
-                                                                PointerEntered="WaveformComment_PointerEntered" PointerExited="WaveformComment_PointerExited"
-                                                                PointerCanceled="WaveformComment_PointerExited" PointerCaptureLost="WaveformComment_PointerExited"
-                                                                GotFocus="WaveformComment_GotFocus" LostFocus="WaveformComment_LostFocus" Unloaded="WaveformComment_Unloaded">
-                                                            <PersonPicture Width="26" Height="26" ProfilePicture="{x:Bind ImageSource, Mode=OneWay}" AutomationProperties.AccessibilityView="Raw"/>
-                                                        </Button>
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+                                        <Grid x:Name="TrackCommentLayer" Grid.RowSpan="2">
+                                            <ItemsControl x:Name="WaveformCommentMarkers" ItemsSource="{x:Bind ViewModel.EqualizerComments}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <Canvas Width="1500" Height="110"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="viewmodelsItems:EqualizerCommentItemViewModel">
+                                                        <Grid Width="28" Height="28">
+                                                            <Grid.RenderTransform>
+                                                                <TranslateTransform X="{x:Bind CanvasLeft, Mode=OneWay}" Y="{x:Bind CanvasTop}"/>
+                                                            </Grid.RenderTransform>
+                                                            <controls:FeatureButton Width="28" Height="28" Opacity="0.5" Background="Transparent"
+                                                                    CornerRadius="14" BorderThickness="0" Padding="0"
+                                                                    AutomationProperties.Name="{x:Bind Text}" Command="{x:Bind Command}" UseSystemFocusVisuals="True"
+                                                                    AutomationProperties.HelpText="{x:Bind OwnerHint(Localization.Revision), Mode=OneWay}"
+                                                                    PointerEntered="WaveformComment_PointerEntered" PointerExited="WaveformComment_PointerExited"
+                                                                    PointerCanceled="WaveformComment_PointerExited" PointerCaptureLost="WaveformComment_PointerExited"
+                                                                    GotFocus="WaveformComment_GotFocus" LostFocus="WaveformComment_LostFocus" Unloaded="WaveformComment_Unloaded">
+                                                                <Grid Width="28" Height="28">
+                                                                    <PersonPicture Width="24" Height="24" ProfilePicture="{x:Bind ImageSource, Mode=OneWay}"
+                                                                                   AutomationProperties.AccessibilityView="Raw"/>
+                                                                    <Ellipse Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.25"
+                                                                             IsHitTestVisible="False"/>
+                                                                    <Ellipse Stroke="{ThemeResource AccentTextFillColorPrimaryBrush}" StrokeThickness="1.25"
+                                                                             IsHitTestVisible="False"
+                                                                             Visibility="{x:Bind IsOwnComment, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                                </Grid>
+                                                            </controls:FeatureButton>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Grid>
                                     </Grid>
                                 </ScrollViewer>
                                 <Grid Grid.Row="2" x:Name="SocialDock">
@@ -324,25 +411,13 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <WrapPanel Margin="0,8,0,0" HorizontalAlignment="Left" LineSpacing="8" x:Name="SocialActions">
-                                        <Button Style="{StaticResource MusicSupportButtonStyle}" Margin="0,0,4,0"
-                                                FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
-                                                common:CursorExtensions.Cursor="Hand"
-                                                AutomationProperties.Name="{x:Bind Text('Support', Localization.Revision), Mode=OneWay}">
-                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="9">
-                                                <Grid Width="32" Height="32" AutomationProperties.AccessibilityView="Raw">
-                                                    <Border Margin="1" CornerRadius="12" Background="{ThemeResource SupportMedallion}"/>
-                                                    <icon:SymbolIcon Symbol="Heart" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                                     Foreground="{ThemeResource SupportInk}"/>
-                                                    <Ellipse Width="4" Height="4" Margin="0,3,4,0" HorizontalAlignment="Right" VerticalAlignment="Top"
-                                                             Fill="{ThemeResource SupportInk}"/>
-                                                </Grid>
-                                                <TextBlock Grid.Column="1" FontWeight="SemiBold" VerticalAlignment="Center"
-                                                           Foreground="{ThemeResource TextFillColorPrimaryBrush}"
-                                                           Text="{x:Bind Text('Support', Localization.Revision), Mode=OneWay}"/>
-                                                <FontIcon Grid.Column="2" FontSize="10" Glyph="&#xE70D;" VerticalAlignment="Center"
-                                                          Foreground="{ThemeResource SupportInk}" AutomationProperties.AccessibilityView="Raw"/>
-                                            </Grid>
-                                            <Button.Flyout>
+                                        <controls:AuthActionButton Style="{StaticResource MusicSupportButtonStyle}" Margin="0,0,4,0"
+                                                HoverScale="1.11" PressedScale="0.89"
+                                                AutomationProperties.Name="{x:Bind Text('Support', Localization.Revision), Mode=OneWay}"
+                                                ToolTipService.ToolTip="{x:Bind Text('Support', Localization.Revision), Mode=OneWay}">
+                                            <icon:SymbolIcon Symbol="Heart" FontSize="18" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                                             AutomationProperties.AccessibilityView="Raw"/>
+                                            <controls:AuthActionButton.Flyout>
                                                 <Flyout Placement="BottomEdgeAlignedLeft">
                                                     <StackPanel Width="250" Spacing="10" XYFocusKeyboardNavigation="Enabled"
                                                                 FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
@@ -369,9 +444,9 @@
                                                         </Button>
                                                     </StackPanel>
                                                 </Flyout>
-                                            </Button.Flyout>
-                                        </Button>
-                                        <DropDownButton FontSize="13" Margin="4,0" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+                                            </controls:AuthActionButton.Flyout>
+                                        </controls:AuthActionButton>
+                                        <DropDownButton Style="{StaticResource TrackMenuButtonStyle}" FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
                                                         Content="{x:Bind Text('AddToPlaylist', Localization.Revision), Mode=OneWay}">
                                             <DropDownButton.Flyout>
                                                 <MenuFlyout x:Name="MusicPlaylistsMenuFlyout" Placement="Bottom" Opened="MusicPlaylistsFlyout_Opened">
@@ -396,49 +471,53 @@
                                                 </MenuFlyout>
                                             </DropDownButton.Flyout>
                                         </DropDownButton>
-                                        <DropDownButton x:Name="AudioOutputButton" FontSize="13" Margin="4,0">
+                                        <DropDownButton x:Name="AudioOutputButton" Style="{StaticResource TrackMenuButtonStyle}"
+                                                        FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <icon:SymbolIcon x:Name="AudioOutputGlyph" Symbol="Speaker2" FontSize="16"
-                                                                 AutomationProperties.AccessibilityView="Raw"/>
                                                 <TextBlock Text="{x:Bind Text('AudioOutput', Localization.Revision), Mode=OneWay}"/>
                                                 <TextBlock x:Name="AudioOutputWarning" Visibility="Collapsed"
                                                            FontWeight="SemiBold" Foreground="{ThemeResource SystemFillColorCautionBrush}"
                                                            AutomationProperties.LiveSetting="Polite"/>
                                             </StackPanel>
                                             <DropDownButton.Flyout>
-                                                <Flyout x:Name="AudioRenderMenuFlyout" Placement="Bottom"
-                                                        Opening="AudioRenderMenuFlyout_Opening" Closed="AudioRenderMenuFlyout_Closed">
-                                                    <Flyout.SystemBackdrop><DesktopAcrylicBackdrop/></Flyout.SystemBackdrop>
-                                                    <Flyout.FlyoutPresenterStyle>
-                                                        <Style TargetType="FlyoutPresenter">
-                                                            <Setter Property="Background" Value="Transparent"/>
-                                                            <Setter Property="Padding" Value="8"/>
-                                                        </Style>
-                                                    </Flyout.FlyoutPresenterStyle>
-                                                    <StackPanel Width="272" Spacing="8" XYFocusKeyboardNavigation="Enabled"
-                                                                FlowDirection="LeftToRight"
-                                                                Language="{x:Bind Localization.LanguageTag, Mode=OneWay}">
-                                                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="200">
-                                                            <StackPanel x:Name="AudioOutputItemsPanel" Padding="8,0"/>
-                                                        </ScrollViewer>
-                                                        <TextBlock x:Name="NoAudioOutputsText" Visibility="Collapsed" Margin="6"
-                                                                   Text="{x:Bind Text('NoAudioOutputs', Localization.Revision), Mode=OneWay}"/>
-                                                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" Padding="8,6"
-                                                              BorderThickness="0,1,0,0" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}">
-                                                            <TextBlock Text="{x:Bind Text('AudioOutputVolumeLabel', Localization.Revision), Mode=OneWay}" FontSize="12"/>
-                                                            <TextBlock x:Name="AudioOutputVolumeValue" Grid.Column="1" FontSize="12"/>
-                                                            <Slider x:Name="AudioOutputSlider" Grid.Row="1" Grid.ColumnSpan="2"
-                                                                    FlowDirection="LeftToRight" Minimum="0" Maximum="100"
-                                                                    StepFrequency="1" SmallChange="1" LargeChange="5"
-                                                                    IsFocusEngagementEnabled="True" UseSystemFocusVisuals="True"
-                                                                    AutomationProperties.Name="{x:Bind Text('AudioOutputVolumeLabel', Localization.Revision), Mode=OneWay}"
-                                                                    ValueChanged="AudioOutputSlider_ValueChanged"/>
-                                                            <TextBlock x:Name="AudioOutputVolumeHint" Grid.Row="2" Grid.ColumnSpan="2" FontSize="11"
-                                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"
-                                                                       AutomationProperties.LiveSetting="Polite"/>
-                                                        </Grid>
-                                                    </StackPanel>
-                                                </Flyout>
+                                                <MenuFlyout x:Name="AudioRenderMenuFlyout" Placement="Bottom"
+                                                            Opening="AudioRenderMenuFlyout_Opening" Opened="AudioRenderMenuFlyout_Opened"
+                                                            Closed="AudioRenderMenuFlyout_Closed">
+                                                    <controls:MenuContentHost IsTabStop="False" AllowFocusOnInteraction="False"
+                                                                              FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+                                                                              Padding="0" MinWidth="0" AutomationProperties.AccessibilityView="Raw">
+                                                        <controls:MenuContentHost.Template>
+                                                            <ControlTemplate TargetType="controls:MenuContentHost">
+                                                                <ContentPresenter Content="{TemplateBinding Tag}" HorizontalContentAlignment="Stretch"/>
+                                                            </ControlTemplate>
+                                                        </controls:MenuContentHost.Template>
+                                                        <controls:MenuContentHost.Tag>
+                                                            <StackPanel MinWidth="252" MaxWidth="292" Padding="16,8" Spacing="8" XYFocusKeyboardNavigation="Enabled"
+                                                                        FlowDirection="LeftToRight"
+                                                                        Language="{x:Bind Localization.LanguageTag, Mode=OneWay}">
+                                                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="200">
+                                                                    <StackPanel x:Name="AudioOutputItemsPanel"/>
+                                                                </ScrollViewer>
+                                                                <TextBlock x:Name="NoAudioOutputsText" Visibility="Collapsed" Margin="6"
+                                                                           Text="{x:Bind Text('NoAudioOutputs', Localization.Revision), Mode=OneWay}"/>
+                                                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" Padding="8,6"
+                                                                      BorderThickness="0,1,0,0" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}">
+                                                                    <TextBlock Text="{x:Bind Text('AudioOutputVolumeLabel', Localization.Revision), Mode=OneWay}" FontSize="12"/>
+                                                                    <TextBlock x:Name="AudioOutputVolumeValue" Grid.Column="1" FontSize="12"/>
+                                                                    <Slider x:Name="AudioOutputSlider" Grid.Row="1" Grid.ColumnSpan="2"
+                                                                            FlowDirection="LeftToRight" Minimum="0" Maximum="100"
+                                                                            StepFrequency="1" SmallChange="1" LargeChange="5"
+                                                                            IsFocusEngagementEnabled="True" UseSystemFocusVisuals="True"
+                                                                            AutomationProperties.Name="{x:Bind Text('AudioOutputVolumeLabel', Localization.Revision), Mode=OneWay}"
+                                                                            ValueChanged="AudioOutputSlider_ValueChanged"/>
+                                                                    <TextBlock x:Name="AudioOutputVolumeHint" Grid.Row="2" Grid.ColumnSpan="2" FontSize="11"
+                                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"
+                                                                               AutomationProperties.LiveSetting="Polite"/>
+                                                                </Grid>
+                                                            </StackPanel>
+                                                        </controls:MenuContentHost.Tag>
+                                                    </controls:MenuContentHost>
+                                                </MenuFlyout>
                                             </DropDownButton.Flyout>
                                         </DropDownButton>
                                         <Button Click="OpenMusicVideo_Click" CornerRadius="8" Padding="5,3,9,3" Margin="4,0"

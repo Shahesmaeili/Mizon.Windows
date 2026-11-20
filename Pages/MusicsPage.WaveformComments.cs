@@ -25,7 +25,9 @@ public sealed partial class MusicsPage
     private void WaveformMotionChanged(UISettings sender, UISettingsAnimationsEnabledChangedEventArgs args) =>
         DispatcherQueue.TryEnqueue(() =>
         {
-            if (_pageActive) RefreshWaveformMotion();
+            if (!_pageActive) return;
+            RefreshWaveformMotion();
+            if (!_waveformAnimations.AnimationsEnabled) StopTrackLoadMotion();
         });
 
     private void RefreshWaveformMotion()

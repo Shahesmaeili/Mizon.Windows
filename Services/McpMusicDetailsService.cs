@@ -9,6 +9,7 @@ internal interface IMcpMusicDetailsPage
     McpMusicDetailsState ReadState();
     bool SetCoverOpen(bool open);
     void SetRepeatEnabled(bool enabled);
+    bool SetAudience(string view);
 }
 
 // Called only by the authorized UI dispatcher for the currently displayed track.
@@ -29,12 +30,16 @@ internal sealed class McpMusicDetailsService(Func<IMcpMusicDetailsPage?> getPage
         {
             case ("get_music_details", null):
                 break;
-            case ("set_music_details", { RepeatEnabled: bool repeat, CoverOpen: null }):
+            case ("set_music_details", { RepeatEnabled: bool repeat, CoverOpen: null, Audience: null }):
                 page.SetRepeatEnabled(repeat);
                 break;
-            case ("set_music_details", { RepeatEnabled: null, CoverOpen: bool open }):
+            case ("set_music_details", { RepeatEnabled: null, CoverOpen: bool open, Audience: null }):
                 if (!page.SetCoverOpen(open))
                     return new() { Code = "cover_unavailable", Message = "This track has no cover ready to preview." };
+                break;
+            case ("set_music_details", { RepeatEnabled: null, CoverOpen: null, Audience: "live" or "views" or "closed" } details):
+                if (!page.SetAudience(details.Audience))
+                    return new() { Code = "audience_unavailable", Message = "The current track’s audience panel is unavailable." };
                 break;
             default:
                 return Invalid();

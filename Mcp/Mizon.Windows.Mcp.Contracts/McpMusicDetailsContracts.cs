@@ -4,6 +4,7 @@ public sealed record McpMusicDetailsRequest
 {
     public bool? RepeatEnabled { get; init; }
     public bool? CoverOpen { get; init; }
+    public string? Audience { get; init; }
 }
 
 public sealed record McpMusicDetailsState
@@ -12,6 +13,14 @@ public sealed record McpMusicDetailsState
     public string? Title { get; init; }
     public string? Duration { get; init; }
     public string? Language { get; init; }
+    public bool MetadataLoading { get; init; }
+    public bool MetadataLoadFailed { get; init; }
+    public bool WaveformLoading { get; init; }
+    public bool WaveformCommentsLoading { get; init; }
+    public string? AudiencePopup { get; init; }
+    public int ViewsCount { get; init; }
+    public int OnlineViewersCount { get; init; }
+    public int LiveListenerCount { get; init; }
     public bool MusicVideoAvailable { get; init; }
     public int? PlaybackDeviceVolume { get; init; }
     public bool? PlaybackDeviceSilent { get; init; }

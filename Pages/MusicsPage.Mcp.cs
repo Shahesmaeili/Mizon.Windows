@@ -15,6 +15,14 @@ public sealed partial class MusicsPage : IMcpMusicDetailsPage
         Title = ViewModel.Title,
         Duration = ViewModel.Duration,
         Language = Localization.LanguageTag,
+        MetadataLoading = ViewModel.IsTrackMetadataLoading,
+        MetadataLoadFailed = ViewModel.TrackMetadataLoadFailed,
+        WaveformLoading = ViewModel.IsTrackWaveformLoading,
+        WaveformCommentsLoading = ViewModel.IsTrackCommentsLoading,
+        AudiencePopup = _openAudience,
+        ViewsCount = ViewModel.ViewsCount,
+        OnlineViewersCount = ViewModel.LiveViewsCount,
+        LiveListenerCount = ViewModel.MusicListeners.Count,
         MusicVideoAvailable = ViewModel.HasMusicVideo,
         PlaybackDeviceVolume = ViewModel.SelectedAudioDevice?.OutputVolume?.Percentage,
         PlaybackDeviceSilent = ViewModel.SelectedAudioDevice?.OutputVolume?.IsSilent,
@@ -37,4 +45,6 @@ public sealed partial class MusicsPage : IMcpMusicDetailsPage
     bool IMcpMusicDetailsPage.SetCoverOpen(bool open) => SetCoverPreview(open, restoreFocus: true);
 
     void IMcpMusicDetailsPage.SetRepeatEnabled(bool enabled) => ViewModel.IsRepeatEnabled = enabled;
+
+    bool IMcpMusicDetailsPage.SetAudience(string view) => SetTrackAudience(view);
 }

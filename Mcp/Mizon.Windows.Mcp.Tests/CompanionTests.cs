@@ -67,14 +67,20 @@ internal static class CompanionTests
         }
 
         var detailsTool = tools.Single(tool => tool.Name == "mizon_set_music_details").ProtocolTool;
-        Check.That(detailsTool.InputSchema.GetProperty("oneOf").GetArrayLength() == 2,
-            "Track details must advertise mutually exclusive repeat and preview options.");
+        Check.That(detailsTool.InputSchema.GetProperty("oneOf").GetArrayLength() == 3,
+            "Track details must advertise mutually exclusive repeat, cover and audience options.");
+        var audienceModes = detailsTool.InputSchema.GetProperty("properties").GetProperty("audience").GetProperty("enum")
+            .EnumerateArray().Select(value => value.GetString());
+        Check.That(audienceModes.SequenceEqual(new[] { "live", "views", "closed" }),
+            "The advertised audience action is limited to the two track panes and closing.");
         using var enabled = JsonDocument.Parse("true");
         using var disabled = JsonDocument.Parse("false");
         foreach (var arguments in new Dictionary<string, JsonElement>[]
         {
             [], new() { ["repeatEnabled"] = JsonString("true") },
-            new() { ["repeatEnabled"] = enabled.RootElement, ["coverOpen"] = disabled.RootElement }
+            new() { ["repeatEnabled"] = enabled.RootElement, ["coverOpen"] = disabled.RootElement },
+            new() { ["audience"] = JsonString("arbitrary") },
+            new() { ["audience"] = JsonString("live"), ["coverOpen"] = enabled.RootElement }
         })
         {
             var invalid = await client.CallToolAsync(new CallToolRequestParams { Name = detailsTool.Name, Arguments = arguments },

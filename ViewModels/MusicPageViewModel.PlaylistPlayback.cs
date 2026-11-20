@@ -10,12 +10,20 @@ public partial class MusicPageViewModel
 {
     private Task _musicLoadTask = Task.CompletedTask;
     private Task<bool> _musicDetailsTask = Task.FromResult(false);
+    public bool IsTrackMetadataLoading { get => field; private set => SetField(ref field, value); }
+    public bool TrackMetadataLoadFailed { get => field; private set => SetField(ref field, value); }
+    public bool IsTrackWaveformLoading { get => field; private set => SetField(ref field, value); }
+    public bool IsTrackCommentsLoading { get => field; private set => SetField(ref field, value); }
 
     private void BeginMusicLoad(Guid musicPublicId)
     {
         _musicLoadCancellationTokenSource?.Cancel();
         _musicLoadCancellationTokenSource?.Dispose();
         _musicLoadCancellationTokenSource = new CancellationTokenSource();
+        IsTrackMetadataLoading = true;
+        TrackMetadataLoadFailed = false;
+        IsTrackWaveformLoading = true;
+        IsTrackCommentsLoading = true;
         ResetMusicPresentation();
         _musicPublicId = musicPublicId;
         UpdateTrackPlaybackPresentation();
@@ -33,6 +41,8 @@ public partial class MusicPageViewModel
         if (!_dispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => ready.TrySetResult()))
         {
             details.TrySetResult(false);
+            FinishTrackMetadataLoad(musicPublicId, token, loaded: false);
+            FinishTrackTimelineLoad(musicPublicId, token);
             return;
         }
         try
@@ -57,13 +67,32 @@ public partial class MusicPageViewModel
 
     private async Task LoadMusicDetailsAsync(Guid musicPublicId, CancellationToken token, TaskCompletionSource<bool> details)
     {
-        try { details.TrySetResult(await GetMusicAsync(musicPublicId, token)); }
-        catch (OperationCanceledException) when (token.IsCancellationRequested) { details.TrySetResult(false); }
+        var loaded = false;
+        try { loaded = await GetMusicAsync(musicPublicId, token); }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception error)
         {
-            details.TrySetResult(false);
             AppLog.Error("Music details could not be loaded.", error);
         }
+        finally
+        {
+            details.TrySetResult(loaded);
+            FinishTrackMetadataLoad(musicPublicId, token, loaded);
+        }
+    }
+
+    private void FinishTrackMetadataLoad(Guid musicPublicId, CancellationToken token, bool loaded)
+    {
+        if (!IsCurrentMusicLoad(musicPublicId, token)) return;
+        TrackMetadataLoadFailed = !loaded;
+        IsTrackMetadataLoading = false;
+    }
+
+    private void FinishTrackTimelineLoad(Guid musicPublicId, CancellationToken token)
+    {
+        if (!IsCurrentMusicLoad(musicPublicId, token)) return;
+        IsTrackWaveformLoading = false;
+        IsTrackCommentsLoading = false;
     }
 
     internal async Task<bool> WaitForMusicDetailsAsync(Guid musicPublicId, CancellationToken token)

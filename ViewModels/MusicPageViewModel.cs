@@ -461,10 +461,6 @@ public partial class MusicPageViewModel : MainViewModel
     private const double MusicListenerMarkerSize = 28d;
     private const double TopBarMarkerCanvasTop = 22d;
 
-    // ارتفاع waveform برابر 110 و ردیف پایینی یک‌سوم آن است. این نقطه مرکز
-    // نوارهای پایین است؛ پس مرکز آواتار دقیقاً روی همان نوار قرار می‌گیرد.
-    private const double BottomBarMarkerCenterY = 92d;
-
     private void LoadHardCodedVocalSegments()
     {
         VocalSegments.Clear();
@@ -751,7 +747,7 @@ public partial class MusicPageViewModel : MainViewModel
         // Place the confirmed comment immediately, even if the list or avatar request is slow.
         if (!EqualizerComments.Any(marker => marker.PublicId == created.MusicCommentPublicId))
         {
-            var marker = AddWaveformComment(created.MusicCommentPublicId, timestamp, trimmedText);
+            var marker = AddWaveformComment(created.MusicCommentPublicId, timestamp, trimmedText, isOwnComment: true);
             marker.ImageSource = avatar;
             if (avatar is null)
                 _ = LoadPostedCommentAvatarAsync(musicPublicId, marker, token);
@@ -882,6 +878,7 @@ public partial class MusicPageViewModel : MainViewModel
             await GetMusicFileWaveformAsync(musicPublicId, _musicFilePublicId, cancellationToken);
             if (!IsCurrentMusicLoad(musicPublicId, cancellationToken))
                 return;
+            IsTrackWaveformLoading = false;
 
             if (HasCurrentTrackSource)
                 UpdatePlaybackPosition(_audioPlayerService.Position);
@@ -903,6 +900,10 @@ public partial class MusicPageViewModel : MainViewModel
         catch (Exception exception)
         {
             AppLog.Error($"Music page load failed. MusicPublicId='{musicPublicId}'.", exception);
+        }
+        finally
+        {
+            FinishTrackTimelineLoad(musicPublicId, cancellationToken);
         }
     }
 
@@ -1366,6 +1367,8 @@ public partial class MusicPageViewModel : MainViewModel
 
         _dispatcherQueue.TryEnqueue(() =>
         {
+            if (e.MusicPublicId != _musicPublicId || _musicLoadCancellationTokenSource?.IsCancellationRequested != false)
+                return;
             MusicListeners.Clear();
 
             foreach (var listener in e.Listeners)
@@ -1378,7 +1381,11 @@ public partial class MusicPageViewModel : MainViewModel
         if (e.MusicPublicId != _musicPublicId)
             return;
 
-        _dispatcherQueue.TryEnqueue(() => UpsertMusicListener(e.Listener));
+        _dispatcherQueue.TryEnqueue(() =>
+        {
+            if (e.MusicPublicId == _musicPublicId && _musicLoadCancellationTokenSource?.IsCancellationRequested == false)
+                UpsertMusicListener(e.Listener);
+        });
     }
 
     private void MizonSocket_MusicListenerRemoved(object? sender, MizonSocket.MusicListenerRemovedEventArgs e)
@@ -1388,6 +1395,8 @@ public partial class MusicPageViewModel : MainViewModel
 
         _dispatcherQueue.TryEnqueue(() =>
         {
+            if (e.MusicPublicId != _musicPublicId || _musicLoadCancellationTokenSource?.IsCancellationRequested != false)
+                return;
             var marker = MusicListeners.FirstOrDefault(x => x.ClientPublicId == e.ClientPublicId);
             if (marker is not null)
                 MusicListeners.Remove(marker);
@@ -2557,18 +2566,20 @@ public partial class MusicPageViewModel : MainViewModel
             return;
 
         var loadedIds = EqualizerComments.Select(marker => marker.PublicId).ToHashSet();
+        var currentClientId = MizonSocket.CurrentClientPublicId;
         foreach (var comment in content.MusicComments)
         {
             if (!loadedIds.Add(comment.PublicId))
                 continue;
 
-            var marker = AddWaveformComment(comment.PublicId, comment.Timestamp, comment.Text);
+            var marker = AddWaveformComment(comment.PublicId, comment.Timestamp, comment.Text,
+                MusicWaveformTimeline.IsOwnComment(comment.ClientPublicId, currentClientId));
             if (comment.ProfileMediaPublicId.GetValueOrDefault() != Guid.Empty)
                 _ = LoadCommentAvatarAsync(musicPublicId, marker, comment.ProfileMediaPublicId!.Value, token);
         }
     }
 
-    private EqualizerCommentItemViewModel AddWaveformComment(Guid id, TimeSpan? timestamp, string text)
+    private EqualizerCommentItemViewModel AddWaveformComment(Guid id, TimeSpan? timestamp, string text, bool isOwnComment)
     {
         var stackIndex = 0;
         if (timestamp is { } position)
@@ -2583,7 +2594,8 @@ public partial class MusicPageViewModel : MainViewModel
             Timestamp = timestamp,
             Text = text,
             CanvasLeft = MusicWaveformTimeline.GetMarkerLeft(timestamp, _musicDuration, EqualizerComments.Count),
-            Y = BottomBarMarkerCenterY + MusicWaveformTimeline.GetCommentStackOffset(stackIndex),
+            CanvasTop = MusicWaveformTimeline.GetCommentMarkerTop(stackIndex),
+            IsOwnComment = isOwnComment,
             Command = PlayCommand
         };
 

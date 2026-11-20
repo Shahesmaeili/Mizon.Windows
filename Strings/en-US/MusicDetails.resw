@@ -5,6 +5,24 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="Play" xml:space="preserve"><value>Play track</value></data>
+  <data name="WindowTitle" xml:space="preserve"><value>Track details</value></data>
+  <data name="OwnWaveformComment" xml:space="preserve"><value>Your comment</value></data>
+  <data name="LoadingTrack" xml:space="preserve"><value>Loading track details</value></data>
+  <data name="TrackLoadFailed" xml:space="preserve"><value>Track details could not be loaded.</value></data>
+  <data name="ViewsAudience" xml:space="preserve"><value>Track views</value></data>
+  <data name="LiveAudience" xml:space="preserve"><value>Live listeners</value></data>
+  <data name="AudienceButtonLabel" xml:space="preserve"><value>{0}, {1}</value></data>
+  <data name="AudienceList" xml:space="preserve"><value>Listener list</value></data>
+  <data name="AudienceYou" xml:space="preserve"><value>Your activity</value></data>
+  <data name="AudienceListener" xml:space="preserve"><value>Listener</value></data>
+  <data name="AudiencePlaying" xml:space="preserve"><value>Playing</value></data>
+  <data name="AudiencePaused" xml:space="preserve"><value>Paused</value></data>
+  <data name="AudienceLiveDetails" xml:space="preserve"><value>{0} · {1} · {2}</value></data>
+  <data name="LiveAudiencePlatformSample" xml:space="preserve"><value>Listener status and playback time are live. Device platforms are sample values.</value></data>
+  <data name="LiveAudienceEmptySample" xml:space="preserve"><value>No other live listeners right now. These rows show a sample preview.</value></data>
+  <data name="AudienceHistorySample" xml:space="preserve"><value>Sample history and play counts</value></data>
+  <data name="AudienceHistoryDetails" xml:space="preserve"><value>{0} views · {1} listens</value></data>
+  <data name="AudienceOwnCounts" xml:space="preserve"><value>{0} plays · {1} listens</value></data>
   <data name="Pause" xml:space="preserve"><value>Pause track</value></data>
   <data name="Repeat" xml:space="preserve"><value>Repeat this track</value></data>
   <data name="Cover" xml:space="preserve"><value>Open cover preview</value></data>

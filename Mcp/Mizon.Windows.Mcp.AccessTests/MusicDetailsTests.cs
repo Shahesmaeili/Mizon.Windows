@@ -10,6 +10,7 @@ internal static partial class Program
         var proof = Proof();
         var open = new McpRequest { Operation = "set_music_details", MusicDetails = new() { CoverOpen = true } };
         var repeat = new McpRequest { Operation = "set_music_details", MusicDetails = new() { RepeatEnabled = true } };
+        var live = new McpRequest { Operation = "set_music_details", MusicDetails = new() { Audience = "live" } };
         await using (var host = await Host.StartAsync(path))
         {
             await using var peer = await host.ConnectAsync(proof);
@@ -26,12 +27,21 @@ internal static partial class Program
             Assert((await peer.Call("get_music_details")).MusicDetails is { MixerAvailable: true, MixerEnabled: true,
                 MixerActive: true, MixerLoading: false, MixerBalance: 100, WaveformCommentCount: 1 },
                 "The existing track read grant exposes the active mix and confirmed comment count");
+            await host.Ui(() => host.MusicDetailsPage.Loading = true);
+            Assert((await peer.Call("get_music_details")).MusicDetails is
+                { MetadataLoading: true, WaveformLoading: true, WaveformCommentsLoading: true, MetadataLoadFailed: false },
+                "Approved readers can distinguish pending track, waveform and comment data");
+            await host.Ui(() => { host.MusicDetailsPage.Loading = false; host.MusicDetailsPage.LoadFailed = true; });
+            Assert((await peer.Call("get_music_details")).MusicDetails is
+                { MetadataLoading: false, WaveformLoading: false, WaveformCommentsLoading: false, MetadataLoadFailed: true },
+                "A failed metadata read settles the loading stages with a bounded status");
             await host.Ui(() => host.MusicDetailsPage.Language = "en-US");
             Assert((await peer.Call("get_music_details")).MusicDetails is
                 { Language: "en-US", PlaybackDeviceCount: 2, PlaybackDeviceSelected: true,
                     PlaybackDeviceVolume: 0, PlaybackDeviceSilent: true, MusicVideoAvailable: true },
                 "Track readback reflects app language and bounded render-device availability without endpoint identifiers");
             Assert(!(await peer.Call(repeat)).Success && !host.MusicDetailsPage.RepeatEnabled, "Read cannot set repeat");
+            Assert(!(await peer.Call(live)).Success, "Track read consent cannot open an audience panel");
 
             await host.Ui(() => host.Service.RevokeAsync(host.Item(id)));
             await host.Approve(id, false, false, false, detailsControl: true);
@@ -42,13 +52,19 @@ internal static partial class Program
             Assert((await peer.Call(open with { MusicDetails = new() { CoverOpen = false } })).Success
                 && !host.MusicDetailsPage.CoverOpen, "The desired false closes the preview");
             Assert((await peer.Call(repeat)).Success && host.MusicDetailsPage.RepeatEnabled, "Repeat uses the page's playback state");
+            Assert((await peer.Call(live)) is { Success: true, MusicDetails: null } && host.MusicDetailsPage.Audience == "live",
+                "Track control can open live listeners without revealing a read snapshot");
+            Assert((await peer.Call(live with { MusicDetails = new() { Audience = "arbitrary" } })).Code == "invalid_arguments",
+                "Audience control accepts only the declared views");
+            Assert((await peer.Call(live with { MusicDetails = new() { Audience = "closed" } })).Success &&
+                host.MusicDetailsPage.Audience is null, "Audience control closes the current popup");
             Assert((await peer.Call(repeat with { MusicDetails = new() { RepeatEnabled = false, CoverOpen = false } })).Code == "invalid_arguments"
                 && host.MusicDetailsPage.RepeatEnabled, "An ambiguous command changes nothing");
             Assert((await peer.Call(open with { Page = "login" })).Code == "invalid_arguments", "Unrelated arguments are rejected");
             await host.Ui(() => host.MusicDetailsPage.Active = false);
             Assert((await peer.Call(open)).Code == "page_unavailable", "Control stops when the track page leaves");
             await host.Ui(() => host.Service.RevokeAsync(host.Item(id)));
-            Assert(!(await peer.Call(repeat)).Success, "Revocation blocks further track actions");
+            Assert(!(await peer.Call(repeat)).Success && !(await peer.Call(live)).Success, "Revocation blocks further track actions");
             await host.Approve(id, false, false, false, detailsRead: true);
         }
 
@@ -89,10 +105,17 @@ internal static partial class Program
                 .Select(x => MusicWaveformTimeline.GetHoverBarIndex(x, 250))
                 .SequenceEqual(new[] { -1, -1, -1, 0, 0, 0, 1, 87, 0, 248, 249, 249, -1 }),
             "Highlight reaches each visible stroke only after the pointer crosses the leading gap");
-        var stackedOffsets = Enumerable.Range(0, 5).Select(MusicWaveformTimeline.GetCommentStackOffset).ToArray();
-        Assert(stackedOffsets[0] == 0 && stackedOffsets.Distinct().Count() == 5 &&
-                stackedOffsets.All(offset => offset is >= -18 and <= 4),
-            "Up to five coincident comments have separate vertical hit targets without moving their timestamps");
+        var markerTops = Enumerable.Range(0, 5).Select(MusicWaveformTimeline.GetCommentMarkerTop).ToArray();
+        var seekLaneEnd = MusicWaveformTimeline.Height * 2 / 3;
+        Assert(markerTops.Distinct().Count() == 5 && markerTops.All(top => top - seekLaneEnd >= 2
+                && top + MusicWaveformTimeline.MarkerSize <= MusicWaveformTimeline.Height),
+            "Five coincident comments keep their distinct vertical hit targets inside the comment lane with a two-unit gap");
+        var author = Guid.NewGuid();
+        Assert(MusicWaveformTimeline.IsOwnComment(author, author) &&
+                !MusicWaveformTimeline.IsOwnComment(author, Guid.NewGuid()) &&
+                !MusicWaveformTimeline.IsOwnComment(author, null) &&
+                !MusicWaveformTimeline.IsOwnComment(Guid.Empty, Guid.Empty),
+            "Only a signed-in account matching the stored author marks a comment as its own");
     }
 
     private sealed class SyntheticMusicDetails : IMcpMusicDetailsPage
@@ -103,10 +126,16 @@ internal static partial class Program
         public string Language { get; set; } = "fa-IR";
         public bool CoverOpen { get; private set; }
         public bool RepeatEnabled { get; private set; }
+        public bool Loading { get; set; }
+        public bool LoadFailed { get; set; }
+        public string? Audience { get; private set; }
 
         public McpMusicDetailsState ReadState() => new()
         {
             MusicPublicId = _id, Title = "Synthetic track", Duration = "00:03:00",
+            MetadataLoading = Loading, WaveformLoading = Loading,
+            WaveformCommentsLoading = Loading, MetadataLoadFailed = LoadFailed,
+            AudiencePopup = Audience, ViewsCount = 15, OnlineViewersCount = 4, LiveListenerCount = 2,
             Language = Language, PlaybackDeviceCount = 2, PlaybackDeviceSelected = true,
             PlaybackDeviceVolume = 0, PlaybackDeviceSilent = true, MusicVideoAvailable = true,
             CoverAvailable = HasCover, CoverOpen = CoverOpen, RepeatEnabled = RepeatEnabled,
@@ -122,5 +151,11 @@ internal static partial class Program
         }
 
         public void SetRepeatEnabled(bool enabled) => RepeatEnabled = enabled;
+
+        public bool SetAudience(string view)
+        {
+            Audience = view == "closed" ? null : view;
+            return true;
+        }
     }
 }

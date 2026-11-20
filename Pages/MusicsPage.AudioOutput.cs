@@ -3,7 +3,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using Symbol = FluentIcons.Common.Symbol;
 using Mizon.Windows.Services;
 using Mizon.Windows.ViewModels;
 using Mizon.Windows.ViewModels.Items;
@@ -34,6 +33,16 @@ public sealed partial class MusicsPage
     }
 
     private void AudioRenderMenuFlyout_Closed(object sender, object args) => CloseAudioOutputMenu();
+
+    private void AudioRenderMenuFlyout_Opened(object sender, object args)
+    {
+        if (!_audioOutputMenuOpen) return;
+
+        var firstChoice = _audioOutputItems.Values.FirstOrDefault(item => item.IsEnabled && item.IsChecked == true)
+            ?? _audioOutputItems.Values.FirstOrDefault(item => item.IsEnabled);
+        if (firstChoice?.Focus(FocusState.Programmatic) != true && AudioOutputSlider.IsEnabled)
+            AudioOutputSlider.Focus(FocusState.Programmatic);
+    }
 
     private void CloseAudioOutputMenu()
     {
@@ -91,8 +100,8 @@ public sealed partial class MusicsPage
                     UseSystemFocusVisuals = true,
                     HorizontalAlignment = HorizontalAlignment.Stretch,
                     HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                    Margin = new Thickness(0, 8, 0, 8),
-                    MinHeight = 48
+                    Margin = new Thickness(0, 4, 0, 4),
+                    MinHeight = 36
                 };
                 item.Click += AudioOutputItem_Click;
                 device.PropertyChanged += AudioDevice_PropertyChanged;
@@ -155,7 +164,6 @@ public sealed partial class MusicsPage
         var alert = silent ? OutputStateLabel(state!.Value) : string.Empty;
         AudioOutputWarning.Text = alert;
         AudioOutputWarning.Visibility = silent ? Visibility.Visible : Visibility.Collapsed;
-        AudioOutputGlyph.Symbol = silent ? Symbol.SpeakerMute : Symbol.Speaker2;
         AutomationProperties.SetName(AudioOutputButton, silent ? $"{Text("AudioOutput")} · {alert}" : Text("AudioOutput"));
 
         if (!_audioOutputMenuOpen) return;
@@ -205,6 +213,7 @@ public sealed partial class MusicsPage
     {
         if (args.PropertyName != nameof(LocalizationService.Revision)) return;
         RefreshTrackTitle();
+        RefreshTrackAudience();
         SyncAudioOutputMenu();
         SyncSelectedOutputVolume();
         if (CommentNavigationNotice.IsOpen && _commentNoticeKey is { } key)

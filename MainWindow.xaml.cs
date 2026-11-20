@@ -112,7 +112,7 @@ public sealed partial class MainWindow : Window
             WelcomePage => LocalizationService.Current.GetString("WindowTitleWelcome"),
             HomePage => navigation.CurrentInternalPage switch
             {
-                MusicsPage => "جزئیات آهنگ",
+                MusicsPage track => track.CaptionTitle ?? LocalizationService.Current.GetString("MusicDetails/WindowTitle"),
                 MusicVideoPage => LocalizationService.Current.GetString("MusicDetails/MusicVideo"),
                 MusicPlaylistsPage => "پلی‌لیست‌های تو",
                 FollowingActivitiesPage => "فعالیت دنبال‌شده‌ها",
@@ -125,7 +125,9 @@ public sealed partial class MainWindow : Window
             },
             _ => null
         };
-        Title = section is null ? "Mizon" : $"Mizon - {section}";
+        var title = section is null ? "Mizon" : $"Mizon - {section}";
+        if (Title != title)
+            Title = title;
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
             var accountPage = navigation.CurrentMainPage is LoginPage or WelcomePage;

@@ -5,6 +5,24 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="Play" xml:space="preserve"><value>پخش آهنگ</value></data>
+  <data name="WindowTitle" xml:space="preserve"><value>جزئیات آهنگ</value></data>
+  <data name="OwnWaveformComment" xml:space="preserve"><value>نظر شما</value></data>
+  <data name="LoadingTrack" xml:space="preserve"><value>در حال بارگذاری جزئیات آهنگ</value></data>
+  <data name="TrackLoadFailed" xml:space="preserve"><value>جزئیات آهنگ بارگذاری نشد.</value></data>
+  <data name="ViewsAudience" xml:space="preserve"><value>بازدیدهای آهنگ</value></data>
+  <data name="LiveAudience" xml:space="preserve"><value>شنونده‌های آنلاین</value></data>
+  <data name="AudienceButtonLabel" xml:space="preserve"><value>{0}، {1}</value></data>
+  <data name="AudienceList" xml:space="preserve"><value>فهرست شنونده‌ها</value></data>
+  <data name="AudienceYou" xml:space="preserve"><value>فعالیت تو</value></data>
+  <data name="AudienceListener" xml:space="preserve"><value>شنونده</value></data>
+  <data name="AudiencePlaying" xml:space="preserve"><value>در حال پخش</value></data>
+  <data name="AudiencePaused" xml:space="preserve"><value>مکث کرده</value></data>
+  <data name="AudienceLiveDetails" xml:space="preserve"><value>{0} · {1} · {2}</value></data>
+  <data name="LiveAudiencePlatformSample" xml:space="preserve"><value>وضعیت و زمان پخش زنده‌اند. پلتفرم‌ها نمونه‌اند.</value></data>
+  <data name="LiveAudienceEmptySample" xml:space="preserve"><value>فعلاً شنوندهٔ آنلاین دیگری نیست. ردیف‌های زیر نمونه‌اند.</value></data>
+  <data name="AudienceHistorySample" xml:space="preserve"><value>تاریخچه و تعداد پخش نمونه‌اند</value></data>
+  <data name="AudienceHistoryDetails" xml:space="preserve"><value>{0} بازدید · {1} بار شنیدن</value></data>
+  <data name="AudienceOwnCounts" xml:space="preserve"><value>{0} پخش · {1} بار شنیدن</value></data>
   <data name="Pause" xml:space="preserve"><value>مکث آهنگ</value></data>
   <data name="Repeat" xml:space="preserve"><value>تکرار این آهنگ</value></data>
   <data name="Cover" xml:space="preserve"><value>باز کردن پیش‌نمایش کاور</value></data>

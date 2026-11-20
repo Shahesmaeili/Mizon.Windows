@@ -41,22 +41,33 @@ namespace Mizon.Windows.Pages
         public LocalizationService Localization => LocalizationService.Current;
         private string Text(string key, int revision) => Localization.GetString("MusicDetails/" + key, revision);
         private string Text(string key) => Localization.GetString("MusicDetails/" + key);
-        private void RefreshTrackTitle()
+        internal string? CaptionTitle => GetTrackTitles().Primary;
+
+        private (string? Primary, string? Alternate) GetTrackTitles()
         {
+            if (!IsMusicDetailsActive) return default;
+
             var title = ViewModel.Title;
             var persian = ViewModel.PersianTitle?.Trim('(', ')').Trim();
             var hasPersianTitle = !string.IsNullOrWhiteSpace(persian);
             var hasTitle = !string.IsNullOrWhiteSpace(title);
             var showPersianFirst = hasPersianTitle && (Localization.IsPersian || !hasTitle);
-
-            TrackTitleText.Text = (showPersianFirst ? persian : title) ?? string.Empty;
-            TrackPersianTitleText.Text = hasTitle && hasPersianTitle
-                ? $"({(showPersianFirst ? title : persian)})"
-                : string.Empty;
-            TrackPersianTitleText.Visibility = hasTitle && hasPersianTitle ? Visibility.Visible : Visibility.Collapsed;
+            var primary = showPersianFirst ? persian : hasTitle ? title : null;
+            var alternate = hasTitle && hasPersianTitle ? $"({(showPersianFirst ? title : persian)})" : null;
+            return (primary, alternate);
         }
-        private string ViewsLabel(int total, int live, int revision) =>
-            Localization.Format("MusicDetails/ViewsStatus", total, live);
+
+        private void RefreshTrackTitle()
+        {
+            var (primary, alternate) = GetTrackTitles();
+            TrackTitleText.Text = primary ?? string.Empty;
+            TrackPersianTitleText.Text = alternate ?? string.Empty;
+            TrackPersianTitleText.Visibility = alternate is not null ? Visibility.Visible : Visibility.Collapsed;
+            if (ReferenceEquals(ViewModel.NavigationService.CurrentInternalPage, this) && App.MainMizonWindow is MainWindow window)
+                window.RefreshTitle();
+        }
+        private string AudienceButtonLabel(string key, int count, int revision) =>
+            Localization.Format("MusicDetails/AudienceButtonLabel", Text(key, revision), count);
         private void OpenMusicVideo_Click(object sender, RoutedEventArgs args)
         {
             if (!IsMusicDetailsActive || !ViewModel.HasMusicVideo || ViewModel.MusicVideo is not { } video) return;
@@ -106,6 +117,7 @@ namespace Mizon.Windows.Pages
         protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs args)
         {
             base.OnNavigatedTo(args);
+            CloseTrackAudience();
             CancelCommentNavigation();
             ClearCoverTransition();
             if (args.Parameter is not Dictionary<string, object> parameters) return;
@@ -115,6 +127,8 @@ namespace Mizon.Windows.Pages
                 && Guid.TryParse(comment?.ToString(), out var commentId) ? commentId : Guid.Empty;
             CommentNavigationNotice.IsOpen = false;
             CoverImage.Opacity = HasCurrentDestinationCover() ? 1 : 0;
+            TrackCoverSkeleton.Visibility = CoverImage.Opacity > 0 ? Visibility.Collapsed : Visibility.Visible;
+            RefreshTrackLoadingPresentation();
             if (!parameters.Remove(MusicCoverTransition.ParameterKey, out var payload)
                 || payload is not MusicCoverTransition transition) return;
 
@@ -220,7 +234,11 @@ namespace Mizon.Windows.Pages
         {
             _destinationCoverReady = HasCurrentDestinationCover();
             if (!_destinationCoverReady) return;
-            if (_coverTransition is null) CoverImage.Opacity = 1;
+            if (_coverTransition is null)
+            {
+                CoverImage.Opacity = 1;
+                TrackCoverSkeleton.Visibility = Visibility.Collapsed;
+            }
             if (_coverTransitionCompleted) ClearCoverTransition();
         }
 
@@ -241,6 +259,7 @@ namespace Mizon.Windows.Pages
                 _coverTransition = null;
             }
             CoverImage.Opacity = HasCurrentDestinationCover() ? 1 : 0;
+            TrackCoverSkeleton.Visibility = CoverImage.Opacity > 0 ? Visibility.Collapsed : Visibility.Visible;
             NavigationCoverImage.Opacity = 0;
             NavigationCoverImage.Source = null;
             NavigationCoverImage.Visibility = Visibility.Collapsed;
@@ -427,6 +446,7 @@ namespace Mizon.Windows.Pages
             AttachInsightsPresentation();
             ApplyDetailLayout(ActualWidth);
             RefreshTrackTitle();
+            RefreshTrackLoadingPresentation();
             AttachWaveformMotion();
             ViewModel.PropertyChanged += ViewModel_PropertyChanged;
             Localization.PropertyChanged -= TrackDetailsLanguageChanged;
@@ -447,6 +467,8 @@ namespace Mizon.Windows.Pages
         {
             if (IsLoaded || !_pageActive) return;
             _pageActive = false;
+            CloseTrackAudience();
+            StopTrackLoadMotion();
             _waveformCommentDialog?.Hide();
             _createPlaylistDialog?.Hide();
             if (_audioOutputMenuOpen) AudioRenderMenuFlyout.Hide();
@@ -477,6 +499,9 @@ namespace Mizon.Windows.Pages
                 CreateOrUpdateSpringAnimation(ViewModel.ServerWaveformIntensity);
             else if (e.PropertyName is nameof(ViewModel.Title) or nameof(ViewModel.PersianTitle))
                 RefreshTrackTitle();
+            else if (e.PropertyName is nameof(ViewModel.IsTrackMetadataLoading) or nameof(ViewModel.TrackMetadataLoadFailed)
+                or nameof(ViewModel.IsTrackWaveformLoading) or nameof(ViewModel.IsTrackCommentsLoading))
+                RefreshTrackLoadingPresentation();
             else if (e.PropertyName is nameof(ViewModel.SelectedAudioDevice) or nameof(ViewModel.IsAudioDeviceSwitchPending))
             {
                 if (e.PropertyName == nameof(ViewModel.SelectedAudioDevice))
