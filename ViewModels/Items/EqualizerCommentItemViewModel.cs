@@ -12,6 +12,7 @@ public class EqualizerCommentItemViewModel : ViewModelBase
     public string Text { get; init; } = string.Empty;
     public double CanvasTop { get; init; }
     public bool IsOwnComment { get; init; }
+    public bool IsOtherComment => !IsOwnComment;
     public LocalizationService Localization => LocalizationService.Current;
 
     public string OwnerHint(int revision) =>
@@ -25,6 +26,4 @@ public class EqualizerCommentItemViewModel : ViewModelBase
     } = 80;
 
     public ImageSource? ImageSource { get => field; set => SetField(ref field, value); }
-    public RelayCommand Command { get; set; }
-    public RelayCommand MouseEnterCommand { get; set; }
 }

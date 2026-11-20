@@ -7,6 +7,7 @@
   <data name="Play" xml:space="preserve"><value>پخش آهنگ</value></data>
   <data name="WindowTitle" xml:space="preserve"><value>جزئیات آهنگ</value></data>
   <data name="OwnWaveformComment" xml:space="preserve"><value>نظر شما</value></data>
+  <data name="OpenWaveformCommentInList" xml:space="preserve"><value>نمایش این نظر در فهرست</value></data>
   <data name="LoadingTrack" xml:space="preserve"><value>در حال بارگذاری جزئیات آهنگ</value></data>
   <data name="TrackLoadFailed" xml:space="preserve"><value>جزئیات آهنگ بارگذاری نشد.</value></data>
   <data name="ViewsAudience" xml:space="preserve"><value>بازدیدهای آهنگ</value></data>

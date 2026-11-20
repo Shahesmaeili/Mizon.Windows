@@ -8,7 +8,7 @@ internal static class MusicWaveformTimeline
     internal const double Height = 110d;
     internal const double MarkerSize = 28d;
     private const double BarStrokeWidth = 2d;
-    private const double MarkerTop = Height * 2 / 3 + 2;
+    private const double MarkerTop = Height * 2 / 3 + 6;
     private const int MarkerStackLevels = 5;
 
     internal static int GetBarIndex(double contentX, int barCount) =>

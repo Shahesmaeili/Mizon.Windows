@@ -10,7 +10,12 @@ Mizon taskbar pinning, the active music home and track detail pages, current-use
 Track details has independent read/control grants. Read includes the current
 loading stages and bounded audience counts. Control can open or close the live
 listeners and views panels on the active track. Individual listener identities
-and sample history are not included in MCP responses. See the
+and sample history are not included in MCP responses. Track details read also
+returns up to 64 loaded waveform comment IDs and the current preview ID.
+Track details control can open a loaded marker by ID or close the bubble.
+The declared `music-comment` navigation goes directly to its list entry.
+See the [waveform preview handoff](../docs/ai/tasks/2026-11-20-track-popups-waveform-markers.md)
+and the
 [track detail handoff](../docs/ai/tasks/2026-11-20-music-details.md) for the
 bounded state and cover/repeat operations.
 VPN has independent read/control grants; [VPN.md](VPN.md) documents its bounded

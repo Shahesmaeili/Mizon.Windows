@@ -67,8 +67,8 @@ internal static class CompanionTests
         }
 
         var detailsTool = tools.Single(tool => tool.Name == "mizon_set_music_details").ProtocolTool;
-        Check.That(detailsTool.InputSchema.GetProperty("oneOf").GetArrayLength() == 3,
-            "Track details must advertise mutually exclusive repeat, cover and audience options.");
+        Check.That(detailsTool.InputSchema.GetProperty("oneOf").GetArrayLength() == 4,
+            "Track details must advertise mutually exclusive repeat, cover, audience and waveform comment options.");
         var audienceModes = detailsTool.InputSchema.GetProperty("properties").GetProperty("audience").GetProperty("enum")
             .EnumerateArray().Select(value => value.GetString());
         Check.That(audienceModes.SequenceEqual(new[] { "live", "views", "closed" }),
@@ -80,6 +80,8 @@ internal static class CompanionTests
             [], new() { ["repeatEnabled"] = JsonString("true") },
             new() { ["repeatEnabled"] = enabled.RootElement, ["coverOpen"] = disabled.RootElement },
             new() { ["audience"] = JsonString("arbitrary") },
+            new() { ["waveformComment"] = JsonString("invalid-guid") },
+            new() { ["waveformComment"] = JsonString(Guid.Empty.ToString("D")) },
             new() { ["audience"] = JsonString("live"), ["coverOpen"] = enabled.RootElement }
         })
         {

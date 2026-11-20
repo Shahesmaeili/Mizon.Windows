@@ -36,6 +36,8 @@ public sealed partial class MusicsPage : IMcpMusicDetailsPage
         MixerActive = ViewModel.IsStemMixerActive,
         MixerBalance = ViewModel.StemMixBalance,
         WaveformCommentCount = ViewModel.EqualizerComments.Count,
+        WaveformCommentPublicIds = ViewModel.EqualizerComments.Take(64).Select(comment => comment.PublicId).ToArray(),
+        WaveformCommentPreviewPublicId = _previewComment?.PublicId,
         CoverAvailable = !string.IsNullOrWhiteSpace(ViewModel.CoverImagePath),
         CoverOpen = _isCoverPreviewOpen,
         ContributorCount = ViewModel.Contributors.Count,
@@ -47,4 +49,11 @@ public sealed partial class MusicsPage : IMcpMusicDetailsPage
     void IMcpMusicDetailsPage.SetRepeatEnabled(bool enabled) => ViewModel.IsRepeatEnabled = enabled;
 
     bool IMcpMusicDetailsPage.SetAudience(string view) => SetTrackAudience(view);
+
+    bool IMcpMusicDetailsPage.SetWaveformCommentPreview(Guid? commentPublicId)
+    {
+        if (commentPublicId is Guid id) return ShowWaveformCommentPreview(id);
+        CloseWaveformCommentPreview();
+        return true;
+    }
 }

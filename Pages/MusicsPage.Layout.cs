@@ -81,15 +81,6 @@ public sealed partial class MusicsPage
         GenreRail.MaxWidth = LabelLink.MaxWidth = titleWidth;
         ViewsStatusButton.MaxWidth = Math.Max(1, titleWidth - 16);
 
-        var sharedSocial = informationWidth >= 640;
-        SocialDock.ColumnDefinitions[1].Width = sharedSocial ? GridLength.Auto : new GridLength(0);
-        SocialDock.ColumnSpacing = sharedSocial ? 16 : 0;
-        Grid.SetRow(ReactionRail, sharedSocial ? 0 : 1);
-        Grid.SetColumn(ReactionRail, sharedSocial ? 1 : 0);
-        Grid.SetColumnSpan(ReactionRail, sharedSocial ? 1 : 2);
-        ReactionRail.HorizontalAlignment = HorizontalAlignment.Right;
-        ReactionRail.MaxWidth = sharedSocial ? Math.Min(300, informationWidth * .30) : informationWidth;
-
         var sharedLyrics = width >= 850;
         LyricsHeader.ColumnDefinitions[2].Width = sharedLyrics ? GridLength.Auto : new GridLength(0);
         Grid.SetRow(MixerControls, sharedLyrics ? 0 : 1);

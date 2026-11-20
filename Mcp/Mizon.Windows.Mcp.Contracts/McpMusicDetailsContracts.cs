@@ -5,6 +5,7 @@ public sealed record McpMusicDetailsRequest
     public bool? RepeatEnabled { get; init; }
     public bool? CoverOpen { get; init; }
     public string? Audience { get; init; }
+    public string? WaveformComment { get; init; }
 }
 
 public sealed record McpMusicDetailsState
@@ -34,6 +35,8 @@ public sealed record McpMusicDetailsState
     public bool MixerActive { get; init; }
     public double MixerBalance { get; init; }
     public int WaveformCommentCount { get; init; }
+    public Guid[] WaveformCommentPublicIds { get; init; } = [];
+    public Guid? WaveformCommentPreviewPublicId { get; init; }
     public bool CoverAvailable { get; init; }
     public bool CoverOpen { get; init; }
     public int ContributorCount { get; init; }

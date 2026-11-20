@@ -1,10 +1,14 @@
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Mizon.Windows.Services;
 using Mizon.Windows.ViewModels.Items;
 using System;
+using System.Linq;
+using Windows.System;
 using Windows.UI.ViewManagement;
 
 namespace Mizon.Windows.Pages;
@@ -15,6 +19,102 @@ public sealed partial class MusicsPage
     private Button? _hoveredCommentMarker;
     private Button? _focusedCommentMarker;
     private Button? _raisedCommentMarker;
+    private Button? _previewCommentMarker;
+    private EqualizerCommentItemViewModel? _previewComment;
+    private Guid _commentLinkAfterClose;
+
+    private void WaveformComment_Click(object sender, RoutedEventArgs args)
+    {
+        if (sender is Button marker) ShowWaveformCommentPreview(marker);
+    }
+
+    private bool ShowWaveformCommentPreview(Button marker)
+    {
+        if (!IsMusicDetailsActive || marker.XamlRoot is null || !marker.IsLoaded ||
+            marker.DataContext is not EqualizerCommentItemViewModel { PublicId: var commentId } comment || commentId == Guid.Empty)
+            return false;
+        if (ReferenceEquals(marker, _previewCommentMarker)) return true;
+        if (_previewComment is not null) return false;
+
+        _previewComment = comment;
+        _previewCommentMarker = marker;
+        WaveformCommentPreviewText.Text = comment.Text;
+        try
+        {
+            WaveformCommentPreviewFlyout.ShowAt(marker);
+            UpdateWaveformCommentEmphasis();
+            return true;
+        }
+        catch (Exception error)
+        {
+            ClearWaveformCommentPreview();
+            WaveformCommentPreviewText.Text = string.Empty;
+            AppLog.Error("The waveform comment preview could not be opened.", error);
+            return false;
+        }
+    }
+
+    private bool ShowWaveformCommentPreview(Guid id)
+    {
+        var item = ViewModel.EqualizerComments.FirstOrDefault(comment => comment.PublicId == id);
+        return item is not null && WaveformCommentMarkers.ContainerFromItem(item) is DependencyObject container &&
+            FindWaveformMarker(container) is { } marker && ShowWaveformCommentPreview(marker);
+    }
+
+    private static Button? FindWaveformMarker(DependencyObject root)
+    {
+        if (root is Button button) return button;
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(root); index++)
+            if (FindWaveformMarker(VisualTreeHelper.GetChild(root, index)) is { } marker) return marker;
+        return null;
+    }
+
+    private bool CloseWaveformCommentPreview()
+    {
+        _commentLinkAfterClose = Guid.Empty;
+        if (_previewComment is null) return false;
+        ClearWaveformCommentPreview();
+        WaveformCommentPreviewFlyout.Hide();
+        return true;
+    }
+
+    private void ClearWaveformCommentPreview()
+    {
+        _previewComment = null;
+        _previewCommentMarker = null;
+        UpdateWaveformCommentEmphasis();
+    }
+
+    private void WaveformCommentPreview_Opened(object sender, object args)
+    {
+        if (_previewComment is null) return;
+        AutomationProperties.SetFullDescription(WaveformCommentOpenButton, _previewComment.Text);
+        WaveformCommentOpenButton.Focus(FocusState.Programmatic);
+    }
+
+    private async void WaveformCommentPreview_Closed(object sender, object args)
+    {
+        ClearWaveformCommentPreview();
+        WaveformCommentPreviewText.Text = string.Empty;
+        AutomationProperties.SetFullDescription(WaveformCommentOpenButton, string.Empty);
+        var commentId = _commentLinkAfterClose;
+        _commentLinkAfterClose = Guid.Empty;
+        if (commentId != Guid.Empty && IsMusicDetailsActive) await OpenCommentAsync(commentId);
+    }
+
+    private void WaveformCommentOpen_Click(object sender, RoutedEventArgs args)
+    {
+        if (_previewComment is not { } comment) return;
+        _commentLinkAfterClose = comment.PublicId;
+        WaveformCommentPreviewFlyout.Hide();
+    }
+
+    private void WaveformCommentPreview_PreviewKeyDown(object sender, KeyRoutedEventArgs args)
+    {
+        if (args.OriginalKey != VirtualKey.GamepadB && args.Key != VirtualKey.Escape) return;
+        args.Handled = true;
+        if (!args.KeyStatus.WasKeyDown) CloseWaveformCommentPreview();
+    }
 
     private void AttachWaveformMotion()
     {
@@ -96,6 +196,7 @@ public sealed partial class MusicsPage
 
     private void WaveformComment_Unloaded(object sender, RoutedEventArgs args)
     {
+        if (ReferenceEquals(sender, _previewCommentMarker)) CloseWaveformCommentPreview();
         if (ReferenceEquals(sender, _hoveredCommentMarker))
             _hoveredCommentMarker = null;
         if (ReferenceEquals(sender, _focusedCommentMarker))
@@ -113,7 +214,7 @@ public sealed partial class MusicsPage
 
     private void UpdateWaveformCommentEmphasis()
     {
-        var active = _hoveredCommentMarker ?? _focusedCommentMarker;
+        var active = _previewCommentMarker ?? _hoveredCommentMarker ?? _focusedCommentMarker;
         if (ReferenceEquals(active, _raisedCommentMarker))
             return;
 

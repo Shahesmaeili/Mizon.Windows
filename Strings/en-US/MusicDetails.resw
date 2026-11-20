@@ -7,6 +7,7 @@
   <data name="Play" xml:space="preserve"><value>Play track</value></data>
   <data name="WindowTitle" xml:space="preserve"><value>Track details</value></data>
   <data name="OwnWaveformComment" xml:space="preserve"><value>Your comment</value></data>
+  <data name="OpenWaveformCommentInList" xml:space="preserve"><value>Find this comment in the list</value></data>
   <data name="LoadingTrack" xml:space="preserve"><value>Loading track details</value></data>
   <data name="TrackLoadFailed" xml:space="preserve"><value>Track details could not be loaded.</value></data>
   <data name="ViewsAudience" xml:space="preserve"><value>Track views</value></data>

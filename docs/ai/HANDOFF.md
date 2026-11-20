@@ -2,6 +2,13 @@
 
 Updated: 2026-11-20. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Track flyouts and waveform markers — 2026-11-20
+
+The audience panel uses the playlist menu’s Desktop Acrylic material.
+Waveform comment avatars open a text bubble, and its icon focuses the matching
+comment in the existing list. See the [task record](tasks/2026-11-20-track-popups-waveform-markers.md)
+for the scoped MCP actions and the taskbar indicator follow-up.
+
 ## Online audience in the taskbar preview — 2026-11-20
 
 The existing preview adapter displays global online accounts and the signed-in

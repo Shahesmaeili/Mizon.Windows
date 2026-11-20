@@ -2595,8 +2595,7 @@ public partial class MusicPageViewModel : MainViewModel
             Text = text,
             CanvasLeft = MusicWaveformTimeline.GetMarkerLeft(timestamp, _musicDuration, EqualizerComments.Count),
             CanvasTop = MusicWaveformTimeline.GetCommentMarkerTop(stackIndex),
-            IsOwnComment = isOwnComment,
-            Command = PlayCommand
+            IsOwnComment = isOwnComment
         };
 
         EqualizerComments.Add(marker);

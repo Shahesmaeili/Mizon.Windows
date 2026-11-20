@@ -10,6 +10,7 @@ internal interface IMcpMusicDetailsPage
     bool SetCoverOpen(bool open);
     void SetRepeatEnabled(bool enabled);
     bool SetAudience(string view);
+    bool SetWaveformCommentPreview(Guid? commentPublicId);
 }
 
 // Called only by the authorized UI dispatcher for the currently displayed track.
@@ -30,16 +31,26 @@ internal sealed class McpMusicDetailsService(Func<IMcpMusicDetailsPage?> getPage
         {
             case ("get_music_details", null):
                 break;
-            case ("set_music_details", { RepeatEnabled: bool repeat, CoverOpen: null, Audience: null }):
+            case ("set_music_details", { RepeatEnabled: bool repeat, CoverOpen: null, Audience: null, WaveformComment: null }):
                 page.SetRepeatEnabled(repeat);
                 break;
-            case ("set_music_details", { RepeatEnabled: null, CoverOpen: bool open, Audience: null }):
+            case ("set_music_details", { RepeatEnabled: null, CoverOpen: bool open, Audience: null, WaveformComment: null }):
                 if (!page.SetCoverOpen(open))
                     return new() { Code = "cover_unavailable", Message = "This track has no cover ready to preview." };
                 break;
-            case ("set_music_details", { RepeatEnabled: null, CoverOpen: null, Audience: "live" or "views" or "closed" } details):
+            case ("set_music_details", { RepeatEnabled: null, CoverOpen: null, Audience: "live" or "views" or "closed", WaveformComment: null } details):
                 if (!page.SetAudience(details.Audience))
                     return new() { Code = "audience_unavailable", Message = "The current track’s audience panel is unavailable." };
+                break;
+            case ("set_music_details", { RepeatEnabled: null, CoverOpen: null, Audience: null, WaveformComment: { } marker }):
+                Guid? comment = null;
+                if (marker != "closed")
+                {
+                    if (!Guid.TryParseExact(marker, "D", out var id) || id == Guid.Empty) return Invalid();
+                    comment = id;
+                }
+                if (!page.SetWaveformCommentPreview(comment))
+                    return new() { Code = "waveform_comment_unavailable", Message = "This comment marker is unavailable on the active track." };
                 break;
             default:
                 return Invalid();

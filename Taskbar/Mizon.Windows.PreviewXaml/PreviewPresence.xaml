@@ -1,5 +1,5 @@
 <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      Name="MizonPreviewPresence" Grid.Row="{ROW}" Grid.ColumnSpan="100" Height="60" Margin="8,0,8,6"
+      Name="MizonPreviewPresence" Grid.Row="{ROW}" Grid.ColumnSpan="100" Height="60" Margin="8,6,8,6"
       FlowDirection="{DIRECTION}" VerticalAlignment="Bottom" IsHitTestVisible="False">
     <Border Background="{ThemeResource SystemControlBackgroundListLowBrush}" CornerRadius="8" Padding="10,4">
         <Grid ColumnSpacing="8" RowSpacing="3">
@@ -14,9 +14,10 @@
             </Grid.RowDefinitions>
             <Grid Grid.RowSpan="2" Width="22" Height="22" VerticalAlignment="Center"
                   AutomationProperties.AccessibilityView="Raw">
+                <Ellipse Name="OnlineGlow" Width="18" Height="18" Fill="#FF42D99A" Opacity="0"/>
                 <Ellipse Name="OnlineDot" Width="8" Height="8" Fill="#FF42D99A" Visibility="Collapsed"/>
                 <Ellipse Name="OfflineDot" Width="8" Height="8" Fill="#FFE4A85E"/>
-                <ProgressRing Name="OnlineMotion" Width="22" Height="22" IsActive="False"
+                <ProgressRing Name="ConnectionRing" Width="22" Height="22" IsActive="False"
                               Foreground="#FF43D89D" Visibility="Collapsed"/>
             </Grid>
             <Grid Grid.Column="1" ColumnSpacing="6" VerticalAlignment="Center">

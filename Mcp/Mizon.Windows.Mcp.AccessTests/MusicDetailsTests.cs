@@ -11,6 +11,7 @@ internal static partial class Program
         var open = new McpRequest { Operation = "set_music_details", MusicDetails = new() { CoverOpen = true } };
         var repeat = new McpRequest { Operation = "set_music_details", MusicDetails = new() { RepeatEnabled = true } };
         var live = new McpRequest { Operation = "set_music_details", MusicDetails = new() { Audience = "live" } };
+        var marker = new McpRequest { Operation = "set_music_details", MusicDetails = new() { WaveformComment = SyntheticMusicDetails.CommentId.ToString("D") } };
         await using (var host = await Host.StartAsync(path))
         {
             await using var peer = await host.ConnectAsync(proof);
@@ -42,6 +43,9 @@ internal static partial class Program
                 "Track readback reflects app language and bounded render-device availability without endpoint identifiers");
             Assert(!(await peer.Call(repeat)).Success && !host.MusicDetailsPage.RepeatEnabled, "Read cannot set repeat");
             Assert(!(await peer.Call(live)).Success, "Track read consent cannot open an audience panel");
+            Assert((await peer.Call("get_music_details")).MusicDetails is { WaveformCommentPublicIds: [var loadedId], WaveformCommentPreviewPublicId: null } &&
+                loadedId == SyntheticMusicDetails.CommentId && !(await peer.Call(marker)).Success,
+                "Track read discovers loaded comment IDs but cannot open a comment bubble.");
 
             await host.Ui(() => host.Service.RevokeAsync(host.Item(id)));
             await host.Approve(id, false, false, false, detailsControl: true);
@@ -58,13 +62,22 @@ internal static partial class Program
                 "Audience control accepts only the declared views");
             Assert((await peer.Call(live with { MusicDetails = new() { Audience = "closed" } })).Success &&
                 host.MusicDetailsPage.Audience is null, "Audience control closes the current popup");
+            Assert((await peer.Call(marker)) is { Success: true, MusicDetails: null } &&
+                host.MusicDetailsPage.Preview == SyntheticMusicDetails.CommentId,
+                "Track control opens the loaded comment bubble without requiring read consent or changing playback.");
+            Assert((await peer.Call(marker with { MusicDetails = new() { WaveformComment = Guid.NewGuid().ToString("D") } })).Code == "waveform_comment_unavailable",
+                "An ID absent from the active track cannot select a comment.");
+            Assert((await peer.Call(marker with { MusicDetails = new() { WaveformComment = "closed" } })).Success && host.MusicDetailsPage.Preview is null,
+                "The waveform preview can be dismissed through the same action.");
             Assert((await peer.Call(repeat with { MusicDetails = new() { RepeatEnabled = false, CoverOpen = false } })).Code == "invalid_arguments"
                 && host.MusicDetailsPage.RepeatEnabled, "An ambiguous command changes nothing");
             Assert((await peer.Call(open with { Page = "login" })).Code == "invalid_arguments", "Unrelated arguments are rejected");
             await host.Ui(() => host.MusicDetailsPage.Active = false);
             Assert((await peer.Call(open)).Code == "page_unavailable", "Control stops when the track page leaves");
+            Assert((await peer.Call(marker)).Code == "page_unavailable", "An inactive page cannot open a waveform comment.");
             await host.Ui(() => host.Service.RevokeAsync(host.Item(id)));
-            Assert(!(await peer.Call(repeat)).Success && !(await peer.Call(live)).Success, "Revocation blocks further track actions");
+            Assert(!(await peer.Call(repeat)).Success && !(await peer.Call(live)).Success && !(await peer.Call(marker)).Success,
+                "Revocation blocks further track actions.");
             await host.Approve(id, false, false, false, detailsRead: true);
         }
 
@@ -107,9 +120,9 @@ internal static partial class Program
             "Highlight reaches each visible stroke only after the pointer crosses the leading gap");
         var markerTops = Enumerable.Range(0, 5).Select(MusicWaveformTimeline.GetCommentMarkerTop).ToArray();
         var seekLaneEnd = MusicWaveformTimeline.Height * 2 / 3;
-        Assert(markerTops.Distinct().Count() == 5 && markerTops.All(top => top - seekLaneEnd >= 2
+        Assert(markerTops.Distinct().Count() == 5 && markerTops.All(top => top - seekLaneEnd >= 6
                 && top + MusicWaveformTimeline.MarkerSize <= MusicWaveformTimeline.Height),
-            "Five coincident comments keep their distinct vertical hit targets inside the comment lane with a two-unit gap");
+            "Five coincident comments keep distinct hit targets inside the comment lane with a six-unit top gap.");
         var author = Guid.NewGuid();
         Assert(MusicWaveformTimeline.IsOwnComment(author, author) &&
                 !MusicWaveformTimeline.IsOwnComment(author, Guid.NewGuid()) &&
@@ -120,6 +133,7 @@ internal static partial class Program
 
     private sealed class SyntheticMusicDetails : IMcpMusicDetailsPage
     {
+        public static readonly Guid CommentId = Guid.NewGuid();
         private readonly Guid _id = Guid.NewGuid();
         public bool Active { get; set; } = true;
         public bool HasCover { get; set; }
@@ -129,6 +143,7 @@ internal static partial class Program
         public bool Loading { get; set; }
         public bool LoadFailed { get; set; }
         public string? Audience { get; private set; }
+        public Guid? Preview { get; private set; }
 
         public McpMusicDetailsState ReadState() => new()
         {
@@ -140,7 +155,8 @@ internal static partial class Program
             PlaybackDeviceVolume = 0, PlaybackDeviceSilent = true, MusicVideoAvailable = true,
             CoverAvailable = HasCover, CoverOpen = CoverOpen, RepeatEnabled = RepeatEnabled,
             ContributorCount = 2, ContributorsWithPortrait = 1,
-            MixerAvailable = true, MixerEnabled = true, MixerActive = true, MixerBalance = 100, WaveformCommentCount = 1
+            MixerAvailable = true, MixerEnabled = true, MixerActive = true, MixerBalance = 100, WaveformCommentCount = 1,
+            WaveformCommentPublicIds = [CommentId], WaveformCommentPreviewPublicId = Preview
         };
 
         public bool SetCoverOpen(bool open)
@@ -155,6 +171,13 @@ internal static partial class Program
         public bool SetAudience(string view)
         {
             Audience = view == "closed" ? null : view;
+            return true;
+        }
+
+        public bool SetWaveformCommentPreview(Guid? commentPublicId)
+        {
+            if (commentPublicId is not null && commentPublicId != CommentId) return false;
+            Preview = commentPublicId;
             return true;
         }
     }

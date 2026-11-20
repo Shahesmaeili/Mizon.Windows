@@ -118,6 +118,7 @@ namespace Mizon.Windows.Pages
         {
             base.OnNavigatedTo(args);
             CloseTrackAudience();
+            CloseWaveformCommentPreview();
             CancelCommentNavigation();
             ClearCoverTransition();
             if (args.Parameter is not Dictionary<string, object> parameters) return;
@@ -468,6 +469,7 @@ namespace Mizon.Windows.Pages
             if (IsLoaded || !_pageActive) return;
             _pageActive = false;
             CloseTrackAudience();
+            CloseWaveformCommentPreview();
             StopTrackLoadMotion();
             _waveformCommentDialog?.Hide();
             _createPlaylistDialog?.Hide();
@@ -705,7 +707,12 @@ namespace Mizon.Windows.Pages
             if (e.KeyStatus.WasKeyDown)
             {
                 // A held B can close the preview or go back, but must not do both.
-                e.Handled = gamepadBack || _isCoverPreviewOpen;
+                e.Handled = gamepadBack || _isCoverPreviewOpen || _previewComment is not null;
+                return;
+            }
+            if (CloseWaveformCommentPreview())
+            {
+                e.Handled = true;
                 return;
             }
             if (_isCoverPreviewOpen)

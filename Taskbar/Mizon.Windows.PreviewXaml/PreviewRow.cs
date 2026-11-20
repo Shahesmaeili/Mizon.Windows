@@ -6,7 +6,7 @@ internal sealed unsafe class PreviewRow : IDisposable
 {
     private static readonly Guid VectorId = new("B4C1E3AC-8768-5B9D-A661-F63330B8507B");
     private static readonly Guid ElementId = new("676D0BE9-B65C-41C6-BA40-58CF87F201C1");
-    private const int PresenceRowHeight = 66;
+    private const int PresenceRowHeight = 72;
     private PreviewOnlinePanel? _presence;
     private nint _card, _panel, _vector, _row, _definitions;
     private uint _addedDefinitions;
@@ -260,14 +260,22 @@ internal sealed unsafe class PreviewRow : IDisposable
                 var connected = new TaskbarOnlineSnapshot(TaskbarOnlinePhase.Connected, 18, 4, true);
                 row.RefreshOnline(connected, 0);
                 row._presence!.VerifyDisplayed(18, 4);
+                row._presence.VerifyIndicator(ring: false, glow: false);
                 if (!row.RefreshOnline(connected with { OnlineCount = 32, OnlineFollowerCount = 2 }, 100))
                     throw new InvalidOperationException("Changing real counts must schedule an animation.");
                 row.AnimateOnline(506);
                 row._presence.VerifyDisplayed(25, 2);
+                row._presence.VerifyIndicator(ring: false, glow: true);
                 row.AnimateOnline(1_500);
                 row._presence.VerifyDisplayed(32, 2);
-                row.RefreshOnline(new(TaskbarOnlinePhase.NoInternet, null, null, false), 1_600);
+                row._presence.VerifyIndicator(ring: false, glow: false);
+                row.RefreshOnline(new(TaskbarOnlinePhase.Connecting, null, null, true), 1_550);
+                row._presence.VerifyIndicator(ring: true, glow: false);
+                row.RefreshOnline(new(TaskbarOnlinePhase.Reconnecting, null, null, false), 1_575);
+                row._presence.VerifyIndicator(ring: false, glow: false);
+                row.RefreshOnline(new(TaskbarOnlinePhase.NoInternet, null, null, true), 1_600);
                 row._presence.VerifyDisplayed(null, null);
+                row._presence.VerifyIndicator(ring: false, glow: false);
                 if (!row.RetainFor(fixture, updated, 2_000))
                     throw new InvalidOperationException("The presence row did not remain attached across caption changes.");
                 SetFixtureCaption(fixture, updated.Title);

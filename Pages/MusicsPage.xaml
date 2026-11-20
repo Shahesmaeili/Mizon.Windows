@@ -12,6 +12,9 @@
                 <Setter Property="FontSize" Value="13"/>
                 <Setter Property="Margin" Value="4,0"/>
             </Style>
+            <Style x:Key="TrackPopupPresenterStyle" TargetType="FlyoutPresenter">
+                <Setter Property="Background" Value="{ThemeResource MenuFlyoutPresenterBackground}"/>
+            </Style>
             <DataTemplate x:Key="TrackAudienceRowTemplate" x:DataType="viewmodelsItems:TrackAudienceItemViewModel">
                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" Padding="8" CornerRadius="8"
                       Background="{ThemeResource ControlFillColorSecondaryBrush}">
@@ -164,7 +167,11 @@
                                                             BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" VerticalAlignment="Center">
                                                         <FlyoutBase.AttachedFlyout>
                                                             <Flyout x:Name="TrackAudienceFlyout" Placement="Bottom" Opened="TrackAudienceFlyout_Opened"
+                                                                    FlyoutPresenterStyle="{StaticResource TrackPopupPresenterStyle}"
                                                                     Closed="TrackAudienceFlyout_Closed">
+                                                                <Flyout.SystemBackdrop>
+                                                                    <DesktopAcrylicBackdrop/>
+                                                                </Flyout.SystemBackdrop>
                                                                 <StackPanel x:Name="AudiencePopup" Width="280" Spacing="10"
                                                                             XYFocusKeyboardNavigation="Enabled" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
                                                                     <TextBlock x:Name="AudiencePopupTitle" FontSize="17" FontWeight="SemiBold"
@@ -365,6 +372,34 @@
                                         </ItemsControl>
                                         <!-- markerهای کامنت دقیقاً روی قسمت پایینی waveform قرار می‌گیرند. -->
                                         <Grid x:Name="TrackCommentLayer" Grid.RowSpan="2">
+                                            <FlyoutBase.AttachedFlyout>
+                                                <Flyout x:Name="WaveformCommentPreviewFlyout" Placement="Top"
+                                                        FlyoutPresenterStyle="{StaticResource TrackPopupPresenterStyle}"
+                                                        Opened="WaveformCommentPreview_Opened" Closed="WaveformCommentPreview_Closed">
+                                                    <Flyout.SystemBackdrop>
+                                                        <DesktopAcrylicBackdrop/>
+                                                    </Flyout.SystemBackdrop>
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" MaxWidth="270"
+                                                          FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
+                                                          XYFocusKeyboardNavigation="Enabled" PreviewKeyDown="WaveformCommentPreview_PreviewKeyDown">
+                                                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="136"
+                                                                      HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
+                                                                      VerticalAlignment="Center" IsTabStop="True" UseSystemFocusVisuals="True">
+                                                            <TextBlock x:Name="WaveformCommentPreviewText" TextWrapping="Wrap"
+                                                                       FontFamily="{x:Bind Localization.TextFontFamily, Mode=OneWay}"
+                                                                       TextReadingOrder="DetectFromContent" FontSize="13"/>
+                                                        </ScrollViewer>
+                                                        <controls:FeatureButton x:Name="WaveformCommentOpenButton" Grid.Column="1"
+                                                                                MinWidth="34" MinHeight="34" Padding="6"
+                                                                                VerticalAlignment="Top" UseSystemFocusVisuals="True"
+                                                                                Click="WaveformCommentOpen_Click"
+                                                                                AutomationProperties.Name="{x:Bind Text('OpenWaveformCommentInList', Localization.Revision), Mode=OneWay}"
+                                                                                ToolTipService.ToolTip="{x:Bind Text('OpenWaveformCommentInList', Localization.Revision), Mode=OneWay}">
+                                                            <icon:SymbolIcon Symbol="ArrowUpRight" FontSize="16" AutomationProperties.AccessibilityView="Raw"/>
+                                                        </controls:FeatureButton>
+                                                    </Grid>
+                                                </Flyout>
+                                            </FlyoutBase.AttachedFlyout>
                                             <ItemsControl x:Name="WaveformCommentMarkers" ItemsSource="{x:Bind ViewModel.EqualizerComments}">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
@@ -379,7 +414,7 @@
                                                             </Grid.RenderTransform>
                                                             <controls:FeatureButton Width="28" Height="28" Opacity="0.5" Background="Transparent"
                                                                     CornerRadius="14" BorderThickness="0" Padding="0"
-                                                                    AutomationProperties.Name="{x:Bind Text}" Command="{x:Bind Command}" UseSystemFocusVisuals="True"
+                                                                    AutomationProperties.Name="{x:Bind Text}" Click="WaveformComment_Click" UseSystemFocusVisuals="True"
                                                                     AutomationProperties.HelpText="{x:Bind OwnerHint(Localization.Revision), Mode=OneWay}"
                                                                     PointerEntered="WaveformComment_PointerEntered" PointerExited="WaveformComment_PointerExited"
                                                                     PointerCanceled="WaveformComment_PointerExited" PointerCaptureLost="WaveformComment_PointerExited"
@@ -387,9 +422,10 @@
                                                                 <Grid Width="28" Height="28">
                                                                     <PersonPicture Width="24" Height="24" ProfilePicture="{x:Bind ImageSource, Mode=OneWay}"
                                                                                    AutomationProperties.AccessibilityView="Raw"/>
-                                                                    <Ellipse Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.25"
+                                                                    <Ellipse Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1" Opacity="0.34"
+                                                                             Visibility="{x:Bind IsOtherComment, Converter={StaticResource BooleanToVisibilityConverter}}"
                                                                              IsHitTestVisible="False"/>
-                                                                    <Ellipse Stroke="{ThemeResource AccentTextFillColorPrimaryBrush}" StrokeThickness="1.25"
+                                                                    <Ellipse Stroke="{ThemeResource AccentTextFillColorPrimaryBrush}" StrokeThickness="1" Opacity="0.45"
                                                                              IsHitTestVisible="False"
                                                                              Visibility="{x:Bind IsOwnComment, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                                                 </Grid>
@@ -401,16 +437,8 @@
                                         </Grid>
                                     </Grid>
                                 </ScrollViewer>
-                                <Grid Grid.Row="2" x:Name="SocialDock">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <WrapPanel Margin="0,8,0,0" HorizontalAlignment="Left" LineSpacing="8" x:Name="SocialActions">
+                                <controls:MusicHeadingPanel Grid.Row="2" Margin="0,8,0,0">
+                                    <WrapPanel HorizontalAlignment="Left" LineSpacing="8">
                                         <controls:AuthActionButton Style="{StaticResource MusicSupportButtonStyle}" Margin="0,0,4,0"
                                                 HoverScale="1.11" PressedScale="0.89"
                                                 AutomationProperties.Name="{x:Bind Text('Support', Localization.Revision), Mode=OneWay}"
@@ -537,9 +565,9 @@
                                             </StackPanel>
                                         </Button>
                                     </WrapPanel>
-                                    <ScrollViewer HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled" x:Name="ReactionRail" Grid.Column="1"
+                                    <ScrollViewer HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled"
                                                   AutomationProperties.Name="{x:Bind Text('Reactions', Localization.Revision), Mode=OneWay}">
-                                        <ItemsRepeater VerticalAlignment="Top" Margin="0,14,0,0" HorizontalAlignment="Right" ItemsSource="{Binding Reactions, Mode=OneWay}">
+                                        <ItemsRepeater VerticalAlignment="Top" HorizontalAlignment="Right" ItemsSource="{Binding Reactions, Mode=OneWay}">
                                             <ItemsRepeater.Resources>
                                                 <converters:BoolToBrushConverter x:Key="ReactionBorderConverter" NullBrush="Transparent" FalseBrush="Transparent" TrueBrush="#0078D4"/>
                                             </ItemsRepeater.Resources>
@@ -563,7 +591,7 @@
                                             </ItemsRepeater.ItemTemplate>
                                         </ItemsRepeater>
                                     </ScrollViewer>
-                                </Grid>
+                                </controls:MusicHeadingPanel>
                                 <Grid Margin="0,12,0,0" Grid.Row="3">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
