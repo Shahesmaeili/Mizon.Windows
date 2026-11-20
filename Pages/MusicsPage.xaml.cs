@@ -36,7 +36,6 @@ namespace Mizon.Windows.Pages
     public sealed partial class MusicsPage : Page
     {
         private MusicPageViewModel ViewModel { get; }
-        private ContentDialog? _waveformCommentDialog;
         private ContentDialog? _createPlaylistDialog;
         public LocalizationService Localization => LocalizationService.Current;
         private string Text(string key, int revision) => Localization.GetString("MusicDetails/" + key, revision);
@@ -119,6 +118,7 @@ namespace Mizon.Windows.Pages
             base.OnNavigatedTo(args);
             CloseTrackAudience();
             CloseWaveformCommentPreview();
+            ResetDiscussionComposer();
             CancelCommentNavigation();
             ClearCoverTransition();
             if (args.Parameter is not Dictionary<string, object> parameters) return;
@@ -471,7 +471,7 @@ namespace Mizon.Windows.Pages
             CloseTrackAudience();
             CloseWaveformCommentPreview();
             StopTrackLoadMotion();
-            _waveformCommentDialog?.Hide();
+            ResetDiscussionComposer();
             _createPlaylistDialog?.Hide();
             if (_audioOutputMenuOpen) AudioRenderMenuFlyout.Hide();
             CloseAudioOutputMenu();
@@ -479,6 +479,7 @@ namespace Mizon.Windows.Pages
             Localization.PropertyChanged -= TrackDetailsLanguageChanged;
             DetachInsightsPresentation();
             CancelCommentNavigation();
+            ViewModel.CancelDiscussionLoad();
             ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
             _waveformAnimations.AnimationsEnabledChanged -= WaveformMotionChanged;
             ViewModel.ClearWaveformHover();
@@ -497,7 +498,9 @@ namespace Mizon.Windows.Pages
 
         private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(ViewModel.ServerWaveformIntensity))
+            if (e.PropertyName == nameof(ViewModel.DiscussionSort))
+                SyncDiscussionSort();
+            else if (e.PropertyName == nameof(ViewModel.ServerWaveformIntensity))
                 CreateOrUpdateSpringAnimation(ViewModel.ServerWaveformIntensity);
             else if (e.PropertyName is nameof(ViewModel.Title) or nameof(ViewModel.PersianTitle))
                 RefreshTrackTitle();
@@ -715,9 +718,20 @@ namespace Mizon.Windows.Pages
                 e.Handled = true;
                 return;
             }
+            if (CloseDiscussionComposer())
+            {
+                e.Handled = true;
+                return;
+            }
             if (_isCoverPreviewOpen)
             {
                 e.Handled = SetCoverPreview(false, restoreFocus: true);
+                return;
+            }
+            if (ViewModel.IsCommentsDetailsSelected && ViewModel.DiscussionHasSelection)
+            {
+                e.Handled = true;
+                ShowAllMusicComments_Click(this, e);
                 return;
             }
             if (gamepadBack && Frame?.CanGoBack == true)
@@ -783,63 +797,9 @@ namespace Mizon.Windows.Pages
             await ShowWaveformCommentAsync(point.Position.X);
         }
 
-        private async Task ShowWaveformCommentAsync(double contentX)
-        {
-            if (!IsMusicDetailsActive || _waveformCommentDialog is not null ||
-                ViewModel.GetWaveformCommentTimestamp(contentX) is not { } timestamp || XamlRoot is not { } root)
-                return;
-
-            var musicPublicId = MusicPublicId;
-            var textBox = new TextBox
-            {
-                AcceptsReturn = true,
-                MinHeight = 92,
-                TextWrapping = TextWrapping.Wrap,
-                MaxLength = 1000
-            };
-            var dialog = new ContentDialog
-            {
-                XamlRoot = root,
-                Content = textBox,
-                DefaultButton = ContentDialogButton.Primary,
-                IsPrimaryButtonEnabled = false
-            };
-            _waveformCommentDialog = dialog;
-            textBox.TextChanged += UpdateSubmitState;
-            try
-            {
-                if (await ShowLocalizedTrackDialogAsync(dialog, () =>
-                    {
-                        var caption = Localization.Format("MusicDetails/WaveformCommentAt", timestamp.ToString(@"h\:mm\:ss"));
-                        textBox.PlaceholderText = caption;
-                        AutomationProperties.SetName(textBox, caption);
-                        dialog.Title = caption;
-                        dialog.PrimaryButtonText = Text("PostWaveformComment");
-                        dialog.CloseButtonText = Text("Cancel");
-                    }) != ContentDialogResult.Primary ||
-                    !IsMusicDetailsActive || MusicPublicId != musicPublicId)
-                    return;
-
-                var avatar = ((App)App.Current).Services.GetRequiredService<HomePageViewModel>().ProfileImage;
-                if (await ViewModel.CreateMusicCommentAsync(musicPublicId, textBox.Text, timestamp, avatar) &&
-                    IsMusicDetailsActive && MusicPublicId == musicPublicId)
-                    AccessibilityAnnouncements.Announce(WaveformScroller, Text("WaveformCommentPosted", Localization.Revision), "WaveformCommentPosted");
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception exception)
-            {
-                AppLog.Error("Music comment could not be created.", exception);
-            }
-            finally
-            {
-                textBox.TextChanged -= UpdateSubmitState;
-                if (ReferenceEquals(_waveformCommentDialog, dialog))
-                    _waveformCommentDialog = null;
-            }
-
-            void UpdateSubmitState(object sender, TextChangedEventArgs args) =>
-                dialog.IsPrimaryButtonEnabled = !string.IsNullOrWhiteSpace(textBox.Text);
-        }
+        private Task ShowWaveformCommentAsync(double contentX) =>
+            ViewModel.GetWaveformCommentTimestamp(contentX) is { } position
+                ? StartDiscussionComposerAsync(null, position) : Task.CompletedTask;
 
         private async Task<ContentDialogResult> ShowLocalizedTrackDialogAsync(ContentDialog dialog, Action applyText)
         {

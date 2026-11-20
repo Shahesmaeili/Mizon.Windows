@@ -15,7 +15,8 @@ public partial class MusicPageViewModel
     internal Guid CurrentMusicPublicId => _musicPublicId;
 
     // An explicit "play" activation is idempotent. The on-page button remains a toggle.
-    internal async Task<bool> ActivateMusicAsync(Guid musicPublicId, MusicActivationAction action, CancellationToken cancellationToken)
+    internal async Task<bool> ActivateMusicAsync(Guid musicPublicId, MusicActivationAction action,
+        CancellationToken cancellationToken, TimeSpan? startPosition = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (_musicPublicId != musicPublicId || _musicLoadCancellationTokenSource?.IsCancellationRequested != false)
@@ -32,17 +33,26 @@ public partial class MusicPageViewModel
             return IsCurrentMusicLoad(musicPublicId, token);
         }
         if (action != MusicActivationAction.Play) return true;
+        if (startPosition is TimeSpan position && (position < TimeSpan.Zero || position > _musicDuration)) return false;
 
         // A pending on-page AudioGraph transition must finish before a protocol action.
         while (_isPlaybackTransitioning || _isStemMixerSwitching) await Task.Delay(25, token);
         token.ThrowIfCancellationRequested();
         if (_playingMusicPublicId == musicPublicId)
         {
-            if (_audioPlayerService.AudioPlayerState == AudioPlayerState.Playing) return true;
+            if (_audioPlayerService.AudioPlayerState == AudioPlayerState.Playing)
+            {
+                if (startPosition.HasValue) ApplyMusicSeek(startPosition.Value);
+                return true;
+            }
             if (_audioPlayerService.AudioPlayerState == AudioPlayerState.Paused)
             {
                 _isPlaybackTransitioning = true;
-                try { await _audioPlayerService.ResumeAsync(); }
+                try
+                {
+                    if (startPosition.HasValue) ApplyMusicSeek(startPosition.Value);
+                    await _audioPlayerService.ResumeAsync();
+                }
                 finally { _isPlaybackTransitioning = false; }
                 token.ThrowIfCancellationRequested();
                 return IsCurrentMusicLoad(musicPublicId, token);
@@ -55,12 +65,12 @@ public partial class MusicPageViewModel
         {
             token.ThrowIfCancellationRequested();
             var mixed = IsStemMixerEnabled && IsStemMixAvailable
-                && await TryStartStemMixAsync(musicPublicId, token);
+                && await TryStartStemMixAsync(musicPublicId, token, startPosition);
             if (!mixed)
             {
                 token.ThrowIfCancellationRequested();
                 _ = EnsureMusicDownloadAsync(media);
-                await _audioPlayerService.PlayAsync(GetMainSourcePath(media), TimeSpan.Zero);
+                await _audioPlayerService.PlayAsync(GetMainSourcePath(media), startPosition ?? TimeSpan.Zero);
             }
             // Native AudioGraph node creation itself cannot be cancelled. Retire a late
             // source before a newer activation gets the playback guard.

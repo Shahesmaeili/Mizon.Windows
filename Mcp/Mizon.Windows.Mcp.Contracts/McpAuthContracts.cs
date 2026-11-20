@@ -21,6 +21,7 @@ public sealed record McpRequest
     public McpVpnRequest? Vpn { get; init; }
     public McpPersonProfileRequest? PersonProfile { get; init; }
     public McpMusicDetailsRequest? MusicDetails { get; init; }
+    public McpMusicDiscussionRequest? MusicDiscussion { get; init; }
 }
 
 // Input only. Never include this object in a response, diagnostic or exception log.
@@ -51,6 +52,7 @@ public sealed record McpResponse
     public McpVpnState? Vpn { get; init; }
     public McpPersonProfileState? PersonProfile { get; init; }
     public McpMusicDetailsState? MusicDetails { get; init; }
+    public McpMusicDiscussionState? MusicDiscussion { get; init; }
     public McpConnectionStatus? Connection { get; init; }
 }
 
@@ -80,6 +82,8 @@ public sealed record McpConnectionStatus
     public bool AllowPersonProfileControl { get; init; }
     public bool AllowMusicDetailsRead { get; init; }
     public bool AllowMusicDetailsControl { get; init; }
+    public bool AllowMusicDiscussionRead { get; init; }
+    public bool AllowMusicDiscussionControl { get; init; }
     public bool IsRemembered { get; init; }
     public bool IsConnected { get; init; }
 }
@@ -114,4 +118,5 @@ public sealed record McpAuthState
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(McpRequest))]
 [JsonSerializable(typeof(McpResponse))]
+[JsonSerializable(typeof(McpDiscussionTag[]))]
 public sealed partial class McpJsonContext : JsonSerializerContext;

@@ -143,7 +143,8 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
             AllowWindowRead = item.AllowWindowRead, AllowWindowControl = item.AllowWindowControl,
             AllowVpnRead = item.AllowVpnRead, AllowVpnControl = item.AllowVpnControl,
             AllowPersonProfileRead = item.AllowPersonProfileRead, AllowPersonProfileControl = item.AllowPersonProfileControl,
-            AllowMusicDetailsRead = item.AllowMusicDetailsRead, AllowMusicDetailsControl = item.AllowMusicDetailsControl
+            AllowMusicDetailsRead = item.AllowMusicDetailsRead, AllowMusicDetailsControl = item.AllowMusicDetailsControl,
+            AllowMusicDiscussionRead = item.AllowMusicDiscussionRead, AllowMusicDiscussionControl = item.AllowMusicDiscussionControl
         } : null;
         item.BeginSaving();
         var entered = false;
@@ -432,8 +433,10 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
             if (!_enabled || !connection.CanExecute(request.Operation)) return Denied(connection);
             if (request.MusicDetails is not null && request.Operation is not ("get_music_details" or "set_music_details"))
                 return new() { Code = "invalid_arguments", Message = "Unexpected track details arguments.", Connection = connection.Snapshot() };
+            if (request.MusicDiscussion is not null && request.Operation != "manage_music_discussion")
+                return new() { Code = "invalid_arguments", Message = "Unexpected track discussion arguments.", Connection = connection.Snapshot() };
             using var authorized = CancellationTokenSource.CreateLinkedTokenSource(token, connection.AuthorizationToken);
-            var mutation = request.Operation is not ("get_state" or "get_appearance" or "get_navigation" or "get_taskbar_pin_state" or "get_music_home" or "get_presence_state" or "get_window_state" or "get_vpn_state" or "get_person_profile" or "get_music_details");
+            var mutation = request.Operation is not ("get_state" or "get_appearance" or "get_navigation" or "get_taskbar_pin_state" or "get_music_home" or "get_presence_state" or "get_window_state" or "get_vpn_state" or "get_person_profile" or "get_music_details" or "get_music_discussion");
             var enteredGate = false;
             var started = false;
             try
@@ -464,6 +467,9 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                         : new McpResponse { Code = "unavailable", Message = "The presence service is unavailable." },
                     "get_music_details" or "set_music_details" => _musicDetails?.Execute(request, authorized.Token)
                         ?? new() { Code = "page_unavailable", Message = "Open track details in Mizon first." },
+                    "get_music_discussion" or "manage_music_discussion" => _musicDetails is not null
+                        ? await _musicDetails.ExecuteDiscussionAsync(request, authorized.Token)
+                        : new() { Code = "page_unavailable", Message = "Open track details in Mizon first." },
                     "get_person_profile" or "set_person_following" or "load_person_tracks" or "open_person_track" => _personProfile is not null
                         ? await _personProfile.ExecuteAsync(request, authorized.Token)
                         : new McpResponse { Code = "page_unavailable", Message = "The artist profile service is unavailable." },
@@ -494,6 +500,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                     Window = connection.CanExecute("get_window_state") ? result.Window : null,
                     Vpn = connection.CanExecute("get_vpn_state") ? result.Vpn : null,
                     MusicDetails = connection.CanExecute("get_music_details") ? result.MusicDetails : null,
+                    MusicDiscussion = connection.CanExecute("get_music_discussion") ? result.MusicDiscussion : null,
                     PersonProfile = connection.CanExecute("get_person_profile") ? result.PersonProfile : null,
                     Connection = connection.Snapshot()
                 };

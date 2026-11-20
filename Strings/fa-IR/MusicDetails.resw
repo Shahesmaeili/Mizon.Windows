@@ -121,4 +121,35 @@
   <data name="MusicVideoLoading" xml:space="preserve"><value>در حال آماده‌سازی موزیک‌ویدیو</value></data>
   <data name="MusicVideoUnavailable" xml:space="preserve"><value>موزیک‌ویدیوی این آهنگ در دسترس نیست.</value></data>
   <data name="MusicVideoPlaybackFailed" xml:space="preserve"><value>پخش موزیک‌ویدیو انجام نشد.</value></data>
+  <data name="CommentNew" xml:space="preserve"><value>نوشتن نظر</value></data>
+  <data name="CommentPlaceholder" xml:space="preserve"><value>نظرت دربارهٔ این آهنگ چیه؟</value></data>
+  <data name="CommentSort" xml:space="preserve"><value>مرتب‌سازی نظرات</value></data>
+  <data name="CommentNewest" xml:space="preserve"><value>جدیدترین</value></data>
+  <data name="CommentOldest" xml:space="preserve"><value>قدیمی‌ترین</value></data>
+  <data name="CommentMostLikes" xml:space="preserve"><value>بیشترین پسند</value></data>
+  <data name="CommentMostDislikes" xml:space="preserve"><value>بیشترین نپسندیدن</value></data>
+  <data name="CommentAttachPosition" xml:space="preserve"><value>ثبت در این زمان از آهنگ</value></data>
+  <data name="CommentTagType" xml:space="preserve"><value>نوع تگ</value></data>
+  <data name="CommentTagPerson" xml:space="preserve"><value>هنرمند</value></data>
+  <data name="CommentTagClient" xml:space="preserve"><value>کاربر</value></data>
+  <data name="CommentTagMusic" xml:space="preserve"><value>آهنگ</value></data>
+  <data name="CommentTagSearch" xml:space="preserve"><value>جستجوی تگ</value></data>
+  <data name="CommentEmpty" xml:space="preserve"><value>هنوز نظری در این بخش ثبت نشده است.</value></data>
+  <data name="CommentMore" xml:space="preserve"><value>نمایش نظرهای بیشتر</value></data>
+  <data name="CommentUnknownPlatform" xml:space="preserve"><value>پلتفرم نامشخص</value></data>
+  <data name="CommentPlayPosition" xml:space="preserve"><value>پخش از زمان نظر</value></data>
+  <data name="CommentPlayAt" xml:space="preserve"><value>پخش از {0}</value></data>
+  <data name="CommentLike" xml:space="preserve"><value>پسندیدن نظر</value></data>
+  <data name="CommentDislike" xml:space="preserve"><value>نپسندیدن نظر</value></data>
+  <data name="CommentReply" xml:space="preserve"><value>پاسخ</value></data>
+  <data name="CommentReplies" xml:space="preserve"><value>{0} پاسخ</value></data>
+  <data name="CommentReplyTo" xml:space="preserve"><value>پاسخ به {0}</value></data>
+  <data name="CommentTranslate" xml:space="preserve"><value>ترجمه</value></data>
+  <data name="CommentTranslationSoon" xml:space="preserve"><value>ترجمهٔ نظرات به‌زودی اضافه می‌شود.</value></data>
+  <data name="CommentPosting" xml:space="preserve"><value>در حال ثبت نظر…</value></data>
+  <data name="CommentPostFailed" xml:space="preserve"><value>ثبت نظر انجام نشد. دوباره تلاش کن.</value></data>
+  <data name="CommentTagShort" xml:space="preserve"><value>برای جستجو حداقل دو حرف وارد کن.</value></data>
+  <data name="CommentTagNone" xml:space="preserve"><value>نتیجه‌ای پیدا نشد.</value></data>
+  <data name="CommentTagLimit" xml:space="preserve"><value>می‌توانی تا ۸ تگ اضافه کنی.</value></data>
+  <data name="CommentLinkCopied" xml:space="preserve"><value>لینک این نظر کپی شد.</value></data>
 </root>

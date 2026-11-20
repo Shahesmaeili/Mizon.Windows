@@ -14,6 +14,12 @@ and sample history are not included in MCP responses. Track details read also
 returns up to 64 loaded waveform comment IDs and the current preview ID.
 Track details control can open a loaded marker by ID or close the bubble.
 The declared `music-comment` navigation goes directly to its list entry.
+Track discussion has its own read and control grants. `mizon_get_music_discussion`
+returns up to 25 rows from the active track. `mizon_manage_music_discussion`
+operates the page’s sorting, pagination, threads, exact comment focus, tag
+lookup and timestamp playback. It can also post or vote on the user’s request.
+Control alone does not return comments or tag search matches. Never retry an
+interrupted post automatically. See the [track discussion handoff](../docs/ai/tasks/2026-11-20-music-comment-discussion.md).
 See the [waveform preview handoff](../docs/ai/tasks/2026-11-20-track-popups-waveform-markers.md)
 and the
 [track detail handoff](../docs/ai/tasks/2026-11-20-music-details.md) for the

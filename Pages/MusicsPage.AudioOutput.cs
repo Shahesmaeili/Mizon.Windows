@@ -218,6 +218,7 @@ public sealed partial class MusicsPage
         SyncSelectedOutputVolume();
         if (CommentNavigationNotice.IsOpen && _commentNoticeKey is { } key)
             CommentNavigationNotice.Message = Text(key);
+        ApplyDiscussionComposerLanguage();
 
         foreach (var item in MusicPlaylistsMenuFlyout.Items.OfType<MenuFlyoutItem>())
         {

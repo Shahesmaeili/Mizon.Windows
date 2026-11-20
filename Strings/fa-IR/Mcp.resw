@@ -135,4 +135,8 @@
   <data name="PermissionMusicDetailsControlHint" xml:space="preserve"><value>پیش‌نمایش کاور آهنگ را باز یا بسته کند و تکرار را تنظیم کند.</value></data>
   <data name="ReadMusicDetails" xml:space="preserve"><value>خواندن جزئیات آهنگ</value></data>
   <data name="ChangeMusicDetails" xml:space="preserve"><value>تغییر وضعیت پیش‌نمایش کاور یا تکرار</value></data>
+  <data name="PermissionMusicDiscussionRead" xml:space="preserve"><value>خواندن نظرات آهنگ</value></data>
+  <data name="PermissionMusicDiscussionReadHint" xml:space="preserve"><value>نظرات بارگذاری‌شده، رأی‌ها، تعداد پاسخ‌ها، تگ‌ها و زمان هر نظر در آهنگ فعلی را بخواند.</value></data>
+  <data name="PermissionMusicDiscussionControl" xml:space="preserve"><value>مدیریت نظرات آهنگ</value></data>
+  <data name="PermissionMusicDiscussionControlHint" xml:space="preserve"><value>گفت‌وگوها را باز کند، مرتب کند و صفحه بزند، از زمان نظر پخش کند، رأی بدهد یا نظر ثبت کند.</value></data>
 </root>

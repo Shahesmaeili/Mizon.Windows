@@ -8,8 +8,24 @@ namespace Mizon.Windows.Mcp;
 internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
 {
     private const string EmptySchema = """{"type":"object","properties":{},"additionalProperties":false}""";
+    private const string DiscussionSchema = """
+        {"type":"object","properties":{
+          "discussionAction":{"type":"string","enum":["load","next","replies","focus","vote","post","play_timestamp","tag_search"],"description":"Operate only on the active track. load opens root comments. next appends one page. replies opens the selected comment's thread. focus finds an exact comment on this track. play_timestamp seeks and starts playback."},
+          "discussionCommentId":{"type":"string","format":"uuid","description":"Required for replies, focus, vote and play_timestamp. For post, the optional visible parent comment."},
+          "sort":{"type":"string","enum":["newest","oldest","likes","dislikes"],"description":"Optional for load only."},
+          "vote":{"type":"integer","minimum":-1,"maximum":1,"description":"vote only: -1 dislike, 0 clear, 1 like."},
+          "text":{"type":"string","minLength":1,"maxLength":2000,"description":"Required for post."},
+          "timestampMilliseconds":{"type":"integer","minimum":0,"maximum":86399999,"description":"Optional playback time for post. Must be within actual duration."},
+          "tags":{"type":"array","maxItems":8,"description":"Optional for post. Use public IDs from tag_search.","items":{"type":"object","properties":{"type":{"type":"string","enum":["person","client","music","music-video"]},"publicId":{"type":"string","format":"uuid"}},"required":["type","publicId"],"additionalProperties":false}},
+          "tagType":{"type":"string","enum":["person","client","music","music-video"],"description":"Required for tag_search."},
+          "query":{"type":"string","minLength":2,"maxLength":80,"description":"Required prefix for tag_search."}
+        },"required":["discussionAction"],"additionalProperties":false}
+        """;
+
     private static readonly Tool[] Catalog =
     [
+        Define("mizon_get_music_discussion", "Track discussion state", "Read at most 25 loaded comments, their public links, vote counts, tags, reply counts and optional playback positions on the active track. Requires separate discussion read consent.", EmptySchema, readOnly: true),
+        Define("mizon_manage_music_discussion", "Operate track discussion", "Load, sort or page through comments, open a thread or exact comment, look up tags, play from a comment, or apply an explicit vote or post. Publishing and voting require the user's request. Requires separate discussion control consent. Data is returned only with discussion read consent. Never repeat an interrupted post automatically.", DiscussionSchema, idempotent: false, openWorld: true),
         Define("mizon_get_music_details", "Track details state", "Read active-track metadata, app language, playback, playback-device availability, cover, contributor and waveform comment counts, up to 64 loaded waveform comment IDs, the open waveform comment ID, and mixer state. Mixer balance ranges from -100 (accompaniment only) to 100 (vocals only). Requires independent Track details read consent.", EmptySchema, readOnly: true),
         Define("mizon_set_music_details", "Set track details state", "Set repeat, cover preview, audience panel or waveform comment preview on the active track. Supply exactly one desired setting. Requires Track details control. State readback requires Track details read consent.",
             """{"type":"object","properties":{"repeatEnabled":{"type":"boolean","description":"Desired repeat-one state."},"coverOpen":{"type":"boolean","description":"Whether the cover preview should be open."},"audience":{"type":"string","enum":["live","views","closed"],"description":"Desired state of the audience panel."},"waveformComment":{"description":"Public ID from the current track's waveformCommentPublicIds, or closed.","oneOf":[{"type":"string","format":"uuid"},{"const":"closed"}]}},"oneOf":[{"required":["repeatEnabled"]},{"required":["coverOpen"]},{"required":["audience"]},{"required":["waveformComment"]}],"additionalProperties":false}"""),
@@ -89,6 +105,11 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
         var args = call.Arguments;
         switch (call.Name)
         {
+            case "mizon_get_music_discussion":
+                CheckKeys(args);
+                return new() { Operation = "get_music_discussion" };
+            case "mizon_manage_music_discussion":
+                return ParseDiscussion(args);
             case "mizon_get_music_details":
                 CheckKeys(args);
                 return new() { Operation = "get_music_details" };
@@ -290,6 +311,40 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
             Destination = destination, PublicId = publicId, CommentPublicId = comment,
             SearchQuery = query, SettingsSection = section
         } };
+    }
+
+    private static McpRequest ParseDiscussion(IDictionary<string, JsonElement>? args)
+    {
+        CheckKeys(args, "discussionAction", "discussionCommentId", "sort", "vote", "text", "timestampMilliseconds", "tags", "tagType", "query");
+        if (args is null) throw new ArgumentException();
+        McpDiscussionTag[]? tags = null;
+        if (args.TryGetValue("tags", out var entries))
+        {
+            if (entries.ValueKind != JsonValueKind.Array || entries.GetArrayLength() > 8) throw new ArgumentException();
+            tags = entries.EnumerateArray().Select(entry =>
+            {
+                if (entry.ValueKind != JsonValueKind.Object || entry.EnumerateObject().Count() != 2 ||
+                    OptionalString(entry, "type", 16) is not { } type ||
+                    OptionalString(entry, "publicId", 36) is not { } id ||
+                    !Guid.TryParseExact(id, "D", out var tagId) || tagId == Guid.Empty)
+                    throw new ArgumentException();
+                return new McpDiscussionTag(type, tagId);
+            }).ToArray();
+        }
+        var input = new McpMusicDiscussionRequest
+        {
+            Action = RequiredString(args, "discussionAction", 20),
+            CommentPublicId = args.ContainsKey("discussionCommentId") ? Identifier(args, "discussionCommentId") : null,
+            Sort = Optional("sort", 10), Text = Optional("text", 2000), Tags = tags,
+            Vote = Number("vote"), TimestampMilliseconds = Number("timestampMilliseconds"),
+            TagType = Optional("tagType", 16), Query = Optional("query", 80)
+        };
+        if (!input.IsValid()) throw new ArgumentException();
+        return new() { Operation = "manage_music_discussion", MusicDiscussion = input };
+
+        string? Optional(string key, int length) => args.ContainsKey(key) ? RequiredString(args, key, length) : null;
+        int? Number(string key) => !args.TryGetValue(key, out var value) ? null :
+            value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out var number) ? number : throw new ArgumentException();
     }
 
     private static Guid Identifier(IDictionary<string, JsonElement> args, string key) =>

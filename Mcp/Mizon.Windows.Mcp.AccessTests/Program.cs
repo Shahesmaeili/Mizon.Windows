@@ -36,6 +36,7 @@ internal static partial class Program
             await PresenceLifetimeAndRestoration();
             await PersonProfileScopesAndLifetime();
             await MusicDetailsScopesAndLifetime();
+            await MusicDiscussionScopesAndLifetime();
             await VpnScopesAndState();
             await VpnLifetimeAndRestoration();
             await WindowScopesAndState();
@@ -239,7 +240,8 @@ internal static partial class Program
             bool navigationRead = false, bool navigationControl = false, bool taskbarRead = false, bool taskbarControl = false,
             bool musicRead = false, bool musicControl = false, bool musicSubmit = false, bool presenceRead = false,
             bool windowRead = false, bool windowControl = false, bool vpnRead = false, bool vpnControl = false,
-            bool personRead = false, bool personControl = false, bool detailsRead = false, bool detailsControl = false) => Ui(async () =>
+            bool personRead = false, bool personControl = false, bool detailsRead = false, bool detailsControl = false,
+            bool discussionRead = false, bool discussionControl = false) => Ui(async () =>
         {
             var item = Item(id); item.AllowRead = read; item.AllowControl = control; item.AllowSubmit = submit;
             item.AllowAppearanceRead = appearanceRead; item.AllowAppearanceControl = appearanceControl;
@@ -251,6 +253,7 @@ internal static partial class Program
             item.AllowVpnRead = vpnRead; item.AllowVpnControl = vpnControl;
             item.AllowPersonProfileRead = personRead; item.AllowPersonProfileControl = personControl;
             item.AllowMusicDetailsRead = detailsRead; item.AllowMusicDetailsControl = detailsControl;
+            item.AllowMusicDiscussionRead = discussionRead; item.AllowMusicDiscussionControl = discussionControl;
             await Service.ApproveAsync(item);
         });
         public async Task<Peer> ConnectAsync(string? proof)

@@ -2,6 +2,13 @@
 
 Updated: 2026-11-20. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Track comment discussion — 2026-11-20
+
+Track details has a paged discussion, nested replies, votes, tagged links and
+a composer that can attach a playback time. A copied comment link reveals the
+specific comment even outside the loaded page. See the
+[task record](tasks/2026-11-20-music-comment-discussion.md) for dependencies and verification.
+
 ## Track flyouts and waveform markers — 2026-11-20
 
 The audience panel and waveform bubble use Desktop Acrylic inside the popup

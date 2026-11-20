@@ -32,6 +32,8 @@ public sealed record McpRememberedGrant
     public bool AllowPersonProfileControl { get; init; }
     public bool AllowMusicDetailsRead { get; init; }
     public bool AllowMusicDetailsControl { get; init; }
+    public bool AllowMusicDiscussionRead { get; init; }
+    public bool AllowMusicDiscussionControl { get; init; }
     public DateTimeOffset ApprovedAt { get; init; }
 }
 

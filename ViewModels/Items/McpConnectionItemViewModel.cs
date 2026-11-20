@@ -31,6 +31,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
     private bool _allowPersonProfileControl;
     private bool _allowMusicDetailsRead;
     private bool _allowMusicDetailsControl;
+    private bool _allowMusicDiscussionRead;
+    private bool _allowMusicDiscussionControl;
     private bool _isBusy;
     private string _currentOperation = string.Empty;
     private DateTimeOffset? _lastActivity;
@@ -85,6 +87,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         "get_presence_state" => Text("ReadPresence"),
         "get_music_details" => Text("ReadMusicDetails"),
         "set_music_details" => Text("ChangeMusicDetails"),
+        "get_music_discussion" => Text("PermissionMusicDiscussionRead"),
+        "manage_music_discussion" => Text("PermissionMusicDiscussionControl"),
         "get_person_profile" => Text("ReadPersonProfile"),
         "set_person_following" => Text("ChangePersonFollow"),
         "load_person_tracks" or "open_person_track" => Text("BrowsePersonTracks"),
@@ -124,6 +128,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
     public bool AllowVpnControl { get => _allowVpnControl; set { if (CanApprove) SetField(ref _allowVpnControl, value); } }
     public bool AllowMusicDetailsRead { get => _allowMusicDetailsRead; set { if (CanApprove) SetField(ref _allowMusicDetailsRead, value); } }
     public bool AllowMusicDetailsControl { get => _allowMusicDetailsControl; set { if (CanApprove) SetField(ref _allowMusicDetailsControl, value); } }
+    public bool AllowMusicDiscussionRead { get => _allowMusicDiscussionRead; set { if (CanApprove) SetField(ref _allowMusicDiscussionRead, value); } }
+    public bool AllowMusicDiscussionControl { get => _allowMusicDiscussionControl; set { if (CanApprove) SetField(ref _allowMusicDiscussionControl, value); } }
     public bool AllowPersonProfileRead { get => _allowPersonProfileRead; set { if (CanApprove) SetField(ref _allowPersonProfileRead, value); } }
     public bool AllowPersonProfileControl { get => _allowPersonProfileControl; set { if (CanApprove) SetField(ref _allowPersonProfileControl, value); } }
     public bool AllowMusicHomeRead { get => _allowMusicHomeRead; set { if (CanApprove) SetField(ref _allowMusicHomeRead, value); } }
@@ -174,7 +180,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         _policy.Approve(AllowRead, AllowControl, AllowSubmit, AllowAppearanceRead, AllowAppearanceControl,
             AllowNavigationRead, AllowNavigationControl, AllowTaskbarRead, AllowTaskbarControl,
             AllowMusicHomeRead, AllowMusicHomeControl, AllowMusicHomeSubmit, AllowPresenceRead, AllowWindowRead, AllowWindowControl, AllowVpnRead, AllowVpnControl,
-            AllowPersonProfileRead, AllowPersonProfileControl, AllowMusicDetailsRead, AllowMusicDetailsControl);
+            AllowPersonProfileRead, AllowPersonProfileControl, AllowMusicDetailsRead, AllowMusicDetailsControl,
+            AllowMusicDiscussionRead, AllowMusicDiscussionControl);
         NotifyStatus();
     }
 
@@ -200,6 +207,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         SetField(ref _allowPersonProfileControl, grant.AllowPersonProfileControl, nameof(AllowPersonProfileControl));
         SetField(ref _allowMusicDetailsRead, grant.AllowMusicDetailsRead, nameof(AllowMusicDetailsRead));
         SetField(ref _allowMusicDetailsControl, grant.AllowMusicDetailsControl, nameof(AllowMusicDetailsControl));
+        SetField(ref _allowMusicDiscussionRead, grant.AllowMusicDiscussionRead, nameof(AllowMusicDiscussionRead));
+        SetField(ref _allowMusicDiscussionControl, grant.AllowMusicDiscussionControl, nameof(AllowMusicDiscussionControl));
         SetField(ref _allowMusicHomeControl, grant.AllowMusicHomeControl, nameof(AllowMusicHomeControl));
         SetField(ref _allowMusicHomeSubmit, grant.AllowMusicHomeControl && grant.AllowMusicHomeSubmit, nameof(AllowMusicHomeSubmit));
         _isRemembered = true;
@@ -253,7 +262,8 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         AllowWindowRead = _policy.AllowWindowRead, AllowWindowControl = _policy.AllowWindowControl,
         AllowVpnRead = _policy.AllowVpnRead, AllowVpnControl = _policy.AllowVpnControl,
         AllowPersonProfileRead = _policy.AllowPersonProfileRead, AllowPersonProfileControl = _policy.AllowPersonProfileControl,
-        AllowMusicDetailsRead = _policy.AllowMusicDetailsRead, AllowMusicDetailsControl = _policy.AllowMusicDetailsControl
+        AllowMusicDetailsRead = _policy.AllowMusicDetailsRead, AllowMusicDetailsControl = _policy.AllowMusicDetailsControl,
+        AllowMusicDiscussionRead = _policy.AllowMusicDiscussionRead, AllowMusicDiscussionControl = _policy.AllowMusicDiscussionControl
     };
 
     internal void RefreshLocalization()

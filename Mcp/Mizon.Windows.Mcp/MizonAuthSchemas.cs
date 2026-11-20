@@ -71,7 +71,7 @@ internal static class MizonAuthSchemas
                 return definition;
             }
         }).AsObject();
-        schema["description"] = "Result of a scoped Mizon tool. Always inspect success and code. connection describes only this MCP connection. Authentication, appearance, navigation, taskbar, music-home, presence, VPN, artist profile and main-window state each require their own read permission. Passwords, tokens and cookies are never included. A pending, denied or revoked connection cannot bypass consent using another tool.";
+        schema["description"] = "Result of a scoped Mizon tool. Always inspect success and code. connection describes only this MCP connection. Authentication, appearance, navigation, taskbar, music-home, track details, track discussion, presence, VPN, artist profile and main-window state each require their own read permission. Passwords, tokens and cookies are never included. A pending, denied or revoked connection cannot bypass consent using another tool.";
         schema["required"] = new JsonArray("success", "code", "message");
         return ToElement(schema);
     }
@@ -85,6 +85,7 @@ internal static class MizonAuthSchemas
             "code" => "Machine-readable result code. Treat unknown codes as errors when success is false; never automatically repeat a timed-out submission.",
             "message" => "Human-readable outcome or next step. Errors never echo submitted credentials.",
             "state" => "Optional current authentication UI state. Omitted without read permission; never infer permission from its absence or a cached previous result.",
+            "musicDiscussion" => "Current track discussion and up to 25 loaded comments. Omitted without separate discussion read permission. Only a successful tag search includes tagResults.",
             "connection" => "Optional current connection consent status and grants. These grants can only be changed by the user inside Mizon, not through MCP.",
             "id" => "Stable identifier within the reported feature. Music items use the exact opaque ID accepted by their listed actions; connection IDs identify permission entries. Never infer a backend integer ID or arbitrary navigation target.",
             "clientName" => "Unverified label supplied by the MCP client during initialization, not a verified publisher identity.",

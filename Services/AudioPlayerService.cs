@@ -64,7 +64,8 @@ public interface IAudioPlayerService
     Task InitializeAsync();
     Task PlayAsync(string path, TimeSpan? startPosition = null);
     Task PlayAsync(Uri uri, TimeSpan? startPosition = null);
-    Task PlayStemMixAsync(string vocalsPath, string instrumentalPath, double balance, CancellationToken token = default);
+    Task PlayStemMixAsync(string vocalsPath, string instrumentalPath, double balance, CancellationToken token = default,
+        TimeSpan? startPosition = null);
     Task SwitchStemMixAsync(string vocalsPath, string instrumentalPath, double balance, CancellationToken token);
     Task SwitchToMainAsync(string path, CancellationToken token);
     Task PauseAsync();
@@ -392,8 +393,9 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
     public Task PlayAsync(Uri uri, TimeSpan? startPosition = null) =>
         PlayAsync(uri.AbsoluteUri, startPosition);
 
-    public Task PlayStemMixAsync(string vocalsPath, string instrumentalPath, double balance, CancellationToken token = default) =>
-        ReplaceSourcesAsync(vocalsPath, instrumentalPath, TimeSpan.Zero, balance, false, token);
+    public Task PlayStemMixAsync(string vocalsPath, string instrumentalPath, double balance, CancellationToken token = default,
+        TimeSpan? startPosition = null) =>
+        ReplaceSourcesAsync(vocalsPath, instrumentalPath, startPosition ?? TimeSpan.Zero, balance, false, token);
 
     public Task SwitchStemMixAsync(string vocalsPath, string instrumentalPath, double balance, CancellationToken token) =>
         ReplaceSourcesAsync(vocalsPath, instrumentalPath, null, balance, true, token);

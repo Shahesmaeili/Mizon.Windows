@@ -726,33 +726,38 @@ public partial class MusicPageViewModel : MainViewModel
     internal TimeSpan? GetWaveformCommentTimestamp(double contentX) =>
         MusicWaveformTimeline.GetTimestamp(contentX, _musicDuration);
 
-    internal async Task<bool> CreateMusicCommentAsync(Guid musicPublicId, string text, TimeSpan timestamp, ImageSource? avatar)
+    internal async Task<Guid?> PostMusicDiscussionCommentAsync(Guid musicPublicId, string text, TimeSpan? timestamp,
+        ImageSource? avatar, Guid? parentId, List<MusicCommentTagRequest>? tags, CancellationToken cancellationToken)
     {
-        var token = _musicLoadCancellationTokenSource?.Token ?? CancellationToken.None;
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, TrackCommentToken);
+        var token = linked.Token;
         var trimmedText = text.Trim();
         if (!IsCurrentMusicLoad(musicPublicId, token) || musicPublicId == Guid.Empty ||
-            string.IsNullOrWhiteSpace(trimmedText) || timestamp < TimeSpan.Zero || timestamp > _musicDuration)
-            return false;
+            trimmedText.Length is < 1 or > 2000 ||
+            (timestamp is TimeSpan position && (position < TimeSpan.Zero || position > _musicDuration)))
+            return null;
 
         var response = await MizonApi.SendRequestAsync(new MusicCommentCreateOperation(new()
         {
             MusicPublicId = musicPublicId,
             Text = trimmedText,
-            Timestamp = timestamp
+            Timestamp = timestamp,
+            ParentMusicCommentPublicId = parentId,
+            Tags = tags
         }), token);
 
         if (!response.IsSuccess || response.Content is not { } created || !IsCurrentMusicLoad(musicPublicId, token))
-            return false;
+            return null;
 
         // Place the confirmed comment immediately, even if the list or avatar request is slow.
-        if (!EqualizerComments.Any(marker => marker.PublicId == created.MusicCommentPublicId))
+        if (timestamp.HasValue && !EqualizerComments.Any(marker => marker.PublicId == created.MusicCommentPublicId))
         {
             var marker = AddWaveformComment(created.MusicCommentPublicId, timestamp, trimmedText, isOwnComment: true);
             marker.ImageSource = avatar;
             if (avatar is null)
                 _ = LoadPostedCommentAvatarAsync(musicPublicId, marker, token);
         }
-        return true;
+        return created.MusicCommentPublicId;
     }
 
     internal bool SeekRelative(int seconds)
@@ -912,7 +917,7 @@ public partial class MusicPageViewModel : MainViewModel
         if (!HasMusicAlbum)
             return Task.CompletedTask;
 
-        _commentDetailsRequestVersion++;
+        CancelDiscussionLoad();
         ClearFocusedMusicComment();
         IsAlbumDetailsSelected = true;
         IsContributorDetailsSelected = false;
@@ -922,7 +927,7 @@ public partial class MusicPageViewModel : MainViewModel
 
     public Task SelectContributorDetailsAsync()
     {
-        _commentDetailsRequestVersion++;
+        CancelDiscussionLoad();
         ClearFocusedMusicComment();
         IsAlbumDetailsSelected = false;
         IsContributorDetailsSelected = true;
@@ -936,7 +941,7 @@ public partial class MusicPageViewModel : MainViewModel
         IsAlbumDetailsSelected = false;
         IsContributorDetailsSelected = false;
         IsCommentsDetailsSelected = true;
-        return GetMusicDetailsCommentsAsync(_musicPublicId, _musicLoadCancellationTokenSource?.Token ?? CancellationToken.None);
+        return LoadMusicDiscussionAsync(null, DiscussionSort, append: false);
     }
 
     private async Task GetAlbumMusicsAsync(Guid musicPublicId, CancellationToken cancellationToken)
@@ -1019,51 +1024,6 @@ public partial class MusicPageViewModel : MainViewModel
         _dispatcherQueue.TryEnqueue(() => music.CoverImagePath = imagePath);
     }
 
-    private async Task<bool> GetMusicDetailsCommentsAsync(Guid musicPublicId, CancellationToken cancellationToken, Guid? commentPublicId = null)
-    {
-        if (musicPublicId == Guid.Empty)
-            return false;
-
-        var requestVersion = ++_commentDetailsRequestVersion;
-        var response = await MizonApi.SendRequestAsync(new MusicCommentsOperation(new()
-        {
-            MusicPublicId = musicPublicId,
-            MusicCommentPublicId = commentPublicId
-        }), cancellationToken);
-
-        if (!response.IsSuccess || response.Content is null || !IsCurrentMusicLoad(musicPublicId, cancellationToken)
-            || requestVersion != _commentDetailsRequestVersion || !IsCommentsDetailsSelected)
-            return false;
-
-        if (commentPublicId is not null && response.Content!.MusicComments.Count == 0)
-        {
-            var unavailable = MusicDetailsComments.FirstOrDefault(x => x.PublicId == commentPublicId);
-            if (unavailable is not null) MusicDetailsComments.Remove(unavailable);
-            return false;
-        }
-
-        ClearFocusedMusicComment();
-        if (commentPublicId is null) MusicDetailsComments.Clear();
-        foreach (var comment in response.Content!.MusicComments)
-        {
-            var item = CreateCommentItem(comment);
-            if (commentPublicId is not null)
-            {
-                var existing = MusicDetailsComments.FirstOrDefault(x => x.PublicId == comment.PublicId);
-                if (existing is not null)
-                    MusicDetailsComments[MusicDetailsComments.IndexOf(existing)] = item;
-                else
-                    MusicDetailsComments.Insert(0, item);
-                item.IsActivityTarget = true;
-                HasFocusedMusicComment = true;
-            }
-            else MusicDetailsComments.Add(item);
-            if (item.ProfileMediaPublicId is Guid profileMediaPublicId)
-                _ = LoadMusicDetailsCommentProfileAsync(item, profileMediaPublicId, cancellationToken);
-        }
-        return true;
-    }
-
     private async Task LoadMusicDetailsCommentProfileAsync(MusicDetailsCommentItemViewModel comment, Guid mediaPublicId, CancellationToken cancellationToken)
     {
         try
@@ -1142,8 +1102,8 @@ public partial class MusicPageViewModel : MainViewModel
         AlbumMusics.Clear();
         ContributorMusics.Clear();
         MusicDetailsComments.Clear();
-        _commentDetailsRequestVersion++;
         HasFocusedMusicComment = false;
+        ResetMusicDiscussion();
         HasMusicAlbum = false;
         IsAlbumDetailsSelected = false;
         IsContributorDetailsSelected = false;
@@ -2328,7 +2288,7 @@ public partial class MusicPageViewModel : MainViewModel
         }
     }
 
-    private async Task<bool> TryStartStemMixAsync(Guid musicPublicId, CancellationToken token)
+    private async Task<bool> TryStartStemMixAsync(Guid musicPublicId, CancellationToken token, TimeSpan? startPosition = null)
     {
         IsStemMixerLoading = true;
         try
@@ -2338,7 +2298,7 @@ public partial class MusicPageViewModel : MainViewModel
             if (paths is not null && IsCurrentMusicLoad(musicPublicId, token))
             {
                 await _audioPlayerService.PlayStemMixAsync(paths.Value.VocalsPath, paths.Value.InstrumentalPath,
-                    StemMixBalance / 100d, token);
+                    StemMixBalance / 100d, token, startPosition);
                 return true;
             }
         }
@@ -2559,7 +2519,9 @@ public partial class MusicPageViewModel : MainViewModel
     {
         var response = await MizonApi.SendRequestAsync(new MusicCommentsOperation(new()
         {
-            MusicPublicId = musicPublicId
+            MusicPublicId = musicPublicId,
+            PageSize = 100,
+            TimedOnly = true
         }), token);
 
         if (!response.IsSuccess || response.Content is not { } content || !IsCurrentMusicLoad(musicPublicId, token))

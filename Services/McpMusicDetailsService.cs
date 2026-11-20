@@ -1,6 +1,7 @@
 using Mizon.Windows.Mcp.Contracts;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Mizon.Windows.Services;
 
@@ -11,11 +12,40 @@ internal interface IMcpMusicDetailsPage
     void SetRepeatEnabled(bool enabled);
     bool SetAudience(string view);
     bool SetWaveformCommentPreview(Guid? commentPublicId);
+    McpMusicDiscussionState? ReadDiscussion() => null;
+    Task<McpResponse> ExecuteDiscussionAsync(McpMusicDiscussionRequest request, CancellationToken token) =>
+        Task.FromResult(new McpResponse { Code = "discussion_unavailable", Message = "The active track discussion is unavailable." });
 }
 
 // Called only by the authorized UI dispatcher for the currently displayed track.
 internal sealed class McpMusicDetailsService(Func<IMcpMusicDetailsPage?> getPage)
 {
+    internal async Task<McpResponse> ExecuteDiscussionAsync(McpRequest request, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        if (request.Form is not null || request.Page is not null || request.Language is not null || request.Navigation is not null ||
+            request.Appearance is not null || request.MusicHome is not null || request.Vpn is not null || request.FullScreen is not null ||
+            request.GamepadAction is not null || request.PersonProfile is not null || request.MusicDetails is not null)
+            return new() { Code = "invalid_arguments", Message = "Specify only one track discussion action." };
+        if (request.Operation == "get_music_discussion" && request.MusicDiscussion is null)
+        {
+            return getPage()?.ReadDiscussion() is { } state
+                ? new() { Success = true, Code = "ok", Message = "Active track discussion.", MusicDiscussion = state }
+                : new() { Code = "page_unavailable", Message = "Open track details in Mizon first." };
+        }
+        if (request.Operation != "manage_music_discussion" || request.MusicDiscussion is not { } command || !command.IsValid())
+            return new() { Code = "invalid_arguments", Message = "Specify one supported track discussion action." };
+
+        if (getPage() is not { } page)
+            return new() { Code = "page_unavailable", Message = "Open track details in Mizon first." };
+
+        var result = await page.ExecuteDiscussionAsync(command, token);
+        token.ThrowIfCancellationRequested();
+        if (!ReferenceEquals(page, getPage()))
+            return result with { MusicDiscussion = null };
+        return result with { MusicDiscussion = result.MusicDiscussion ?? page.ReadDiscussion() };
+    }
+
     internal McpResponse Execute(McpRequest request, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();

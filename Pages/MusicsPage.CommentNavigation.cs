@@ -137,7 +137,11 @@ public sealed partial class MusicsPage
     {
         CancelCommentNavigation();
         CommentNavigationNotice.IsOpen = false;
-        try { await ViewModel.SelectCommentsDetailsAsync(); }
+        try
+        {
+            DiscussionSortPicker.Focus(FocusState.Programmatic);
+            await ViewModel.SelectCommentsDetailsAsync();
+        }
         catch (OperationCanceledException) { }
         catch (Exception exception)
         {

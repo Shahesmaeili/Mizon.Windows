@@ -135,4 +135,8 @@
   <data name="PermissionMusicDetailsControlHint" xml:space="preserve"><value>Open or close the cover preview and set repeat for the active track.</value></data>
   <data name="ReadMusicDetails" xml:space="preserve"><value>Reading track details</value></data>
   <data name="ChangeMusicDetails" xml:space="preserve"><value>Changing the cover preview or repeat</value></data>
+  <data name="PermissionMusicDiscussionRead" xml:space="preserve"><value>Read track comments</value></data>
+  <data name="PermissionMusicDiscussionReadHint" xml:space="preserve"><value>Read loaded comments, votes, reply counts, tags and times on the current track.</value></data>
+  <data name="PermissionMusicDiscussionControl" xml:space="preserve"><value>Operate track comments</value></data>
+  <data name="PermissionMusicDiscussionControlHint" xml:space="preserve"><value>Open threads, sort and page, play from a comment, vote or publish on the current track.</value></data>
 </root>

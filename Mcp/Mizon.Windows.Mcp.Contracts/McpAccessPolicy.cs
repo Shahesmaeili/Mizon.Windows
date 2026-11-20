@@ -28,13 +28,16 @@ public sealed class McpAccessPolicy
     public bool AllowPersonProfileControl { get; private set; }
     public bool AllowMusicDetailsRead { get; private set; }
     public bool AllowMusicDetailsControl { get; private set; }
+    public bool AllowMusicDiscussionRead { get; private set; }
+    public bool AllowMusicDiscussionControl { get; private set; }
 
     public void Approve(bool read, bool control, bool submit, bool appearanceRead = false, bool appearanceControl = false,
         bool navigationRead = false, bool navigationControl = false, bool taskbarRead = false, bool taskbarControl = false,
         bool musicHomeRead = false, bool musicHomeControl = false, bool musicHomeSubmit = false, bool presenceRead = false,
         bool windowRead = false, bool windowControl = false, bool vpnRead = false, bool vpnControl = false,
         bool personProfileRead = false, bool personProfileControl = false,
-        bool musicDetailsRead = false, bool musicDetailsControl = false)
+        bool musicDetailsRead = false, bool musicDetailsControl = false,
+        bool musicDiscussionRead = false, bool musicDiscussionControl = false)
     {
         if (Status == "disconnected") return;
         AllowRead = read;
@@ -58,6 +61,8 @@ public sealed class McpAccessPolicy
         AllowPersonProfileControl = personProfileControl;
         AllowMusicDetailsRead = musicDetailsRead;
         AllowMusicDetailsControl = musicDetailsControl;
+        AllowMusicDiscussionRead = musicDiscussionRead;
+        AllowMusicDiscussionControl = musicDiscussionControl;
         Status = "approved";
     }
 
@@ -82,6 +87,8 @@ public sealed class McpAccessPolicy
         "get_presence_state" => Status == "approved" && AllowPresenceRead,
         "get_music_details" => Status == "approved" && AllowMusicDetailsRead,
         "set_music_details" => Status == "approved" && AllowMusicDetailsControl,
+        "get_music_discussion" => Status == "approved" && AllowMusicDiscussionRead,
+        "manage_music_discussion" => Status == "approved" && AllowMusicDiscussionControl,
         "get_person_profile" => Status == "approved" && AllowPersonProfileRead,
         "set_person_following" or "load_person_tracks" or "open_person_track" => Status == "approved" && AllowPersonProfileControl,
         "get_vpn_state" => Status == "approved" && AllowVpnRead,
@@ -107,5 +114,6 @@ public sealed class McpAccessPolicy
         AllowVpnRead = AllowVpnControl = false;
         AllowPersonProfileRead = AllowPersonProfileControl = false;
         AllowMusicDetailsRead = AllowMusicDetailsControl = false;
+        AllowMusicDiscussionRead = AllowMusicDiscussionControl = false;
     }
 }

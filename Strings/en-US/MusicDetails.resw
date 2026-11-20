@@ -121,4 +121,35 @@
   <data name="MusicVideoLoading" xml:space="preserve"><value>Loading music video</value></data>
   <data name="MusicVideoUnavailable" xml:space="preserve"><value>A music video is unavailable for this track.</value></data>
   <data name="MusicVideoPlaybackFailed" xml:space="preserve"><value>The music video could not be played.</value></data>
+  <data name="CommentNew" xml:space="preserve"><value>Write a comment</value></data>
+  <data name="CommentPlaceholder" xml:space="preserve"><value>What do you think about this track?</value></data>
+  <data name="CommentSort" xml:space="preserve"><value>Sort comments</value></data>
+  <data name="CommentNewest" xml:space="preserve"><value>Newest</value></data>
+  <data name="CommentOldest" xml:space="preserve"><value>Oldest</value></data>
+  <data name="CommentMostLikes" xml:space="preserve"><value>Most liked</value></data>
+  <data name="CommentMostDislikes" xml:space="preserve"><value>Most disliked</value></data>
+  <data name="CommentAttachPosition" xml:space="preserve"><value>Attach this track position</value></data>
+  <data name="CommentTagType" xml:space="preserve"><value>Tag type</value></data>
+  <data name="CommentTagPerson" xml:space="preserve"><value>Artist</value></data>
+  <data name="CommentTagClient" xml:space="preserve"><value>Account</value></data>
+  <data name="CommentTagMusic" xml:space="preserve"><value>Track</value></data>
+  <data name="CommentTagSearch" xml:space="preserve"><value>Find a tag</value></data>
+  <data name="CommentEmpty" xml:space="preserve"><value>There are no comments here yet.</value></data>
+  <data name="CommentMore" xml:space="preserve"><value>Load more comments</value></data>
+  <data name="CommentUnknownPlatform" xml:space="preserve"><value>Unknown platform</value></data>
+  <data name="CommentPlayPosition" xml:space="preserve"><value>Play from comment time</value></data>
+  <data name="CommentPlayAt" xml:space="preserve"><value>Play from {0}</value></data>
+  <data name="CommentLike" xml:space="preserve"><value>Like comment</value></data>
+  <data name="CommentDislike" xml:space="preserve"><value>Dislike comment</value></data>
+  <data name="CommentReply" xml:space="preserve"><value>Reply</value></data>
+  <data name="CommentReplies" xml:space="preserve"><value>Replies ({0})</value></data>
+  <data name="CommentReplyTo" xml:space="preserve"><value>Reply to {0}</value></data>
+  <data name="CommentTranslate" xml:space="preserve"><value>Translate</value></data>
+  <data name="CommentTranslationSoon" xml:space="preserve"><value>Comment translation is coming soon.</value></data>
+  <data name="CommentPosting" xml:space="preserve"><value>Posting comment…</value></data>
+  <data name="CommentPostFailed" xml:space="preserve"><value>Your comment could not be posted. Try again.</value></data>
+  <data name="CommentTagShort" xml:space="preserve"><value>Enter at least two characters to search.</value></data>
+  <data name="CommentTagNone" xml:space="preserve"><value>No matches found.</value></data>
+  <data name="CommentTagLimit" xml:space="preserve"><value>You can add up to 8 tags.</value></data>
+  <data name="CommentLinkCopied" xml:space="preserve"><value>Comment link copied.</value></data>
 </root>

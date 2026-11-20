@@ -95,6 +95,50 @@ internal static partial class Program
         }
     }
 
+    private static async Task MusicDiscussionScopesAndLifetime()
+    {
+        var path = Path.Combine(StorageRoot, "music-discussion", "grants.dat");
+        var proof = Proof();
+        var vote = new McpRequest
+        {
+            Operation = "manage_music_discussion",
+            MusicDiscussion = new() { Action = "vote", CommentPublicId = SyntheticMusicDetails.CommentId, Vote = 1 }
+        };
+        await using (var host = await Host.StartAsync(path))
+        {
+            await using var peer = await host.ConnectAsync(proof);
+            var id = peer.Hello.Connection!.Id;
+            await host.Approve(id, true, true, true, detailsRead: true, detailsControl: true);
+            Assert(!(await peer.Call("get_music_discussion")).Success && !(await peer.Call(vote)).Success,
+                "Existing grants never authorize the track discussion");
+            await host.Ui(() => host.Service.RevokeAsync(host.Item(id)));
+            await host.Approve(id, false, false, false, discussionControl: true);
+            Assert((await peer.Call(vote)) is { Success: true, MusicDiscussion: null },
+                "Control performs a scoped action without disclosing comments");
+            Assert((await peer.Call(vote with { MusicDiscussion = vote.MusicDiscussion! with { Vote = 9 } })).Code == "invalid_arguments",
+                "Invalid desired vote is rejected before dispatch");
+            Assert((await peer.Call(vote with { MusicDiscussion = vote.MusicDiscussion! with { CommentPublicId = Guid.NewGuid() } })).Code == "comment_unavailable",
+                "A comment from another track cannot receive a vote");
+            await host.Ui(() => host.Service.RevokeAsync(host.Item(id)));
+            await host.Approve(id, false, false, false, discussionRead: true);
+            Assert((await peer.Call("get_music_discussion")).MusicDiscussion is { Comments: [{ MyVote: 1 }] },
+                "Read consent returns the active track's actual synthetic vote");
+            Assert(!(await peer.Call(vote)).Success, "Read cannot modify votes");
+            await host.Ui(() => host.MusicDetailsPage.Active = false);
+            Assert((await peer.Call("get_music_discussion")).Code == "page_unavailable", "Leaving the track stops discussion access");
+            using var cancelled = new CancellationTokenSource();
+            cancelled.Cancel();
+            var observed = false;
+            try { await host.MusicDetails.ExecuteDiscussionAsync(vote, cancelled.Token); }
+            catch (OperationCanceledException) { observed = true; }
+            Assert(observed, "Cancellation is observed before dispatch");
+        }
+        await using var restarted = await Host.StartAsync(path);
+        await using var remembered = await restarted.ConnectAsync(proof);
+        Assert(remembered.Hello.Connection is { IsRemembered: true, AllowMusicDiscussionRead: true, AllowMusicDiscussionControl: false },
+            "Only the approved discussion grant persists after restart");
+    }
+
     private static void WaveformTimestampRoundTrip()
     {
         var duration = TimeSpan.FromSeconds(241.37);
@@ -144,6 +188,19 @@ internal static partial class Program
         public bool LoadFailed { get; set; }
         public string? Audience { get; private set; }
         public Guid? Preview { get; private set; }
+        private int _discussionVote;
+
+        public McpMusicDiscussionState ReadDiscussion() => new(_id, true, "newest", null, false, false,
+            [new(CommentId, "Synthetic comment", "Synthetic author", "Windows", 1234, _discussionVote, 0, _discussionVote, 0, null, [])]);
+
+        public Task<McpResponse> ExecuteDiscussionAsync(McpMusicDiscussionRequest request, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            if (request.Action != "vote" || request.CommentPublicId != CommentId)
+                return Task.FromResult(new McpResponse { Code = "comment_unavailable" });
+            _discussionVote = request.Vote!.Value;
+            return Task.FromResult(new McpResponse { Success = true, Code = "ok" });
+        }
 
         public McpMusicDetailsState ReadState() => new()
         {
