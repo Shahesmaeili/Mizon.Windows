@@ -7,7 +7,8 @@ namespace Mizon.Windows.Services;
 
 // Reads the same snapshot as the header/taskbar. It never starts a connection,
 // changes window activation, sends a heartbeat or disposes the shared service.
-internal sealed class McpPresenceService(IProfilePresenceService presence) : IMcpPresenceService, IDisposable
+internal sealed class McpPresenceService(IProfilePresenceService presence,
+    Func<TaskbarOnlineSnapshot?>? readTaskbar = null) : IMcpPresenceService, IDisposable
 {
     private bool _disposed;
 
@@ -23,6 +24,7 @@ internal sealed class McpPresenceService(IProfilePresenceService presence) : IMc
         try
         {
             var state = presence.ReadState();
+            var taskbar = state.HasSession ? readTaskbar?.Invoke() : null;
             cancellationToken.ThrowIfCancellationRequested();
             if (_disposed) return Result(new() { Code = "unavailable", Message = "The presence connection has closed." });
             return Result(new()
@@ -32,7 +34,18 @@ internal sealed class McpPresenceService(IProfilePresenceService presence) : IMc
                 {
                     HasSession = state.HasSession, IsWindowActive = state.IsWindowActive,
                     IsConnected = state.IsConnected, IsOnline = state.IsOnline,
-                    HasConfirmedState = state.HasConfirmedState
+                    HasConfirmedState = state.HasConfirmedState,
+                    TaskbarConnection = taskbar?.Phase switch
+                    {
+                        TaskbarOnlinePhase.Connected => "connected",
+                        TaskbarOnlinePhase.Connecting => "connecting",
+                        TaskbarOnlinePhase.Reconnecting => "reconnecting",
+                        TaskbarOnlinePhase.NoInternet => "no_internet",
+                        TaskbarOnlinePhase.Disconnected => "disconnected",
+                        _ => null
+                    },
+                    OnlineAccountCount = taskbar?.OnlineCount,
+                    OnlineFollowerCount = taskbar?.OnlineFollowerCount
                 }
             });
         }

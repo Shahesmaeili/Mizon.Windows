@@ -29,11 +29,13 @@ internal static unsafe partial class MessageWindow
         return window;
     }
     internal static void Queue(nint window) { if (window != 0) PostMessage(window, 0x8001, 0, 0); }
+    internal static void QueueAnimation(nint window) { if (window != 0) PostMessage(window, 0x8002, 0, 0); }
     internal static void Close(nint window)
     {
         if (window == 0) return;
         Owners.TryRemove(window, out _);
         KillTimer(window, 1);
+        KillTimer(window, 2);
         DestroyWindow(window);
     }
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
@@ -41,11 +43,24 @@ internal static unsafe partial class MessageWindow
     {
         try
         {
-            if (Owners.TryGetValue(window, out var owner) && message is 0x8001 or 0x0113)
+            if (Owners.TryGetValue(window, out var owner))
             {
-                if (File.Exists(Path.Combine(PreviewConfiguration.DirectoryPath, "stop"))) owner.Stop();
-                else owner.Scan();
-                return 0;
+                if (message == 0x8002)
+                {
+                    SetTimer(window, 2, 32, 0);
+                    return 0;
+                }
+                if (message == 0x0113 && wParam == 2)
+                {
+                    if (!owner.AnimateOnlineCounts()) KillTimer(window, 2);
+                    return 0;
+                }
+                if (message is 0x8001 or 0x0113)
+                {
+                    if (File.Exists(Path.Combine(PreviewConfiguration.DirectoryPath, "stop"))) owner.Stop();
+                    else owner.Scan();
+                    return 0;
+                }
             }
         }
         catch (Exception error) { PreviewTap.Log("Message dispatch", error); }

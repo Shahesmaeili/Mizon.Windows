@@ -23,14 +23,15 @@ internal static class PresenceTests
             Check.That(!reset.AllowPresenceRead && !reset.CanExecute("get_presence_state"), "Consent reset retained presence.");
         }
         var expected = new McpPresenceState { HasSession = true, IsWindowActive = true, IsConnected = false,
-            IsOnline = false, HasConfirmedState = false };
+            IsOnline = false, HasConfirmedState = false, TaskbarConnection = "no_internet" };
         using var stream = new MemoryStream();
         await McpPipeProtocol.WriteAsync(stream, new McpResponse { Success = true, Presence = expected }, McpJsonContext.Default.McpResponse, default);
         stream.Position = 0;
         var actual = await McpPipeProtocol.ReadAsync(stream, McpJsonContext.Default.McpResponse, default);
         Check.That(actual?.Presence == expected, "Presence flags changed across source-generated pipe framing.");
         var names = McpJsonContext.Default.McpPresenceState.Properties.Select(property => property.Name).Order(StringComparer.Ordinal);
-        Check.That(names.SequenceEqual(new[] { "hasConfirmedState", "hasSession", "isConnected", "isOnline", "isWindowActive" }.Order(StringComparer.Ordinal)),
+        Check.That(names.SequenceEqual(new[] { "hasConfirmedState", "hasSession", "isConnected", "isOnline", "isWindowActive",
+            "taskbarConnection", "onlineAccountCount", "onlineFollowerCount" }.Order(StringComparer.Ordinal)),
             "Presence output exposes unapproved extra data or lacks synchronization state.");
         var oldStatus = JsonSerializer.Deserialize("""{"id":"old","allowRead":true,"allowMusicHomeRead":true}""",
             McpJsonContext.Default.McpConnectionStatus);

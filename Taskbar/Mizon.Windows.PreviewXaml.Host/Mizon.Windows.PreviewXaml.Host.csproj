@@ -16,6 +16,7 @@
   <ItemGroup>
     <Compile Include="../../Services/AppDeepLinkResult.cs" Link="AppDeepLinkResult.cs" />
     <Compile Include="../../Services/TaskbarPreviewDeepLink.cs" Link="TaskbarPreviewDeepLink.cs" />
+    <Compile Include="../../Services/TaskbarOnlineSnapshot.cs" Link="TaskbarOnlineSnapshot.cs" />
     <Compile Include="../Mizon.Windows.PreviewXaml/Native.cs" Link="Native.cs" />
     <Compile Include="../Mizon.Windows.PreviewXaml/PreviewConfiguration.cs" Link="PreviewConfiguration.cs" />
   </ItemGroup>

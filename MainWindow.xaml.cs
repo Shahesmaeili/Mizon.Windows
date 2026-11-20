@@ -1,4 +1,5 @@
 using DevWinUI;
+using Mizon.API;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Windowing;
@@ -96,7 +97,8 @@ public sealed partial class MainWindow : Window
         var taskbarService = ((App)App.Current).Services.GetRequiredService<ITaskbarService>();
         taskbarService.PlaybackToggleRequested += TaskbarService_PlaybackToggleRequested;
         taskbarService.FullScreenRequested += TaskbarService_FullScreenRequested;
-        _taskbarPreviewXaml = new TaskbarPreviewXamlService(WindowNative.GetWindowHandle(this), DispatcherQueue);
+        _taskbarPreviewXaml = new TaskbarPreviewXamlService(WindowNative.GetWindowHandle(this), DispatcherQueue,
+            () => ((App)App.Current).Services.GetRequiredService<Lazy<MizonSocket>>().Value);
 
         // DragMoveAndResizeHelper.SetDragMove(App.MainMizonWindow, DragAreaOverlayGrid);
 
@@ -135,6 +137,8 @@ public sealed partial class MainWindow : Window
             presenter.PreferredMinimumHeight = accountPage ? 400 : 600;
         }
     }
+
+    internal TaskbarOnlineSnapshot? ReadTaskbarOnlineStatus() => _taskbarPreviewXaml?.OnlineSnapshot;
 
     private void NavigationChanged(object? sender, NavigationChangedEventArgs args)
     {

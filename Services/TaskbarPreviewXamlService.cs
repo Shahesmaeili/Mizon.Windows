@@ -1,4 +1,5 @@
 using Microsoft.UI.Dispatching;
+using Mizon.API;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -10,19 +11,21 @@ using System.Threading.Tasks;
 namespace Mizon.Windows.Services;
 
 /// <summary>Publishes only this window's identity to the independent XAML preview adapter.</summary>
-internal sealed class TaskbarPreviewXamlService : IDisposable
+internal sealed partial class TaskbarPreviewXamlService : IDisposable
 {
     private readonly nint _window;
     private readonly CancellationTokenSource _lifetime = new();
     private readonly string _directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".mizon", "TaskbarPreview");
     private readonly DispatcherQueue _dispatcher;
+    private readonly Func<MizonSocket> _getSocket;
     private bool _started;
     private bool _disposed;
 
-    internal TaskbarPreviewXamlService(nint window, DispatcherQueue dispatcher)
+    internal TaskbarPreviewXamlService(nint window, DispatcherQueue dispatcher, Func<MizonSocket> getSocket)
     {
         _window = window;
         _dispatcher = dispatcher;
+        _getSocket = getSocket;
     }
 
     internal void Update(bool signedIn)
@@ -34,6 +37,7 @@ internal sealed class TaskbarPreviewXamlService : IDisposable
             var destination = Path.Combine(_directory, "window.txt");
             if (!signedIn)
             {
+                StopOnlineStatus();
                 File.Delete(destination);
                 return;
             }
@@ -44,6 +48,7 @@ internal sealed class TaskbarPreviewXamlService : IDisposable
                 File.Move(temporary, destination, true);
             }
             finally { File.Delete(temporary); }
+            StartOnlineStatus();
             if (_started) return;
             _started = true;
             _ = StartAsync(_lifetime.Token);
@@ -101,6 +106,8 @@ internal sealed class TaskbarPreviewXamlService : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        try { StopOnlineStatus(); }
+        catch (Exception error) { AppLog.Error("Taskbar online status cleanup failed.", error); }
         _lifetime.Cancel();
         _lifetime.Dispose();
         try { File.Delete(Path.Combine(_directory, "window.txt")); }

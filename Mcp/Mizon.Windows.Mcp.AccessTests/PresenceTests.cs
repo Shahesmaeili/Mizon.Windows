@@ -103,14 +103,23 @@ internal static partial class Program
                 "Offline revocation removes presence access across restart");
         }
         var source = new SyntheticPresence();
-        using var adapter = new McpPresenceService(source);
+        TaskbarOnlineSnapshot current = new(TaskbarOnlinePhase.Connected, 32, 7, true);
+        using var adapter = new McpPresenceService(source, () => current);
+        Assert((await adapter.ExecuteAsync(new() { Operation = "get_presence_state" }, default)).Presence
+               is { TaskbarConnection: "connected", OnlineAccountCount: 32, OnlineFollowerCount: 7 },
+            "Presence read receives the same bounded counts as the taskbar");
+        current = new(TaskbarOnlinePhase.NoInternet, null, null, false);
+        Assert((await adapter.ExecuteAsync(new() { Operation = "get_presence_state" }, default)).Presence
+               is { TaskbarConnection: "no_internet", OnlineAccountCount: null, OnlineFollowerCount: null },
+            "Offline taskbar presence clears both numbers");
+        var readsBeforeCancellation = source.Reads;
         using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
         try { await adapter.ExecuteAsync(new() { Operation = "get_presence_state" }, cancelled.Token); Assert(false, "Pre-cancellation must throw"); }
-        catch (OperationCanceledException) { Assert(source.Reads == 0, "Pre-cancelled presence requests never read shared state"); }
+        catch (OperationCanceledException) { Assert(source.Reads == readsBeforeCancellation, "Pre-cancelled presence requests never read shared state"); }
         using var duringRead = new CancellationTokenSource();
         source.OnRead = duringRead.Cancel;
         try { await adapter.ExecuteAsync(new() { Operation = "get_presence_state" }, duringRead.Token); Assert(false, "Cancellation during read must throw"); }
-        catch (OperationCanceledException) { Assert(source.Reads == 1, "Cancellation is checked again before presence leaves the adapter"); }
+        catch (OperationCanceledException) { Assert(source.Reads == readsBeforeCancellation + 1, "Cancellation is checked again before presence leaves the adapter"); }
         source.OnRead = adapter.Dispose;
         Assert((await adapter.ExecuteAsync(new() { Operation = "get_presence_state" }, default)).Code == "unavailable",
             "Disposal during a snapshot cannot return stale presence");

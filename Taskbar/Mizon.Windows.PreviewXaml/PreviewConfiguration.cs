@@ -1,4 +1,5 @@
 using System.Globalization;
+using Mizon.Windows.Services;
 
 namespace Mizon.Windows.PreviewXaml;
 
@@ -6,6 +7,19 @@ internal readonly record struct PreviewConfiguration(nint Window, uint ProcessId
 {
     internal static string DirectoryPath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".mizon", "TaskbarPreview");
+
+    internal TaskbarOnlineSnapshot ReadOnline()
+    {
+        var path = Path.Combine(DirectoryPath, "online.txt");
+        try
+        {
+            if (File.Exists(path) && new FileInfo(path).Length <= 192 &&
+                TaskbarOnlineSnapshot.Decode(File.ReadAllText(path), Window, ProcessId) is { } snapshot)
+                return snapshot;
+        }
+        catch (IOException) { }
+        return new(TaskbarOnlinePhase.Disconnected, null, null, false);
+    }
 
     internal static unsafe PreviewConfiguration? Read()
     {

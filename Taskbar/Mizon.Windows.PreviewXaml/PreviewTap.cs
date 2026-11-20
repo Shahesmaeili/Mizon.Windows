@@ -14,6 +14,7 @@ internal sealed unsafe partial class PreviewTap : IObjectWithSite, IVisualTreeCa
     private readonly ConcurrentDictionary<ulong, PreviewRow> _rows = new();
     private nint _site, _tree, _callback, _messageWindow;
     private int _scanQueued, _stopped;
+    private long _onlineAnimationUntil;
     private Task _subscription = Task.CompletedTask;
     private string? _lastError;
     private static readonly Guid DiagnosticsId = new("18C9E2B6-3F43-4116-9F2B-FF935D7770D2");
@@ -164,7 +165,7 @@ internal sealed unsafe partial class PreviewTap : IObjectWithSite, IVisualTreeCa
             }
             if (current.Persian == configuration.Persian)
             {
-                current.RefreshLoading();
+                RefreshOnline(current, configuration);
                 return;
             }
             if (_rows.TryRemove(key, out var old)) old.Dispose();
@@ -174,13 +175,33 @@ internal sealed unsafe partial class PreviewTap : IObjectWithSite, IVisualTreeCa
             RemoveCard(key);
             return;
         }
-        var row = PreviewRow.Attach(card, configuration, QueueRefresh);
+        var row = PreviewRow.Attach(card, configuration);
         if (row is null) return;
         if (!_rows.TryAdd(key, row)) row.Dispose();
-        else Log("XAML row attached to Mizon thumbnail.");
+        else
+        {
+            RefreshOnline(row, configuration);
+            Log("XAML presence row attached to Mizon thumbnail.");
+        }
     }
 
-    private void QueueRefresh() => MessageWindow.Queue(_messageWindow);
+    private void RefreshOnline(PreviewRow row, PreviewConfiguration configuration)
+    {
+        var now = Environment.TickCount64;
+        if (!row.RefreshOnline(configuration.ReadOnline(), now)) return;
+        Interlocked.Exchange(ref _onlineAnimationUntil, now + 1_200);
+        MessageWindow.QueueAnimation(_messageWindow);
+    }
+
+    internal bool AnimateOnlineCounts()
+    {
+        if (_stopped != 0 || _rows.IsEmpty) return false;
+        var now = Environment.TickCount64;
+        foreach (var (key, card) in _cards)
+            if (_rows.TryGetValue(key, out var row))
+                DispatchCard(key, card, _ => row.AnimateOnline(now));
+        return now < Volatile.Read(ref _onlineAnimationUntil);
+    }
 
     private void RemoveCard(ulong key)
     {

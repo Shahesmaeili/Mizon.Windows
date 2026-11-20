@@ -97,7 +97,7 @@ internal static unsafe partial class Exports
             var name = Native.Query(row, Native.Framework);
             try
             {
-                if (Native.GetText(name, 33) != "MizonPreviewActions") return unchecked((int)0x80004005);
+                if (Native.GetText(name, 33) != "MizonPreviewPresence") return unchecked((int)0x80004005);
                 PreviewRow.VerifyAttachment(persian != 0);
                 return 0;
             }

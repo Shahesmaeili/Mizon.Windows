@@ -1,6 +1,6 @@
 namespace Mizon.Windows.Mcp.Contracts;
 
-/// <summary>Current-user presence only; never includes account IDs, tokens or other users.</summary>
+/// <summary>Current-user presence and aggregate connection counts, without account identities.</summary>
 public sealed record McpPresenceState
 {
     public bool HasSession { get; init; }
@@ -8,4 +8,7 @@ public sealed record McpPresenceState
     public bool IsConnected { get; init; }
     public bool IsOnline { get; init; }
     public bool HasConfirmedState { get; init; }
+    public string? TaskbarConnection { get; init; }
+    public int? OnlineAccountCount { get; init; }
+    public int? OnlineFollowerCount { get; init; }
 }

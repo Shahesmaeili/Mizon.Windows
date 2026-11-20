@@ -10,7 +10,7 @@
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../Services/TaskbarPreviewDeepLink.cs" Link="TaskbarPreviewDeepLink.cs" />
-    <EmbeddedResource Include="PreviewActions.xaml" />
+    <Compile Include="../../Services/TaskbarOnlineSnapshot.cs" Link="TaskbarOnlineSnapshot.cs" />
+    <EmbeddedResource Include="PreviewPresence.xaml" />
   </ItemGroup>
 </Project>

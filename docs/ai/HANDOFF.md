@@ -1,6 +1,13 @@
 # Windows handoff
 
-Updated: 2026-11-12. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
+Updated: 2026-11-20. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
+
+## Online audience in the taskbar preview — 2026-11-20
+
+The existing preview adapter displays global online accounts and the signed-in
+account’s online followers below the four native playback controls. It shares the
+app’s SignalR connection and exposes the same aggregates through the existing
+permission-gated MCP presence read. See the [task record](tasks/2026-11-20-taskbar-audience-presence.md).
 
 ## Track detail layout, transport and input — 2026-11-20
 

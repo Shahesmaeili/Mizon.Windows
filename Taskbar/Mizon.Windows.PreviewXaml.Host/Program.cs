@@ -209,7 +209,7 @@ internal static unsafe partial class Program
             Console.WriteLine("PASS actual NativeAOT exports, factory, detached TAP, and unsupported class.");
             var verifyMarkup = (delegate* unmanaged[Stdcall]<int, int>)NativeLibrary.GetExport(module, "MizonVerifyMarkup");
             Native.Check(verifyMarkup(persian ? 1 : 0));
-            Console.WriteLine("PASS " + (persian ? "Persian" : "English") + " XAML parsing, per-button response loading, reopen, and layout restoration.");
+            Console.WriteLine("PASS " + (persian ? "Persian" : "English") + " native XAML presence, eased counts, offline reset, caption retention, and layout restoration.");
             return 0;
         }
         finally { Native.Release(factory); }

@@ -277,7 +277,8 @@ public partial class App : Application
                 () => navigationService.CurrentMainPage is Pages.HomePage { ViewModel.IsSigningOut: false }
                     ? navigationService.CurrentInternalPage as IMcpMusicHomePage : null,
                 () => !string.IsNullOrWhiteSpace(localStorageService.GetJwtToken())),
-            presence: new McpPresenceService(Services.GetRequiredService<ProfilePresenceService>()),
+            presence: new McpPresenceService(Services.GetRequiredService<ProfilePresenceService>(),
+                () => (MainMizonWindow as MainWindow)?.ReadTaskbarOnlineStatus()),
             windowPresentation: new McpWindowPresentationService(() => MainMizonWindow as IWindowPresentationHost),
             vpn: new McpVpnService(
                 () => navigationService.CurrentMainPage is Pages.HomePage { ViewModel.IsSigningOut: false }
