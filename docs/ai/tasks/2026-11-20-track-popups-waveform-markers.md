@@ -5,8 +5,10 @@
 - Owns: the track flyout styling and waveform comment preview, its Track details
   MCP adapter, the reaction row, and the taskbar presence panel spacing and indicator.
 
-The live-listener and view-history flyout shares the playlist menu’s themed
-presenter brush and native Desktop Acrylic backdrop. The waveform marker opens
+The live-listener and view-history flyout uses the header profile menu’s
+in-tree Desktop Acrylic and menu outline. The shared presenter attaches the
+material after loading and releases it on close. Its themed fallback stays
+visible when the native material cannot be attached. The waveform marker opens
 a shared flyout anchored to the avatar. The icon goes through the existing
 comment resolver after the flyout closes, so comments outside the initial
 listing can still be focused. The marker has no playback command. Both stroke
@@ -32,6 +34,10 @@ new reactions and count-width changes participate in normal WinUI measurement.
 
 Verification used the actual panel in an offscreen WinUI fixture. It checked
 one unit below and at the measured width in three cases, plus a narrow viewport.
+The acrylic follow-up used a native offscreen flyout with the production
+presenter and reopened it in Light and Dark. It checked that the rounded
+backdrop was attached on open, the fallback resolved in each theme, and the
+native material was released on close.
 Visual Studio MSBuild built Debug x64 and published Release x64 NativeAOT.
 Existing WinUI evaluation and trimming warnings remain.
 The NativeAOT preview self-test passed in Persian and English, including

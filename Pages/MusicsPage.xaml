@@ -14,6 +14,37 @@
             </Style>
             <Style x:Key="TrackPopupPresenterStyle" TargetType="FlyoutPresenter">
                 <Setter Property="Background" Value="{ThemeResource MenuFlyoutPresenterBackground}"/>
+                <Setter Property="BorderBrush" Value="{ThemeResource MenuFlyoutPresenterBorderBrush}"/>
+                <Setter Property="BorderThickness" Value="{ThemeResource MenuFlyoutPresenterBorderThemeThickness}"/>
+                <Setter Property="CornerRadius" Value="20"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="FlyoutPresenter">
+                            <Grid>
+                                <controls:FlyoutAcrylicSurface CornerRadius="{TemplateBinding CornerRadius}"
+                                                               IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+                                    <Border Background="{ThemeResource SolidBackgroundFillColorTertiaryBrush}"
+                                            CornerRadius="{TemplateBinding CornerRadius}"/>
+                                </controls:FlyoutAcrylicSurface>
+                                <Border Background="{TemplateBinding Background}" BackgroundSizing="InnerBorderEdge"
+                                        BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="{TemplateBinding CornerRadius}">
+                                    <ScrollViewer x:Name="ScrollViewer" ZoomMode="{TemplateBinding ScrollViewer.ZoomMode}"
+                                                  HorizontalScrollMode="{TemplateBinding ScrollViewer.HorizontalScrollMode}"
+                                                  HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                                  VerticalScrollMode="{TemplateBinding ScrollViewer.VerticalScrollMode}"
+                                                  VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"
+                                                  AutomationProperties.AccessibilityView="Raw">
+                                        <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                          ContentTransitions="{TemplateBinding ContentTransitions}" Margin="{TemplateBinding Padding}"
+                                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
             <DataTemplate x:Key="TrackAudienceRowTemplate" x:DataType="viewmodelsItems:TrackAudienceItemViewModel">
                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" Padding="8" CornerRadius="8"
@@ -169,9 +200,6 @@
                                                             <Flyout x:Name="TrackAudienceFlyout" Placement="Bottom" Opened="TrackAudienceFlyout_Opened"
                                                                     FlyoutPresenterStyle="{StaticResource TrackPopupPresenterStyle}"
                                                                     Closed="TrackAudienceFlyout_Closed">
-                                                                <Flyout.SystemBackdrop>
-                                                                    <DesktopAcrylicBackdrop/>
-                                                                </Flyout.SystemBackdrop>
                                                                 <StackPanel x:Name="AudiencePopup" Width="280" Spacing="10"
                                                                             XYFocusKeyboardNavigation="Enabled" FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}">
                                                                     <TextBlock x:Name="AudiencePopupTitle" FontSize="17" FontWeight="SemiBold"
@@ -376,9 +404,6 @@
                                                 <Flyout x:Name="WaveformCommentPreviewFlyout" Placement="Top"
                                                         FlyoutPresenterStyle="{StaticResource TrackPopupPresenterStyle}"
                                                         Opened="WaveformCommentPreview_Opened" Closed="WaveformCommentPreview_Closed">
-                                                    <Flyout.SystemBackdrop>
-                                                        <DesktopAcrylicBackdrop/>
-                                                    </Flyout.SystemBackdrop>
                                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" MaxWidth="270"
                                                           FlowDirection="{x:Bind Localization.FlowDirection, Mode=OneWay}"
                                                           XYFocusKeyboardNavigation="Enabled" PreviewKeyDown="WaveformCommentPreview_PreviewKeyDown">

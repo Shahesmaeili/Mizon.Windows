@@ -4,7 +4,9 @@ Updated: 2026-11-20. This is a source/verification checkpoint, not an assertion 
 
 ## Track flyouts and waveform markers — 2026-11-20
 
-The audience panel uses the playlist menu’s Desktop Acrylic material.
+The audience panel and waveform bubble use Desktop Acrylic inside the popup
+presenter, like the header profile menu. The presenter has a theme-colored
+fallback when Windows cannot attach the material.
 Waveform comment avatars open a text bubble, and its icon focuses the matching
 comment in the existing list. See the [task record](tasks/2026-11-20-track-popups-waveform-markers.md)
 for the scoped MCP actions and the taskbar indicator follow-up.
