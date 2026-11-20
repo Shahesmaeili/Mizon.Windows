@@ -1,6 +1,6 @@
 # Mizon: shared AI development workflow
 
-Policy revision: **2026-11-12.1**. Applies to Codex, Claude, Copilot and human contributors.
+Policy revision: **2026-11-20.1**. Applies to Codex, Claude, Copilot and human contributors.
 The user's current request takes precedence. Read the repository's AGENTS.md first.
 
 ## Read before editing
@@ -113,6 +113,16 @@ Use a temporary UTF-8 message file and git commit -F for multiline text. Preserv
 literal text/newlines. Do not interpolate secrets or arbitrary text into shell code.
 
 ## Shared implementation conventions
+
+Standing product standard, recorded 2026-11-20. Apply these requirements to every
+task as relevant to the surface being changed. Use modern and clean .NET 11
+implementation patterns with NativeAOT-safe contracts and explicit resource
+ownership. Keep work bounded and fast across cold starts, slow networks and
+repeated navigation. User-facing surfaces must be responsive, polished and
+accessible, with live Persian and English localization and native Xbox
+controller navigation. Preserve the existing design and interaction conventions
+when the task does not request a redesign. Verify the actual changed behavior and
+record any untested runtime, visual, hardware or AOT cases.
 
 - Preserve existing naming and layering. View models end in ViewModel.
 - Business behavior and runtime writes belong in Mizon.Server.Logic/Operations;
