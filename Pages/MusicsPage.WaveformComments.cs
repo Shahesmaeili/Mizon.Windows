@@ -2,6 +2,7 @@ using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Mizon.Windows.ViewModels.Items;
 using System;
 using Windows.UI.ViewManagement;
@@ -14,6 +15,46 @@ public sealed partial class MusicsPage
     private Button? _hoveredCommentMarker;
     private Button? _focusedCommentMarker;
     private Button? _raisedCommentMarker;
+
+    private void AttachWaveformMotion()
+    {
+        _waveformAnimations.AnimationsEnabledChanged += WaveformMotionChanged;
+        RefreshWaveformMotion();
+    }
+
+    private void WaveformMotionChanged(UISettings sender, UISettingsAnimationsEnabledChangedEventArgs args) =>
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_pageActive) RefreshWaveformMotion();
+        });
+
+    private void RefreshWaveformMotion()
+    {
+        var animate = _waveformAnimations.AnimationsEnabled;
+        for (var index = 0; index < ViewModel.Bars.Count; index++)
+            SetWaveformBarMotion(WaveformBars.TryGetElement(index), animate);
+    }
+
+    private void WaveformBar_Loaded(object sender, RoutedEventArgs args) =>
+        SetWaveformBarMotion((FrameworkElement)sender, _waveformAnimations.AnimationsEnabled);
+
+    private void WaveformBar_Unloaded(object sender, RoutedEventArgs args) =>
+        SetWaveformBarMotion((FrameworkElement)sender, animate: false);
+
+    private static void SetWaveformBarMotion(UIElement? element, bool animate)
+    {
+        if (element is not FrameworkElement bar ||
+            bar.FindName("TopBar") is not Border top || bar.FindName("BottomBar") is not Border bottom)
+            return;
+
+        animate &= bar.IsLoaded;
+        top.BackgroundTransition = animate
+            ? top.BackgroundTransition ?? new BrushTransition { Duration = TimeSpan.FromMilliseconds(120) }
+            : null;
+        bottom.BackgroundTransition = animate
+            ? bottom.BackgroundTransition ?? new BrushTransition { Duration = TimeSpan.FromMilliseconds(180) }
+            : null;
+    }
 
     private void WaveformComment_PointerEntered(object sender, PointerRoutedEventArgs args)
     {
@@ -89,7 +130,7 @@ public sealed partial class MusicsPage
             WaveformCommentMarkers.ContainerFromItem(item) is UIElement container)
             Canvas.SetZIndex(container, raised ? 1 : 0);
 
-        if (animate)
+        if (animate && marker.IsLoaded)
             marker.OpacityTransition ??= new ScalarTransition { Duration = TimeSpan.FromMilliseconds(160) };
         else
             marker.OpacityTransition = null;

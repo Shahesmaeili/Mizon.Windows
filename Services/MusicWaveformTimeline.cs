@@ -5,12 +5,23 @@ namespace Mizon.Windows.Services;
 internal static class MusicWaveformTimeline
 {
     internal const double Width = 1500d;
+    private const double BarStrokeWidth = 2d;
     private const double MarkerRadius = 14d;
 
     internal static int GetBarIndex(double contentX, int barCount) =>
         !double.IsFinite(contentX) || contentX < 0 || contentX > Width || barCount <= 0
             ? -1
             : Math.Min(barCount - 1, (int)(contentX * barCount / Width));
+
+    internal static int GetHoverBarIndex(double contentX, int barCount)
+    {
+        if (barCount <= 0 || contentX > Width) return -1;
+
+        // Each stroke is centered in its slot. Change the highlight at the
+        // leading edge of the stroke, beyond the space between bars.
+        var leadingGap = (Width / barCount - BarStrokeWidth) / 2;
+        return GetBarIndex(contentX - leadingGap, barCount);
+    }
 
     internal static double GetCommentStackOffset(int stackIndex) => (stackIndex % 5) switch
     {

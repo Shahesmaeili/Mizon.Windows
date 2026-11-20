@@ -698,7 +698,7 @@ public partial class MusicPageViewModel : MainViewModel
 
     internal void UpdateWaveformHover(double contentX, bool commentLane)
     {
-        var index = MusicWaveformTimeline.GetBarIndex(contentX, Bars.Count);
+        var index = MusicWaveformTimeline.GetHoverBarIndex(contentX, Bars.Count);
         SetTopBarHover(commentLane ? -1 : index);
         SetBottomBarHover(commentLane ? index : -1);
     }

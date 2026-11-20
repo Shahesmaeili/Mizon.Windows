@@ -37,13 +37,24 @@ namespace Mizon.Windows.Pages
     {
         private MusicPageViewModel ViewModel { get; }
         private ContentDialog? _waveformCommentDialog;
+        private ContentDialog? _createPlaylistDialog;
         public LocalizationService Localization => LocalizationService.Current;
         private string Text(string key, int revision) => Localization.GetString("MusicDetails/" + key, revision);
         private string Text(string key) => Localization.GetString("MusicDetails/" + key);
-        private string PrimaryTrackTitle(string title, string? persian, int revision) =>
-            Localization.IsPersian && !string.IsNullOrWhiteSpace(persian) ? persian.Trim('(', ')') : title;
-        private string? AlternateTrackTitle(string title, string? persian, int revision) =>
-            string.IsNullOrWhiteSpace(persian) ? null : Localization.IsPersian ? $"({title})" : persian;
+        private void RefreshTrackTitle()
+        {
+            var title = ViewModel.Title;
+            var persian = ViewModel.PersianTitle?.Trim('(', ')').Trim();
+            var hasPersianTitle = !string.IsNullOrWhiteSpace(persian);
+            var hasTitle = !string.IsNullOrWhiteSpace(title);
+            var showPersianFirst = hasPersianTitle && (Localization.IsPersian || !hasTitle);
+
+            TrackTitleText.Text = (showPersianFirst ? persian : title) ?? string.Empty;
+            TrackPersianTitleText.Text = hasTitle && hasPersianTitle
+                ? $"({(showPersianFirst ? title : persian)})"
+                : string.Empty;
+            TrackPersianTitleText.Visibility = hasTitle && hasPersianTitle ? Visibility.Visible : Visibility.Collapsed;
+        }
         private string ViewsLabel(int total, int live, int revision) =>
             Localization.Format("MusicDetails/ViewsStatus", total, live);
         private void OpenMusicVideo_Click(object sender, RoutedEventArgs args)
@@ -341,33 +352,37 @@ namespace Mizon.Windows.Pages
 
         private async void CreateMusicPlaylistButton_Click(object sender, RoutedEventArgs e)
         {
-            MusicPlaylistsMenuFlyout.Hide();
+            if (!IsMusicDetailsActive || _createPlaylistDialog is not null || XamlRoot is not { } root) return;
 
             var titleTextBox = new TextBox { MaxLength = 60 };
             var dialog = new ContentDialog
             {
-                XamlRoot = XamlRoot,
+                XamlRoot = root,
                 Content = titleTextBox,
                 DefaultButton = ContentDialogButton.Primary
             };
-
-            if (await ShowLocalizedTrackDialogAsync(dialog, () =>
-            {
-                titleTextBox.PlaceholderText = Text("PlaylistTitle");
-                AutomationProperties.SetName(titleTextBox, Text("PlaylistTitle"));
-                dialog.Title = Text("NewPlaylist");
-                dialog.PrimaryButtonText = Text("CreateAndAddTrack");
-                dialog.CloseButtonText = Text("Cancel");
-            }) != ContentDialogResult.Primary)
-                return;
-
+            _createPlaylistDialog = dialog;
+            var musicId = MusicPublicId;
             try
             {
-                await ViewModel.CreateMusicPlaylistAsync(titleTextBox.Text);
+                MusicPlaylistsMenuFlyout.Hide();
+                if (await ShowLocalizedTrackDialogAsync(dialog, () =>
+                {
+                    titleTextBox.PlaceholderText = Text("PlaylistTitle");
+                    AutomationProperties.SetName(titleTextBox, Text("PlaylistTitle"));
+                    dialog.Title = Text("NewPlaylist");
+                    dialog.PrimaryButtonText = Text("CreateAndAddTrack");
+                    dialog.CloseButtonText = Text("Cancel");
+                }) == ContentDialogResult.Primary && IsMusicDetailsActive && musicId == MusicPublicId)
+                    await ViewModel.CreateMusicPlaylistAsync(titleTextBox.Text);
             }
             catch (Exception exception)
             {
                 AppLog.Error("Music playlist could not be created.", exception);
+            }
+            finally
+            {
+                _createPlaylistDialog = null;
             }
         }
 
@@ -411,6 +426,8 @@ namespace Mizon.Windows.Pages
             _pageActive = true;
             AttachInsightsPresentation();
             ApplyDetailLayout(ActualWidth);
+            RefreshTrackTitle();
+            AttachWaveformMotion();
             ViewModel.PropertyChanged += ViewModel_PropertyChanged;
             Localization.PropertyChanged -= TrackDetailsLanguageChanged;
             Localization.PropertyChanged += TrackDetailsLanguageChanged;
@@ -431,6 +448,7 @@ namespace Mizon.Windows.Pages
             if (IsLoaded || !_pageActive) return;
             _pageActive = false;
             _waveformCommentDialog?.Hide();
+            _createPlaylistDialog?.Hide();
             if (_audioOutputMenuOpen) AudioRenderMenuFlyout.Hide();
             CloseAudioOutputMenu();
             UnobserveSelectedAudioOutput();
@@ -438,6 +456,7 @@ namespace Mizon.Windows.Pages
             DetachInsightsPresentation();
             CancelCommentNavigation();
             ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+            _waveformAnimations.AnimationsEnabledChanged -= WaveformMotionChanged;
             ViewModel.ClearWaveformHover();
             ClearWaveformCommentEmphasis();
             ClearCoverTransition();
@@ -456,6 +475,8 @@ namespace Mizon.Windows.Pages
         {
             if (e.PropertyName == nameof(ViewModel.ServerWaveformIntensity))
                 CreateOrUpdateSpringAnimation(ViewModel.ServerWaveformIntensity);
+            else if (e.PropertyName is nameof(ViewModel.Title) or nameof(ViewModel.PersianTitle))
+                RefreshTrackTitle();
             else if (e.PropertyName is nameof(ViewModel.SelectedAudioDevice) or nameof(ViewModel.IsAudioDeviceSwitchPending))
             {
                 if (e.PropertyName == nameof(ViewModel.SelectedAudioDevice))

@@ -85,11 +85,14 @@ public sealed partial class MusicsPage
                 item = new RadioButton
                 {
                     Tag = device,
+                    Content = device,
+                    ContentTemplate = (DataTemplate)Resources["AudioOutputMenuItemTemplate"],
                     GroupName = "MizonTrackAudioOutputs",
                     UseSystemFocusVisuals = true,
                     HorizontalAlignment = HorizontalAlignment.Stretch,
                     HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                    MinHeight = 34
+                    Margin = new Thickness(0, 8, 0, 8),
+                    MinHeight = 48
                 };
                 item.Click += AudioOutputItem_Click;
                 device.PropertyChanged += AudioDevice_PropertyChanged;
@@ -112,7 +115,7 @@ public sealed partial class MusicsPage
         var battery = device.HasBatteryLevel ? Localization.Format("MusicDetails/AudioOutputBattery", device.BatteryLevel!) : null;
         var details = volume is null ? battery : battery is null ? volume : $"{volume}  ·  {battery}";
         var label = details is null ? device.Title : $"{device.Title}  ·  {details}";
-        item.Content = label;
+        device.MenuDetails = details ?? string.Empty;
         item.IsChecked = ViewModel.SelectedAudioDevice?.Id == device.Id;
         item.IsEnabled = !ViewModel.IsAudioDeviceSwitchPending;
         ApplyAudioMenuLanguage(item);
@@ -201,6 +204,7 @@ public sealed partial class MusicsPage
     private void TrackDetailsLanguageChanged(object? sender, PropertyChangedEventArgs args)
     {
         if (args.PropertyName != nameof(LocalizationService.Revision)) return;
+        RefreshTrackTitle();
         SyncAudioOutputMenu();
         SyncSelectedOutputVolume();
         if (CommentNavigationNotice.IsOpen && _commentNoticeKey is { } key)

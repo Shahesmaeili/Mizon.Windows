@@ -7,6 +7,7 @@ public sealed class AudioDeviceItemViewModel : Mizon.Windows.ViewModels.ViewMode
 {
     public string Id { get; init; } = null!;
     public string Title { get => field; set => SetField(ref field, value); } = null!;
+    public string MenuDetails { get => field; set => SetField(ref field, value); } = string.Empty;
     public byte? BatteryLevel
     {
         get => field;

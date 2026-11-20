@@ -85,6 +85,10 @@ internal static partial class Program
             "Fast forward and backward hover maps directly to its current bar across gaps and edges");
         Assert(MusicWaveformTimeline.GetBarIndex(42, 0) == -1,
             "Hover cannot target a waveform while it is being replaced");
+        Assert(new[] { -0.01d, 0d, 1.99d, 2d, 6d, 7.99d, 8d, 528.01d, 7.99d, 1495.99d, 1496d, 1500d, 1500.01d }
+                .Select(x => MusicWaveformTimeline.GetHoverBarIndex(x, 250))
+                .SequenceEqual(new[] { -1, -1, -1, 0, 0, 0, 1, 87, 0, 248, 249, 249, -1 }),
+            "Highlight reaches each visible stroke only after the pointer crosses the leading gap");
         var stackedOffsets = Enumerable.Range(0, 5).Select(MusicWaveformTimeline.GetCommentStackOffset).ToArray();
         Assert(stackedOffsets[0] == 0 && stackedOffsets.Distinct().Count() == 5 &&
                 stackedOffsets.All(offset => offset is >= -18 and <= 4),
