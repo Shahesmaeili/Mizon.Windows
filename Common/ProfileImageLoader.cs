@@ -13,7 +13,7 @@ internal static class ProfileImageLoader
     internal sealed record Result(string Path, ImageSource Image);
 
     public static async ValueTask<Result> LoadAsync(MizonApi api, MediaDownloader downloader,
-        Guid mediaPublicId, CancellationToken cancellationToken)
+        Guid mediaPublicId, CancellationToken cancellationToken, int decodePixelWidth = 240)
     {
         var response = await api.SendRequestAsync(new MediaOperation(new() { MediaPublicId = mediaPublicId }), cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
@@ -22,7 +22,7 @@ internal static class ProfileImageLoader
             throw new IOException($"Profile media metadata is unavailable. MediaPublicId='{mediaPublicId}'.");
 
         var path = await downloader.DownloadToCacheAsync(media, uri, cancellationToken: cancellationToken);
-        var image = await ImageSourceFactory.LoadFileAsync(path, 240, cancellationToken);
+        var image = await ImageSourceFactory.LoadFileAsync(path, decodePixelWidth, cancellationToken);
         return new(path, image);
     }
 }

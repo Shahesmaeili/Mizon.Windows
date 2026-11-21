@@ -10,6 +10,7 @@ namespace Mizon.Windows.Services;
 public class LocalStorageService
 {
     private const string JwtTokenKey = "JwtToken";
+    private const string NearbyDiscoveryKey = "NearbyDevices.Enabled";
 
     private ApplicationDataContainer LocalSettings => ApplicationData.GetDefault().LocalSettings;
 
@@ -32,6 +33,11 @@ public class LocalStorageService
         PublishExternalAuthentication(token);
         return token;
     }
+
+    internal bool GetNearbyDiscoveryEnabled() =>
+        !LocalSettings.Values.TryGetValue(NearbyDiscoveryKey, out var stored) || stored is not false;
+
+    internal void SetNearbyDiscoveryEnabled(bool enabled) => LocalSettings.Values[NearbyDiscoveryKey] = enabled;
 
     private static void PublishExternalAuthentication(string? token)
     {

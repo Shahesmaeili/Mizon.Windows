@@ -63,6 +63,7 @@ internal static class MizonAuthSchemas
                 {
                     var description = Description(property.Name);
                     if (description is not null) definition["description"] = description;
+                    if (property.Name == "discoveryStatus") definition["enum"] = new JsonArray("off", "starting", "searching", "unavailable");
                     if (property.Name == "completionStage") definition["enum"] = new JsonArray("opened", "completed");
                     if (property.Name == "lastErrorCode") definition["enum"] = new JsonArray(null,
                         "preference_save_failed", "environment_unavailable", "settings_timeout",
@@ -138,6 +139,9 @@ internal static class MizonAuthSchemas
             "canRequest" => "Whether a pin request is currently available. Windows still requires foreground app and user confirmation.",
             "allowTaskbarRead" => "Independent permission to read Mizon's taskbar pin status.",
             "allowTaskbarControl" => "Independent permission to request Windows pin confirmation, never to approve it or unpin.",
+            "nearbyDevices" => "Local discovery snapshot with aggregate counts only, returned with separate Nearby devices read consent.",
+            "discoveryStatus" => "Local discovery status: off, starting, searching or unavailable. Searching can have zero peers.",
+            "allowNearbyDevicesRead" => "User-approved access to discovery status and aggregate platform counts. Cannot start discovery.",
             "allowPresenceRead" => "Independent user-approved permission to read your current online presence only. It cannot change presence or activate the app window.",
             "allowVpnRead" => "Independent permission to read bounded state from the active VPN page. Existing authentication, navigation and other grants do not authorize it.",
             "allowVpnControl" => "Independent permission to change VPN-page decorative particles and open Windows VPN settings. No tunnel connection, OS configuration or arbitrary URI operations.",

@@ -13,6 +13,8 @@
     <Compile Include="..\..\Services\IMcpNavigationService.cs" Link="Production\IMcpNavigationService.cs" />
     <Compile Include="..\..\Services\IMcpTaskbarPinService.cs" Link="Production\IMcpTaskbarPinService.cs" />
     <Compile Include="..\..\Services\IMcpPresenceService.cs" Link="Production\IMcpPresenceService.cs" />
+    <Compile Include="..\..\Services\Discovery\NearbyDevice.cs" Link="Production\NearbyDevice.cs" />
+    <Compile Include="..\..\Services\Discovery\McpNearbyDevicesService.cs" Link="Production\McpNearbyDevicesService.cs" />
     <Compile Include="..\..\Services\IWindowPresentationHost.cs" Link="Production\IWindowPresentationHost.cs" />
     <Compile Include="..\..\Services\IMcpVpnService.cs" Link="Production\IMcpVpnService.cs" />
     <Compile Include="..\..\Services\McpPersonProfileService.cs" Link="Production\McpPersonProfileService.cs" />

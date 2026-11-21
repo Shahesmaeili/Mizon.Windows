@@ -56,6 +56,7 @@ public partial class HomePageViewModel
     {
         _taskbarProfileSession = taskbarSession ?? TaskbarProfileBridge.CurrentSession;
         _hasAccount = true;
+        OnPropertyChanged(nameof(CanStartNearbyDiscovery));
         Username = account.Username;
         FirstName = account.FirstName;
         LastName = account.LastName;
@@ -72,6 +73,7 @@ public partial class HomePageViewModel
         OnPropertyChanged(nameof(ProfileButtonLabel));
         TaskbarProfileBridge.PublishProfile(_taskbarProfileSession, DisplayName, ProfileImagePath);
         if (updateMood) ApplyMood(account.CurrentMood);
+        TryStartNearbyDiscovery();
     }
 
     public async Task RefreshProfileAsync(CancellationToken cancellationToken = default)
@@ -154,6 +156,7 @@ public partial class HomePageViewModel
     {
         ClearMood();
         _hasAccount = false;
+        OnPropertyChanged(nameof(CanStartNearbyDiscovery));
         _taskbarProfileSession = 0;
         _profileMediaPublicId = null;
         _profileRefreshTask = null;

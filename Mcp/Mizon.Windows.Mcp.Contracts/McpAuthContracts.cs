@@ -48,6 +48,7 @@ public sealed record McpResponse
     public McpTaskbarPinState? TaskbarPin { get; init; }
     public McpMusicHomeState? MusicHome { get; init; }
     public McpPresenceState? Presence { get; init; }
+    public McpNearbyDevicesState? NearbyDevices { get; init; }
     public McpWindowPresentationState? Window { get; init; }
     public McpVpnState? Vpn { get; init; }
     public McpPersonProfileState? PersonProfile { get; init; }
@@ -74,6 +75,7 @@ public sealed record McpConnectionStatus
     public bool AllowMusicHomeControl { get; init; }
     public bool AllowMusicHomeSubmit { get; init; }
     public bool AllowPresenceRead { get; init; }
+    public bool AllowNearbyDevicesRead { get; init; }
     public bool AllowWindowRead { get; init; }
     public bool AllowWindowControl { get; init; }
     public bool AllowVpnRead { get; init; }

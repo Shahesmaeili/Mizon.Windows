@@ -1,24 +1,22 @@
-# Discovery lifecycle regression checks
+# Nearby discovery checks
 
 ```powershell
-dotnet run --project .\Mcp\Mizon.Windows.Discovery.Tests\Mizon.Windows.Discovery.Tests.csproj -c Release --no-launch-profile
+dotnet run -c Release --project Mcp/Mizon.Windows.Discovery.Tests --no-launch-profile
+dotnet publish Mcp/Mizon.Windows.Discovery.Tests -c Release -r win-x64 -p:PublishAot=true
 ```
 
-This headless executable source-links the actual `MulticastDiscoveryServiceV2`
-and uses Windows `DatagramSocket` with OS-assigned ephemeral test ports. It never
-binds production port 40404, launches Mizon, automates Windows UI, changes consent,
-or sends authentication requests. Received peer packets contain synthetic data.
-Reflection-based JSON serialization is disabled, matching the app's AOT constraint.
+The harness links the production Windows discovery service, protocol and WinRT
+transport. By default it uses synthetic peers and never opens a socket,
+launches Mizon, authenticates or changes consent. Run the published EXE to
+exercise the same lifecycle and parser checks with NativeAOT.
 
-Checks cover repeated/concurrent startup, stop/rebind, occupied-port failure and
-recovery, startup cancellation races, idempotent disposal, 25 page-style lifecycle
-cycles, concurrent start/stop, malformed packets, peer cleanup across restart and
-draining an in-flight discovery callback during async disposal.
-These checks reproduce the socket ownership underlying logout/login failures;
-they do not claim to automate the actual login/logout UI or its animations.
+For an intentional LAN test, run the harness with `--lan <peer UUID>` and
+advertise that peer from another device using the published DNS-SD contract.
+Use `--advertise 120` to publish a synthetic Windows peer for two minutes while
+testing Apple or another client. These modes use an ephemeral listening port.
+They announce the fictitious name `Mizon Windows probe` and `windows-probe`.
 
-The project lives under the app's existing `Mcp/**` source exclusion so the test
-entry point is never compiled into WinUI. It adds no MCP tool or permission scope.
-Run the sibling [MCP integration checks](../Mizon.Windows.Mcp.Tests/README.md) and
-[app permission checks](../Mizon.Windows.Mcp.AccessTests/README.md) for the existing
-authentication contracts, cancellation and connection cleanup.
+See the [feature record](../../docs/ai/tasks/2026-11-21-nearby-devices.md) for the
+wire contract. The sibling [protocol suite](../Mizon.Windows.Mcp.Tests/README.md)
+and [permission suite](../Mizon.Windows.Mcp.AccessTests/README.md) cover the
+MCP catalog, adapters and consent.

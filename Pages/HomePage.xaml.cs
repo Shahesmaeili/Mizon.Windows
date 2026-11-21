@@ -61,6 +61,7 @@ namespace Mizon.Windows.Pages
         {
             ViewModel = ((App)App.Current).Services.GetRequiredService<HomePageViewModel>();
             this.InitializeComponent();
+            NearbyDevicePicker.ViewModel = ViewModel;
             if (App.MainMizonWindow is { } window && window.Content?.XamlRoot is { RasterizationScale: > 0 } root)
                 SetRightCaptionInset(GetRightCaptionInset(window.AppWindow, root.RasterizationScale));
             DataContext = ViewModel;
@@ -430,6 +431,7 @@ namespace Mizon.Windows.Pages
         private void HomePage_Unloaded(object sender, RoutedEventArgs e)
         {
             if (IsLoaded) return;
+            NearbyDevicePicker.CloseFlyout();
             _retainedMusicPage?.EndHomeSession();
             _retainedMusicPage = null;
             _musicActivationCancellation?.Cancel();

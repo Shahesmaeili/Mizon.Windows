@@ -96,6 +96,7 @@ Color="Transparent" />
                         <Border CornerRadius="8,16,16,8" Background="#0FFFFFFF" IsHitTestVisible="False"/>
                         <StackPanel Orientation="Horizontal">
 
+                            <usercontrols:NearbyDevicesButton x:Name="NearbyDevicePicker" VerticalAlignment="Center" Margin="0,0,3,0"/>
                             <usercontrols:MoodButton ViewModel="{x:Bind ViewModel}" VerticalAlignment="Center"/>
                             <controls:AuthActionButton x:Name="ProfilePersonButtton" Width="32" Height="32" Padding="0" CornerRadius="16"
                                     Style="{StaticResource ProfileAvatarButtonStyle}" HoverScale="1.06" PressedScale="0.91"

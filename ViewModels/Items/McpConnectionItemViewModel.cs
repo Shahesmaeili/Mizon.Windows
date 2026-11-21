@@ -23,6 +23,7 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
     private bool _allowMusicHomeControl;
     private bool _allowMusicHomeSubmit;
     private bool _allowPresenceRead;
+    private bool _allowNearbyDevicesRead;
     private bool _allowWindowRead;
     private bool _allowWindowControl;
     private bool _allowVpnRead;
@@ -122,6 +123,7 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
     public bool AllowTaskbarRead { get => _allowTaskbarRead; set { if (CanApprove) SetField(ref _allowTaskbarRead, value); } }
     public bool AllowTaskbarControl { get => _allowTaskbarControl; set { if (CanApprove) SetField(ref _allowTaskbarControl, value); } }
     public bool AllowPresenceRead { get => _allowPresenceRead; set { if (CanApprove) SetField(ref _allowPresenceRead, value); } }
+    public bool AllowNearbyDevicesRead { get => _allowNearbyDevicesRead; set { if (CanApprove) SetField(ref _allowNearbyDevicesRead, value); } }
     public bool AllowWindowRead { get => _allowWindowRead; set { if (CanApprove) SetField(ref _allowWindowRead, value); } }
     public bool AllowWindowControl { get => _allowWindowControl; set { if (CanApprove) SetField(ref _allowWindowControl, value); } }
     public bool AllowVpnRead { get => _allowVpnRead; set { if (CanApprove) SetField(ref _allowVpnRead, value); } }
@@ -181,7 +183,7 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
             AllowNavigationRead, AllowNavigationControl, AllowTaskbarRead, AllowTaskbarControl,
             AllowMusicHomeRead, AllowMusicHomeControl, AllowMusicHomeSubmit, AllowPresenceRead, AllowWindowRead, AllowWindowControl, AllowVpnRead, AllowVpnControl,
             AllowPersonProfileRead, AllowPersonProfileControl, AllowMusicDetailsRead, AllowMusicDetailsControl,
-            AllowMusicDiscussionRead, AllowMusicDiscussionControl);
+            AllowMusicDiscussionRead, AllowMusicDiscussionControl, AllowNearbyDevicesRead);
         NotifyStatus();
     }
 
@@ -199,6 +201,7 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         SetField(ref _allowTaskbarControl, grant.AllowTaskbarControl, nameof(AllowTaskbarControl));
         SetField(ref _allowMusicHomeRead, grant.AllowMusicHomeRead, nameof(AllowMusicHomeRead));
         SetField(ref _allowPresenceRead, grant.AllowPresenceRead, nameof(AllowPresenceRead));
+        SetField(ref _allowNearbyDevicesRead, grant.AllowNearbyDevicesRead, nameof(AllowNearbyDevicesRead));
         SetField(ref _allowWindowRead, grant.AllowWindowRead, nameof(AllowWindowRead));
         SetField(ref _allowWindowControl, grant.AllowWindowControl, nameof(AllowWindowControl));
         SetField(ref _allowVpnRead, grant.AllowVpnRead, nameof(AllowVpnRead));
@@ -259,6 +262,7 @@ public sealed class McpConnectionItemViewModel : ViewModelBase, IDisposable
         AllowMusicHomeRead = _policy.AllowMusicHomeRead, AllowMusicHomeControl = _policy.AllowMusicHomeControl,
         AllowMusicHomeSubmit = _policy.AllowMusicHomeSubmit,
         AllowPresenceRead = _policy.AllowPresenceRead,
+        AllowNearbyDevicesRead = _policy.AllowNearbyDevicesRead,
         AllowWindowRead = _policy.AllowWindowRead, AllowWindowControl = _policy.AllowWindowControl,
         AllowVpnRead = _policy.AllowVpnRead, AllowVpnControl = _policy.AllowVpnControl,
         AllowPersonProfileRead = _policy.AllowPersonProfileRead, AllowPersonProfileControl = _policy.AllowPersonProfileControl,

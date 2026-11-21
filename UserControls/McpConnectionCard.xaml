@@ -182,6 +182,14 @@
                     <TextBlock Text="{x:Bind Text('PermissionPresenceReadHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
                 </StackPanel>
             </CheckBox>
+            <TextBlock Text="{x:Bind Text('NearbyDevicesGroup', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold"/>
+            <TextBlock Text="{x:Bind Text('NearbyDevicesGroupHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+            <CheckBox IsChecked="{x:Bind ViewModel.AllowNearbyDevicesRead, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionNearbyDevicesRead', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionNearbyDevicesReadHint', Localization.Revision), Mode=OneWay}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{x:Bind Text('PermissionNearbyDevicesRead', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}"/>
+                    <TextBlock Text="{x:Bind Text('PermissionNearbyDevicesReadHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
+                </StackPanel>
+            </CheckBox>
             <TextBlock Text="{x:Bind Text('MusicHomeGroup', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpBody}" FontWeight="SemiBold"/>
             <TextBlock Text="{x:Bind Text('MusicHomeGroupHint', Localization.Revision), Mode=OneWay}" Style="{StaticResource McpCaption}"/>
             <CheckBox IsChecked="{x:Bind ViewModel.AllowMusicHomeRead, Mode=TwoWay}" IsEnabled="{x:Bind ViewModel.CanApprove, Mode=OneWay}" HorizontalContentAlignment="Stretch" AutomationProperties.Name="{x:Bind Text('PermissionMusicHomeRead', Localization.Revision), Mode=OneWay}" AutomationProperties.HelpText="{x:Bind Text('PermissionMusicHomeReadHint', Localization.Revision), Mode=OneWay}">

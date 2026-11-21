@@ -1,6 +1,12 @@
 # Windows handoff
 
-Updated: 2026-11-20. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
+Updated: 2026-11-21. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
+
+## Nearby devices — 2026-11-21
+
+The home header shows live Windows, Apple and other compatible Mizon devices over
+Bonjour DNS-SD. The Windows session starts discovery independently of the popup.
+See the [cross-platform contract and task checks](tasks/2026-11-21-nearby-devices.md).
 
 ## Track comment discussion — 2026-11-20
 

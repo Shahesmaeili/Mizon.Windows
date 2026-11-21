@@ -139,4 +139,8 @@
   <data name="PermissionMusicDiscussionReadHint" xml:space="preserve"><value>نظرات بارگذاری‌شده، رأی‌ها، تعداد پاسخ‌ها، تگ‌ها و زمان هر نظر در آهنگ فعلی را بخواند.</value></data>
   <data name="PermissionMusicDiscussionControl" xml:space="preserve"><value>مدیریت نظرات آهنگ</value></data>
   <data name="PermissionMusicDiscussionControlHint" xml:space="preserve"><value>گفت‌وگوها را باز کند، مرتب کند و صفحه بزند، از زمان نظر پخش کند، رأی بدهد یا نظر ثبت کند.</value></data>
+  <data name="NearbyDevicesGroup" xml:space="preserve"><value>دستگاه‌های نزدیک</value></data>
+  <data name="NearbyDevicesGroupHint" xml:space="preserve"><value>مجوز جداگانه برای خواندن وضعیت کشف در شبکهٔ محلی.</value></data>
+  <data name="PermissionNearbyDevicesRead" xml:space="preserve"><value>خواندن وضعیت دستگاه‌های نزدیک</value></data>
+  <data name="PermissionNearbyDevicesReadHint" xml:space="preserve"><value>فقط وضعیت کشف، تعداد کل و تعداد هر پلتفرم را نشان می‌دهد.</value></data>
 </root>

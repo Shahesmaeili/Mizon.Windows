@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Title" xml:space="preserve"><value>دستگاه‌های نزدیک</value></data>
+  <data name="Off" xml:space="preserve"><value>کشف دستگاه خاموش است</value></data>
+  <data name="Starting" xml:space="preserve"><value>در حال راه‌اندازی کشف محلی…</value></data>
+  <data name="Empty" xml:space="preserve"><value>در حال جستجو در شبکهٔ محلی</value></data>
+  <data name="Unavailable" xml:space="preserve"><value>کشف محلی در دسترس نیست</value></data>
+  <data name="Count" xml:space="preserve"><value>دستگاه‌های پیدا شده · {0}</value></data>
+  <data name="List" xml:space="preserve"><value>دستگاه‌های پیدا شده</value></data>
+  <data name="Start" xml:space="preserve"><value>ادامهٔ کشف</value></data>
+  <data name="Stop" xml:space="preserve"><value>مکث</value></data>
+  <data name="Retry" xml:space="preserve"><value>تلاش دوباره</value></data>
+  <data name="Privacy" xml:space="preserve"><value>تا وقتی کشف روشن است، دستگاه‌های دیگر میزون در همین شبکه می‌توانند نام دستگاه، نسخهٔ برنامه و نام عمومی حسابت را ببینند. مشخصات را خود دستگاه‌ها اعلام می‌کنند.</value></data>
+  <data name="Controller" xml:space="preserve"><value>برای باز کردن A را بزن. با جهت‌ها حرکت کن و با B ببند.</value></data>
+  <data name="ControllerFooter" xml:space="preserve"><value>جهت‌ها برای حرکت · A برای انتخاب · B برای بستن</value></data>
+  <data name="Version" xml:space="preserve"><value>{0} · میزون {1}</value></data>
+  <data name="NoAccount" xml:space="preserve"><value>حسابی اعلام نشده</value></data>
+  <data name="windows" xml:space="preserve"><value>ویندوز</value></data>
+  <data name="macos" xml:space="preserve"><value>مک</value></data>
+  <data name="ios" xml:space="preserve"><value>آیفون / آیپد</value></data>
+  <data name="android" xml:space="preserve"><value>اندروید</value></data>
+  <data name="watchos" xml:space="preserve"><value>اپل واچ</value></data>
+  <data name="wearos" xml:space="preserve"><value>ور اواس</value></data>
+  <data name="unknown" xml:space="preserve"><value>دستگاه دیگر</value></data>
+</root>

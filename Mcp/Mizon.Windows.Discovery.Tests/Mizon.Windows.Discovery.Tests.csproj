@@ -1,14 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net11.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net11.0-windows10.0.26100.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <CsWinRTAotOptimizerEnabled>true</CsWinRTAotOptimizerEnabled>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <WindowsSdkPackageVersion>10.0.26100.75</WindowsSdkPackageVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\..\MulticastDiscoveryServiceV2.cs" Link="Production\MulticastDiscoveryServiceV2.cs" />
-    <!-- DeviceInfo belongs to this existing source file. Only V2 is exercised. -->
-    <Compile Include="..\..\MulticastDiscoveryService.cs" Link="Production\MulticastDiscoveryService.cs" />
+    <Compile Include="..\..\Services\Discovery\NearbyDevice.cs" Link="Production\NearbyDevice.cs" />
+    <Compile Include="..\..\Services\Discovery\NearbyDeviceDiscoveryService.cs" Link="Production\NearbyDeviceDiscoveryService.cs" />
+    <Compile Include="..\..\Services\Discovery\WindowsNearbyDeviceTransport.cs" Link="Production\WindowsNearbyDeviceTransport.cs" />
   </ItemGroup>
 </Project>

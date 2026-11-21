@@ -27,6 +27,7 @@ internal static class Program
             ("SDK navigation returns invocation receipts and additional data without changing outcomes", ConnectionLifecycleTests.NavigationReceiptDispatch),
             ("SDK taskbar tools require isolated consent and reject undeclared actions", ConnectionLifecycleTests.TaskbarTypedDispatch),
             ("SDK presence is read-only, argument-free and independently gated", ConnectionLifecycleTests.PresenceTypedDispatch),
+            ("SDK nearby devices lists an all-local, independently gated read tool", ConnectionLifecycleTests.NearbyDevicesTypedDispatch),
             ("SDK VPN tools preserve typed inputs, reject arbitrary URIs and require consent", ConnectionLifecycleTests.VpnTypedDispatch),
             ("VPN permissions and generated state are independent and bounded", VpnTests.ScopeAndSnapshot),
             ("VPN remembered consent defaults denied and persists exact grants", VpnTests.PersistentScopes),

@@ -7,6 +7,8 @@ using Mizon.API.Client.Requests.Media;
 using Mizon.API.Client.Responses.Clients;
 using Mizon.Windows.Pages;
 using Mizon.Windows.Services;
+using Mizon.Windows.Services.Discovery;
+using Windows.Networking.Connectivity;
 using Mizon.Windows.ViewModels.Items;
 using System;
 using System.Collections.Generic;
@@ -22,10 +24,9 @@ public partial class HomePageViewModel : MainViewModel
     private readonly LocalStorageService _localStorageService;
     private readonly DispatcherQueue _dispatcherQueue;
     private readonly MediaDownloader _mediaDownloader;
-    private readonly MulticastDiscoveryServiceV2 _discoveryService;
     private CancellationTokenSource? _shellCancellation;
     private Task _socketStopTask = Task.CompletedTask;
-    private Task _discoveryStopTask = Task.CompletedTask;
+    internal NearbyDeviceDiscoveryService NearbyDevices { get; }
 
     public HomePageViewModel(MizonApi mizonApi,
     Lazy<MizonSocket> mizonSocket,
@@ -34,17 +35,18 @@ public partial class HomePageViewModel : MainViewModel
     DispatcherQueue dispatcherQueue,
     IAudioPlayerService audioPlayerService,
     MediaDownloader mediaDownloader,
-    MulticastDiscoveryServiceV2 discoveryService,
+    NearbyDeviceDiscoveryService nearbyDevices,
     ProfilePresenceService profilePresence)
     : base(mizonApi, mizonSocket, navigationService, audioPlayerService)
     {
         _dispatcherQueue = dispatcherQueue;
         _mediaDownloader = mediaDownloader;
-        _discoveryService = discoveryService;
+        NearbyDevices = nearbyDevices;
         _profilePresence = profilePresence;
 
         NavigationService.MainNavigationChanged += NavigationService_NavigationChanged;
         _localStorageService = localStorageService;
+        _nearbyEnabled = ReadNearbyPreference();
         LogoutCommand = new RelayCommand(LogoutAsync, (_, _) => !IsSigningOut);
 
     }
@@ -190,7 +192,8 @@ public partial class HomePageViewModel : MainViewModel
             _shellCancellation = null;
             MizonSocket.HubConnectionStateChanged -= MizonSocket_HubConnectionStateChanged;
             _socketStopTask = StopSocketAsync();
-            _discoveryStopTask = StopDiscoveryAsync();
+            NetworkInformation.NetworkStatusChanged -= NearbyNetworkChanged;
+            _ = NearbyDevices.StopAsync();
         }
         if (e.IsEnteringPage)
         {
@@ -205,8 +208,10 @@ public partial class HomePageViewModel : MainViewModel
                 if (!_hasAccount || (_profileMediaPublicId is not null && ProfileImage is null))
                     _ = RefreshProfileAsync(_shellCancellation.Token);
 
+                NetworkInformation.NetworkStatusChanged -= NearbyNetworkChanged;
+                NetworkInformation.NetworkStatusChanged += NearbyNetworkChanged;
+                TryStartNearbyDiscovery();
                 _ = StartSocketAsync(_shellCancellation.Token);
-                _ = StartDiscoveryAsync(_shellCancellation.Token);
             }
         }
     }
@@ -232,33 +237,12 @@ public partial class HomePageViewModel : MainViewModel
         catch (Exception exception) { AppLog.Error("Signed-out socket shutdown failed.", exception); }
     }
 
-    private async Task StartDiscoveryAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            // A quick sign-out/sign-in must wait for the previous socket and workers.
-            await _discoveryStopTask.WaitAsync(cancellationToken);
-            await _discoveryService.StartAsync(cancellationToken);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
-        catch (Exception exception)
-        {
-            // LAN discovery is optional; its failure must not interrupt signing in.
-            AppLog.Error("Authenticated device discovery initialization failed.", exception);
-        }
-    }
-
-    private async Task StopDiscoveryAsync()
-    {
-        try { await _discoveryService.StopAsync(); }
-        catch (Exception exception) { AppLog.Error("Signed-out device discovery shutdown failed.", exception); }
-    }
-
     private async Task LogoutAsync(object? parameter, CancellationToken cancellationToken)
     {
         if (IsSigningOut) return;
         ProfileStatus = "در حال خروج از حساب…";
         IsSigningOut = true;
+        _ = NearbyDevices.StopAsync();
         StopProfilePresence();
         App.CancelPendingNavigation();
         _profileSession++;

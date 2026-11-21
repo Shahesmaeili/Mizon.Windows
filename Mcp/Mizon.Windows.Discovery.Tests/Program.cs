@@ -1,302 +1,139 @@
-using System.Net;
-using System.Net.Sockets;
+using Mizon.Windows.Services.Discovery;
+using System.Collections.Concurrent;
 using System.Text;
-using System.Text.Json;
-using Mizon.Windows;
-using Windows.Networking.Sockets;
 
-internal static class Program
+var id = Guid.Parse("d9714af0-350c-48b9-9c72-e3930e906cc9");
+if (args is ["--advertise", var duration] && int.TryParse(duration, out var seconds) && seconds is >= 1 and <= 180)
 {
-    private static readonly TimeSpan Deadline = TimeSpan.FromSeconds(5);
-    private static int _assertions;
-
-    private static async Task<int> Main()
+    using var native = new NearbyDeviceDiscoveryService(new WindowsNearbyDeviceTransport(), error => Console.Error.WriteLine(error));
+    var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    native.Changed += () =>
     {
-        (string Name, Func<Task> Run)[] tests =
-        [
-            ("Discovery announcements serialize with generated metadata", AnnouncementSerialization),
-            ("Repeated and concurrent starts retain one socket", RepeatedStart),
-            ("Stop releases the port for the next page instance", StopAndRebind),
-            ("Occupied-port startup cleans up and can recover", BindFailureRecovery),
-            ("Cancelled startup does not retain the port", CancelledStartup),
-            ("Dispose is idempotent and prevents a later start", Disposal),
-            ("Twenty-five login/logout discovery cycles release every socket", RepeatedCycles),
-            ("Concurrent start/stop operations settle with no retained socket", ConcurrentLifecycle),
-            ("Synthetic packets are parsed and stopped sessions clear peers", PacketAndPeerLifecycle),
-            ("Async disposal drains an in-flight discovery callback", InFlightCallbackCleanup)
-        ];
+        if (native.ReadState().Status == NearbyDiscoveryStatus.Searching) ready.TrySetResult();
+        else if (native.ReadState().Status == NearbyDiscoveryStatus.Unavailable)
+            ready.TrySetException(new InvalidOperationException("Native discovery could not start."));
+    };
+    native.Start("11.0-test", "Mizon Windows probe", "windows-probe", "Windows Probe");
+    await ready.Task.WaitAsync(TimeSpan.FromSeconds(15));
+    Console.WriteLine($"LAN Windows probe ready for {seconds} seconds");
+    await Task.Delay(TimeSpan.FromSeconds(seconds));
+    await native.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+    Console.WriteLine("LAN Windows probe stopped");
+    return;
+}
+if (args is ["--lan", var remoteId] && Guid.TryParse(remoteId, out var expected))
+{
+    using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+    using var native = new NearbyDeviceDiscoveryService(new WindowsNearbyDeviceTransport(),
+        error => Console.Error.WriteLine(error));
+    var observed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    native.Changed += () =>
+    {
+        var state = native.ReadState();
+        Console.WriteLine($"LAN {state.Status}: {string.Join(", ", state.Devices.Select(peer => $"{peer.Id:D} {peer.Platform} {peer.Name}"))}");
+        if (state.Devices.Any(peer => peer.Id == expected))
+            observed.TrySetResult();
+        if (state.Status is NearbyDiscoveryStatus.Unavailable)
+            observed.TrySetException(new InvalidOperationException("Native discovery could not start."));
+    };
+    native.Start("11.0-test", "Mizon Windows probe", "windows-probe", "Windows Probe");
+    await observed.Task.WaitAsync(timeout.Token);
+    Console.WriteLine("PASS native Windows detected the expected Bonjour peer");
+    await Task.Delay(TimeSpan.FromSeconds(18), timeout.Token);
+    await native.StopAsync().WaitAsync(timeout.Token);
+    Check(native.ReadState().Status == NearbyDiscoveryStatus.Off, "native Windows withdraws the session");
+    return;
+}
 
-        var failed = 0;
-        foreach (var test in tests)
-        {
-            try
-            {
-                await test.Run().WaitAsync(TimeSpan.FromSeconds(30));
-                Console.WriteLine($"PASS {test.Name}");
-            }
-            catch (Exception error)
-            {
-                failed++;
-                Console.Error.WriteLine($"FAIL {test.Name}: {error.GetType().Name}: {error.Message}");
-            }
-        }
+var self = Guid.NewGuid();
+var device = new NearbyDevice(id, "macos", "11.0", "مک آلیس", "alice", "آلیس");
+var properties = NearbyDeviceProtocol.ToTxt(device).Select(pair => $"{pair.Key}={pair.Value}").ToArray();
+var name = NearbyDeviceProtocol.FullName(id);
+Check(NearbyDeviceProtocol.Parse(name, properties, self) == device, "Swift/Windows DNS-SD fields survive UTF-8 round trip");
+Check(NearbyDeviceProtocol.Parse(name.TrimEnd('.'), properties, self) == device, "Windows normalized hostname works");
+Check(NearbyDeviceProtocol.Parse(name, properties, id) is null, "own instance is excluded");
+Check(NearbyDeviceProtocol.Parse(NearbyDeviceProtocol.FullName(Guid.NewGuid()), properties, self) is null, "mismatched instance ID is rejected");
+Check(NearbyDeviceProtocol.Parse(name, [.. properties, "v=2"], self) is null, "duplicate/conflicting keys are rejected");
+Check(NearbyDeviceProtocol.Parse(name, properties.Select(x => x == "v=1" ? "v=2" : x), self) is null, "future incompatible contract is ignored");
+Check(NearbyDeviceProtocol.Parse(name, properties.Select(x => x.StartsWith("device=") ? "device=" + new string('ب', 49) : x), self) is null, "receive byte cap is enforced");
+var unicodeName = string.Concat(Enumerable.Repeat("😀", 49)) + "\r\n";
+var wire = NearbyDeviceProtocol.ToTxt(device with { Name = unicodeName, DisplayName = "\u202eآلیس" });
+Check(Encoding.UTF8.GetByteCount(wire["device"]) == 96 && !wire["device"].Contains('\uFFFD')
+    && wire["display"] == "آلیس", "advertisement limits preserve Unicode and strip direction overrides");
 
-        Console.WriteLine($"{tests.Length - failed}/{tests.Length} groups passed; {_assertions} assertions. Actual Windows DatagramSocket, private ephemeral test ports, synthetic peers. No app, UI, authentication or production discovery port accessed.");
-        return failed == 0 ? 0 : 1;
+var transport = new SyntheticTransport();
+var errors = new ConcurrentQueue<Exception>();
+using var service = new NearbyDeviceDiscoveryService(transport, errors.Enqueue);
+using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+Check(service.ReadState().Status == NearbyDiscoveryStatus.Off && transport.Runs == 0, "service starts off without socket");
+service.Start("11.0", "Windows probe", "bob", null);
+service.Start("11.0", "Windows probe", "bob", null);
+var first = await transport.Started.Reader.ReadAsync(deadline.Token);
+Check(service.ReadState().Status == NearbyDiscoveryStatus.Searching && transport.Runs == 1, "explicit start is idempotent");
+first.Update("wifi", name, properties);
+first.Update("ethernet", name, properties);
+first.Update("self", NearbyDeviceProtocol.FullName(first.Local.Id),
+    NearbyDeviceProtocol.ToTxt(first.Local).Select(pair => $"{pair.Key}={pair.Value}"));
+Check(service.ReadState().Devices.SequenceEqual([device]), "different accounts visible; two adapters deduplicated; self hidden");
+first.Update("wifi", null, null);
+Check(service.ReadState().Devices.Count == 1, "another interface keeps a peer visible");
+first.Update("ethernet", null, null);
+Check(service.ReadState().Devices.Count == 0, "last removal clears the row");
+for (var i = 0; i < 150; i++)
+{
+    var peer = device with { Id = Guid.NewGuid() };
+    first.Update(i.ToString(), NearbyDeviceProtocol.FullName(peer.Id), NearbyDeviceProtocol.ToTxt(peer).Select(pair => $"{pair.Key}={pair.Value}"));
+}
+Check(service.ReadState().Devices.Count == 128, "discovery state is bounded");
+var stop = service.StopAsync();
+Check(service.ReadState() is { Status: NearbyDiscoveryStatus.Off, Devices.Count: 0 }, "stop immediately hides peers");
+service.Start("11.0", "Windows probe", "new-login", null);
+await stop.WaitAsync(deadline.Token);
+var second = await transport.Started.Reader.ReadAsync(deadline.Token);
+first.Update("late", name, properties);
+Check(service.ReadState().Devices.Count == 0 && second.Local.Account == "new-login" && transport.MaximumActive == 1,
+    "relogin is drained; stale callbacks cannot cross sessions");
+second.Failed.TrySetException(new IOException("Synthetic multicast failure."));
+while (service.ReadState().Status != NearbyDiscoveryStatus.Unavailable)
+    await Task.Delay(10, deadline.Token);
+Check(errors.Count == 1, "transport failure produces a retryable state");
+service.Start("11.0", "Windows probe", null, null);
+var last = await transport.Started.Reader.ReadAsync(deadline.Token);
+Check(last.Local.Account is null, "a retry starts a fresh session");
+await service.StopAsync().WaitAsync(deadline.Token);
+Check(transport.Active == 0, "transport owned by stopped service is released");
+service.Dispose();
+service.Dispose();
+try
+{
+    service.Start("11.0", "Windows probe", null, null);
+    throw new InvalidOperationException("Disposed service accepted start.");
+}
+catch (ObjectDisposedException) { Console.WriteLine("PASS idempotent disposal rejects restart"); }
+
+static void Check(bool condition, string message)
+{
+    if (!condition) throw new InvalidOperationException(message);
+    Console.WriteLine("PASS " + message);
+}
+
+internal sealed class SyntheticTransport : INearbyDeviceTransport
+{
+    internal readonly System.Threading.Channels.Channel<Run> Started = System.Threading.Channels.Channel.CreateUnbounded<Run>();
+    internal int Runs;
+    internal int Active;
+    internal int MaximumActive;
+
+    public async Task RunAsync(NearbyDevice local, Action ready, Action<string, string?, IEnumerable<string>?> update, CancellationToken cancellationToken)
+    {
+        MaximumActive = Math.Max(MaximumActive, Interlocked.Increment(ref Active));
+        Interlocked.Increment(ref Runs);
+        var failed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        ready();
+        Started.Writer.TryWrite(new(local, update, failed));
+        try { await failed.Task.WaitAsync(cancellationToken); }
+        finally { Interlocked.Decrement(ref Active); }
     }
 
-    private static async Task RepeatedStart()
-    {
-        var port = await GetTestPort();
-        await using var service = new MulticastDiscoveryServiceV2(port);
-        await Task.WhenAll(Enumerable.Range(0, 16).Select(_ => service.StartAsync()));
-        await AssertPortBound(port);
-        await service.StartAsync();
-        await AssertPortBound(port);
-        await service.StopAsync();
-        await AssertPortAvailable(port);
-    }
-
-    private static Task AnnouncementSerialization()
-    {
-        Assert(!JsonSerializer.IsReflectionEnabledByDefault, "Reflection serialization must stay disabled in this regression suite.");
-        var packet = new DiscoveryAnnouncement { DeviceId = "synthetic-device", DeviceName = "Synthetic test peer" };
-        var json = JsonSerializer.Serialize(packet, DiscoveryJsonContext.Default.DiscoveryAnnouncement);
-        using var document = JsonDocument.Parse(json);
-        var root = document.RootElement;
-        Assert(root.GetProperty("type").GetString() == "discovery" && root.GetProperty("appId").GetString() == "MyLocalShare",
-            "The generated announcement must retain the existing discovery wire contract.");
-        Assert(root.GetProperty("deviceId").GetString() == packet.DeviceId
-            && root.GetProperty("deviceName").GetString() == packet.DeviceName
-            && root.GetProperty("port").GetInt32() == 5000, "Generated announcements must contain the intended synthetic peer fields.");
-        return Task.CompletedTask;
-    }
-
-    private static async Task StopAndRebind()
-    {
-        var port = await GetTestPort();
-        await using var first = new MulticastDiscoveryServiceV2(port);
-        await first.StartAsync();
-        await first.StopAsync();
-        await first.StopAsync();
-        await AssertPortAvailable(port);
-
-        await using var nextPage = new MulticastDiscoveryServiceV2(port);
-        await nextPage.StartAsync();
-        await AssertPortBound(port);
-        nextPage.Stop();
-        await AssertPortAvailable(port);
-        await nextPage.StopAsync();
-
-        await first.StartAsync();
-        await first.StopAsync();
-        await AssertPortAvailable(port);
-    }
-
-    private static async Task BindFailureRecovery()
-    {
-        using var blocker = new DatagramSocket();
-        await blocker.BindServiceNameAsync("0");
-        var port = int.Parse(blocker.Information.LocalPort);
-        Assert(port != 40404, "Test must never use the production discovery port.");
-        await using var service = new MulticastDiscoveryServiceV2(port);
-        await ExpectAddressInUse(() => service.StartAsync(), "Startup must report an already occupied port.");
-        await service.StopAsync();
-        blocker.Dispose();
-        await service.StartAsync();
-        await AssertPortBound(port);
-        await service.StopAsync();
-        await AssertPortAvailable(port);
-    }
-
-    private static async Task CancelledStartup()
-    {
-        var port = await GetTestPort();
-        await using var service = new MulticastDiscoveryServiceV2(port);
-        using var cancellation = new CancellationTokenSource();
-        cancellation.Cancel();
-        await Expect<OperationCanceledException>(() => service.StartAsync(cancellation.Token));
-        await AssertPortAvailable(port);
-        await service.StartAsync();
-        await service.StopAsync();
-        await AssertPortAvailable(port);
-
-        for (var attempt = 0; attempt < 20; attempt++)
-        {
-            using var immediateCancellation = new CancellationTokenSource();
-            var starting = service.StartAsync(immediateCancellation.Token);
-            immediateCancellation.Cancel();
-            try { await starting; }
-            catch (OperationCanceledException) { }
-            await service.StopAsync();
-            await AssertPortAvailable(port);
-        }
-    }
-
-    private static async Task Disposal()
-    {
-        var port = await GetTestPort();
-        var service = new MulticastDiscoveryServiceV2(port);
-        try
-        {
-            await service.StartAsync();
-            await Task.WhenAll(service.DisposeAsync().AsTask(), service.DisposeAsync().AsTask());
-            service.Dispose();
-            service.Stop();
-            await service.StopAsync();
-            await AssertPortAvailable(port);
-            await Expect<ObjectDisposedException>(() => service.StartAsync());
-            await AssertPortAvailable(port);
-        }
-        finally { await service.DisposeAsync(); }
-    }
-
-    private static async Task RepeatedCycles()
-    {
-        var port = await GetTestPort();
-        for (var cycle = 0; cycle < 25; cycle++)
-        {
-            await using var pageDiscovery = new MulticastDiscoveryServiceV2(port);
-            await pageDiscovery.StartAsync();
-            await AssertPortBound(port);
-            await pageDiscovery.StopAsync();
-            await AssertPortAvailable(port);
-        }
-    }
-
-    private static async Task ConcurrentLifecycle()
-    {
-        var port = await GetTestPort();
-        await using var service = new MulticastDiscoveryServiceV2(port);
-        for (var cycle = 0; cycle < 25; cycle++)
-        {
-            var starts = Enumerable.Range(0, 4).Select(_ => Task.Run(async () =>
-            {
-                try { await service.StartAsync(); }
-                catch (OperationCanceledException) { } // A concurrent Stop can cancel startup.
-            }));
-            var stops = Enumerable.Range(0, 4).Select(_ => Task.Run(() => service.StopAsync()));
-            await Task.WhenAll(starts.Concat(stops));
-            await service.StopAsync();
-            await AssertPortAvailable(port);
-            await service.StartAsync();
-            await AssertPortBound(port);
-            await service.StopAsync();
-        }
-    }
-
-    private static async Task PacketAndPeerLifecycle()
-    {
-        var port = await GetTestPort();
-        await using var service = new MulticastDiscoveryServiceV2(port);
-        var firstPeer = "synthetic-" + Guid.NewGuid().ToString("N");
-        var discovered = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
-        service.DeviceDiscovered += peer => discovered.TrySetResult(peer.DeviceId);
-        await service.StartAsync();
-        await SendPacket(port, "malformed synthetic packet");
-        await SendPacket(port, "{\"type\":\"unrelated\",\"appId\":\"MyLocalShare\"}");
-        await SendPeer(port, firstPeer);
-        Assert(await discovered.Task.WaitAsync(Deadline) == firstPeer, "Only the valid synthetic discovery packet should be surfaced.");
-        var snapshot = service.Devices;
-        Assert(snapshot.Count == 1 && snapshot.Single().DeviceName == "Synthetic test peer", "The received peer must be observable.");
-        await service.StopAsync();
-        Assert(service.Devices.Count == 0, "Stopped sessions must not retain their peers.");
-        Assert(snapshot.Count == 1, "A caller's snapshot must remain safe after discovery stops.");
-
-        discovered = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        await service.StartAsync();
-        Assert(service.Devices.Count == 0, "Restarted sessions must begin with no stale peer data.");
-        var secondPeer = "synthetic-" + Guid.NewGuid().ToString("N");
-        await SendPeer(port, secondPeer);
-        Assert(await discovered.Task.WaitAsync(Deadline) == secondPeer, "The restarted socket must receive fresh peers.");
-        await service.StopAsync();
-        await AssertPortAvailable(port);
-    }
-
-    private static Task SendPeer(int port, string deviceId) => SendPacket(port,
-        "{\"type\":\"discovery\",\"appId\":\"MyLocalShare\",\"deviceId\":\"" + deviceId +
-        "\",\"deviceName\":\"Synthetic test peer\",\"port\":5000}");
-
-    private static async Task InFlightCallbackCleanup()
-    {
-        var port = await GetTestPort();
-        await using var service = new MulticastDiscoveryServiceV2(port);
-        using var release = new ManualResetEventSlim();
-        var callbackStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var callbackFinished = false;
-        service.DeviceDiscovered += _ =>
-        {
-            callbackStarted.TrySetResult();
-            release.Wait(Deadline);
-            callbackFinished = true;
-        };
-        try
-        {
-            await service.StartAsync();
-            await SendPeer(port, "synthetic-callback-" + Guid.NewGuid().ToString("N"));
-            await callbackStarted.Task.WaitAsync(Deadline);
-            var disposing = service.DisposeAsync().AsTask();
-            await Task.Delay(50);
-            Assert(!disposing.IsCompleted, "Async disposal must wait for a callback already in progress.");
-            release.Set();
-            await disposing.WaitAsync(Deadline);
-            Assert(callbackFinished, "No callback may outlive completed async disposal.");
-            await AssertPortAvailable(port);
-        }
-        finally { release.Set(); }
-    }
-
-    private static async Task SendPacket(int port, string packet)
-    {
-        using var sender = new UdpClient(AddressFamily.InterNetwork);
-        await sender.SendAsync(Encoding.UTF8.GetBytes(packet), new IPEndPoint(IPAddress.Loopback, port));
-    }
-
-    private static async Task<int> GetTestPort()
-    {
-        using var reservation = new DatagramSocket();
-        await reservation.BindServiceNameAsync("0");
-        var port = int.Parse(reservation.Information.LocalPort);
-        Assert(port != 40404, "Test must never use the production discovery port.");
-        return port;
-    }
-
-    private static async Task AssertPortAvailable(int port)
-    {
-        using var probe = new DatagramSocket();
-        await probe.BindServiceNameAsync(port.ToString());
-        Assert(true, "Stopped discovery must release its bound port.");
-    }
-
-    private static async Task AssertPortBound(int port)
-    {
-        using var probe = new DatagramSocket();
-        await ExpectAddressInUse(async () => await probe.BindServiceNameAsync(port.ToString()),
-            "An active discovery socket must retain exclusive ownership of its port.");
-    }
-
-    private static async Task ExpectAddressInUse(Func<Task> action, string message)
-    {
-        try { await action(); }
-        catch (Exception error) when (unchecked((uint)error.HResult) == 0x80072740
-            || error is SocketException { SocketErrorCode: System.Net.Sockets.SocketError.AddressAlreadyInUse })
-        {
-            Assert(true, message);
-            return;
-        }
-        throw new InvalidOperationException(message);
-    }
-
-    private static async Task Expect<T>(Func<Task> action) where T : Exception
-    {
-        try { await action(); }
-        catch (T) { Assert(true, $"Expected {typeof(T).Name}."); return; }
-        throw new InvalidOperationException($"Expected {typeof(T).Name}.");
-    }
-
-    private static void Assert(bool condition, string message)
-    {
-        if (!condition) throw new InvalidOperationException(message);
-        _assertions++;
-    }
+    internal sealed record Run(NearbyDevice Local, Action<string, string?, IEnumerable<string>?> Update, TaskCompletionSource Failed);
 }

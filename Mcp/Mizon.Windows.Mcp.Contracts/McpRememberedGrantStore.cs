@@ -24,6 +24,7 @@ public sealed record McpRememberedGrant
     public bool AllowMusicHomeControl { get; init; }
     public bool AllowMusicHomeSubmit { get; init; }
     public bool AllowPresenceRead { get; init; }
+    public bool AllowNearbyDevicesRead { get; init; }
     public bool AllowWindowRead { get; init; }
     public bool AllowWindowControl { get; init; }
     public bool AllowVpnRead { get; init; }

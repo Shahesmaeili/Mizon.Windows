@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using Microsoft.UI.Dispatching;
 using Mizon.Windows.Mcp.Contracts;
 using Mizon.Windows.Services;
+using Mizon.Windows.Services.Discovery;
 using Mizon.Windows.ViewModels.Items;
 
 internal static partial class Program
@@ -34,6 +35,7 @@ internal static partial class Program
             await MusicHomeLifetimeAndRestoration();
             await PresenceScopesAndState();
             await PresenceLifetimeAndRestoration();
+            await NearbyDevicesConsentAndState();
             await PersonProfileScopesAndLifetime();
             await MusicDetailsScopesAndLifetime();
             await MusicDiscussionScopesAndLifetime();
@@ -204,6 +206,7 @@ internal static partial class Program
         public McpMusicHomeService MusicHome { get; }
         public SyntheticPresence PresenceBackend { get; } = new();
         public McpPresenceService Presence { get; }
+        public Func<NearbyDiscoveryState> ReadNearby { get; set; } = () => NearbyDiscoveryState.Empty(NearbyDiscoveryStatus.Off);
         public SyntheticWindow WindowBackend { get; } = new();
         public McpWindowPresentationService Window { get; }
         public SyntheticVpnPage VpnPage { get; } = new();
@@ -232,7 +235,7 @@ internal static partial class Program
         public static async Task<Host> StartAsync(string path)
         {
             var host = new Host(path);
-            await host.Ui(() => host.Service.Start(host._ui, host.Auth, host.Appearance, host.Navigation, host.Taskbar, host.MusicHome, host.Presence, host.Window, host.Vpn, host.PersonProfile, host.MusicDetails));
+            await host.Ui(() => host.Service.Start(host._ui, host.Auth, host.Appearance, host.Navigation, host.Taskbar, host.MusicHome, host.Presence, host.Window, host.Vpn, host.PersonProfile, host.MusicDetails, new McpNearbyDevicesService(() => host.ReadNearby())));
             return host;
         }
         public McpConnectionItemViewModel Item(string id) => Service.Connections.Single(item => item.Id == id);
@@ -241,7 +244,7 @@ internal static partial class Program
             bool musicRead = false, bool musicControl = false, bool musicSubmit = false, bool presenceRead = false,
             bool windowRead = false, bool windowControl = false, bool vpnRead = false, bool vpnControl = false,
             bool personRead = false, bool personControl = false, bool detailsRead = false, bool detailsControl = false,
-            bool discussionRead = false, bool discussionControl = false) => Ui(async () =>
+            bool discussionRead = false, bool discussionControl = false, bool nearbyRead = false) => Ui(async () =>
         {
             var item = Item(id); item.AllowRead = read; item.AllowControl = control; item.AllowSubmit = submit;
             item.AllowAppearanceRead = appearanceRead; item.AllowAppearanceControl = appearanceControl;
@@ -249,6 +252,7 @@ internal static partial class Program
             item.AllowTaskbarRead = taskbarRead; item.AllowTaskbarControl = taskbarControl;
             item.AllowMusicHomeRead = musicRead; item.AllowMusicHomeControl = musicControl; item.AllowMusicHomeSubmit = musicSubmit;
             item.AllowPresenceRead = presenceRead;
+            item.AllowNearbyDevicesRead = nearbyRead;
             item.AllowWindowRead = windowRead; item.AllowWindowControl = windowControl;
             item.AllowVpnRead = vpnRead; item.AllowVpnControl = vpnControl;
             item.AllowPersonProfileRead = personRead; item.AllowPersonProfileControl = personControl;

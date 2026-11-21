@@ -39,6 +39,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
     private IMcpTaskbarPinService? _taskbar;
     private IMcpMusicHomeService? _musicHome;
     private IMcpPresenceService? _presence;
+    private Discovery.McpNearbyDevicesService? _nearbyDevices;
     private IMcpWindowPresentationService? _windowPresentation;
     private IMcpVpnService? _vpn;
     private McpPersonProfileService? _personProfile;
@@ -86,7 +87,8 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         IMcpNavigationService? navigation = null, IMcpTaskbarPinService? taskbar = null,
         IMcpMusicHomeService? musicHome = null, IMcpPresenceService? presence = null,
         IMcpWindowPresentationService? windowPresentation = null, IMcpVpnService? vpn = null,
-        McpPersonProfileService? personProfile = null, McpMusicDetailsService? musicDetails = null)
+        McpPersonProfileService? personProfile = null, McpMusicDetailsService? musicDetails = null,
+        Discovery.McpNearbyDevicesService? nearbyDevices = null)
     {
         if (_dispatcher is not null || _disposed) return;
         _dispatcher = dispatcher;
@@ -96,6 +98,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         _taskbar = taskbar;
         _musicHome = musicHome;
         _presence = presence;
+        _nearbyDevices = nearbyDevices;
         _windowPresentation = windowPresentation;
         _vpn = vpn;
         _personProfile = personProfile;
@@ -140,6 +143,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
             AllowMusicHomeRead = item.AllowMusicHomeRead, AllowMusicHomeControl = item.AllowMusicHomeControl,
             AllowMusicHomeSubmit = item.AllowMusicHomeControl && item.AllowMusicHomeSubmit,
             AllowPresenceRead = item.AllowPresenceRead,
+            AllowNearbyDevicesRead = item.AllowNearbyDevicesRead,
             AllowWindowRead = item.AllowWindowRead, AllowWindowControl = item.AllowWindowControl,
             AllowVpnRead = item.AllowVpnRead, AllowVpnControl = item.AllowVpnControl,
             AllowPersonProfileRead = item.AllowPersonProfileRead, AllowPersonProfileControl = item.AllowPersonProfileControl,
@@ -436,7 +440,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
             if (request.MusicDiscussion is not null && request.Operation != "manage_music_discussion")
                 return new() { Code = "invalid_arguments", Message = "Unexpected track discussion arguments.", Connection = connection.Snapshot() };
             using var authorized = CancellationTokenSource.CreateLinkedTokenSource(token, connection.AuthorizationToken);
-            var mutation = request.Operation is not ("get_state" or "get_appearance" or "get_navigation" or "get_taskbar_pin_state" or "get_music_home" or "get_presence_state" or "get_window_state" or "get_vpn_state" or "get_person_profile" or "get_music_details" or "get_music_discussion");
+            var mutation = request.Operation is not ("get_state" or "get_appearance" or "get_navigation" or "get_taskbar_pin_state" or "get_music_home" or "get_presence_state" or "get_nearby_devices" or "get_window_state" or "get_vpn_state" or "get_person_profile" or "get_music_details" or "get_music_discussion");
             var enteredGate = false;
             var started = false;
             try
@@ -462,6 +466,8 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                     "get_taskbar_pin_state" or "request_taskbar_pin" => _taskbar is not null
                         ? await _taskbar.ExecuteAsync(request, authorized.Token)
                         : new McpResponse { Code = "unavailable", Message = "The taskbar service is unavailable." },
+                    "get_nearby_devices" => _nearbyDevices?.Read(request, authorized.Token)
+                        ?? new() { Code = "unavailable", Message = "Local device discovery is unavailable." },
                     "get_presence_state" => _presence is not null
                         ? await _presence.ExecuteAsync(request, authorized.Token)
                         : new McpResponse { Code = "unavailable", Message = "The presence service is unavailable." },
@@ -497,6 +503,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                     TaskbarPin = connection.CanExecute("get_taskbar_pin_state") ? result.TaskbarPin : null,
                     MusicHome = connection.CanExecute("get_music_home") ? result.MusicHome : null,
                     Presence = connection.CanExecute("get_presence_state") ? result.Presence : null,
+                    NearbyDevices = connection.CanExecute("get_nearby_devices") ? result.NearbyDevices : null,
                     Window = connection.CanExecute("get_window_state") ? result.Window : null,
                     Vpn = connection.CanExecute("get_vpn_state") ? result.Vpn : null,
                     MusicDetails = connection.CanExecute("get_music_details") ? result.MusicDetails : null,
@@ -629,6 +636,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         (_taskbar as IDisposable)?.Dispose();
         (_musicHome as IDisposable)?.Dispose();
         (_presence as IDisposable)?.Dispose();
+        _nearbyDevices = null;
         (_windowPresentation as IDisposable)?.Dispose();
         (_vpn as IDisposable)?.Dispose();
         _personProfile?.Dispose();

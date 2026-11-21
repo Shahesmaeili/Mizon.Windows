@@ -19,6 +19,7 @@ public sealed class McpAccessPolicy
     public bool AllowMusicHomeControl { get; private set; }
     public bool AllowMusicHomeSubmit { get; private set; }
     public bool AllowPresenceRead { get; private set; }
+    public bool AllowNearbyDevicesRead { get; private set; }
     public bool AllowWindowRead { get; private set; }
     public bool AllowWindowControl { get; private set; }
 
@@ -37,7 +38,7 @@ public sealed class McpAccessPolicy
         bool windowRead = false, bool windowControl = false, bool vpnRead = false, bool vpnControl = false,
         bool personProfileRead = false, bool personProfileControl = false,
         bool musicDetailsRead = false, bool musicDetailsControl = false,
-        bool musicDiscussionRead = false, bool musicDiscussionControl = false)
+        bool musicDiscussionRead = false, bool musicDiscussionControl = false, bool nearbyDevicesRead = false)
     {
         if (Status == "disconnected") return;
         AllowRead = read;
@@ -53,6 +54,7 @@ public sealed class McpAccessPolicy
         AllowMusicHomeControl = musicHomeControl;
         AllowMusicHomeSubmit = musicHomeControl && musicHomeSubmit;
         AllowPresenceRead = presenceRead;
+        AllowNearbyDevicesRead = nearbyDevicesRead;
         AllowWindowRead = windowRead;
         AllowWindowControl = windowControl;
         AllowVpnRead = vpnRead;
@@ -85,6 +87,7 @@ public sealed class McpAccessPolicy
         "request_taskbar_pin" => Status == "approved" && AllowTaskbarControl,
         "get_music_home" => Status == "approved" && AllowMusicHomeRead,
         "get_presence_state" => Status == "approved" && AllowPresenceRead,
+        "get_nearby_devices" => Status == "approved" && AllowNearbyDevicesRead,
         "get_music_details" => Status == "approved" && AllowMusicDetailsRead,
         "set_music_details" => Status == "approved" && AllowMusicDetailsControl,
         "get_music_discussion" => Status == "approved" && AllowMusicDiscussionRead,
@@ -109,7 +112,7 @@ public sealed class McpAccessPolicy
         AllowNavigationRead = AllowNavigationControl = false;
         AllowTaskbarRead = AllowTaskbarControl = false;
         AllowMusicHomeRead = AllowMusicHomeControl = AllowMusicHomeSubmit = false;
-        AllowPresenceRead = false;
+        AllowPresenceRead = AllowNearbyDevicesRead = false;
         AllowWindowRead = AllowWindowControl = false;
         AllowVpnRead = AllowVpnControl = false;
         AllowPersonProfileRead = AllowPersonProfileControl = false;

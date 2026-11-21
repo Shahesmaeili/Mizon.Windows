@@ -9,6 +9,7 @@ using Mizon.API.Client;
 using Mizon.Windows.Common;
 using Mizon.Windows.Pages;
 using Mizon.Windows.Services;
+using Mizon.Windows.Services.Discovery;
 using Mizon.Windows.ViewModels;
 using RGB.NET.Core;
 using System;
@@ -117,7 +118,7 @@ public partial class App : Application
     private bool _initialized;
     private AppActionsService? _appActions;
     private JumpListService? _jumpList;
-    private MulticastDiscoveryServiceV2? _discoveryService;
+    private NearbyDeviceDiscoveryService? _discoveryService;
     private AppDeepLinkResultDispatcher? _deepLinkResults;
     private AppActivationEnvelope? _pendingResultActivation;
     private AppDeepLinkResponseSession? _deferredForeground;
@@ -290,7 +291,8 @@ public partial class App : Application
             musicDetails: new McpMusicDetailsService(
                 () => navigationService.CurrentMainPage is Pages.HomePage { ViewModel.IsSigningOut: false }
                     && navigationService.CurrentInternalPage is Pages.MusicsPage { IsMusicDetailsActive: true } details
-                        ? details : null));
+                        ? details : null),
+            nearbyDevices: new McpNearbyDevicesService(Services.GetRequiredService<NearbyDeviceDiscoveryService>().ReadState));
         MainMizonWindow.Closed += MainWindow_Closed;
         if (_pendingResultActivation is { } pendingResult)
         {
@@ -359,7 +361,8 @@ public partial class App : Application
             static (session, state) => TaskbarProfileBridge.PublishPresence(session, state.IsOnline),
             static error => AppLog.Information($"Profile presence update failed ({error.GetType().Name}).")));
         services.AddSingleton<IProfilePresenceService>(sp => sp.GetRequiredService<ProfilePresenceService>());
-        services.AddSingleton<MulticastDiscoveryServiceV2>(_ => _discoveryService = new());
+        services.AddSingleton<NearbyDeviceDiscoveryService>(_ => _discoveryService = new(new WindowsNearbyDeviceTransport(),
+            static error => AppLog.Information($"Nearby discovery stopped ({error.GetType().Name}, 0x{error.HResult:X8}).")));
 
         // Register a shared MediaDownloader
         services.AddSingleton(sp =>

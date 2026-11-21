@@ -139,4 +139,8 @@
   <data name="PermissionMusicDiscussionReadHint" xml:space="preserve"><value>Read loaded comments, votes, reply counts, tags and times on the current track.</value></data>
   <data name="PermissionMusicDiscussionControl" xml:space="preserve"><value>Operate track comments</value></data>
   <data name="PermissionMusicDiscussionControlHint" xml:space="preserve"><value>Open threads, sort and page, play from a comment, vote or publish on the current track.</value></data>
+  <data name="NearbyDevicesGroup" xml:space="preserve"><value>Nearby devices</value></data>
+  <data name="NearbyDevicesGroupHint" xml:space="preserve"><value>Separate access to the local discovery status.</value></data>
+  <data name="PermissionNearbyDevicesRead" xml:space="preserve"><value>Read nearby device status</value></data>
+  <data name="PermissionNearbyDevicesReadHint" xml:space="preserve"><value>Allows discovery status, total and platform counts only.</value></data>
 </root>
