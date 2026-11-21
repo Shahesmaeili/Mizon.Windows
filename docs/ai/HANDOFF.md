@@ -2,6 +2,11 @@
 
 Updated: 2026-11-21. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
 
+## Verified LAN media transfer — 2026-11-21
+
+The shared media downloader prefers verified cached or LAN pieces for public
+assets eligible at the origin. Read [the cross-platform handoff](tasks/2026-11-21-lan-media-transfer.md).
+
 ## Nearby devices — 2026-11-21
 
 The home header shows live Windows, Apple and other compatible Mizon devices over

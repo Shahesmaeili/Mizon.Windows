@@ -16,6 +16,10 @@ Use `--advertise 120` to publish a synthetic Windows peer for two minutes while
 testing Apple or another client. These modes use an ephemeral listening port.
 They announce the fictitious name `Mizon Windows probe` and `windows-probe`.
 
+Use `--wire` for the production Windows TCP listener and pinned TLS on loopback. The opt-in
+`--apple-peer` probe advertises a fictitious, known partial file. A second device
+can run `--lan-media-client 0` against that probe or provide an equivalent seed.
+
 See the [feature record](../../docs/ai/tasks/2026-11-21-nearby-devices.md) for the
 wire contract. The sibling [protocol suite](../Mizon.Windows.Mcp.Tests/README.md)
 and [permission suite](../Mizon.Windows.Mcp.AccessTests/README.md) cover the

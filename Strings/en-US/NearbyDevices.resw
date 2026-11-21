@@ -14,7 +14,7 @@
   <data name="Start" xml:space="preserve"><value>Resume discovery</value></data>
   <data name="Stop" xml:space="preserve"><value>Pause</value></data>
   <data name="Retry" xml:space="preserve"><value>Retry</value></data>
-  <data name="Privacy" xml:space="preserve"><value>While discovery is on, other Mizon devices on this network can see your device name, app version and public account name. Device details are self-reported.</value></data>
+  <data name="Privacy" xml:space="preserve"><value>While discovery is on, other Mizon devices on this network can see your device name, app version and public account name. Public media available in cache can be shared on this network. Device details are self-reported.</value></data>
   <data name="Controller" xml:space="preserve"><value>Press A to open. Use the D-pad to move and B to close.</value></data>
   <data name="ControllerFooter" xml:space="preserve"><value>D-pad  Move   ·   A  Select   ·   B  Close</value></data>
   <data name="Version" xml:space="preserve"><value>{0} · Mizon {1}</value></data>

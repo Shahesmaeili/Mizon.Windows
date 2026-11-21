@@ -235,7 +235,7 @@ internal static partial class Program
         public static async Task<Host> StartAsync(string path)
         {
             var host = new Host(path);
-            await host.Ui(() => host.Service.Start(host._ui, host.Auth, host.Appearance, host.Navigation, host.Taskbar, host.MusicHome, host.Presence, host.Window, host.Vpn, host.PersonProfile, host.MusicDetails, new McpNearbyDevicesService(() => host.ReadNearby())));
+            await host.Ui(() => host.Service.Start(host._ui, host.Auth, host.Appearance, host.Navigation, host.Taskbar, host.MusicHome, host.Presence, host.Window, host.Vpn, host.PersonProfile, host.MusicDetails, new McpNearbyDevicesService(() => host.ReadNearby(), static () => new(true, 262144, 524288))));
             return host;
         }
         public McpConnectionItemViewModel Item(string id) => Service.Connections.Single(item => item.Id == id);

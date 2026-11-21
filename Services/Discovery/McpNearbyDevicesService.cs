@@ -5,7 +5,7 @@ using Mizon.Windows.Mcp.Contracts;
 
 namespace Mizon.Windows.Services.Discovery;
 
-internal sealed class McpNearbyDevicesService(Func<NearbyDiscoveryState> readState)
+internal sealed class McpNearbyDevicesService(Func<NearbyDiscoveryState> readState, Func<McpNearbyMediaTransferState>? readTransfer = null)
 {
     internal McpResponse Read(McpRequest request, CancellationToken cancellationToken)
     {
@@ -28,7 +28,7 @@ internal sealed class McpNearbyDevicesService(Func<NearbyDiscoveryState> readSta
                 NearbyDiscoveryStatus.Searching => "searching",
                 NearbyDiscoveryStatus.Unavailable => "unavailable",
                 _ => "off"
-            }, state.Devices.Count, platforms)
+            }, state.Devices.Count, platforms, readTransfer?.Invoke())
         };
     }
 }

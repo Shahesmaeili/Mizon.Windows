@@ -142,5 +142,5 @@
   <data name="NearbyDevicesGroup" xml:space="preserve"><value>دستگاه‌های نزدیک</value></data>
   <data name="NearbyDevicesGroupHint" xml:space="preserve"><value>مجوز جداگانه برای خواندن وضعیت کشف در شبکهٔ محلی.</value></data>
   <data name="PermissionNearbyDevicesRead" xml:space="preserve"><value>خواندن وضعیت دستگاه‌های نزدیک</value></data>
-  <data name="PermissionNearbyDevicesReadHint" xml:space="preserve"><value>فقط وضعیت کشف، تعداد کل و تعداد هر پلتفرم را نشان می‌دهد.</value></data>
+  <data name="PermissionNearbyDevicesReadHint" xml:space="preserve"><value>وضعیت کشف، تعداد دستگاه‌ها و مجموع حجم رسانهٔ دریافت و ارسال‌شده را نشان می‌دهد.</value></data>
 </root>

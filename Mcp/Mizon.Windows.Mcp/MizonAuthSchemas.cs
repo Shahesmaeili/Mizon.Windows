@@ -140,6 +140,7 @@ internal static class MizonAuthSchemas
             "allowTaskbarRead" => "Independent permission to read Mizon's taskbar pin status.",
             "allowTaskbarControl" => "Independent permission to request Windows pin confirmation, never to approve it or unpin.",
             "nearbyDevices" => "Local discovery snapshot with aggregate counts only, returned with separate Nearby devices read consent.",
+            "mediaTransfer" => "Availability and session byte totals for verified public media transferred on the LAN. Does not include filenames, media IDs, IP addresses or peer identities.",
             "discoveryStatus" => "Local discovery status: off, starting, searching or unavailable. Searching can have zero peers.",
             "allowNearbyDevicesRead" => "User-approved access to discovery status and aggregate platform counts. Cannot start discovery.",
             "allowPresenceRead" => "Independent user-approved permission to read your current online presence only. It cannot change presence or activate the app window.",

@@ -2,6 +2,24 @@ using Mizon.Windows.Services.Discovery;
 using System.Collections.Concurrent;
 using System.Text;
 
+if (args is ["--wire"] or ["--apple-peer"] or ["--lan-media-client", "0" or "1"]
+    or ["--direct-media-client", "0" or "1", _, _, _])
+{
+    try
+    {
+        await NativeMediaFixture.RunAsync(advertise: args[0] == "--apple-peer",
+            receiveIndex: args[0] is "--lan-media-client" or "--direct-media-client" ? int.Parse(args[1]) : null,
+            directAddress: args is ["--direct-media-client", _, var host, var port, var fingerprint]
+                ? (new System.Net.IPEndPoint(System.Net.IPAddress.Parse(host), int.Parse(port)), Convert.FromHexString(fingerprint)) : null);
+    }
+    catch (OperationCanceledException)
+    {
+        Console.Error.WriteLine("The LAN probe deadline expired.");
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
 var id = Guid.Parse("d9714af0-350c-48b9-9c72-e3930e906cc9");
 if (args is ["--advertise", var duration] && int.TryParse(duration, out var seconds) && seconds is >= 1 and <= 180)
 {

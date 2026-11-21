@@ -99,7 +99,7 @@ resolve their actual roots before editing; do not create a second copy.
 ## Nearby device discovery
 
 `mizon_get_nearby_devices` reads the shared discovery status, total and per-platform
-counts under the separate **Nearby devices** read scope. It can neither enable
+counts and public media transfer totals under the separate **Nearby devices** read scope. It can neither enable
 advertising nor read device, account or network identifiers. The Windows header
 owns local discovery preference changes. Scope and transport checks live under
 `Mizon.Windows.Mcp.AccessTests` and `Mizon.Windows.Mcp.Tests` respectively.

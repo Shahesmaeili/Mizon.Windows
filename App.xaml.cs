@@ -292,7 +292,12 @@ public partial class App : Application
                 () => navigationService.CurrentMainPage is Pages.HomePage { ViewModel.IsSigningOut: false }
                     && navigationService.CurrentInternalPage is Pages.MusicsPage { IsMusicDetailsActive: true } details
                         ? details : null),
-            nearbyDevices: new McpNearbyDevicesService(Services.GetRequiredService<NearbyDeviceDiscoveryService>().ReadState));
+            nearbyDevices: new McpNearbyDevicesService(Services.GetRequiredService<NearbyDeviceDiscoveryService>().ReadState,
+                () =>
+                {
+                    var (available, received, uploaded) = Services.GetRequiredService<WindowsPeerMediaExchange>().ReadTransferState();
+                    return new(available, received, uploaded);
+                }));
         MainMizonWindow.Closed += MainWindow_Closed;
         if (_pendingResultActivation is { } pendingResult)
         {
@@ -361,7 +366,9 @@ public partial class App : Application
             static (session, state) => TaskbarProfileBridge.PublishPresence(session, state.IsOnline),
             static error => AppLog.Information($"Profile presence update failed ({error.GetType().Name}).")));
         services.AddSingleton<IProfilePresenceService>(sp => sp.GetRequiredService<ProfilePresenceService>());
-        services.AddSingleton<NearbyDeviceDiscoveryService>(_ => _discoveryService = new(new WindowsNearbyDeviceTransport(),
+        services.AddSingleton<WindowsPeerMediaExchange>();
+        services.AddSingleton<NearbyDeviceDiscoveryService>(sp => _discoveryService = new(
+            new WindowsNearbyDeviceTransport(sp.GetRequiredService<WindowsPeerMediaExchange>().Open),
             static error => AppLog.Information($"Nearby discovery stopped ({error.GetType().Name}, 0x{error.HResult:X8}).")));
 
         // Register a shared MediaDownloader
@@ -369,7 +376,10 @@ public partial class App : Application
         {
             var client = new HttpClient();
             var cacheRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "MizonCache");
-            return new Mizon.API.Client.Operations.Media.MediaDownloader(client, cacheRoot);
+            var peers = sp.GetRequiredService<WindowsPeerMediaExchange>();
+            var downloader = new Mizon.API.Client.Operations.Media.MediaDownloader(client, cacheRoot, peers);
+            peers.Attach(downloader);
+            return downloader;
         });
 
         // Register ViewModels:

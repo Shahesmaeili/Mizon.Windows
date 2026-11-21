@@ -14,7 +14,7 @@
   <data name="Start" xml:space="preserve"><value>ادامهٔ کشف</value></data>
   <data name="Stop" xml:space="preserve"><value>مکث</value></data>
   <data name="Retry" xml:space="preserve"><value>تلاش دوباره</value></data>
-  <data name="Privacy" xml:space="preserve"><value>تا وقتی کشف روشن است، دستگاه‌های دیگر میزون در همین شبکه می‌توانند نام دستگاه، نسخهٔ برنامه و نام عمومی حسابت را ببینند. مشخصات را خود دستگاه‌ها اعلام می‌کنند.</value></data>
+  <data name="Privacy" xml:space="preserve"><value>تا وقتی کشف روشن است، دستگاه‌های دیگر میزون در همین شبکه می‌توانند نام دستگاه، نسخهٔ برنامه و نام عمومی حسابت را ببینند. رسانهٔ عمومی موجود در کش هم می‌تواند در همین شبکه به‌اشتراک گذاشته شود. مشخصات را خود دستگاه‌ها اعلام می‌کنند.</value></data>
   <data name="Controller" xml:space="preserve"><value>برای باز کردن A را بزن. با جهت‌ها حرکت کن و با B ببند.</value></data>
   <data name="ControllerFooter" xml:space="preserve"><value>جهت‌ها برای حرکت · A برای انتخاب · B برای بستن</value></data>
   <data name="Version" xml:space="preserve"><value>{0} · میزون {1}</value></data>

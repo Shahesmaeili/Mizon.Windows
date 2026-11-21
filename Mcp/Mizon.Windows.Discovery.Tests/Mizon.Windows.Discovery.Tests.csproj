@@ -12,6 +12,11 @@
   <ItemGroup>
     <Compile Include="..\..\Services\Discovery\NearbyDevice.cs" Link="Production\NearbyDevice.cs" />
     <Compile Include="..\..\Services\Discovery\NearbyDeviceDiscoveryService.cs" Link="Production\NearbyDeviceDiscoveryService.cs" />
+    <ProjectReference Include="..\..\..\..\Mizon.API\Mizon.API.Client\Mizon.API.Client.csproj" />
+    <Compile Include="..\..\Services\Discovery\PublicPeerMediaIndex.cs" Link="Production\PublicPeerMediaIndex.cs" />
+    <Compile Include="..\..\Services\Discovery\WindowsPeerMediaExchange.cs" Link="Production\WindowsPeerMediaExchange.cs" />
+    <Compile Include="..\..\Services\Discovery\WindowsPeerMediaExchange.Session.cs" Link="Production\WindowsPeerMediaExchange.Session.cs" />
+    <Compile Include="..\..\Services\Discovery\NearbyMediaSession.cs" Link="Production\NearbyMediaSession.cs" />
     <Compile Include="..\..\Services\Discovery\WindowsNearbyDeviceTransport.cs" Link="Production\WindowsNearbyDeviceTransport.cs" />
   </ItemGroup>
 </Project>

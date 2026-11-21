@@ -24,6 +24,9 @@ Narrator. Native WinUI focus handles controller A and directional navigation.
 B and Esc close the popup. The app's MCP reader has a separate opt-in scope and
 returns aggregate device counts and discovery status only.
 
+The subsequent [LAN media task](2026-11-21-lan-media-transfer.md) adds a pinned
+TLS data listener while retaining this discovery contract.
+
 ## DNS-SD contract
 
 Use service type `_mizon-peer._tcp` in `local.` with instance

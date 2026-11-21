@@ -11,19 +11,23 @@ using Windows.Networking.Sockets;
 
 namespace Mizon.Windows.Services.Discovery;
 
-internal sealed class WindowsNearbyDeviceTransport : INearbyDeviceTransport
+internal sealed class WindowsNearbyDeviceTransport(Func<Guid, CancellationToken, INearbyMediaSession?>? openMedia = null) : INearbyDeviceTransport
 {
     private const string FullNameProperty = "System.Devices.Dnssd.FullName";
     private const string TextProperty = "System.Devices.Dnssd.TextAttributes";
+    private const string AddressProperty = "System.Devices.IpAddress";
+    private const string PortProperty = "System.Devices.Dnssd.PortNumber";
+    private const string HostProperty = "System.Devices.Dnssd.HostName";
     private const string Query = """
         System.Devices.AepService.ProtocolId:="{4526e8c1-8aac-4153-9b16-55e86ada0e54}" AND System.Devices.Dnssd.Domain:="local" AND System.Devices.Dnssd.ServiceName:="_mizon-peer._tcp"
         """;
 
     public async Task RunAsync(NearbyDevice local, Action ready, Action<string, string?, IEnumerable<string>?> update, CancellationToken cancellationToken)
     {
+        await using var media = openMedia?.Invoke(local.Id, cancellationToken);
         using var listener = new StreamSocketListener();
         listener.ConnectionReceived += RejectConnection;
-        var watcher = DeviceInformation.CreateWatcher(Query, new List<string> { FullNameProperty, TextProperty },
+        var watcher = DeviceInformation.CreateWatcher(Query, new List<string> { FullNameProperty, TextProperty, AddressProperty, PortProperty, HostProperty },
             DeviceInformationKind.AssociationEndpointService);
         var stopped = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var sync = new object();
@@ -35,8 +39,18 @@ internal sealed class WindowsNearbyDeviceTransport : INearbyDeviceTransport
             // An Added event can precede TXT availability. Updated merges partial native properties.
             if (info.Properties.TryGetValue(FullNameProperty, out var fullName) && fullName is string name
                 && info.Properties.TryGetValue(TextProperty, out var values) && values is IEnumerable<string> txt)
+            {
                 update(info.Id, name, txt);
-            else update(info.Id, null, null);
+                info.Properties.TryGetValue(AddressProperty, out var addresses);
+                info.Properties.TryGetValue(PortProperty, out var port);
+                info.Properties.TryGetValue(HostProperty, out var host);
+                media?.UpdateEndpoint(info.Id, name, txt, addresses, port, host as string);
+            }
+            else
+            {
+                update(info.Id, null, null);
+                media?.UpdateEndpoint(info.Id, null, null, null, null, null);
+            }
         }
 
         void Added(DeviceWatcher sender, DeviceInformation info)
@@ -62,7 +76,11 @@ internal sealed class WindowsNearbyDeviceTransport : INearbyDeviceTransport
         void Removed(DeviceWatcher sender, DeviceInformationUpdate change)
         {
             lock (sync)
-                if (active && endpoints.Remove(change.Id)) update(change.Id, null, null);
+            {
+                if (!active || !endpoints.Remove(change.Id)) return;
+                update(change.Id, null, null);
+                media?.UpdateEndpoint(change.Id, null, null, null, null, null);
+            }
         }
 
         void Stopped(DeviceWatcher sender, object args) => stopped.TrySetResult();
@@ -79,6 +97,12 @@ internal sealed class WindowsNearbyDeviceTransport : INearbyDeviceTransport
             var advertisement = new DnssdServiceInstance(NearbyDeviceProtocol.FullName(local.Id), null, 0);
             foreach (var (key, value) in NearbyDeviceProtocol.ToTxt(local))
                 advertisement.TextAttributes.Add(key, value);
+            if (media is not null)
+            {
+                advertisement.TextAttributes.Add("media", "1");
+                advertisement.TextAttributes.Add("cert", media.CertificateFingerprint);
+                advertisement.TextAttributes.Add("media-port", media.Port.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
             var registration = await advertisement.RegisterStreamSocketListenerAsync(listener).AsTask(startup.Token).ConfigureAwait(false);
             if (registration.Status != DnssdRegistrationStatus.Success)
                 throw new IOException($"DNS-SD registration status {registration.Status}.");
@@ -99,6 +123,6 @@ internal sealed class WindowsNearbyDeviceTransport : INearbyDeviceTransport
         }
     }
 
-    // The socket only supplies an advertised port. This phase has no peer session protocol.
-    private static void RejectConnection(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args) => args.Socket.Dispose();
+    private static void RejectConnection(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args) =>
+        args.Socket.Dispose();
 }

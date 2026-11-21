@@ -26,7 +26,8 @@ internal static partial class Program
             await host.Approve(connection.Id, false, false, false, nearbyRead: true);
             var response = await peer.Call("get_nearby_devices");
             Assert(response is { Success: true, NearbyDevices: { DiscoveryStatus: "searching", DeviceCount: 2 } }
-                && response.NearbyDevices.PlatformCounts.SequenceEqual([new("ios", 1), new("macos", 1)]),
+                && response.NearbyDevices.PlatformCounts.SequenceEqual([new("ios", 1), new("macos", 1)])
+                && response.NearbyDevices.MediaTransfer is { IsAvailable: true, ReceivedBytes: 262144, UploadedBytes: 524288 },
                 "Authorized local discovery MCP wire response matches the shared state");
             Assert(!JsonSerializer.Serialize(response, McpJsonContext.Default.McpResponse).Contains("private-", StringComparison.Ordinal),
                 "MCP never returns device names or account metadata");
