@@ -23,11 +23,16 @@ The existing controller-accessible Nearby pause also stops sharing.
 - WinUI Debug x64 build and isolated discovery MCP permission/SDK contract tests.
 - NativeAOT Windows fixture used the production TCP listener to repeatedly serve
   an exact partial piece over pinned TLS, report a missing piece and drain the
-  active workers. Windows discovery stays in WinRT and advertises the optional
+  active workers. Windows uses WinRT and Windows DNS-SD discovery to resolve
+  Bonjour peers even if the Windows device association provider omits them.
+  The Windows announcement carries the optional
   `media-port` TXT value for the separate TCP data listener. Older announcements
   without it use the SRV port. The Swift implementation on Mac downloaded the
   expected 4096-byte piece from this Windows NativeAOT announcement and saw the
-  matching unavailable response for the next piece.
+  matching unavailable response for the next piece. A second Windows process
+  discovered the first probe automatically and downloaded its verified piece.
+  On the physical LAN, Windows NativeAOT also resolved the Swift Mac probe via
+  DNS-SD, received its second 4096-byte piece and checked its SHA-256 digest.
 - NativeAOT SDK fixture combined two real pinned TLS peers with the missing
   origin ranges and reconstructed identical bytes. It exercised certificate pin
   rejection and corrupt-peer fallback.

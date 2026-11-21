@@ -25,6 +25,7 @@ internal sealed class WindowsNearbyDeviceTransport(Func<Guid, CancellationToken,
     public async Task RunAsync(NearbyDevice local, Action ready, Action<string, string?, IEnumerable<string>?> update, CancellationToken cancellationToken)
     {
         await using var media = openMedia?.Invoke(local.Id, cancellationToken);
+        using var mediaBrowser = media is not null ? new WindowsMediaDnsBrowser(media, update) : null;
         using var listener = new StreamSocketListener();
         listener.ConnectionReceived += RejectConnection;
         var watcher = DeviceInformation.CreateWatcher(Query, new List<string> { FullNameProperty, TextProperty, AddressProperty, PortProperty, HostProperty },
@@ -107,6 +108,7 @@ internal sealed class WindowsNearbyDeviceTransport(Func<Guid, CancellationToken,
             if (registration.Status != DnssdRegistrationStatus.Success)
                 throw new IOException($"DNS-SD registration status {registration.Status}.");
             watcher.Start();
+            mediaBrowser?.Start();
             ready();
             await stopped.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
