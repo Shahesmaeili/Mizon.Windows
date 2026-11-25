@@ -17,6 +17,9 @@ deployed app after the API and database rollout. Platform logo vectors are from
 Bootstrap Icons v1.13.1 with the license included alongside the assets.
 Live updates reuse each existing device row. Later refreshes keep the visible
 layout stable, and changing the language updates the loaded data without an HTTP request.
+The device badge uses the WinUI ControlFillColorSecondaryBrush theme resource.
+The former resource name caused a XAML parse failure when the first device row
+was materialized in Security settings.
 
 mizon_get_device_sessions requires the independent Device Sessions read grant.
 It returns summary counters and inactivity policy, omitting device identities
