@@ -7,6 +7,8 @@ using Mizon.API.Client.Operations.Clients;
 using Mizon.API.Client.Responses.Clients;
 using Mizon.Windows.Services;
 using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -14,11 +16,33 @@ using System.Threading.Tasks;
 
 namespace Mizon.Windows.UserControls;
 
-public sealed record DeviceSessionRow(ClientSessionItemResponse Session, string Glyph, SvgImageSource? Logo, string Title,
-    string VersionLabel, string StatusLabel)
+public sealed class DeviceSessionRow(ClientSessionItemResponse session, string glyph, SvgImageSource? logo, string title,
+    string versionLabel, string statusLabel) : INotifyPropertyChanged
 {
+    public ClientSessionItemResponse Session { get; private set; } = session;
+    public string Glyph { get; private set; } = glyph;
+    public SvgImageSource? Logo { get; private set; } = logo;
+    public string Title { get; private set; } = title;
+    public string VersionLabel { get; private set; } = versionLabel;
+    public string StatusLabel { get; private set; } = statusLabel;
     public Visibility DeviceGlyphVisibility => Logo is null ? Visibility.Visible : Visibility.Collapsed;
     public Visibility OnlineIndicatorVisibility => Session.IsOnline ? Visibility.Visible : Visibility.Collapsed;
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    internal void Update(DeviceSessionRow row)
+    {
+        var presentationChanged = Glyph != row.Glyph || Logo != row.Logo || Title != row.Title ||
+            VersionLabel != row.VersionLabel || StatusLabel != row.StatusLabel || Session.IsOnline != row.Session.IsOnline;
+        Session = row.Session;
+        if (!presentationChanged) return;
+        Glyph = row.Glyph;
+        Logo = row.Logo;
+        Title = row.Title;
+        VersionLabel = row.VersionLabel;
+        StatusLabel = row.StatusLabel;
+        PropertyChanged?.Invoke(this, new(string.Empty));
+    }
+
     public override string ToString() => $"{Title}, {VersionLabel}, {StatusLabel}";
 }
 
@@ -30,6 +54,7 @@ public sealed partial class DeviceSessionsPanel : UserControl
     private SvgImageSource? _androidLogo;
     private readonly MizonApi _api;
     private readonly Lazy<MizonSocket> _socket;
+    private readonly ObservableCollection<DeviceSessionRow> _otherRows = [];
     private CancellationTokenSource? _lifetime;
     private bool _busy;
     private bool _refreshPending;
@@ -37,6 +62,7 @@ public sealed partial class DeviceSessionsPanel : UserControl
     private bool _showingDialog;
     private ContentDialog? _dialog;
     private int _days;
+    private int _inactivityRevision = -1;
 
     public DeviceSessionsPanel()
     {
@@ -44,6 +70,7 @@ public sealed partial class DeviceSessionsPanel : UserControl
         _api = services.GetRequiredService<MizonApi>();
         _socket = services.GetRequiredService<Lazy<MizonSocket>>();
         InitializeComponent();
+        OtherDevices.ItemsSource = _otherRows;
     }
 
     public LocalizationService Localization => LocalizationService.Current;
@@ -69,6 +96,11 @@ public sealed partial class DeviceSessionsPanel : UserControl
         _lifetime = null;
         lifetime.Cancel();
         lifetime.Dispose();
+        CurrentDevice.Content = null;
+        _otherRows.Clear();
+        DeviceList.Visibility = Visibility.Collapsed;
+        DeviceActions.Visibility = Visibility.Collapsed;
+        StatusMessage.IsOpen = false;
     }
 
     private void SessionsChanged(object? sender, EventArgs args) =>
@@ -77,7 +109,15 @@ public sealed partial class DeviceSessionsPanel : UserControl
     private void LocalizationChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
     {
         if (args.PropertyName == nameof(LocalizationService.Revision))
-            DispatcherQueue.TryEnqueue(async () => await RefreshAsync());
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (_lifetime is null) return;
+                if (CurrentDevice.Content is DeviceSessionRow current)
+                    current.Update(ToRow(current.Session));
+                foreach (var row in _otherRows)
+                    row.Update(ToRow(row.Session));
+                SetInactivity();
+            });
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs args) => await RefreshAsync();
@@ -92,8 +132,11 @@ public sealed partial class DeviceSessionsPanel : UserControl
         }
 
         _busy = true;
-        Loading.IsActive = true;
-        Loading.Visibility = Visibility.Visible;
+        if (DeviceList.Visibility != Visibility.Visible)
+        {
+            Loading.IsActive = true;
+            Loading.Visibility = Visibility.Visible;
+        }
         try
         {
             do
@@ -109,9 +152,14 @@ public sealed partial class DeviceSessionsPanel : UserControl
 
                 var current = content.Sessions.FirstOrDefault(item => item.IsCurrent);
                 var others = content.Sessions.Where(item => !item.IsCurrent).Select(ToRow).ToArray();
-                CurrentDevice.Content = current is null ? null : ToRow(current);
+                var currentRow = current is null ? null : ToRow(current);
+                if (CurrentDevice.Content is DeviceSessionRow displayed && currentRow is not null &&
+                    displayed.Session.SessionPublicId == currentRow.Session.SessionPublicId)
+                    displayed.Update(currentRow);
+                else
+                    CurrentDevice.Content = currentRow;
                 DeviceList.Visibility = current is null ? Visibility.Collapsed : Visibility.Visible;
-                OtherDevices.ItemsSource = others;
+                UpdateOtherRows(others);
                 OtherDevices.Visibility = others.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
                 NoOthers.Visibility = others.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
                 RevokeOthers.IsEnabled = others.Length > 0;
@@ -133,14 +181,47 @@ public sealed partial class DeviceSessionsPanel : UserControl
         }
     }
 
+    private void UpdateOtherRows(DeviceSessionRow[] incoming)
+    {
+        var ids = incoming.Select(row => row.Session.SessionPublicId).ToHashSet();
+        for (var index = _otherRows.Count - 1; index >= 0; index--)
+        {
+            if (!ids.Contains(_otherRows[index].Session.SessionPublicId))
+                _otherRows.RemoveAt(index);
+        }
+
+        var rowsById = _otherRows.ToDictionary(row => row.Session.SessionPublicId);
+        for (var index = 0; index < incoming.Length; index++)
+        {
+            var updated = incoming[index];
+            if (!rowsById.TryGetValue(updated.Session.SessionPublicId, out var existing))
+            {
+                _otherRows.Insert(index, updated);
+                continue;
+            }
+
+            existing.Update(updated);
+            var position = _otherRows.IndexOf(existing);
+            if (position != index)
+                _otherRows.Move(position, index);
+        }
+    }
+
     private void SetInactivity()
     {
+        var revision = Localization.Revision;
+        var selectedIndex = Array.IndexOf(InactivityChoices, _days);
+        if (_inactivityRevision == revision && Inactivity.SelectedIndex == selectedIndex) return;
         _settingInactivity = true;
         try
         {
-            Inactivity.ItemsSource = InactivityChoices.Select(days => days == 0
-                ? Text("DevicesNever") : string.Format(Culture, Text("DevicesDays"), days)).ToArray();
-            Inactivity.SelectedIndex = Array.IndexOf(InactivityChoices, _days);
+            if (_inactivityRevision != revision)
+            {
+                Inactivity.ItemsSource = InactivityChoices.Select(days => days == 0
+                    ? Text("DevicesNever") : string.Format(Culture, Text("DevicesDays"), days)).ToArray();
+                _inactivityRevision = revision;
+            }
+            Inactivity.SelectedIndex = selectedIndex;
         }
         finally { _settingInactivity = false; }
     }
@@ -182,7 +263,7 @@ public sealed partial class DeviceSessionsPanel : UserControl
 
     private async Task ShowDetailsAsync(DeviceSessionRow row)
     {
-        if (_showingDialog || _lifetime is null || XamlRoot is null) return;
+        if (_showingDialog || _lifetime is not { } lifetime || XamlRoot is null) return;
         var session = row.Session;
         var information = new StackPanel { Spacing = 8 };
         Add(row.VersionLabel);
@@ -205,7 +286,8 @@ public sealed partial class DeviceSessionsPanel : UserControl
                 SecondaryButtonText = !session.IsCurrent && session.IsUnconfirmed ? Text("DevicesConfirmSession") : string.Empty,
             };
             var action = await ShowDialogAsync(dialog);
-            if (action == ContentDialogResult.Secondary && _lifetime is { } lifetime)
+            if (!ReferenceEquals(_lifetime, lifetime)) return;
+            if (action == ContentDialogResult.Secondary)
             {
                 var confirmation = await _api.SendRequestAsync(new ConfirmSessionOperation(new()
                 {
@@ -215,10 +297,12 @@ public sealed partial class DeviceSessionsPanel : UserControl
                 if (!confirmation.IsSuccess) ShowError(confirmation.Error?.Code);
                 else await RefreshAsync();
             }
-            if (action == ContentDialogResult.Primary && _lifetime is not null &&
-                await ConfirmAsync(Text("DevicesTerminate"), Text("DevicesTerminateOneConfirm")))
+            if (action == ContentDialogResult.Primary &&
+                await ConfirmAsync(Text("DevicesTerminate"), Text("DevicesTerminateOneConfirm")) &&
+                ReferenceEquals(_lifetime, lifetime))
                 await RevokeAsync(session.SessionPublicId);
         }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
         catch (Exception error) { AppLog.Error("Could not show session details.", error); ShowError(); }
         finally { _showingDialog = false; }
 
@@ -227,11 +311,12 @@ public sealed partial class DeviceSessionsPanel : UserControl
 
     private async void RevokeOthers_Click(object sender, RoutedEventArgs args)
     {
-        if (_showingDialog || _lifetime is null || XamlRoot is null) return;
+        if (_showingDialog || _lifetime is not { } lifetime || XamlRoot is null) return;
         _showingDialog = true;
         try
         {
-            if (await ConfirmAsync(Text("DevicesTerminateOthers"), Text("DevicesTerminateOthersConfirm")))
+            if (await ConfirmAsync(Text("DevicesTerminateOthers"), Text("DevicesTerminateOthersConfirm")) &&
+                ReferenceEquals(_lifetime, lifetime))
                 await RevokeAsync(null);
         }
         catch (Exception error) { AppLog.Error("Could not close other sessions.", error); ShowError(); }

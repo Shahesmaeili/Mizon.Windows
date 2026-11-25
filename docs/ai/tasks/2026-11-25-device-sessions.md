@@ -15,6 +15,8 @@ The panel uses WinUI input and accessibility controls and has Persian and Englis
 resources. Check the physical Xbox focus path, Narrator, theme, and layout on the
 deployed app after the API and database rollout. Platform logo vectors are from
 Bootstrap Icons v1.13.1 with the license included alongside the assets.
+Live updates reuse each existing device row. Later refreshes keep the visible
+layout stable, and changing the language updates the loaded data without an HTTP request.
 
 mizon_get_device_sessions requires the independent Device Sessions read grant.
 It returns summary counters and inactivity policy, omitting device identities

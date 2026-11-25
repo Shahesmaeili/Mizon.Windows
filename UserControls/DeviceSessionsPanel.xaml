@@ -10,20 +10,20 @@
             <Grid ColumnSpacing="12" Padding="8,9" HorizontalAlignment="Stretch">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                 <Grid Width="40" Height="40" CornerRadius="10" Background="{ThemeResource ControlSecondaryFillColorDefaultBrush}" VerticalAlignment="Top">
-                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{x:Bind Glyph}" FontSize="18"
-                              Visibility="{x:Bind DeviceGlyphVisibility}" AutomationProperties.AccessibilityView="Raw"/>
-                    <Image Source="{x:Bind Logo}" Width="19" Height="19" HorizontalAlignment="Center"
+                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{x:Bind Glyph, Mode=OneWay}" FontSize="18"
+                              Visibility="{x:Bind DeviceGlyphVisibility, Mode=OneWay}" AutomationProperties.AccessibilityView="Raw"/>
+                    <Image Source="{x:Bind Logo, Mode=OneWay}" Width="19" Height="19" HorizontalAlignment="Center"
                            VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
                 </Grid>
                 <StackPanel Grid.Column="1" Spacing="4">
-                    <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                    <TextBlock Text="{x:Bind VersionLabel}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{x:Bind Title, Mode=OneWay}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock Text="{x:Bind VersionLabel, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
                     <Grid ColumnSpacing="6">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                         <Ellipse Width="6" Height="6" Fill="{ThemeResource SystemFillColorSuccessBrush}"
-                                 VerticalAlignment="Center" Visibility="{x:Bind OnlineIndicatorVisibility}"
+                                 VerticalAlignment="Center" Visibility="{x:Bind OnlineIndicatorVisibility, Mode=OneWay}"
                                  AutomationProperties.AccessibilityView="Raw"/>
-                        <TextBlock Grid.Column="1" Text="{x:Bind StatusLabel}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        <TextBlock Grid.Column="1" Text="{x:Bind StatusLabel, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                    FontSize="12" TextWrapping="Wrap"/>
                     </Grid>
                 </StackPanel>
