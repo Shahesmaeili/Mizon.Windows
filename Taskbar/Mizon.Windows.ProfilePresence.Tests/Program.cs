@@ -68,6 +68,112 @@ catch (ObjectDisposedException) { count++; }
 service.Dispose();
 Check(errors == 0, "Normal lifecycle has no unobserved errors");
 
+var sharedTransport = new FakeTransport();
+var sharedClock = new TestClock();
+var sharedPublications = new List<(long Session, ProfilePresenceState State)>();
+using (var shared = new ProfilePresenceService(() => sharedTransport,
+    (session, state) => sharedPublications.Add((session, state)), _ => ++errors, sharedClock))
+{
+    shared.SetSession(true, 10);
+    Check(sharedTransport.WatchCount == 0, "Account watch waits for the authenticated hub connection");
+    sharedTransport.SetState(true, false);
+    Check(sharedTransport.WatchCount == 1 && !sharedTransport.Intent,
+        "An inactive Windows window still subscribes to the account");
+    sharedTransport.SetAccountState(true);
+    Check(shared.ReadState() == new ProfilePresenceState(true, false, true, true, true),
+        "Another device confirms the account online while Windows is inactive");
+    Check(sharedPublications[^1].State.IsOnline,
+        "The same account snapshot marks the Windows taskbar publisher online");
+    var reportsBeforeLease = sharedTransport.CallCount;
+    var publicationsAtRemoteOnline = sharedPublications.Count;
+    sharedClock.Tick();
+    Check(sharedPublications.Count == publicationsAtRemoteOnline + 1 && sharedTransport.CallCount == reportsBeforeLease,
+        "Remote-only presence renews local taskbar IPC without sending window focus again");
+
+    shared.SetWindowActive(true);
+    Check(sharedTransport.Intent && shared.ReadState().IsOnline, "Focus gain keeps account presence while reporting local activity");
+    shared.SetWindowActive(false);
+    sharedTransport.SetState(true, false);
+    Check(!sharedTransport.Intent && shared.ReadState().IsOnline,
+        "Deactivating Windows does not override another active device");
+    sharedTransport.SetAccountState(false);
+    Check(!shared.ReadState().IsOnline && shared.ReadState().HasConfirmedState,
+        "The final device going inactive turns the confirmed account indicator off");
+
+    sharedTransport.SetAccountState(true);
+    sharedTransport.SetState(false, null);
+    Check(!shared.ReadState().IsOnline && !shared.ReadState().HasConfirmedState, "Disconnect clears the account confirmation");
+    sharedTransport.SetState(true, null);
+    Check(sharedTransport.WatchCount == 2 && !shared.ReadState().IsOnline, "Reconnect watches again before showing fresh online state");
+    sharedTransport.SetAccountState(true);
+    Check(shared.ReadState().IsOnline, "The reconnected account watch updates an inactive window");
+    shared.SetSession(false, 10);
+    sharedTransport.SetAccountState(true);
+    Check(!shared.ReadState().IsOnline && !shared.ReadState().HasSession,
+        "Signing out clears presence and rejects later account events");
+}
+
+sharedTransport = new FakeTransport { FailWatch = true };
+sharedTransport.SetState(true, null);
+using (var legacy = new ProfilePresenceService(() => sharedTransport, (_, _) => { }, _ => { }))
+{
+    legacy.SetSession(true, 11);
+    legacy.SetWindowActive(true);
+    sharedTransport.SetState(true, true);
+    Check(legacy.ReadState().IsOnline && legacy.ReadState().HasConfirmedState,
+        "Unavailable account watch keeps legacy local focus confirmation");
+    legacy.SetWindowActive(false);
+    Check(!legacy.ReadState().IsOnline && sharedTransport.WatchCount == 1,
+        "An older hub is not re-probed on each focus change");
+}
+
+var unfinishedWatch = new TaskCompletionSource();
+var nextWatch = new TaskCompletionSource();
+var oldWatchToken = CancellationToken.None;
+var replacementTransport = new FakeTransport
+{
+    OnWatch = token =>
+    {
+        oldWatchToken = token;
+        return unfinishedWatch.Task;
+    }
+};
+replacementTransport.SetState(true, null);
+using (var replacement = new ProfilePresenceService(() => replacementTransport, (_, _) => { }, _ => { }))
+{
+    replacement.SetSession(true, 12);
+    replacementTransport.SetAccountState(true);
+    Check(!replacement.ReadState().IsOnline, "A pending subscription does not publish a retained account snapshot");
+    replacement.SetSession(false, 12);
+    Check(oldWatchToken.IsCancellationRequested, "Logout cancels the old account subscription");
+    replacementTransport.OnWatch = _ => nextWatch.Task;
+    replacement.SetSession(true, 13);
+    unfinishedWatch.SetResult();
+    Check(!replacement.ReadState().IsOnline, "Completion from before logout cannot confirm the new session");
+    replacementTransport.SetAccountState(false);
+    nextWatch.SetResult();
+    Check(replacement.ReadState().HasConfirmedState && !replacement.ReadState().IsOnline,
+        "The new subscription confirms its own current snapshot");
+}
+
+var remoteOnlineTransport = new FakeTransport();
+var remoteOnlineClock = new TestClock();
+remoteOnlineTransport.SetState(true, false);
+using (var remoteOnline = new ProfilePresenceService(() => remoteOnlineTransport, (_, _) => { },
+    _ => { }, remoteOnlineClock))
+{
+    remoteOnline.SetSession(true, 14);
+    remoteOnlineTransport.SetAccountState(true);
+    remoteOnlineTransport.Fail = true;
+    remoteOnline.SetWindowActive(true);
+    var focusReports = remoteOnlineTransport.CallCount;
+    remoteOnlineTransport.Fail = false;
+    remoteOnlineClock.Tick();
+    Check(remoteOnlineTransport.CallCount == focusReports + 1 && remoteOnlineTransport.Intent
+        && remoteOnline.ReadState().IsOnline,
+        "Account confirmation leaves local focus retries enabled");
+}
+
 var failedTransport = new FakeTransport { Fail = true };
 using (var failed = new ProfilePresenceService(() => failedTransport, (_, _) => { }, _ => ++errors))
 {
@@ -182,7 +288,10 @@ internal sealed class FakeTransport : IProfilePresenceTransport
     public event EventHandler? StateChanged;
     public int SubscriberCount => StateChanged?.GetInvocationList().Length ?? 0;
     public int CallCount;
+    public int WatchCount;
     public bool Intent, Disposed, Fail, WaitForCancellation;
+    public bool FailWatch;
+    public Func<CancellationToken, Task>? OnWatch;
     public TaskCompletionSource Canceled = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private ProfilePresenceTransportState _state;
     public ProfilePresenceTransportState ReadState() => _state;
@@ -190,10 +299,16 @@ internal sealed class FakeTransport : IProfilePresenceTransport
     {
         ++CallCount;
         Intent = isActive;
-        _state = _state with { ConfirmedOnline = null };
+        _state = _state with { ConfirmedWindowOnline = null };
         StateChanged?.Invoke(this, EventArgs.Empty);
         if (Fail) throw new IOException("Synthetic presence send failed");
         return WaitForCancellation ? WaitAsync(token) : Task.CompletedTask;
+    }
+    public Task WatchAccountPresenceAsync(CancellationToken token)
+    {
+        ++WatchCount;
+        return FailWatch ? Task.FromException(new IOException("Synthetic older hub"))
+            : OnWatch?.Invoke(token) ?? Task.CompletedTask;
     }
     private async Task WaitAsync(CancellationToken token)
     {
@@ -202,7 +317,12 @@ internal sealed class FakeTransport : IProfilePresenceTransport
     }
     public void SetState(bool connected, bool? online)
     {
-        _state = new(connected, online);
+        _state = new(connected, online, connected ? _state.AccountOnline : null);
+        StateChanged?.Invoke(this, EventArgs.Empty);
+    }
+    public void SetAccountState(bool? online)
+    {
+        _state = _state with { AccountOnline = online };
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
     public void Dispose() { Disposed = true; StateChanged = null; }

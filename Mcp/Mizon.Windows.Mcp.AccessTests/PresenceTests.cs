@@ -24,6 +24,7 @@ internal static partial class Program
         var states = new ProfilePresenceState[]
         {
             new(true, true, true, true, true),
+            new(true, false, true, true, true),
             new(true, false, true, false, true),
             new(true, true, false, false, false),
             new(true, true, true, false, false),

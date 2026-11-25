@@ -18,8 +18,8 @@ identity; client names do not grant access.
 | `hasSession` | The shared service has a current signed-in session. |
 | `isWindowActive` | Mizon's main window is active. Reading does not activate it. |
 | `isConnected` | The presence SignalR connection is currently connected. |
-| `isOnline` | The current indicator state from the shared service. |
-| `hasConfirmedState` | The current presence state is confirmed by the server. Do not treat an unconfirmed indicator as authoritative. |
+| `isOnline` | The signed-in account's indicator, including active windows on other devices. Older servers report only the current Windows window. |
+| `hasConfirmedState` | The server has confirmed the displayed state. |
 
 These are the only presence fields. No account IDs, profile details, tokens,
 last-seen times, window titles or other users are returned. A signed-out snapshot

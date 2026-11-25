@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 namespace Mizon.Windows.Services;
 
 /// <summary>
-/// One focus owner, one authenticated SignalR connection, and the same confirmed
-/// state for the header and taskbar. No socket is allocated on the sign-in page.
+/// The signed-in shell reports this window's focus and shares the account's
+/// confirmed presence with the header and taskbar over the existing connection.
 /// </summary>
 public sealed class ProfilePresenceService : IProfilePresenceService, IDisposable
 {
@@ -17,6 +17,8 @@ public sealed class ProfilePresenceService : IProfilePresenceService, IDisposabl
     private readonly TimeProvider _timeProvider;
     private readonly CancellationTokenSource _lifetime = new();
     private IProfilePresenceTransport? _transport;
+    private CancellationTokenSource? _accountWatch;
+    private bool _accountWatchReady;
     private ITimer? _leaseTimer;
     private ITimer? _retryTimer;
     private ProfilePresenceState _state = new(false, false, false, false, false);
@@ -51,6 +53,7 @@ public sealed class ProfilePresenceService : IProfilePresenceService, IDisposabl
         {
             if (_disposed) return;
             if (_state.HasSession == authenticated && _session == session) return;
+            ClearAccountWatchLocked();
             _session = session;
             _state = _state with { HasSession = authenticated, IsOnline = false, HasConfirmedState = false };
             if (authenticated && _transport is null)
@@ -68,7 +71,7 @@ public sealed class ProfilePresenceService : IProfilePresenceService, IDisposabl
         lock (_gate)
         {
             if (_disposed || _state.IsWindowActive == active) return;
-            _state = _state with { IsWindowActive = active, IsOnline = false, HasConfirmedState = false };
+            _state = _state with { IsWindowActive = active };
             SynchronizeLocked();
             RefreshLocked(forceNotification: true);
         }
@@ -126,7 +129,7 @@ public sealed class ProfilePresenceService : IProfilePresenceService, IDisposabl
     private void ScheduleRetryLocked(long version)
     {
         if (_disposed || version != _sendVersion || !_state.HasSession || !_state.IsConnected
-            || _state.HasConfirmedState || _retryCount >= 3) return;
+            || IsWindowConfirmed(_transport?.ReadState() ?? default) || _retryCount >= 3) return;
         var delay = TimeSpan.FromSeconds(++_retryCount switch { 1 => 1, 2 => 2, _ => 5 });
         _retryTimer?.Dispose();
         _retryTimer = _timeProvider.CreateTimer(static state =>
@@ -136,7 +139,7 @@ public sealed class ProfilePresenceService : IProfilePresenceService, IDisposabl
             {
                 if (retry.Owner._disposed || retry.Version != retry.Owner._sendVersion
                     || !retry.Owner._state.HasSession || !retry.Owner._state.IsConnected
-                    || retry.Owner._state.HasConfirmedState) return;
+                    || retry.Owner.IsWindowConfirmed(retry.Owner._transport?.ReadState() ?? default)) return;
                 retry.Owner.SynchronizeLocked(resetRetries: false);
                 retry.Owner.RefreshLocked();
             }
@@ -155,20 +158,71 @@ public sealed class ProfilePresenceService : IProfilePresenceService, IDisposabl
     {
         var transport = _transport?.ReadState() ?? default;
         var connected = _state.HasSession && transport.IsConnected;
-        var confirmed = connected && transport.ConfirmedOnline is { } online && online == _state.IsWindowActive;
+        if (!connected) ClearAccountWatchLocked();
+        var windowConfirmed = connected && IsWindowConfirmed(transport);
+        var accountOnline = _accountWatchReady ? transport.AccountOnline : null;
         var next = _state with
         {
             IsConnected = connected,
-            HasConfirmedState = confirmed,
-            IsOnline = confirmed && _state.IsWindowActive
+            HasConfirmedState = accountOnline.HasValue || windowConfirmed,
+            IsOnline = accountOnline ?? (windowConfirmed && _state.IsWindowActive)
         };
-        if (!forceNotification && next == _state) return;
-        _state = next;
-        if (next.HasConfirmedState || !next.IsConnected)
+        if (windowConfirmed || !connected)
         {
             _retryTimer?.Dispose();
             _retryTimer = null;
         }
+        if (forceNotification || next != _state) PublishStateLocked(next);
+        if (!_disposed && _state.IsConnected && _transport is { } connectedTransport && _accountWatch is null)
+        {
+            var watch = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            _accountWatch = watch;
+            _ = ObserveAccountWatchAsync(connectedTransport, watch);
+        }
+    }
+
+    private bool IsWindowConfirmed(ProfilePresenceTransportState transport) =>
+        transport.IsConnected && transport.ConfirmedWindowOnline is { } online && online == _state.IsWindowActive;
+
+    private async Task ObserveAccountWatchAsync(IProfilePresenceTransport transport, CancellationTokenSource watch)
+    {
+        try
+        {
+            await transport.WatchAccountPresenceAsync(watch.Token).ConfigureAwait(false);
+            lock (_gate)
+            {
+                if (_disposed || !ReferenceEquals(_accountWatch, watch)) return;
+                _accountWatchReady = true;
+                RefreshLocked();
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception error)
+        {
+            // Older hubs only acknowledge this window. Retain that fallback until reconnect.
+            lock (_gate)
+                if (!_disposed && ReferenceEquals(_accountWatch, watch)) _reportError(error);
+        }
+        finally
+        {
+            lock (_gate)
+                if (ReferenceEquals(_accountWatch, watch)) watch.CancelAfter(Timeout.InfiniteTimeSpan);
+        }
+    }
+
+    private void ClearAccountWatchLocked()
+    {
+        var watch = _accountWatch;
+        _accountWatch = null;
+        _accountWatchReady = false;
+        if (watch is null) return;
+        watch.Cancel();
+        watch.Dispose();
+    }
+
+    private void PublishStateLocked(ProfilePresenceState next)
+    {
+        _state = next;
         if (next.IsOnline)
         {
             _leaseTimer ??= _timeProvider.CreateTimer(static state => ((ProfilePresenceService)state!).RenewLease(),
@@ -205,6 +259,7 @@ public sealed class ProfilePresenceService : IProfilePresenceService, IDisposabl
             _leaseTimer = null;
             _retryTimer?.Dispose();
             _retryTimer = null;
+            ClearAccountWatchLocked();
             if (_transport is { } transport)
             {
                 transport.StateChanged -= TransportStateChanged;

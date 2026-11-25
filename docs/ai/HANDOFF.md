@@ -1,6 +1,10 @@
 # Windows handoff
 
-Updated: 2026-11-21. This is a source/verification checkpoint, not an assertion that every visible feature has been tested end to end. Check Git status, remote changes and active task notes before continuing.
+Updated: 2026-11-25. This records the latest source and verification checkpoint. Check Git status, remote changes and active task notes before continuing.
+
+## Same-account device presence — 2026-11-25
+
+The Windows header and taskbar follow the signed-in account's active devices when the Mizon window is inactive. The existing presence read scope shares the same snapshot. See the [task record](tasks/2026-11-25-windows-account-presence.md) for dependencies and verification.
 
 ## Verified LAN media transfer — 2026-11-21
 

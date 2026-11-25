@@ -16,11 +16,12 @@ internal sealed class MizonProfilePresenceTransport : IProfilePresenceTransport
         _socket = socket;
         socket.HubConnectionStateChanged += ConnectionChanged;
         socket.WindowPresenceChanged += PresenceChanged;
+        socket.AccountPresenceChanged += AccountPresenceChanged;
     }
 
     public event EventHandler? StateChanged;
     public ProfilePresenceTransportState ReadState() => _disposed ? default
-        : new(_socket.IsConnected, _socket.WindowPresence?.IsOnline);
+        : new(_socket.IsConnected, _socket.WindowPresence?.IsOnline, _socket.AccountPresence?.IsOnline);
 
     public Task SetWindowPresenceAsync(bool isActive, CancellationToken cancellationToken)
     {
@@ -28,8 +29,16 @@ internal sealed class MizonProfilePresenceTransport : IProfilePresenceTransport
         return _socket.SetWindowPresenceAsync(isActive, cancellationToken);
     }
 
+    public Task WatchAccountPresenceAsync(CancellationToken cancellationToken)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        return _socket.WatchAccountPresenceAsync(cancellationToken);
+    }
+
     private void ConnectionChanged(object? sender, HubConnectionState state) => StateChanged?.Invoke(this, EventArgs.Empty);
     private void PresenceChanged(object? sender, ClientWindowPresenceResponse state) => StateChanged?.Invoke(this, EventArgs.Empty);
+    private void AccountPresenceChanged(object? sender, ClientAccountPresenceResponse? state) =>
+        StateChanged?.Invoke(this, EventArgs.Empty);
 
     public void Dispose()
     {
@@ -37,6 +46,7 @@ internal sealed class MizonProfilePresenceTransport : IProfilePresenceTransport
         _disposed = true;
         _socket.HubConnectionStateChanged -= ConnectionChanged;
         _socket.WindowPresenceChanged -= PresenceChanged;
+        _socket.AccountPresenceChanged -= AccountPresenceChanged;
         StateChanged = null;
         // The authenticated shell owns the shared music/notification connection.
     }
