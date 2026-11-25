@@ -16,7 +16,7 @@ internal static class CompanionTests
         "mizon_get_appearance", "mizon_set_appearance", "mizon_get_navigation", "mizon_open_destination",
         "mizon_get_taskbar_pin_state", "mizon_request_taskbar_pin",
         "mizon_get_music_home", "mizon_refresh_music_home", "mizon_music_home_action", "mizon_get_presence_state", "mizon_get_nearby_devices",
-        "mizon_get_window_state", "mizon_set_fullscreen",
+        "mizon_get_window_state", "mizon_set_fullscreen", "mizon_get_device_sessions",
         "mizon_get_vpn_state", "mizon_set_vpn_particles", "mizon_open_vpn_settings",
         "mizon_get_music_details", "mizon_set_music_details", "mizon_get_person_profile", "mizon_set_person_following", "mizon_load_person_tracks", "mizon_open_person_track",
         "mizon_get_music_discussion", "mizon_manage_music_discussion"
@@ -53,7 +53,7 @@ internal static class CompanionTests
             var state = properties.GetProperty("state").GetProperty("properties");
             Check.That(!state.TryGetProperty("password", out _) && !state.TryGetProperty("accessToken", out _), "Output schema exposes a secret.");
             Check.That(state.GetProperty("hasSession").GetProperty("description").GetString()!.Contains("not proof", StringComparison.Ordinal), "Session presence must not claim server verification.");
-            Check.That(definition.Annotations?.ReadOnlyHint == (tool.Name is "mizon_get_connection" or "mizon_get_auth_state" or "mizon_get_appearance" or "mizon_get_navigation" or "mizon_get_taskbar_pin_state" or "mizon_get_music_home" or "mizon_get_presence_state" or "mizon_get_nearby_devices" or "mizon_get_window_state" or "mizon_get_vpn_state" or "mizon_get_person_profile" or "mizon_get_music_details" or "mizon_get_music_discussion"), "A modifying tool is incorrectly marked read-only.");
+            Check.That(definition.Annotations?.ReadOnlyHint == (tool.Name is "mizon_get_connection" or "mizon_get_auth_state" or "mizon_get_appearance" or "mizon_get_navigation" or "mizon_get_taskbar_pin_state" or "mizon_get_music_home" or "mizon_get_presence_state" or "mizon_get_nearby_devices" or "mizon_get_device_sessions" or "mizon_get_window_state" or "mizon_get_vpn_state" or "mizon_get_person_profile" or "mizon_get_music_details" or "mizon_get_music_discussion"), "A modifying tool is incorrectly marked read-only.");
             if (tool.Name is "mizon_submit_auth_form" or "mizon_retry_welcome" or "mizon_request_taskbar_pin" or "mizon_refresh_music_home" or "mizon_music_home_action" or "mizon_auth_gamepad_action" or "mizon_load_person_tracks" or "mizon_manage_music_discussion")
                 Check.That(definition.Annotations?.IdempotentHint == false, "A non-idempotent operation is marked safe to repeat.");
 
@@ -132,7 +132,7 @@ internal static class CompanionTests
 
         // These are the only valid tool calls. They never launch a GUI, submit
         // credentials, grant permission or alter application state.
-        foreach (var name in catalogOnly ? Array.Empty<string>() : ["mizon_get_connection", "mizon_get_auth_state", "mizon_get_appearance", "mizon_get_navigation", "mizon_get_music_home", "mizon_get_presence_state", "mizon_get_nearby_devices"])
+        foreach (var name in catalogOnly ? Array.Empty<string>() : ["mizon_get_connection", "mizon_get_auth_state", "mizon_get_appearance", "mizon_get_navigation", "mizon_get_music_home", "mizon_get_presence_state", "mizon_get_nearby_devices", "mizon_get_device_sessions"])
         {
             var result = await client.CallToolAsync(new CallToolRequestParams { Name = name }, cancellationToken: timeout.Token);
             var output = tools.Single(tool => tool.Name == name).ProtocolTool.OutputSchema!.Value;
@@ -147,7 +147,7 @@ internal static class CompanionTests
                 Check.That(connection.GetProperty("status").GetString() != "approved", "Test connection was unexpectedly approved.");
                 Check.That(!connection.GetProperty("allowRead").GetBoolean() && !connection.GetProperty("allowControl").GetBoolean() && !connection.GetProperty("allowSubmit").GetBoolean(), "An unapproved connection contains permissions.");
             }
-            if (name is "mizon_get_auth_state" or "mizon_get_appearance" or "mizon_get_navigation" or "mizon_get_music_home" or "mizon_get_presence_state" or "mizon_get_nearby_devices") Check.That(result.IsError == true, "Private state access succeeded before approval.");
+            if (name is "mizon_get_auth_state" or "mizon_get_appearance" or "mizon_get_navigation" or "mizon_get_music_home" or "mizon_get_presence_state" or "mizon_get_nearby_devices" or "mizon_get_device_sessions") Check.That(result.IsError == true, "Private state access succeeded before approval.");
         }
         Check.That(!stderr.Any(line => line.Contains(SecretSentinel, StringComparison.Ordinal)), "The companion logged a credential value.");
     }

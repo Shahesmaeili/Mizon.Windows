@@ -40,6 +40,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
     private IMcpMusicHomeService? _musicHome;
     private IMcpPresenceService? _presence;
     private Discovery.McpNearbyDevicesService? _nearbyDevices;
+    private Func<CancellationToken, Task<McpResponse>>? _readDeviceSessions;
     private IMcpWindowPresentationService? _windowPresentation;
     private IMcpVpnService? _vpn;
     private McpPersonProfileService? _personProfile;
@@ -88,7 +89,8 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         IMcpMusicHomeService? musicHome = null, IMcpPresenceService? presence = null,
         IMcpWindowPresentationService? windowPresentation = null, IMcpVpnService? vpn = null,
         McpPersonProfileService? personProfile = null, McpMusicDetailsService? musicDetails = null,
-        Discovery.McpNearbyDevicesService? nearbyDevices = null)
+        Discovery.McpNearbyDevicesService? nearbyDevices = null,
+        Func<CancellationToken, Task<McpResponse>>? readDeviceSessions = null)
     {
         if (_dispatcher is not null || _disposed) return;
         _dispatcher = dispatcher;
@@ -99,6 +101,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         _musicHome = musicHome;
         _presence = presence;
         _nearbyDevices = nearbyDevices;
+        _readDeviceSessions = readDeviceSessions;
         _windowPresentation = windowPresentation;
         _vpn = vpn;
         _personProfile = personProfile;
@@ -144,6 +147,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
             AllowMusicHomeSubmit = item.AllowMusicHomeControl && item.AllowMusicHomeSubmit,
             AllowPresenceRead = item.AllowPresenceRead,
             AllowNearbyDevicesRead = item.AllowNearbyDevicesRead,
+            AllowDeviceSessionsRead = item.AllowDeviceSessionsRead,
             AllowWindowRead = item.AllowWindowRead, AllowWindowControl = item.AllowWindowControl,
             AllowVpnRead = item.AllowVpnRead, AllowVpnControl = item.AllowVpnControl,
             AllowPersonProfileRead = item.AllowPersonProfileRead, AllowPersonProfileControl = item.AllowPersonProfileControl,
@@ -440,7 +444,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
             if (request.MusicDiscussion is not null && request.Operation != "manage_music_discussion")
                 return new() { Code = "invalid_arguments", Message = "Unexpected track discussion arguments.", Connection = connection.Snapshot() };
             using var authorized = CancellationTokenSource.CreateLinkedTokenSource(token, connection.AuthorizationToken);
-            var mutation = request.Operation is not ("get_state" or "get_appearance" or "get_navigation" or "get_taskbar_pin_state" or "get_music_home" or "get_presence_state" or "get_nearby_devices" or "get_window_state" or "get_vpn_state" or "get_person_profile" or "get_music_details" or "get_music_discussion");
+            var mutation = request.Operation is not ("get_state" or "get_appearance" or "get_navigation" or "get_taskbar_pin_state" or "get_music_home" or "get_presence_state" or "get_nearby_devices" or "get_device_sessions" or "get_window_state" or "get_vpn_state" or "get_person_profile" or "get_music_details" or "get_music_discussion");
             var enteredGate = false;
             var started = false;
             try
@@ -468,6 +472,9 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                         : new McpResponse { Code = "unavailable", Message = "The taskbar service is unavailable." },
                     "get_nearby_devices" => _nearbyDevices?.Read(request, authorized.Token)
                         ?? new() { Code = "unavailable", Message = "Local device discovery is unavailable." },
+                    "get_device_sessions" => _readDeviceSessions is not null
+                        ? await _readDeviceSessions(authorized.Token)
+                        : new() { Code = "unavailable", Message = "Device sessions are unavailable." },
                     "get_presence_state" => _presence is not null
                         ? await _presence.ExecuteAsync(request, authorized.Token)
                         : new McpResponse { Code = "unavailable", Message = "The presence service is unavailable." },
@@ -504,6 +511,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
                     MusicHome = connection.CanExecute("get_music_home") ? result.MusicHome : null,
                     Presence = connection.CanExecute("get_presence_state") ? result.Presence : null,
                     NearbyDevices = connection.CanExecute("get_nearby_devices") ? result.NearbyDevices : null,
+                    DeviceSessions = connection.CanExecute("get_device_sessions") ? result.DeviceSessions : null,
                     Window = connection.CanExecute("get_window_state") ? result.Window : null,
                     Vpn = connection.CanExecute("get_vpn_state") ? result.Vpn : null,
                     MusicDetails = connection.CanExecute("get_music_details") ? result.MusicDetails : null,
@@ -637,6 +645,7 @@ public sealed class McpAccessService : INotifyPropertyChanged, IDisposable, IAsy
         (_musicHome as IDisposable)?.Dispose();
         (_presence as IDisposable)?.Dispose();
         _nearbyDevices = null;
+        _readDeviceSessions = null;
         (_windowPresentation as IDisposable)?.Dispose();
         (_vpn as IDisposable)?.Dispose();
         _personProfile?.Dispose();

@@ -41,6 +41,7 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
         Define("mizon_open_vpn_settings", "Open Windows VPN settings", "Open only the system Windows VPN settings page through the active signed-in Mizon VPN page. Requires independent VPN control consent. Does not connect, disconnect, edit configuration or accept an arbitrary URI. Never automatically retry an interrupted launch. Readback requires VPN read consent.", EmptySchema, idempotent: false, openWorld: true),
         Define("mizon_get_nearby_devices", "Nearby device discovery", "Read whether local Mizon device discovery is off, starting, searching or unavailable, plus total and per-platform counts and aggregate LAN media transfer totals. Requires separate Nearby devices read consent. Reading never starts discovery and returns no device names, account names, IP addresses or device identifiers.", EmptySchema, readOnly: true),
         Define("mizon_get_presence_state", "Online presence state", "Read the shared header and taskbar indicator for your signed-in Mizon account, including activity on your other connected devices. Returns local window activity, session, SignalR connectivity, online status and server confirmation. Requires separate presence read consent. Reading leaves the connection, published presence and window focus untouched. Only the signed-in account is represented.", EmptySchema, readOnly: true),
+        Define("mizon_get_device_sessions", "Signed-in devices", "Read active and online signed-in device counts and the inactivity setting. Requires separate signed-in device read consent. This tool cannot reveal IP addresses, device identities or terminate a session.", EmptySchema, readOnly: true),
         Define("mizon_get_window_state", "Main-window presentation", "Read whether the Mizon main window is available, fullscreen, and currently showing its fullscreen controls. Requires separate window read consent. Does not reveal window coordinates/handles, other windows or page contents, and does not activate the window.", EmptySchema, readOnly: true),
         Define("mizon_set_fullscreen", "Set main-window fullscreen", "Enter or leave fullscreen for the existing Mizon main window through the same operation as its own controls. fullScreen is an explicit desired state, not a toggle. Requires separate window control consent; readback requires window read consent. Does not minimize, close, focus, resize or reposition other windows, and does not change video-only fullscreen or saved theme preferences.",
             """{"type":"object","properties":{"fullScreen":{"type":"boolean"}},"required":["fullScreen"],"additionalProperties":false}"""),
@@ -179,6 +180,9 @@ internal sealed partial class MizonAuthTools(MizonAuthPipeClient bridge)
             case "mizon_get_nearby_devices":
                 CheckKeys(args);
                 return new() { Operation = "get_nearby_devices" };
+            case "mizon_get_device_sessions":
+                CheckKeys(args);
+                return new() { Operation = "get_device_sessions" };
             case "mizon_get_presence_state":
                 CheckKeys(args);
                 return new() { Operation = "get_presence_state" };

@@ -108,4 +108,29 @@
   <data name="VersionDetails" xml:space="preserve"><value>Version information</value></data>
   <data name="AiConnections" xml:space="preserve"><value>AI connections</value></data>
   <data name="AiConnectionsDescription" xml:space="preserve"><value>Choose which AI clients can access Mizon and what each connection is allowed to do.</value></data>
+  <data name="DevicesTitle" xml:space="preserve"><value>Devices</value></data>
+  <data name="DevicesDescription" xml:space="preserve"><value>See where your Mizon account is signed in and manage those sessions.</value></data>
+  <data name="DevicesLoading" xml:space="preserve"><value>Loading active sessions</value></data>
+  <data name="DevicesCurrent" xml:space="preserve"><value>This device</value></data>
+  <data name="DevicesOther" xml:space="preserve"><value>Other active sessions</value></data>
+  <data name="DevicesEmpty" xml:space="preserve"><value>There are no other active sessions.</value></data>
+  <data name="DevicesTerminateOthers" xml:space="preserve"><value>Terminate all other sessions</value></data>
+  <data name="DevicesInactivity" xml:space="preserve"><value>Automatically end inactive sessions</value></data>
+  <data name="DevicesRefresh" xml:space="preserve"><value>Refresh sessions</value></data>
+  <data name="DevicesNever" xml:space="preserve"><value>Never</value></data>
+  <data name="DevicesDays" xml:space="preserve"><value>After {0} days</value></data>
+  <data name="DevicesOnline" xml:space="preserve"><value>Online</value></data>
+  <data name="DevicesLastSeen" xml:space="preserve"><value>Last active {0}</value></data>
+  <data name="DevicesCreated" xml:space="preserve"><value>Signed in {0}</value></data>
+  <data name="DevicesIpAddress" xml:space="preserve"><value>Sign-in IP {0}</value></data>
+  <data name="DevicesClose" xml:space="preserve"><value>Close</value></data>
+  <data name="DevicesTerminate" xml:space="preserve"><value>Terminate session</value></data>
+  <data name="DevicesTerminateOneConfirm" xml:space="preserve"><value>This device will have to sign in again.</value></data>
+  <data name="DevicesTerminateOthersConfirm" xml:space="preserve"><value>Every other device will be signed out. This device will stay signed in.</value></data>
+  <data name="DevicesFreshSession" xml:space="preserve"><value>Use a device that has been signed in for at least 24 hours, or try again later.</value></data>
+  <data name="DevicesError" xml:space="preserve"><value>Mizon could not update your sessions. Try again.</value></data>
+  <data name="DevicesUnconfirmed" xml:space="preserve"><value>Unrecognized sign-in</value></data>
+  <data name="DevicesConfirmSession" xml:space="preserve"><value>I recognize this device</value></data>
+  <data name="DevicesCheckNew" xml:space="preserve"><value>Review the device under Settings, Security, Devices.</value></data>
+  <data name="DevicesOffline" xml:space="preserve"><value>Offline</value></data>
 </root>

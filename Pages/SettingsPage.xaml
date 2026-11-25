@@ -342,6 +342,7 @@
                                 <TextBlock Text="{x:Bind Text('SecurityDescription', Localization.Revision), Mode=OneWay}" Style="{StaticResource SmallCaption}"/>
                             </StackPanel>
                         </Grid>
+                        <controls2:DeviceSessionsPanel/>
                         <controls:SettingsCardPanel MinColumnWidth="300" Spacing="14">
                             <Border Style="{StaticResource SettingCard}" controls:SettingsCardPanel.ColumnSpan="2">
                                 <StackPanel Spacing="14">

@@ -143,4 +143,6 @@
   <data name="NearbyDevicesGroupHint" xml:space="preserve"><value>مجوز جداگانه برای خواندن وضعیت کشف در شبکهٔ محلی.</value></data>
   <data name="PermissionNearbyDevicesRead" xml:space="preserve"><value>خواندن وضعیت دستگاه‌های نزدیک</value></data>
   <data name="PermissionNearbyDevicesReadHint" xml:space="preserve"><value>وضعیت کشف، تعداد دستگاه‌ها و مجموع حجم رسانهٔ دریافت و ارسال‌شده را نشان می‌دهد.</value></data>
+  <data name="PermissionDeviceSessionsRead" xml:space="preserve"><value>خواندن وضعیت دستگاه‌های واردشده</value></data>
+  <data name="PermissionDeviceSessionsReadHint" xml:space="preserve"><value>اجازهٔ خواندن تعداد نشست‌ها و زمان انقضای غیرفعال بودن را می‌دهد.</value></data>
 </root>

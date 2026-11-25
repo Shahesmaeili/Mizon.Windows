@@ -143,4 +143,6 @@
   <data name="NearbyDevicesGroupHint" xml:space="preserve"><value>Separate access to the local discovery status.</value></data>
   <data name="PermissionNearbyDevicesRead" xml:space="preserve"><value>Read nearby device status</value></data>
   <data name="PermissionNearbyDevicesReadHint" xml:space="preserve"><value>Allows discovery status, device counts and total media bytes transferred.</value></data>
+  <data name="PermissionDeviceSessionsRead" xml:space="preserve"><value>Read signed-in device status</value></data>
+  <data name="PermissionDeviceSessionsReadHint" xml:space="preserve"><value>Allows reading session counts and the inactivity period.</value></data>
 </root>

@@ -297,7 +297,8 @@ public partial class App : Application
                 {
                     var (available, received, uploaded) = Services.GetRequiredService<WindowsPeerMediaExchange>().ReadTransferState();
                     return new(available, received, uploaded);
-                }));
+                }),
+            readDeviceSessions: ReadMcpDeviceSessionsAsync);
         MainMizonWindow.Closed += MainWindow_Closed;
         if (_pendingResultActivation is { } pendingResult)
         {
@@ -325,6 +326,30 @@ public partial class App : Application
         ClearPendingActivation();
         McpAccessService.Current.Dispose();
         TaskbarPinService.DisposeCurrent();
+    }
+
+    private async Task<Mizon.Windows.Mcp.Contracts.McpResponse> ReadMcpDeviceSessionsAsync(CancellationToken token)
+    {
+        var api = Services.GetRequiredService<Mizon.API.MizonApi>();
+        if (string.IsNullOrWhiteSpace(api.GetToken()))
+            return new() { Code = "unavailable", Message = "Sign in to inspect device sessions." };
+
+        var response = await api.SendRequestAsync(
+            new Mizon.API.Client.Operations.Clients.ClientSessionsOperation(new()), token);
+        token.ThrowIfCancellationRequested();
+        if (!response.IsSuccess || response.Content is not { } content)
+            return new() { Code = "unavailable", Message = "Device session status is unavailable." };
+
+        var online = 0;
+        foreach (var session in content.Sessions)
+            if (session.IsOnline) online++;
+        return new()
+        {
+            Success = true,
+            Code = "device_sessions",
+            Message = "Current signed-in session counts.",
+            DeviceSessions = new(content.Sessions.Count, online, content.InactivityDays),
+        };
     }
 
     private void ReceiveAppAction(AppActivationRequest request)

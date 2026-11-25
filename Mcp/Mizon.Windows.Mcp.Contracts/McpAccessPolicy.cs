@@ -20,6 +20,7 @@ public sealed class McpAccessPolicy
     public bool AllowMusicHomeSubmit { get; private set; }
     public bool AllowPresenceRead { get; private set; }
     public bool AllowNearbyDevicesRead { get; private set; }
+    public bool AllowDeviceSessionsRead { get; private set; }
     public bool AllowWindowRead { get; private set; }
     public bool AllowWindowControl { get; private set; }
 
@@ -38,7 +39,8 @@ public sealed class McpAccessPolicy
         bool windowRead = false, bool windowControl = false, bool vpnRead = false, bool vpnControl = false,
         bool personProfileRead = false, bool personProfileControl = false,
         bool musicDetailsRead = false, bool musicDetailsControl = false,
-        bool musicDiscussionRead = false, bool musicDiscussionControl = false, bool nearbyDevicesRead = false)
+        bool musicDiscussionRead = false, bool musicDiscussionControl = false, bool nearbyDevicesRead = false,
+        bool deviceSessionsRead = false)
     {
         if (Status == "disconnected") return;
         AllowRead = read;
@@ -55,6 +57,7 @@ public sealed class McpAccessPolicy
         AllowMusicHomeSubmit = musicHomeControl && musicHomeSubmit;
         AllowPresenceRead = presenceRead;
         AllowNearbyDevicesRead = nearbyDevicesRead;
+        AllowDeviceSessionsRead = deviceSessionsRead;
         AllowWindowRead = windowRead;
         AllowWindowControl = windowControl;
         AllowVpnRead = vpnRead;
@@ -88,6 +91,7 @@ public sealed class McpAccessPolicy
         "get_music_home" => Status == "approved" && AllowMusicHomeRead,
         "get_presence_state" => Status == "approved" && AllowPresenceRead,
         "get_nearby_devices" => Status == "approved" && AllowNearbyDevicesRead,
+        "get_device_sessions" => Status == "approved" && AllowDeviceSessionsRead,
         "get_music_details" => Status == "approved" && AllowMusicDetailsRead,
         "set_music_details" => Status == "approved" && AllowMusicDetailsControl,
         "get_music_discussion" => Status == "approved" && AllowMusicDiscussionRead,
@@ -113,6 +117,7 @@ public sealed class McpAccessPolicy
         AllowTaskbarRead = AllowTaskbarControl = false;
         AllowMusicHomeRead = AllowMusicHomeControl = AllowMusicHomeSubmit = false;
         AllowPresenceRead = AllowNearbyDevicesRead = false;
+        AllowDeviceSessionsRead = false;
         AllowWindowRead = AllowWindowControl = false;
         AllowVpnRead = AllowVpnControl = false;
         AllowPersonProfileRead = AllowPersonProfileControl = false;

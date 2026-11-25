@@ -36,6 +36,19 @@ internal static class PresenceTests
         var oldStatus = JsonSerializer.Deserialize("""{"id":"old","allowRead":true,"allowMusicHomeRead":true}""",
             McpJsonContext.Default.McpConnectionStatus);
         Check.That(oldStatus is { AllowPresenceRead: false }, "A status without the new field implicitly approved presence.");
+        Check.That(!policy.CanExecute("get_device_sessions"), "Presence scope granted device session access.");
+        policy.Approve(false, false, false, deviceSessionsRead: true);
+        Check.That(policy.CanExecute("get_device_sessions") && !policy.CanExecute("get_presence_state") &&
+            !policy.CanExecute("terminate_device_session"), "Device session summary is an independent read-only permission.");
+        var counts = new McpDeviceSessionsState(3, 1, 30);
+        using var sessionStream = new MemoryStream();
+        await McpPipeProtocol.WriteAsync(sessionStream, new McpResponse { Success = true, DeviceSessions = counts },
+            McpJsonContext.Default.McpResponse, default);
+        sessionStream.Position = 0;
+        var read = await McpPipeProtocol.ReadAsync(sessionStream, McpJsonContext.Default.McpResponse, default);
+        Check.That(read?.DeviceSessions == counts, "Session aggregate did not survive generated serialization.");
+        policy.Revoke();
+        Check.That(!policy.CanExecute("get_device_sessions"), "Revoked device session scope still permits reads.");
     }
 
     public static async Task PersistentScope()

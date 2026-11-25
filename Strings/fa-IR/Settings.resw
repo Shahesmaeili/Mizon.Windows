@@ -108,4 +108,29 @@
   <data name="VersionDetails" xml:space="preserve"><value>اطلاعات نسخه</value></data>
   <data name="AiConnections" xml:space="preserve"><value>اتصال‌های هوش مصنوعی</value></data>
   <data name="AiConnectionsDescription" xml:space="preserve"><value>انتخاب کن کدام دستیارها به میزون دسترسی داشته باشند و هر اتصال چه کارهایی بتواند انجام بدهد.</value></data>
+  <data name="DevicesTitle" xml:space="preserve"><value>دستگاه‌ها</value></data>
+  <data name="DevicesDescription" xml:space="preserve"><value>دستگاه‌هایی را که با حساب میزون وارد شده‌اند ببین و نشست‌هایشان را مدیریت کن.</value></data>
+  <data name="DevicesLoading" xml:space="preserve"><value>در حال بارگیری نشست‌ها</value></data>
+  <data name="DevicesCurrent" xml:space="preserve"><value>این دستگاه</value></data>
+  <data name="DevicesOther" xml:space="preserve"><value>سایر نشست‌های فعال</value></data>
+  <data name="DevicesEmpty" xml:space="preserve"><value>نشست فعال دیگری وجود ندارد.</value></data>
+  <data name="DevicesTerminateOthers" xml:space="preserve"><value>قطع همهٔ نشست‌های دیگر</value></data>
+  <data name="DevicesInactivity" xml:space="preserve"><value>قطع خودکار نشست‌های غیرفعال</value></data>
+  <data name="DevicesRefresh" xml:space="preserve"><value>تازه‌سازی نشست‌ها</value></data>
+  <data name="DevicesNever" xml:space="preserve"><value>هرگز</value></data>
+  <data name="DevicesDays" xml:space="preserve"><value>پس از {0} روز</value></data>
+  <data name="DevicesOnline" xml:space="preserve"><value>آنلاین</value></data>
+  <data name="DevicesLastSeen" xml:space="preserve"><value>آخرین فعالیت {0}</value></data>
+  <data name="DevicesCreated" xml:space="preserve"><value>تاریخ ورود {0}</value></data>
+  <data name="DevicesIpAddress" xml:space="preserve"><value>آدرس IP ورود {0}</value></data>
+  <data name="DevicesClose" xml:space="preserve"><value>بستن</value></data>
+  <data name="DevicesTerminate" xml:space="preserve"><value>قطع نشست</value></data>
+  <data name="DevicesTerminateOneConfirm" xml:space="preserve"><value>برای استفادهٔ دوباره از این دستگاه باید وارد حساب شد.</value></data>
+  <data name="DevicesTerminateOthersConfirm" xml:space="preserve"><value>همهٔ دستگاه‌های دیگر از حساب خارج می‌شوند و این دستگاه وارد می‌ماند.</value></data>
+  <data name="DevicesFreshSession" xml:space="preserve"><value>از دستگاهی استفاده کن که دست‌کم ۲۴ ساعت از ورودش گذشته، یا بعداً دوباره تلاش کن.</value></data>
+  <data name="DevicesError" xml:space="preserve"><value>مدیریت نشست‌ها انجام نشد. دوباره تلاش کن.</value></data>
+  <data name="DevicesUnconfirmed" xml:space="preserve"><value>ورود تأییدنشده</value></data>
+  <data name="DevicesConfirmSession" xml:space="preserve"><value>این دستگاه را می‌شناسم</value></data>
+  <data name="DevicesCheckNew" xml:space="preserve"><value>دستگاه جدید را از تنظیمات، امنیت، دستگاه‌ها بررسی کن.</value></data>
+  <data name="DevicesOffline" xml:space="preserve"><value>آفلاین</value></data>
 </root>

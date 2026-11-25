@@ -1,4 +1,5 @@
 using Microsoft.UI.Dispatching;
+using Microsoft.Extensions.DependencyInjection;
 using Mizon.API;
 using Mizon.API.Client.Operations.Clients;
 using Mizon.API.Client.Operations.Media;
@@ -48,6 +49,7 @@ public partial class HomePageViewModel : MainViewModel
         _localStorageService = localStorageService;
         _nearbyEnabled = ReadNearbyPreference();
         LogoutCommand = new RelayCommand(LogoutAsync, (_, _) => !IsSigningOut);
+        MizonApi.SessionRevoked += SessionRevoked;
 
     }
     public RelayCommand LogoutCommand { get; }
@@ -191,6 +193,8 @@ public partial class HomePageViewModel : MainViewModel
             _shellCancellation?.Dispose();
             _shellCancellation = null;
             MizonSocket.HubConnectionStateChanged -= MizonSocket_HubConnectionStateChanged;
+            MizonSocket.SessionRevoked -= SessionRevoked;
+            MizonSocket.NewSessionUnconfirmed -= NewSessionUnconfirmed;
             _socketStopTask = StopSocketAsync();
             NetworkInformation.NetworkStatusChanged -= NearbyNetworkChanged;
             _ = NearbyDevices.StopAsync();
@@ -204,6 +208,10 @@ public partial class HomePageViewModel : MainViewModel
                 _shellCancellation = new CancellationTokenSource();
                 MizonSocket.HubConnectionStateChanged -= MizonSocket_HubConnectionStateChanged;
                 MizonSocket.HubConnectionStateChanged += MizonSocket_HubConnectionStateChanged;
+                MizonSocket.SessionRevoked -= SessionRevoked;
+                MizonSocket.SessionRevoked += SessionRevoked;
+                MizonSocket.NewSessionUnconfirmed -= NewSessionUnconfirmed;
+                MizonSocket.NewSessionUnconfirmed += NewSessionUnconfirmed;
                 StartProfilePresence();
                 if (!_hasAccount || (_profileMediaPublicId is not null && ProfileImage is null))
                     _ = RefreshProfileAsync(_shellCancellation.Token);
@@ -237,7 +245,26 @@ public partial class HomePageViewModel : MainViewModel
         catch (Exception exception) { AppLog.Error("Signed-out socket shutdown failed.", exception); }
     }
 
-    private async Task LogoutAsync(object? parameter, CancellationToken cancellationToken)
+    private void NewSessionUnconfirmed(object? sender, EventArgs args) =>
+        _dispatcherQueue.TryEnqueue(() =>
+        {
+            if (IsSigningOut || string.IsNullOrWhiteSpace(MizonApi.GetToken())) return;
+            var localization = LocalizationService.Current;
+            ((App)App.Current).Services.GetRequiredService<TeachingTipService>().ShowMessage(
+                localization.GetString("Settings/DevicesUnconfirmed", localization.Revision),
+                localization.GetString("Settings/DevicesCheckNew", localization.Revision));
+        });
+
+    private void SessionRevoked(object? sender, SessionRevokedEventArgs args) =>
+        _dispatcherQueue.TryEnqueue(() =>
+        {
+            if (!IsSigningOut && MizonApi.IsCurrentSession(args))
+                _ = SignOutAsync(notifyServer: false);
+        });
+
+    private Task LogoutAsync(object? parameter, CancellationToken cancellationToken) => SignOutAsync(notifyServer: true);
+
+    private async Task SignOutAsync(bool notifyServer)
     {
         if (IsSigningOut) return;
         ProfileStatus = "در حال خروج از حساب…";
@@ -251,7 +278,8 @@ public partial class HomePageViewModel : MainViewModel
         {
             // A server outage must not prevent signing out on this device.
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(4));
-            await MizonApi.SendRequestAsync(new LogoutOperation(new()), timeout.Token);
+            if (notifyServer)
+                await MizonApi.SendRequestAsync(new LogoutOperation(new()), timeout.Token);
         }
         catch (Exception exception) { AppLog.Error("Remote sign-out failed; clearing the local session.", exception); }
         finally

@@ -1,0 +1,68 @@
+<UserControl
+    x:Class="Mizon.Windows.UserControls.DeviceSessionsPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Mizon.Windows.UserControls"
+    x:Name="Root" Loaded="Panel_Loaded" Unloaded="Panel_Unloaded"
+    XYFocusKeyboardNavigation="Enabled">
+    <UserControl.Resources>
+        <DataTemplate x:Key="SessionRowTemplate" x:DataType="local:DeviceSessionRow">
+            <Grid ColumnSpacing="12" Padding="8,9" HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <Grid Width="40" Height="40" CornerRadius="10" Background="{ThemeResource ControlSecondaryFillColorDefaultBrush}" VerticalAlignment="Top">
+                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{x:Bind Glyph}" FontSize="18"
+                              Visibility="{x:Bind DeviceGlyphVisibility}" AutomationProperties.AccessibilityView="Raw"/>
+                    <Image Source="{x:Bind Logo}" Width="19" Height="19" HorizontalAlignment="Center"
+                           VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
+                </Grid>
+                <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock Text="{x:Bind VersionLabel}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                    <Grid ColumnSpacing="6">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Ellipse Width="6" Height="6" Fill="{ThemeResource SystemFillColorSuccessBrush}"
+                                 VerticalAlignment="Center" Visibility="{x:Bind OnlineIndicatorVisibility}"
+                                 AutomationProperties.AccessibilityView="Raw"/>
+                        <TextBlock Grid.Column="1" Text="{x:Bind StatusLabel}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   FontSize="12" TextWrapping="Wrap"/>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Border CornerRadius="16" Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+        <StackPanel Spacing="12">
+            <TextBlock Text="{x:Bind Text('DevicesTitle', Localization.Revision), Mode=OneWay}" FontSize="20" FontWeight="SemiBold"
+                       AutomationProperties.HeadingLevel="Level3" TextWrapping="Wrap"/>
+            <TextBlock Text="{x:Bind Text('DevicesDescription', Localization.Revision), Mode=OneWay}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+            <ProgressRing x:Name="Loading" IsActive="False" Width="24" Height="24" Visibility="Collapsed"
+                          HorizontalAlignment="Left" AutomationProperties.Name="{x:Bind Text('DevicesLoading', Localization.Revision), Mode=OneWay}"/>
+            <InfoBar x:Name="StatusMessage" IsClosable="True" AutomationProperties.LiveSetting="Polite"/>
+            <StackPanel x:Name="DeviceList" Spacing="9" Visibility="Collapsed">
+                <TextBlock Text="{x:Bind Text('DevicesCurrent', Localization.Revision), Mode=OneWay}" FontWeight="SemiBold" AutomationProperties.HeadingLevel="Level4"/>
+                <Button x:Name="CurrentDevice" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                        ContentTemplate="{StaticResource SessionRowTemplate}" Click="CurrentDevice_Click"/>
+                <TextBlock Text="{x:Bind Text('DevicesOther', Localization.Revision), Mode=OneWay}" FontWeight="SemiBold" AutomationProperties.HeadingLevel="Level4"/>
+                <TextBlock x:Name="NoOthers" Text="{x:Bind Text('DevicesEmpty', Localization.Revision), Mode=OneWay}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                <ListView x:Name="OtherDevices" MaxHeight="470" SelectionMode="None" IsItemClickEnabled="True"
+                          ItemTemplate="{StaticResource SessionRowTemplate}" ItemClick="OtherDevices_ItemClick"
+                          AutomationProperties.Name="{x:Bind Text('DevicesOther', Localization.Revision), Mode=OneWay}">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem"><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
+                    </ListView.ItemContainerStyle>
+                </ListView>
+            </StackPanel>
+            <StackPanel x:Name="DeviceActions" Spacing="10" Visibility="Collapsed">
+                <Button x:Name="RevokeOthers" Click="RevokeOthers_Click">
+                    <TextBlock Text="{x:Bind Text('DevicesTerminateOthers', Localization.Revision), Mode=OneWay}" TextWrapping="Wrap"/>
+                </Button>
+                <ComboBox x:Name="Inactivity" Header="{x:Bind Text('DevicesInactivity', Localization.Revision), Mode=OneWay}"
+                          SelectionChanged="Inactivity_SelectionChanged" HorizontalAlignment="Stretch"/>
+            </StackPanel>
+            <Button Click="Refresh_Click"><TextBlock Text="{x:Bind Text('DevicesRefresh', Localization.Revision), Mode=OneWay}"/></Button>
+        </StackPanel>
+    </Border>
+</UserControl>

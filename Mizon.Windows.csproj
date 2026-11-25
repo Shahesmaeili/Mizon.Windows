@@ -27,6 +27,7 @@
 		<Content Remove="Mcp\**\*" />
 		<None Remove="Mcp\**\*" />
 		<Content Include="Assets\Mcp\**\*" CopyToOutputDirectory="PreserveNewest" />
+		<Content Include="Assets\PlatformLogos\**\*" CopyToOutputDirectory="PreserveNewest" />
 		<Compile Remove="Taskbar\**\*.cs" />
 		<Page Remove="Taskbar\**\*.xaml" />
 		<ApplicationDefinition Remove="Taskbar\**\*.xaml" />
