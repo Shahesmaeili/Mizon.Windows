@@ -55,22 +55,6 @@ public sealed partial class MainWindow : Window
         InitializeMcpAccess();
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon", "Mizon.ico"));
 
-        switch (AppWindow.Presenter)
-        {
-            case Microsoft.UI.Windowing.OverlappedPresenter overlappedPresenter:
-                //overlappedPresenter.SetBorderAndTitleBar(false, false);
-                //overlappedPresenter.IsMaximizable = false;
-                //overlappedPresenter.IsResizable = true;
-                //overlappedPresenter.IsMinimizable = false;
-
-                overlappedPresenter.PreferredMinimumWidth = 900;
-                overlappedPresenter.PreferredMinimumHeight = 600;
-
-                //overlappedPresenter.Maximize();
-                break;
-        }
-
-
         AppWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
         AppWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
         // Let WinUI own and refresh the native caption across resize/maximize/DPI changes.
@@ -130,12 +114,6 @@ public sealed partial class MainWindow : Window
         var title = section is null ? "Mizon" : $"Mizon - {section}";
         if (Title != title)
             Title = title;
-        if (AppWindow.Presenter is OverlappedPresenter presenter)
-        {
-            var accountPage = navigation.CurrentMainPage is LoginPage or WelcomePage;
-            presenter.PreferredMinimumWidth = accountPage ? 360 : 900;
-            presenter.PreferredMinimumHeight = accountPage ? 400 : 600;
-        }
     }
 
     internal TaskbarOnlineSnapshot? ReadTaskbarOnlineStatus() => _taskbarPreviewXaml?.OnlineSnapshot;
