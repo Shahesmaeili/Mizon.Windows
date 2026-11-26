@@ -20,6 +20,7 @@
 | جزئیات آهنگ | `mizon://music/{musicPublicId}` | نمایش آهنگ **بدون پخش خودکار** |
 | پخش آهنگ | `mizon://music/{musicPublicId}?action=play` | باز کردن آهنگ و درخواست صریح پخش |
 | دانلود آهنگ | `mizon://music/{musicPublicId}?action=download` | دانلود با سرویس و کش فعلی برنامه |
+| موزیک‌ویدیو | `mizon://music/{musicPublicId}?action=video` | نمایش ویدیوی مرتبط بدون پخش خودکار |
 | نظر مشخص آهنگ | `mizon://music/{musicPublicId}/comments/{commentPublicId}` | باز کردن آهنگ و نمایش نظر موردنظر؛ بدون پخش خودکار |
 | پروفایل کلاینت | `mizon://client/{clientPublicId}` | صفحهٔ پروفایل |
 | پروفایل هنرمند | `mizon://person/{personPublicId}` | پروفایل واقعی هنرمند با فهرست آهنگ‌ها |
@@ -171,6 +172,13 @@ if (response.Status == Windows.System.LaunchUriStatus.Success
 [Launcher and manifest contract](https://learn.microsoft.com/en-us/uwp/launch-resume/how-to-launch-an-app-for-results)،
 [desktop HWND initialization sample](https://github.com/dotnet/maui/blob/main/src/Essentials/src/MediaPicker/MediaPicker.windows.cs).
 
+## سازگاری نسخه‌ها
+
+[فایل آزمون قرارداد دیپ‌لینک نسخهٔ ۱](docs/ai/contracts/deep-links-v1.json) همهٔ مقصدهای عمومی و بخش‌های تنظیمات ویندوز را پوشش می‌دهد.
+این فایل شکل استاندارد لینک، مسیرهای قدیمی، نیاز به ورود، مرحله و مهلت پاسخ و شناسه‌های عمومی را مشخص می‌کند.
+با تغییر قرارداد ویندوز، ابتدا این فایل را به‌روز کنید. سپس همان نسخه را در هر کلاینت با مسیریاب و پاسخ‌ساز همان پلتفرم تست کنید.
+اگر مقصدی در یک پلتفرم پیاده نشده، نتیجه باید در دسترس نبودن مقصد را اعلام کند.
+
 ## MCP
 
 - `mizon_get_navigation`: مقصد فعلی، URI استاندارد، مقصد منتظر و امکان بازگشت.
@@ -183,10 +191,9 @@ if (response.Status == Windows.System.LaunchUriStatus.Success
 
 ```powershell
 dotnet run --project WindowsSearch/Mizon.Windows.Activation.Tests -c Release
+dotnet run --project WindowsSearch/Mizon.Windows.DeepLinkResults.Tests -c Release
 dotnet run --project Mcp/Mizon.Windows.Mcp.Tests -c Release -- --isolated
 dotnet run --project Mcp/Mizon.Windows.Mcp.AccessTests -c Release
 ```
 
 تست‌های parser/catalog در انتشار واقعی NativeAOT ویندوز x64 نیز اجرا می‌شوند. تست‌های MCP از پروتکل، سرویس مجوز و آداپتر اصلی با داده و نشست مصنوعی استفاده می‌کنند؛ تأیید مجوز واقعی یا ارسال فرم حساب واقعی انجام نمی‌دهند. این بررسی‌ها جای تست دیداری انیمیشن و صفحه‌های دارای API واقعی را نمی‌گیرند.
-
-برای موزیک‌ویدیوی مرتبط با یک آهنگ، از \`mizon://music/{musicPublicId}?action=video\` یا مقصد \`music-video\` در MCP استفاده کنید. این مقصد با شناسهٔ خود آهنگ باز می‌شود و پخش را خودکار شروع نمی‌کند.

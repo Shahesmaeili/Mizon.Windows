@@ -1,0 +1,480 @@
+{
+  "protocolVersion": 1,
+  "requestId": "882e51dc-a69f-4410-98fc-d46eff3e8e11",
+  "routes": [
+    {
+      "routeKey": "home",
+      "canonicalUri": "mizon://home",
+      "inputs": [
+        "mizon://home",
+        "mizon://localhost/home",
+        "mizon://S-1-5-21-123-1001/localhost/home"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50
+    },
+    {
+      "routeKey": "login",
+      "canonicalUri": "mizon://login",
+      "inputs": [
+        "mizon://login",
+        "mizon://localhost/login",
+        "mizon://S-1-5-21-123-1001/localhost/login"
+      ],
+      "requiresAuthentication": false,
+      "completionStage": "opened",
+      "timeoutSeconds": 50
+    },
+    {
+      "routeKey": "register",
+      "canonicalUri": "mizon://register",
+      "inputs": [
+        "mizon://register",
+        "mizon://localhost/register",
+        "mizon://S-1-5-21-123-1001/localhost/register"
+      ],
+      "requiresAuthentication": false,
+      "completionStage": "opened",
+      "timeoutSeconds": 50
+    },
+    {
+      "routeKey": "music",
+      "canonicalUri": "mizon://music",
+      "inputs": [
+        "mizon://music",
+        "mizon://localhost/music",
+        "mizon://S-1-5-21-123-1001/localhost/music",
+        "MIZON://MUSIC/"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50
+    },
+    {
+      "routeKey": "movies",
+      "canonicalUri": "mizon://movies",
+      "inputs": [
+        "mizon://movies",
+        "mizon://localhost/movies",
+        "mizon://S-1-5-21-123-1001/localhost/movies"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50
+    },
+    {
+      "routeKey": "apps",
+      "canonicalUri": "mizon://apps",
+      "inputs": [
+        "mizon://apps",
+        "mizon://localhost/apps",
+        "mizon://S-1-5-21-123-1001/localhost/apps"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50
+    },
+    {
+      "routeKey": "vpn",
+      "canonicalUri": "mizon://vpn",
+      "inputs": [
+        "mizon://vpn",
+        "mizon://localhost/vpn",
+        "mizon://S-1-5-21-123-1001/localhost/vpn"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50
+    },
+    {
+      "routeKey": "playlists",
+      "canonicalUri": "mizon://playlists",
+      "inputs": [
+        "mizon://playlists",
+        "mizon://localhost/playlists",
+        "mizon://S-1-5-21-123-1001/localhost/playlists"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "completed",
+      "timeoutSeconds": 50
+    },
+    {
+      "routeKey": "playlist",
+      "canonicalUri": "mizon://playlist/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+      "inputs": [
+        "mizon://playlist/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+        "mizon://localhost/playlist/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+        "mizon://S-1-5-21-123-1001/localhost/playlist/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "completed",
+      "timeoutSeconds": 50,
+      "publicId": "0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"
+    },
+    {
+      "routeKey": "music-details",
+      "canonicalUri": "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+      "inputs": [
+        "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+        "mizon://localhost/music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+        "mizon://S-1-5-21-123-1001/localhost/music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+        "MIZON://MUSIC/0195DD3C9A3E7C4A8C6F2E9C0F6B1A72/?ACTION=DETAILS"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "completed",
+      "timeoutSeconds": 50,
+      "publicId": "0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"
+    },
+    {
+      "routeKey": "music-play",
+      "canonicalUri": "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=play",
+      "inputs": [
+        "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=play",
+        "mizon://localhost/music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=play",
+        "mizon://S-1-5-21-123-1001/localhost/music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=play"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "completed",
+      "timeoutSeconds": 50,
+      "publicId": "0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"
+    },
+    {
+      "routeKey": "music-download",
+      "canonicalUri": "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=download",
+      "inputs": [
+        "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=download",
+        "mizon://localhost/music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=download",
+        "mizon://S-1-5-21-123-1001/localhost/music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=download"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "completed",
+      "timeoutSeconds": 300,
+      "publicId": "0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"
+    },
+    {
+      "routeKey": "music-video",
+      "canonicalUri": "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=video",
+      "inputs": [
+        "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=video",
+        "mizon://localhost/music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=video",
+        "mizon://S-1-5-21-123-1001/localhost/music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=video"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "completed",
+      "timeoutSeconds": 50,
+      "publicId": "0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"
+    },
+    {
+      "routeKey": "music-comment",
+      "canonicalUri": "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72/comments/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a73",
+      "inputs": [
+        "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72/comments/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a73",
+        "mizon://localhost/music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72/comments/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a73",
+        "mizon://S-1-5-21-123-1001/localhost/music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72/comments/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a73"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "completed",
+      "timeoutSeconds": 50,
+      "publicId": "0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+      "commentPublicId": "0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a73"
+    },
+    {
+      "routeKey": "client",
+      "canonicalUri": "mizon://client/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+      "inputs": [
+        "mizon://client/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+        "mizon://localhost/client/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+        "mizon://S-1-5-21-123-1001/localhost/client/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "completed",
+      "timeoutSeconds": 50,
+      "publicId": "0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"
+    },
+    {
+      "routeKey": "person",
+      "canonicalUri": "mizon://person/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+      "inputs": [
+        "mizon://person/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+        "mizon://localhost/person/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+        "mizon://S-1-5-21-123-1001/localhost/person/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "completed",
+      "timeoutSeconds": 50,
+      "publicId": "0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"
+    },
+    {
+      "routeKey": "story",
+      "canonicalUri": "mizon://story/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+      "inputs": [
+        "mizon://story/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+        "mizon://localhost/story/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+        "mizon://S-1-5-21-123-1001/localhost/story/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "completed",
+      "timeoutSeconds": 50,
+      "publicId": "0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72"
+    },
+    {
+      "routeKey": "activities",
+      "canonicalUri": "mizon://activities",
+      "inputs": [
+        "mizon://activities",
+        "mizon://localhost/activities",
+        "mizon://S-1-5-21-123-1001/localhost/activities"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "completed",
+      "timeoutSeconds": 50
+    },
+    {
+      "routeKey": "settings",
+      "canonicalUri": "mizon://settings",
+      "inputs": [
+        "mizon://settings",
+        "mizon://localhost/settings",
+        "mizon://S-1-5-21-123-1001/localhost/settings"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50
+    },
+    {
+      "routeKey": "settings",
+      "canonicalUri": "mizon://settings/account",
+      "inputs": [
+        "mizon://settings/account",
+        "mizon://localhost/settings/account",
+        "mizon://S-1-5-21-123-1001/localhost/settings/account"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "settingsSection": "account"
+    },
+    {
+      "routeKey": "settings",
+      "canonicalUri": "mizon://settings/security",
+      "inputs": [
+        "mizon://settings/security",
+        "mizon://localhost/settings/security",
+        "mizon://S-1-5-21-123-1001/localhost/settings/security"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "settingsSection": "security"
+    },
+    {
+      "routeKey": "settings",
+      "canonicalUri": "mizon://settings/language",
+      "inputs": [
+        "mizon://settings/language",
+        "mizon://localhost/settings/language",
+        "mizon://S-1-5-21-123-1001/localhost/settings/language"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "settingsSection": "language"
+    },
+    {
+      "routeKey": "settings",
+      "canonicalUri": "mizon://settings/appearance",
+      "inputs": [
+        "mizon://settings/appearance",
+        "mizon://localhost/settings/appearance",
+        "mizon://S-1-5-21-123-1001/localhost/settings/appearance"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "settingsSection": "appearance"
+    },
+    {
+      "routeKey": "settings",
+      "canonicalUri": "mizon://settings/notifications",
+      "inputs": [
+        "mizon://settings/notifications",
+        "mizon://localhost/settings/notifications",
+        "mizon://S-1-5-21-123-1001/localhost/settings/notifications"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "settingsSection": "notifications"
+    },
+    {
+      "routeKey": "settings",
+      "canonicalUri": "mizon://settings/storage",
+      "inputs": [
+        "mizon://settings/storage",
+        "mizon://localhost/settings/storage",
+        "mizon://S-1-5-21-123-1001/localhost/settings/storage"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "settingsSection": "storage"
+    },
+    {
+      "routeKey": "settings",
+      "canonicalUri": "mizon://settings/updates",
+      "inputs": [
+        "mizon://settings/updates",
+        "mizon://localhost/settings/updates",
+        "mizon://S-1-5-21-123-1001/localhost/settings/updates"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "settingsSection": "updates"
+    },
+    {
+      "routeKey": "settings",
+      "canonicalUri": "mizon://settings/platforms",
+      "inputs": [
+        "mizon://settings/platforms",
+        "mizon://localhost/settings/platforms",
+        "mizon://S-1-5-21-123-1001/localhost/settings/platforms"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "settingsSection": "platforms"
+    },
+    {
+      "routeKey": "settings",
+      "canonicalUri": "mizon://settings/ai-connections",
+      "inputs": [
+        "mizon://settings/ai-connections",
+        "mizon://localhost/settings/ai-connections",
+        "mizon://S-1-5-21-123-1001/localhost/settings/ai-connections"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "settingsSection": "ai-connections"
+    },
+    {
+      "routeKey": "search",
+      "canonicalUri": "mizon://search?query=%D9%85%D8%B9%DB%8C%D9%86%20%26%20Mizon%20%2B%20%F0%9F%8E%B5",
+      "inputs": [
+        "mizon://search?query=%D9%85%D8%B9%DB%8C%D9%86%20%26%20Mizon%20%2B%20%F0%9F%8E%B5",
+        "mizon://localhost/search?query=%D9%85%D8%B9%DB%8C%D9%86%20%26%20Mizon%20%2B%20%F0%9F%8E%B5",
+        "mizon://S-1-5-21-123-1001/localhost/search?query=%D9%85%D8%B9%DB%8C%D9%86%20%26%20Mizon%20%2B%20%F0%9F%8E%B5"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "searchQuery": "معین & Mizon + 🎵"
+    },
+    {
+      "routeKey": "search",
+      "canonicalUri": "mizon://search?query=test%2B%20two",
+      "inputs": [
+        "mizon://search?query=test%2B%20two",
+        "mizon://localhost/search?query=test%2B%20two",
+        "mizon://S-1-5-21-123-1001/localhost/search?query=test%2B%20two",
+        "mizon://search?query=%20test%2B+two%20"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "searchQuery": "test+ two"
+    },
+    {
+      "routeKey": "search",
+      "canonicalUri": "mizon://search?query=%252F",
+      "inputs": [
+        "mizon://search?query=%252F",
+        "mizon://localhost/search?query=%252F",
+        "mizon://S-1-5-21-123-1001/localhost/search?query=%252F"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "searchQuery": "%2F"
+    },
+    {
+      "routeKey": "search",
+      "canonicalUri": "mizon://search?query=%E2%80%8B",
+      "inputs": [
+        "mizon://search?query=%E2%80%8B",
+        "mizon://localhost/search?query=%E2%80%8B",
+        "mizon://S-1-5-21-123-1001/localhost/search?query=%E2%80%8B"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "searchQuery": "​"
+    },
+    {
+      "routeKey": "search",
+      "canonicalUri": "mizon://search?query=test",
+      "inputs": [
+        "mizon://search?query=test",
+        "mizon://localhost/search?query=test",
+        "mizon://S-1-5-21-123-1001/localhost/search?query=test",
+        "mizon://search?query=%C2%A0test%E3%80%80"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "searchQuery": "test",
+      "typedSearchQuery": "\t test \n"
+    },
+    {
+      "routeKey": "search",
+      "canonicalUri": "mizon://search?query=%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5",
+      "inputs": [
+        "mizon://search?query=%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5",
+        "mizon://localhost/search?query=%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5",
+        "mizon://S-1-5-21-123-1001/localhost/search?query=%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5"
+      ],
+      "requiresAuthentication": true,
+      "completionStage": "opened",
+      "timeoutSeconds": 50,
+      "searchQuery": "🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵🎵"
+    }
+  ],
+  "invalidUris": [
+    "mizon://welcome",
+    "mizon://localhost/Welcome/",
+    "mizon://S-1-5-21-123-1001/localhost/welcome",
+    "mizon:/music",
+    "mizon:///music",
+    "mizon://localhost/",
+    "mizon://unknown",
+    "mizon://settings/unknown",
+    "mizon://settings/%61ccount",
+    "mizon://settings/../login",
+    "mizon://localhost//music",
+    "mizon://user:password@settings/appearance",
+    "mizon://settings:42/appearance",
+    "mizon://settings/appearance#",
+    "mizon://home?",
+    "mizon://activities?filter=music",
+    "mizon://S-1-18446744073709551616-5/localhost/music",
+    "mizon://S-1-invalid/localhost/music",
+    "mizon://music/00000000-0000-0000-0000-000000000000",
+    "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=%70lay",
+    "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=play&action=video",
+    "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72/comments/00000000-0000-0000-0000-000000000000",
+    "mizon://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72/comments/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a73?action=play",
+    "mizon://story/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72?action=delete",
+    "mizon://search?query=a%00b",
+    "mizon://search?query=a%0Ab",
+    "mizon://search?query=%",
+    "mizon://search?query=%ED%A0%80",
+    "mizon://search?query=%C0%AF",
+    "mizon://search?query=hello&query=world",
+    "mizon://search?query=hello&redirect=mizon://login",
+    "https://music/0195dd3c-9a3e-7c4a-8c6f-2e9c0f6b1a72",
+    "mizon://search?query=%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5%F0%9F%8E%B5",
+    "mizon://search?query=x\n"
+  ]
+}

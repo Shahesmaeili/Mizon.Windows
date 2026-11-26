@@ -8,6 +8,7 @@
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="..\..\docs\ai\contracts\deep-links-v1.json" Link="deep-links-v1.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Compile Include="..\..\Services\AppActivationRoute.cs" Link="AppActivationRoute.cs" />
     <Compile Include="..\..\Services\AppDeepLinkCatalog.cs" Link="AppDeepLinkCatalog.cs" />
     <Compile Include="..\..\Services\AppDeepLinkNavigationContracts.cs" Link="AppDeepLinkNavigationContracts.cs" />

@@ -84,7 +84,9 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
                 Operation = "open_page", Page = request.Destination
             }, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            return new(result.Success, result.Code, result.Message, result.Success ? ResultData(request, "opened") : null);
+            return result.Success
+                ? AppNavigationOutcome.ForDestination(request, result.Message)
+                : new(false, result.Code, result.Message);
         }
 
         var home = _navigation.CurrentMainPage as HomePage ?? await ValidateSessionAsync(cancellationToken);
@@ -109,7 +111,7 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
                 || !ReferenceEquals(_navigation.CurrentMainPage, home) || !_hasSession)
                 return new(false, "page_changed", "The profile page changed before loading completed.");
             if (!loaded) return new(false, "profile_unavailable", "The profile could not be loaded. Check the account and connection.");
-            return new(true, "completed", "The profile was opened and loaded.", ResultData(request, "completed"));
+            return AppNavigationOutcome.ForDestination(request, "The profile was opened and loaded.");
         }
         if (request.PersonPublicId is Guid personId)
         {
@@ -122,7 +124,7 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
                 || !ReferenceEquals(_navigation.CurrentMainPage, home) || !_hasSession)
                 return new(false, "page_changed", "The artist page changed before loading completed.");
             return loaded
-                ? new(true, "completed", "The artist profile was opened and loaded.", ResultData(request, "completed"))
+                ? AppNavigationOutcome.ForDestination(request, "The artist profile was opened and loaded.")
                 : new(false, "profile_unavailable", "The artist profile could not be loaded.");
         }
         var destination = _navigation.CurrentInternalPage;
@@ -146,22 +148,13 @@ internal sealed class AppDeepLinkNavigation : IAppDeepLinkNavigation, IDisposabl
                 || !ReferenceEquals(_navigation.CurrentInternalPage, page))
                 return new(false, "page_changed", "The destination changed before loading completed.");
             return loaded
-                ? new(true, "completed", "The requested content was loaded.", ResultData(request, "completed"))
+                ? AppNavigationOutcome.ForDestination(request, "The requested content was loaded.")
                 : new(false, "page_unavailable", "The requested content could not be loaded.");
         }
-        var completed = request.MusicAction is MusicActivationAction.Play or MusicActivationAction.Download
-            || request.StoryPublicId is not null || request.MusicCommentPublicId is not null;
-        return completed
-            ? new(true, "completed", "The requested destination operation completed.", ResultData(request, "completed"))
-            : new(true, "opened", "The destination was opened; its content may still be loading.", ResultData(request, "opened"));
+        return AppNavigationOutcome.ForDestination(request, AppNavigationOutcome.WaitsForCompletion(request)
+            ? "The requested destination operation completed."
+            : "The destination was opened; its content may still be loading.");
     }
-
-    private static AppDeepLinkResultData ResultData(AppActivationRequest request, string stage) => new()
-    {
-        Destination = request.RouteKey!, Uri = request.ToUri()!, CompletionStage = stage,
-        PublicId = request.PersonPublicId ?? request.ClientPublicId ?? request.MusicPublicId ?? request.PlaylistPublicId ?? request.StoryPublicId,
-        CommentPublicId = request.MusicCommentPublicId, SettingsSection = request.SettingsSection
-    };
 
     private async Task<HomePage?> ValidateSessionAsync(CancellationToken cancellationToken)
     {

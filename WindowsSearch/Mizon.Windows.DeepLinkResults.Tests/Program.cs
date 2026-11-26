@@ -227,11 +227,12 @@ async Task DispatchException(Exception exception, string expectedCode)
     Check((await plain.Completion) is { Success: true, Code: "opened" } && dispatcher.PendingUri is null,
         "an ordinary URI gets a local receipt without a native callback");
     Check(AppDeepLinkResponseSession.TimeoutFor(music with { MusicAction = MusicActivationAction.Download })
-        == TimeSpan.FromMinutes(5) && AppDeepLinkResponseSession.TimeoutFor(music) is null,
+        == TimeSpan.FromMinutes(5) && AppDeepLinkResponseSession.TimeoutFor(music) == TimeSpan.FromSeconds(50),
         "ordinary and protocol-for-results links share the download response budget");
 }
 
-Console.WriteLine($"Passed {checks} deep-link response lifecycle assertions.");
+DeepLinkParityTests.Run(Check);
+Console.WriteLine($"Passed {checks} deep-link response and parity assertions.");
 
 sealed class FakeNavigation(Func<AppActivationRequest, CancellationToken, Task<AppNavigationOutcome>> open) : IAppDeepLinkNavigation, IDisposable
 {

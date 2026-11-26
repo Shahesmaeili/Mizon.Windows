@@ -8,6 +8,9 @@ namespace Mizon.Windows.Services;
 // this lifetime boundary stays independent of COM, WinUI and the transport.
 internal sealed class AppDeepLinkResponseSession : IDisposable
 {
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(50);
+    private static readonly TimeSpan DownloadTimeout = TimeSpan.FromMinutes(5);
+
     private readonly object _gate = new();
     private readonly CancellationTokenSource _cancellation = new();
     private readonly CancellationToken _token;
@@ -22,8 +25,8 @@ internal sealed class AppDeepLinkResponseSession : IDisposable
     internal AppDeepLinkResponseSession(Guid requestId, Action<AppDeepLinkResult>? report = null, TimeSpan? timeout = null)
     {
         if (requestId == Guid.Empty) throw new ArgumentException("A request ID is required.", nameof(requestId));
-        var duration = timeout ?? TimeSpan.FromSeconds(50);
-        if (duration <= TimeSpan.Zero || duration > TimeSpan.FromMinutes(5))
+        var duration = timeout ?? DefaultTimeout;
+        if (duration <= TimeSpan.Zero || duration > DownloadTimeout)
             throw new ArgumentOutOfRangeException(nameof(timeout));
         RequestId = requestId;
         _report = report;
@@ -36,8 +39,8 @@ internal sealed class AppDeepLinkResponseSession : IDisposable
         _deadline.Change(duration, Timeout.InfiniteTimeSpan);
     }
 
-    internal static TimeSpan? TimeoutFor(AppActivationRequest request) =>
-        request.MusicAction == MusicActivationAction.Download ? TimeSpan.FromMinutes(5) : null;
+    internal static TimeSpan TimeoutFor(AppActivationRequest request) =>
+        request.MusicAction == MusicActivationAction.Download ? DownloadTimeout : DefaultTimeout;
 
     internal Guid RequestId { get; }
     internal CancellationToken Token => _token;
