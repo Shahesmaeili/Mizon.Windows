@@ -11,7 +11,7 @@ namespace Mizon.Windows.Services.Discovery;
 // Windows' device association provider does not always surface every resolved
 // service. The DNS-SD API is an independent source of endpoints for media.
 internal sealed partial class WindowsMediaDnsBrowser(INearbyMediaSession media,
-    Action<string, string?, IEnumerable<string>?> publish) : IDisposable
+    Action<string, string?, IEnumerable<string>?, string?> publish) : IDisposable
 {
     private const uint DnsPending = 9506;
     private static readonly ConcurrentDictionary<nint, WindowsMediaDnsBrowser> Browsers = new();
@@ -155,7 +155,7 @@ internal sealed partial class WindowsMediaDnsBrowser(INearbyMediaSession media,
                 if (result is not null)
                 {
                     var sourceId = SourceId(query.Name);
-                    publish(sourceId, query.Name, result.Txt);
+                    publish(sourceId, query.Name, result.Txt, result.Host);
                     media.UpdateEndpoint(sourceId, query.Name, result.Txt, result.Addresses, result.Port, result.Host);
                 }
             }
@@ -182,7 +182,7 @@ internal sealed partial class WindowsMediaDnsBrowser(INearbyMediaSession media,
     private void Withdraw(string name)
     {
         var sourceId = SourceId(name);
-        publish(sourceId, null, null);
+        publish(sourceId, null, null, null);
         media.UpdateEndpoint(sourceId, null, null, null, null, null);
     }
 

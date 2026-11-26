@@ -82,7 +82,7 @@ public sealed class NearbyDeviceDiscoveryService : IDisposable
             await previous.ConfigureAwait(false);
             session.Lifetime.Token.ThrowIfCancellationRequested();
             await _transport.RunAsync(local, () => Ready(session),
-                (endpoint, name, txt) => Update(session, endpoint, name, txt), session.Lifetime.Token).ConfigureAwait(false);
+                (endpoint, name, txt, host) => Update(session, endpoint, name, txt, host), session.Lifetime.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (session.Lifetime.IsCancellationRequested) { }
         catch (Exception exception) { _reportError(exception); }
@@ -113,47 +113,77 @@ public sealed class NearbyDeviceDiscoveryService : IDisposable
         Changed?.Invoke();
     }
 
-    private void Update(Session session, string endpoint, string? name, IEnumerable<string>? txt)
+    private void Update(Session session, string endpoint, string? name, IEnumerable<string>? txt, string? host)
     {
         if (endpoint.Length > 2048) return;
         var peer = name is not null && txt is not null ? NearbyDeviceProtocol.Parse(name, txt, _localId) : null;
+        var dnsHost = host?.TrimEnd('.');
+        dnsHost = dnsHost is { Length: > 6 and <= 253 } && dnsHost.EndsWith(".local", StringComparison.OrdinalIgnoreCase)
+            ? dnsHost.ToUpperInvariant() : null;
         lock (_sync)
         {
             if (!ReferenceEquals(_session, session)) return;
+            session.Devices.TryGetValue(endpoint, out var existing);
             if (peer is null)
             {
                 if (!session.Devices.Remove(endpoint)) return;
             }
             else
             {
-                if (session.Devices.TryGetValue(endpoint, out var existing))
-                {
-                    if (peer == existing) return;
-                }
-                else if (session.Devices.Count >= MaximumEndpoints) return;
-                session.Devices[endpoint] = peer;
+                if (existing is null && session.Devices.Count >= MaximumEndpoints) return;
+                var instance = session.Instances.GetValueOrDefault(peer.Id);
+                dnsHost ??= instance.Host;
+                if (peer == existing?.Device && dnsHost == instance.Host) return;
+
+                var order = ++session.LastObservation;
+                session.Instances[peer.Id] = new(dnsHost, instance.FirstSeen == 0 ? order : instance.FirstSeen);
+                session.Devices[endpoint] = new(peer, order);
             }
-            Publish(session, ReadState().Status);
+
+            if (existing is not null && existing.Device.Id != peer?.Id
+                && !session.Devices.Values.Any(source => source.Device.Id == existing.Device.Id))
+                session.Instances.Remove(existing.Device.Id);
+
+            if (!Publish(session, ReadState().Status)) return;
         }
         Changed?.Invoke();
     }
 
-    private void Publish(Session session, NearbyDiscoveryStatus status)
+    private bool Publish(Session session, NearbyDiscoveryStatus status)
     {
-        var devices = session.Devices.Values.DistinctBy(static device => device.Id)
+        // Each service instance can arrive through both Windows discovery sources.
+        // An app restart can register a new instance on the same host before the old one is withdrawn.
+        var hosts = new HashSet<(string Platform, string Host, string DeviceName)>();
+        var devices = session.Devices.Values
+            .GroupBy(static source => source.Device.Id)
+            .Select(static group => group.MaxBy(static source => source.Order)!)
+            .Select(source => (source.Device, Instance: session.Instances[source.Device.Id]))
+            .OrderByDescending(static source => source.Instance.FirstSeen)
+            .Where(source => source.Instance.Host is null
+                || hosts.Add((source.Device.Platform, source.Instance.Host, source.Device.Name.ToUpperInvariant())))
+            .Select(static source => source.Device)
             .OrderBy(static device => device.Name, StringComparer.OrdinalIgnoreCase)
             .ThenBy(static device => device.Id).ToArray();
+
+        if (_state.Status == status && _state.Devices.SequenceEqual(devices)) return false;
         Volatile.Write(ref _state, new(status, Array.AsReadOnly(devices)));
+        return true;
     }
+
+    private sealed record Observation(NearbyDevice Device, long Order);
+    private readonly record struct Instance(string? Host, long FirstSeen);
 
     private sealed class Session
     {
         internal readonly CancellationTokenSource Lifetime = new();
-        internal readonly Dictionary<string, NearbyDevice> Devices = new(StringComparer.Ordinal);
+        internal readonly Dictionary<string, Observation> Devices = new(StringComparer.Ordinal);
+        // Cache a resolved host only while at least one source still reports this instance.
+        internal readonly Dictionary<Guid, Instance> Instances = new();
+        internal long LastObservation;
     }
 }
 
 internal interface INearbyDeviceTransport
 {
-    Task RunAsync(NearbyDevice local, Action ready, Action<string, string?, IEnumerable<string>?> update, CancellationToken cancellationToken);
+    Task RunAsync(NearbyDevice local, Action ready, Action<string, string?, IEnumerable<string>?, string?> update, CancellationToken cancellationToken);
 }

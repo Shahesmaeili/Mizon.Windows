@@ -1,3 +1,4 @@
+using Mizon.Windows.Mcp.Contracts;
 using Mizon.Windows.Services.Discovery;
 using System.Collections.Concurrent;
 using System.Text;
@@ -97,6 +98,41 @@ first.Update("wifi", null, null);
 Check(service.ReadState().Devices.Count == 1, "another interface keeps a peer visible");
 first.Update("ethernet", null, null);
 Check(service.ReadState().Devices.Count == 0, "last removal clears the row");
+
+var restartedDevice = device with { Id = Guid.NewGuid(), AppVersion = "11.1" };
+var restartedName = NearbyDeviceProtocol.FullName(restartedDevice.Id);
+var restartedProperties = NearbyDeviceProtocol.ToTxt(restartedDevice).Select(pair => $"{pair.Key}={pair.Value}").ToArray();
+first.Update("old-winrt", name, properties);
+first.Update("old-dns", name, properties, "Test-Mac.local.");
+first.Update("new-dns", restartedName, restartedProperties, "test-mac.LOCAL");
+first.Update("new-winrt", restartedName, restartedProperties);
+Check(service.ReadState().Devices.SequenceEqual([restartedDevice]), "a restart changes the instance ID without duplicating the device");
+var deduplicated = service.ReadState();
+first.Update("old-late", name, properties, "test-mac.local");
+Check(ReferenceEquals(service.ReadState(), deduplicated), "a late observation of the old instance cannot replace the current row");
+first.Update("old-late", null, null);
+
+var otherMac = device with { Id = Guid.NewGuid() };
+var otherName = NearbyDeviceProtocol.FullName(otherMac.Id);
+var otherProperties = NearbyDeviceProtocol.ToTxt(otherMac).Select(pair => $"{pair.Key}={pair.Value}").ToArray();
+first.Update("other-mac", otherName, otherProperties, "another-mac.local");
+Check(service.ReadState().Devices.Count == 2, "different DNS hosts with the same label and account remain separate");
+
+var nearbyMcp = new McpNearbyDevicesService(service.ReadState);
+var nearbyRequest = new McpRequest { Operation = "get_nearby_devices" };
+Check(nearbyMcp.Read(nearbyRequest, deadline.Token).NearbyDevices is { DeviceCount: 2 } nearby
+    && nearby.PlatformCounts.SequenceEqual([new("macos", 2)]), "MCP reports the same deduplicated platform counts as the header");
+first.Update("old-dns", null, null);
+Check(service.ReadState().Devices.Count == 2, "the remaining source retains the last resolved host without reviving a duplicate");
+first.Update("old-winrt", null, null);
+Check(service.ReadState().Devices.Count == 2 && service.ReadState().Devices.Contains(restartedDevice),
+    "withdrawal of the previous instance keeps the current row");
+first.Update("new-dns", null, null);
+Check(service.ReadState().Devices.Count == 2, "a remaining source keeps the current row visible");
+first.Update("new-winrt", null, null);
+first.Update("other-mac", null, null);
+Check(nearbyMcp.Read(nearbyRequest, deadline.Token).NearbyDevices is { DeviceCount: 0 }, "withdrawals clear the MCP count");
+
 for (var i = 0; i < 150; i++)
 {
     var peer = device with { Id = Guid.NewGuid() };
@@ -142,7 +178,7 @@ internal sealed class SyntheticTransport : INearbyDeviceTransport
     internal int Active;
     internal int MaximumActive;
 
-    public async Task RunAsync(NearbyDevice local, Action ready, Action<string, string?, IEnumerable<string>?> update, CancellationToken cancellationToken)
+    public async Task RunAsync(NearbyDevice local, Action ready, Action<string, string?, IEnumerable<string>?, string?> update, CancellationToken cancellationToken)
     {
         MaximumActive = Math.Max(MaximumActive, Interlocked.Increment(ref Active));
         Interlocked.Increment(ref Runs);
@@ -153,5 +189,9 @@ internal sealed class SyntheticTransport : INearbyDeviceTransport
         finally { Interlocked.Decrement(ref Active); }
     }
 
-    internal sealed record Run(NearbyDevice Local, Action<string, string?, IEnumerable<string>?> Update, TaskCompletionSource Failed);
+    internal sealed record Run(NearbyDevice Local, Action<string, string?, IEnumerable<string>?, string?> Publish, TaskCompletionSource Failed)
+    {
+        internal void Update(string endpoint, string? name, IEnumerable<string>? txt, string? host = null) =>
+            Publish(endpoint, name, txt, host);
+    }
 }

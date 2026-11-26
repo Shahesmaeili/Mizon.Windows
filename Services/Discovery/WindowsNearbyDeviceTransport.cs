@@ -22,7 +22,7 @@ internal sealed class WindowsNearbyDeviceTransport(Func<Guid, CancellationToken,
         System.Devices.AepService.ProtocolId:="{4526e8c1-8aac-4153-9b16-55e86ada0e54}" AND System.Devices.Dnssd.Domain:="local" AND System.Devices.Dnssd.ServiceName:="_mizon-peer._tcp"
         """;
 
-    public async Task RunAsync(NearbyDevice local, Action ready, Action<string, string?, IEnumerable<string>?> update, CancellationToken cancellationToken)
+    public async Task RunAsync(NearbyDevice local, Action ready, Action<string, string?, IEnumerable<string>?, string?> update, CancellationToken cancellationToken)
     {
         await using var media = openMedia?.Invoke(local.Id, cancellationToken);
         using var mediaBrowser = media is not null ? new WindowsMediaDnsBrowser(media, update) : null;
@@ -41,15 +41,18 @@ internal sealed class WindowsNearbyDeviceTransport(Func<Guid, CancellationToken,
             if (info.Properties.TryGetValue(FullNameProperty, out var fullName) && fullName is string name
                 && info.Properties.TryGetValue(TextProperty, out var values) && values is IEnumerable<string> txt)
             {
-                update(info.Id, name, txt);
-                info.Properties.TryGetValue(AddressProperty, out var addresses);
-                info.Properties.TryGetValue(PortProperty, out var port);
                 info.Properties.TryGetValue(HostProperty, out var host);
-                media?.UpdateEndpoint(info.Id, name, txt, addresses, port, host as string);
+                update(info.Id, name, txt, host as string);
+                if (media is not null)
+                {
+                    info.Properties.TryGetValue(AddressProperty, out var addresses);
+                    info.Properties.TryGetValue(PortProperty, out var port);
+                    media.UpdateEndpoint(info.Id, name, txt, addresses, port, host as string);
+                }
             }
             else
             {
-                update(info.Id, null, null);
+                update(info.Id, null, null, null);
                 media?.UpdateEndpoint(info.Id, null, null, null, null, null);
             }
         }
@@ -79,7 +82,7 @@ internal sealed class WindowsNearbyDeviceTransport(Func<Guid, CancellationToken,
             lock (sync)
             {
                 if (!active || !endpoints.Remove(change.Id)) return;
-                update(change.Id, null, null);
+                update(change.Id, null, null, null);
                 media?.UpdateEndpoint(change.Id, null, null, null, null, null);
             }
         }
