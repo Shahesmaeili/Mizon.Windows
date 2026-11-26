@@ -7,6 +7,7 @@
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="../../docs/ai/contracts/auth-gamepad-v1.json" Link="auth-gamepad-v1.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Compile Include="../../Common/ArtistModelInput.cs" Link="Production/ArtistModelInput.cs" />
     <Compile Include="../../Common/ArtistModelMotion.cs" Link="Production/ArtistModelMotion.cs" />
     <Compile Include="../../Services/Gamepad/*.cs" Link="Production/%(Filename)%(Extension)" />

@@ -272,6 +272,7 @@ for (var i = 0; i < 100000; i++) allocationReducer.TryRead(default, i, out _);
 allocated = GC.GetAllocatedBytesForCurrentThread() - allocated;
 Check(allocated == 0, $"Idle reducer must allocate zero managed bytes; got {allocated}");
 FeedbackTests.Run(Check);
+GamepadParityTests.Run(Check);
 foreach (var (stick, key) in new[]
 {
     (VirtualKey.GamepadRightThumbstickLeft, VirtualKey.Left),

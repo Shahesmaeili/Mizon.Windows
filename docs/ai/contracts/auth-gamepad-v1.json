@@ -1,0 +1,231 @@
+{
+  "version": 1,
+  "directionInitialRepeatMs": 360,
+  "directionRepeatMs": 110,
+  "inputCases": [
+    {
+      "name": "A press and held reset",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "buttons": ["A"], "action": "Accept"},
+        {"ms": 1000, "buttons": ["A"], "action": null},
+        {"ms": 1001, "action": null},
+        {"ms": 1002, "buttons": ["A"], "action": "Accept"},
+        {"ms": 1100, "buttons": ["A"], "reset": true, "action": null},
+        {"ms": 2000, "buttons": ["A"], "action": null},
+        {"ms": 2001, "action": null},
+        {"ms": 2002, "buttons": ["A"], "action": "Accept"}
+      ]
+    },
+    {
+      "name": "B press and held reset",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "buttons": ["B"], "action": "Back"},
+        {"ms": 1000, "buttons": ["B"], "action": null},
+        {"ms": 1001, "action": null},
+        {"ms": 1002, "buttons": ["B"], "action": "Back"},
+        {"ms": 1100, "buttons": ["B"], "reset": true, "action": null},
+        {"ms": 2000, "buttons": ["B"], "action": null},
+        {"ms": 2001, "action": null},
+        {"ms": 2002, "buttons": ["B"], "action": "Back"}
+      ]
+    },
+    {
+      "name": "X press and held reset",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "buttons": ["X"], "action": "Clear"},
+        {"ms": 1000, "buttons": ["X"], "action": null},
+        {"ms": 1001, "action": null},
+        {"ms": 1002, "buttons": ["X"], "action": "Clear"},
+        {"ms": 1100, "buttons": ["X"], "reset": true, "action": null},
+        {"ms": 2000, "buttons": ["X"], "action": null},
+        {"ms": 2001, "action": null},
+        {"ms": 2002, "buttons": ["X"], "action": "Clear"}
+      ]
+    },
+    {
+      "name": "Y press and held reset",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "buttons": ["Y"], "action": "RevealPassword"},
+        {"ms": 1000, "buttons": ["Y"], "action": null},
+        {"ms": 1001, "action": null},
+        {"ms": 1002, "buttons": ["Y"], "action": "RevealPassword"},
+        {"ms": 1100, "buttons": ["Y"], "reset": true, "action": null},
+        {"ms": 2000, "buttons": ["Y"], "action": null},
+        {"ms": 2001, "action": null},
+        {"ms": 2002, "buttons": ["Y"], "action": "RevealPassword"}
+      ]
+    },
+    {
+      "name": "View press and held reset",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "buttons": ["View"], "action": "ToggleHelp"},
+        {"ms": 1000, "buttons": ["View"], "action": null},
+        {"ms": 1001, "action": null},
+        {"ms": 1002, "buttons": ["View"], "action": "ToggleHelp"},
+        {"ms": 1100, "buttons": ["View"], "reset": true, "action": null},
+        {"ms": 2000, "buttons": ["View"], "action": null},
+        {"ms": 2001, "action": null},
+        {"ms": 2002, "buttons": ["View"], "action": "ToggleHelp"}
+      ]
+    },
+    {
+      "name": "Menu press and held reset",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "buttons": ["Menu"], "action": "Submit"},
+        {"ms": 1000, "buttons": ["Menu"], "action": null},
+        {"ms": 1001, "action": null},
+        {"ms": 1002, "buttons": ["Menu"], "action": "Submit"},
+        {"ms": 1100, "buttons": ["Menu"], "reset": true, "action": null},
+        {"ms": 2000, "buttons": ["Menu"], "action": null},
+        {"ms": 2001, "action": null},
+        {"ms": 2002, "buttons": ["Menu"], "action": "Submit"}
+      ]
+    },
+    {
+      "name": "LeftShoulder press and held reset",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "buttons": ["LeftShoulder"], "action": "PreviousSection"},
+        {"ms": 1000, "buttons": ["LeftShoulder"], "action": null},
+        {"ms": 1001, "action": null},
+        {"ms": 1002, "buttons": ["LeftShoulder"], "action": "PreviousSection"},
+        {"ms": 1100, "buttons": ["LeftShoulder"], "reset": true, "action": null},
+        {"ms": 2000, "buttons": ["LeftShoulder"], "action": null},
+        {"ms": 2001, "action": null},
+        {"ms": 2002, "buttons": ["LeftShoulder"], "action": "PreviousSection"}
+      ]
+    },
+    {
+      "name": "RightShoulder press and held reset",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "buttons": ["RightShoulder"], "action": "NextSection"},
+        {"ms": 1000, "buttons": ["RightShoulder"], "action": null},
+        {"ms": 1001, "action": null},
+        {"ms": 1002, "buttons": ["RightShoulder"], "action": "NextSection"},
+        {"ms": 1100, "buttons": ["RightShoulder"], "reset": true, "action": null},
+        {"ms": 2000, "buttons": ["RightShoulder"], "action": null},
+        {"ms": 2001, "action": null},
+        {"ms": 2002, "buttons": ["RightShoulder"], "action": "NextSection"}
+      ]
+    },
+    {
+      "name": "LeftThumbstick press and held reset",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "buttons": ["LeftThumbstick"], "action": "FocusPrimary"},
+        {"ms": 1000, "buttons": ["LeftThumbstick"], "action": null},
+        {"ms": 1001, "action": null},
+        {"ms": 1002, "buttons": ["LeftThumbstick"], "action": "FocusPrimary"},
+        {"ms": 1100, "buttons": ["LeftThumbstick"], "reset": true, "action": null},
+        {"ms": 2000, "buttons": ["LeftThumbstick"], "action": null},
+        {"ms": 2001, "action": null},
+        {"ms": 2002, "buttons": ["LeftThumbstick"], "action": "FocusPrimary"}
+      ]
+    },
+    {
+      "name": "RightThumbstick press and held reset",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "buttons": ["RightThumbstick"], "action": "ResetFocus"},
+        {"ms": 1000, "buttons": ["RightThumbstick"], "action": null},
+        {"ms": 1001, "action": null},
+        {"ms": 1002, "buttons": ["RightThumbstick"], "action": "ResetFocus"},
+        {"ms": 1100, "buttons": ["RightThumbstick"], "reset": true, "action": null},
+        {"ms": 2000, "buttons": ["RightThumbstick"], "action": null},
+        {"ms": 2001, "action": null},
+        {"ms": 2002, "buttons": ["RightThumbstick"], "action": "ResetFocus"}
+      ]
+    },
+    {
+      "name": "D-pad repeat and no catch-up",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 10, "buttons": ["Up"], "action": "Up"},
+        {"ms": 369, "buttons": ["Up"], "action": null},
+        {"ms": 370, "buttons": ["Up"], "action": "Up"},
+        {"ms": 479, "buttons": ["Up"], "action": null},
+        {"ms": 480, "buttons": ["Up"], "action": "Up"},
+        {"ms": 10000, "buttons": ["Up"], "action": "Up"},
+        {"ms": 10001, "buttons": ["Up"], "action": null},
+        {"ms": 11000, "buttons": ["Up"], "reset": true, "action": null},
+        {"ms": 22000, "buttons": ["Up"], "action": null},
+        {"ms": 22001, "action": null},
+        {"ms": 22002, "buttons": ["Up"], "action": "Up"}
+      ]
+    },
+    {
+      "name": "left stick dead zone and stable axis",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "leftX": 0.54, "action": null},
+        {"ms": 2, "leftX": 0.56, "action": "Right"},
+        {"ms": 200, "leftX": 0.4, "action": null},
+        {"ms": 362, "leftX": 0.4, "action": "Right"},
+        {"ms": 363, "leftX": 0.34, "action": null},
+        {"ms": 364, "leftX": 0.5, "action": null},
+        {"ms": 365, "leftX": -0.8, "action": "Left"},
+        {"ms": 366, "leftY": -0.9, "action": "Down"},
+        {"ms": 367, "leftY": 0.9, "action": "Up"},
+        {"ms": 368, "leftX": 0.84, "leftY": 0.8, "action": null},
+        {"ms": 369, "leftX": 1, "leftY": 0.7, "action": "Right"}
+      ]
+    },
+    {
+      "name": "right stick scroll and rebasing",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 10, "rightY": 0.54, "action": null},
+        {"ms": 20, "rightY": 0.6, "action": "ScrollUp"},
+        {"ms": 379, "rightY": 0.4, "action": null},
+        {"ms": 380, "rightY": 0.4, "action": "ScrollUp"},
+        {"ms": 390, "rightY": 0.34, "action": null},
+        {"ms": 400, "rightY": -0.75, "action": "ScrollDown"},
+        {"ms": 410, "rightY": -0.75, "reset": true, "action": null},
+        {"ms": 411, "rightY": -0.75, "action": null},
+        {"ms": 412, "action": null},
+        {"ms": 413, "rightY": -0.75, "action": "ScrollDown"}
+      ]
+    },
+    {
+      "name": "trigger press/release hysteresis",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "leftTrigger": 0.64, "action": null},
+        {"ms": 2, "leftTrigger": 0.66, "action": "PreviousField"},
+        {"ms": 3, "leftTrigger": 0.4, "action": null},
+        {"ms": 4, "leftTrigger": 0.8, "action": null},
+        {"ms": 5, "leftTrigger": 0.34, "action": null},
+        {"ms": 6, "leftTrigger": 0.9, "action": "PreviousField"},
+        {"ms": 7, "rightTrigger": 0.7, "action": "NextField"},
+        {"ms": 8, "rightTrigger": 0.65, "reset": true, "action": null},
+        {"ms": 9, "rightTrigger": 0.9, "action": null},
+        {"ms": 10, "rightTrigger": 0.34, "action": null},
+        {"ms": 11, "rightTrigger": 0.67, "action": "NextField"}
+      ]
+    },
+    {
+      "name": "simultaneous edges prefer Back and are consumed",
+      "frames": [
+        {"ms": 0, "action": null},
+        {"ms": 1, "buttons": ["A", "B", "Menu", "View"], "action": "Back"},
+        {"ms": 2, "buttons": ["A", "Menu", "View"], "action": null},
+        {"ms": 3, "action": null},
+        {"ms": 4, "buttons": ["A", "View"], "action": "ToggleHelp"},
+        {"ms": 5, "action": null},
+        {"ms": 6, "buttons": ["A", "Menu"], "action": "Submit"}
+      ]
+    }
+  ],
+  "feedback": [
+    {"kind": "Success", "durationMs": 260, "samples": [[0, 0, 0, false], [25, 0.08, 0.18, false], [115, 0, 0, false], [165, 0.14, 0.28, false], [260, 0, 0, true]]},
+    {"kind": "Error", "durationMs": 360, "samples": [[0, 0, 0, false], [25, 0.38, 0.18, false], [180, 0, 0, false], [245, 0.38, 0.18, false], [360, 0, 0, true]]},
+    {"kind": "Validation", "durationMs": 100, "samples": [[0, 0, 0, false], [25, 0, 0.16, false], [100, 0, 0, true]]}
+  ]
+}
