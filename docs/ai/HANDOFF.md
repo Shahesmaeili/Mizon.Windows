@@ -25,17 +25,20 @@ were not exercised.
 ## Welcome profile transition — 2026-11-28
 
 Welcome uses WinUI's Gravity connected animation to hand off the loaded
-profile photo to the Home header. Home waits for stable caption and avatar
-bounds, then animates the photo without moving the presence badge. The frame
-does not run its entrance transition over the transferred photo. A missing
-photo or disabled Windows animations skips the handoff. Cancellation or a
-layout timeout restores the photo immediately. The existing account
-navigation, controller focus and MCP contracts remain the entry points.
+profile photo to the Home header. The first rendered frame with valid caption
+and avatar bounds starts the animation. The default Music page is constructed
+after native completion so its XAML and widget startup do not block the
+handoff. The presence badge stays fixed. Windows animations disabled or a
+missing photo loads Music immediately. Cancellation, a rejected start, or
+the bounded layout/completion timers release the default landing.
+Explicit section and deep-link navigation take priority and unload clears
+the render handler, completion handler, and timer.
 
 Verification passed on .NET 11 with the Debug x64 WinUI build and Release
-checks in Mcp.AuthTests, Mcp.AccessTests and Gamepad.NavigationTests. The
-rendered transition, physical controller, Narrator and full WinUI NativeAOT
-publication were not tested.
+checks in Mcp.AuthTests, Mcp.AccessTests, AuthOutcome.Tests,
+Gamepad.NavigationTests and DeepLinkResults.Tests. The rendered transition,
+physical controller, Narrator and full WinUI NativeAOT publication were not
+tested.
 
 ## Same-account device presence — 2026-11-25
 

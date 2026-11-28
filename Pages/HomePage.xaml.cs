@@ -42,7 +42,7 @@ namespace Mizon.Windows.Pages
         private int _titleBarGeneration;
         private ConnectedAnimation? _profileConnectedAnimation;
         private DispatcherQueueTimer? _profileEntranceDeadline;
-        private RectInt32? _profileEntranceBounds;
+        private bool _homeLandingPending;
         private bool _internalFrameInitialized;
         private MusicPage? _retainedMusicPage;
         private bool _synchronizingNavigationSelection;
@@ -139,9 +139,7 @@ namespace Mizon.Windows.Pages
             InitializeTitleBarPointerRegions();
             QueueTitleBarRegionUpdate();
 
-            StartProfileConnectedAnimation();
-
-            var navigationService = ((App)App.Current).Services.GetRequiredService<NavigationService>();
+            var navigationService = ViewModel.NavigationService;
             if (!_internalFrameInitialized)
             {
                 navigationService.InternalInitialize(InternalFrame);
@@ -151,12 +149,33 @@ namespace Mizon.Windows.Pages
             navigationService.InternalNavigationChanged += ActivationNavigationChanged;
             _retainedMusicPage ??= InternalFrame.Content as MusicPage;
 
+            _homeLandingPending = true;
+            if (!BeginProfileEntrance()) OpenHomeLanding();
+            else if (App.TryOpenPendingContent())
+            {
+                SupersedeHomeLanding();
+                SynchronizeNavigationSelection();
+            }
+        }
+
+        private void OpenHomeLanding()
+        {
+            if (!_homeLandingPending || !IsLoaded || ViewModel.IsSigningOut) return;
+            _homeLandingPending = false;
             if (!App.TryOpenPendingContent() && (_resetMusicLanding || InternalFrame.Content is null)
                 && InternalFrame.Content is not MusicPage)
-                navigationService.InternalNavigate(typeof(MusicPage));
+                ViewModel.NavigationService.InternalNavigate(typeof(MusicPage));
 
             SynchronizeNavigationSelection();
             _resetMusicLanding = false;
+        }
+
+        private void SupersedeHomeLanding()
+        {
+            if (!_homeLandingPending) return;
+            _homeLandingPending = false;
+            _resetMusicLanding = false;
+            StopProfileEntrance(cancel: true);
         }
 
         private void SynchronizeNavigationSelection()
@@ -179,55 +198,86 @@ namespace Mizon.Windows.Pages
             finally { _synchronizingNavigationSelection = false; }
         }
 
-        private void StartProfileConnectedAnimation()
+        private bool BeginProfileEntrance()
         {
             _profileConnectedAnimation = ConnectedAnimationService.GetForCurrentView()
                 .GetAnimation(WelcomePage.ProfileConnectedAnimationKey);
-            if (_profileConnectedAnimation is null) return;
+            if (_profileConnectedAnimation is not { } animation) return false;
 
-            // Keep the destination measured while native caption metrics settle.
-            // The prepared animation owns the visual hand-off during this brief gap.
             CurrentProfileAvatar.ConnectedAnimationTarget.Opacity = 0;
+            animation.Completed += ProfileEntrance_Completed;
+            CompositionTarget.Rendering += ProfileEntrance_Rendering;
             _profileEntranceDeadline = DispatcherQueue.CreateTimer();
-            _profileEntranceDeadline.Interval = TimeSpan.FromMilliseconds(300);
+            _profileEntranceDeadline.Interval = TimeSpan.FromMilliseconds(250);
             _profileEntranceDeadline.IsRepeating = false;
             _profileEntranceDeadline.Tick += ProfileEntranceDeadline_Tick;
             _profileEntranceDeadline.Start();
-            QueueTitleBarRegionUpdate();
+            return true;
         }
 
         private void ProfileEntranceDeadline_Tick(DispatcherQueueTimer sender, object args) =>
-            ReleaseProfileEntrance()?.Cancel();
+            CompleteProfileEntrance(cancel: true);
 
-        private void TryStartProfileConnectedAnimation()
+        private void ProfileEntrance_Completed(ConnectedAnimation sender, object args)
         {
-            var target = CurrentProfileAvatar.ConnectedAnimationTarget;
-            if (_profileConnectedAnimation is null
-                || Math.Abs(RightCaptionInset.ActualWidth - RightCaptionInset.Width.Value) > .75
-                || Common.TitleBarRegions.GetPixelBounds(target) is not { } bounds)
-                return;
+            if (ReferenceEquals(_profileConnectedAnimation, sender)) CompleteProfileEntrance(cancel: false);
+        }
 
-            if (_profileEntranceBounds is not { } previous || !previous.Equals(bounds))
-            {
-                _profileEntranceBounds = bounds;
-                QueueTitleBarRegionUpdate(DispatcherQueuePriority.Low);
-                return;
-            }
-
-            var animation = ReleaseProfileEntrance()!;
+        private void ProfileEntrance_Rendering(object? sender, object args)
+        {
+            if (_profileConnectedAnimation is not { } animation || !IsLoaded) return;
             try
             {
-                if (!animation.TryStart(target)) animation.Cancel();
+                // Rendering runs after layout. Start on the first arranged frame instead of
+                // waiting for a low-priority round-trip through title-bar hit testing.
+                var target = CurrentProfileAvatar.ConnectedAnimationTarget;
+                if (App.MainMizonWindow is not { } window || XamlRoot is not { RasterizationScale: > 0 } root
+                    || SetRightCaptionInset(GetRightCaptionInset(window.AppWindow, root.RasterizationScale))
+                    || Math.Abs(RightCaptionInset.ActualWidth - RightCaptionInset.Width.Value) > .75
+                    || Common.TitleBarRegions.GetPixelBounds(target) is not { Width: > 0, Height: > 0 })
+                    return;
+
+                CompositionTarget.Rendering -= ProfileEntrance_Rendering;
+                target.Opacity = 1;
+                if (!animation.TryStart(target))
+                {
+                    CompleteProfileEntrance(cancel: true);
+                    return;
+                }
+
+                // The native Completed event normally releases the landing. A window that
+                // stops presenting frames must still be able to finish opening the page.
+                if (_profileEntranceDeadline is { } deadline)
+                {
+                    deadline.Stop();
+                    deadline.Interval = TimeSpan.FromSeconds(1);
+                    deadline.Start();
+                }
             }
-            catch (COMException exception)
+            catch (Exception exception) when (exception is COMException or InvalidOperationException or ArgumentException)
             {
-                animation.Cancel();
+                CompleteProfileEntrance(cancel: true);
                 AppLog.Error("Welcome profile transition could not be started.", exception);
             }
         }
 
-        private ConnectedAnimation? ReleaseProfileEntrance()
+        private void CompleteProfileEntrance(bool cancel)
         {
+            StopProfileEntrance(cancel);
+            var generation = _titleBarGeneration;
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                // Keep page construction off the rendering and animation callbacks.
+                if (generation == _titleBarGeneration) OpenHomeLanding();
+            });
+        }
+
+        private void StopProfileEntrance(bool cancel)
+        {
+            if (_profileConnectedAnimation is not { } animation) return;
+            _profileConnectedAnimation = null;
+            CompositionTarget.Rendering -= ProfileEntrance_Rendering;
+            animation.Completed -= ProfileEntrance_Completed;
             if (_profileEntranceDeadline is { } timer)
             {
                 timer.Stop();
@@ -235,11 +285,12 @@ namespace Mizon.Windows.Pages
                 _profileEntranceDeadline = null;
             }
 
-            var animation = _profileConnectedAnimation;
-            _profileConnectedAnimation = null;
-            _profileEntranceBounds = null;
-            if (animation is not null) CurrentProfileAvatar.ConnectedAnimationTarget.Opacity = 1;
-            return animation;
+            CurrentProfileAvatar.ConnectedAnimationTarget.Opacity = 1;
+            if (cancel)
+            {
+                try { animation.Cancel(); }
+                catch (COMException exception) { AppLog.Error("Welcome profile transition could not be cancelled.", exception); }
+            }
         }
 
         private static double GetRightCaptionInset(AppWindow window, double scale) =>
@@ -249,7 +300,6 @@ namespace Mizon.Windows.Pages
         {
             if (Math.Abs(RightCaptionInset.Width.Value - width) <= .01) return false;
             RightCaptionInset.Width = new GridLength(width);
-            _profileEntranceBounds = null;
             return true;
         }
 
@@ -271,24 +321,19 @@ namespace Mizon.Windows.Pages
             QueueTitleBarRegionUpdate();
         }
 
-        private void TitleBarRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args)
-        {
-            _profileEntranceBounds = null;
-            QueueTitleBarRegionUpdate();
-        }
+        private void TitleBarRoot_Changed(XamlRoot sender, XamlRootChangedEventArgs args) => QueueTitleBarRegionUpdate();
         private void TitleBar_LayoutUpdated(object? sender, object args) => QueueTitleBarRegionUpdate();
         private void TitleBarWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)
         {
             if (!args.DidPresenterChange && !args.DidSizeChange) return;
-            _profileEntranceBounds = null;
             QueueTitleBarRegionUpdate();
         }
 
-        private void QueueTitleBarRegionUpdate(DispatcherQueuePriority priority = DispatcherQueuePriority.Normal)
+        private void QueueTitleBarRegionUpdate()
         {
             if (_titleBarRegionUpdateQueued || _titleBarPointerSource is null || !IsLoaded) return;
             var generation = _titleBarGeneration;
-            _titleBarRegionUpdateQueued = DispatcherQueue.TryEnqueue(priority, () =>
+            _titleBarRegionUpdateQueued = DispatcherQueue.TryEnqueue(() =>
             {
                 // A cached page may unload and attach to the window again before
                 // this callback runs. The old lifetime must not update new regions.
@@ -332,11 +377,9 @@ namespace Mizon.Windows.Pages
                 AppLog.Information($"Title-bar native regions: presenter={presenter}, leftInset={titleBar.LeftInset}, rightInset={titleBar.RightInset}, scale={scale}, previousRegions={_titleBarInteractiveRects.Length}.");
             if (SetRightCaptionInset(rightInset))
             {
-                // The new inset must be arranged before publishing hit-test bounds
-                // or using the avatar as the connected animation destination.
+                // The new inset must be arranged before publishing hit-test bounds.
                 if (!fullScreen) return;
             }
-            else TryStartProfileConnectedAnimation();
 
             // Fullscreen has no native caption region. Let all header controls and
             // the window's top-edge reveal surface receive normal client input.
@@ -402,7 +445,8 @@ namespace Mizon.Windows.Pages
             _searchCancellationTokenSource = null;
             SearchBox.ClearSearch();
             ViewModel.MainSearch.Clear();
-            ReleaseProfileEntrance()?.Cancel();
+            _homeLandingPending = false;
+            StopProfileEntrance(cancel: true);
 
             DragAreaOverlayGrid.LayoutUpdated -= TitleBar_LayoutUpdated;
             if (_titleBarWindow is not null)
@@ -515,6 +559,7 @@ namespace Mizon.Windows.Pages
         {
             if (args.IsEnteringPage)
             {
+                SupersedeHomeLanding();
                 if (InternalFrame.Content is MusicPage music) _retainedMusicPage = music;
                 SynchronizeNavigationSelection();
                 return;
@@ -529,6 +574,7 @@ namespace Mizon.Windows.Pages
 
         private void NavigateActivation(Action navigate)
         {
+            if (_profileConnectedAnimation is not null) CompleteProfileEntrance(cancel: true);
             _navigatingActivation = true;
             try { navigate(); }
             finally { _navigatingActivation = false; }
@@ -662,6 +708,7 @@ namespace Mizon.Windows.Pages
 
         private void NavigateSection(string tag)
         {
+            if (_profileConnectedAnimation is not null) CompleteProfileEntrance(cancel: true);
             if (tag == nameof(MusicPage))
             {
                 if (InternalFrame.Content is not MusicPage) ViewModel.NavigationService.InternalNavigate(typeof(MusicPage));
