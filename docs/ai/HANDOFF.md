@@ -2,6 +2,23 @@
 
 Updated: 2026-11-28. This records the latest source and verification checkpoint. Check Git status, remote changes and active task notes before continuing.
 
+## Nearby devices panel matches the macOS layout — 2026-11-28
+
+The Windows flyout follows the [Mac panel](https://github.com/Shahesmaeili/Mizon.Apple/blob/b4604d3234cfa26d1999cf0ea0f81688c2b94481/Sources/MizonAppleUI/Pages/NearbyDevicesControl.swift).
+It uses native acrylic, a fixed title and close button, and a scrollable
+body with the discoverability switch, bounded radar sweep, and compact
+device rows. The radar uses up to six real peers with their platform colors.
+Rows include app versions and load public avatars when visible. The switch
+uses the persisted preference and retry calls the discovery start operation.
+The signed-in shell runs discovery independently of flyout visibility.
+The read-only Nearby Devices MCP scope exposes aggregate discovery state.
+
+The flyout follows Persian and English layout, system color and motion
+settings, native D-pad and A focus, and B or Escape dismissal. Closing it
+releases the radar animation and avatar lookups. Debug x64 build, bilingual
+resource key parity, discovery, MCP access/protocol and controller navigation
+checks passed. Live UI, physical controller and Narrator were not inspected.
+
 ## Header presence cutout during the Welcome transition — 2026-11-28
 
 The Gravity connected animation targets an outer photo host. The transparent

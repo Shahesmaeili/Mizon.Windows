@@ -14,6 +14,7 @@ namespace Mizon.Windows.ViewModels;
 public partial class HomePageViewModel
 {
     private bool _nearbyEnabled;
+    internal bool NearbyDiscoveryEnabled => _nearbyEnabled;
     internal bool CanStartNearbyDiscovery => _hasAccount && !IsSigningOut
         && _shellCancellation is { IsCancellationRequested: false };
 

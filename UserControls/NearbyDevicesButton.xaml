@@ -4,125 +4,253 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Mizon.Windows.UserControls"
     xmlns:controls="using:Mizon.Windows.Controls"
+    xmlns:icon="using:FluentIcons.WinUI"
     Loaded="Control_Loaded" Unloaded="Control_Unloaded">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="NearbyAccentBrush" Color="#FF7DD4E8"/>
+                    <SolidColorBrush x:Key="NearbyAccentWashBrush" Color="#207DD4E8"/>
+                    <Color x:Key="NearbyOrbitGlowColor">#367DD4E8</Color>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="NearbyAccentBrush" Color="#FF00748C"/>
+                    <SolidColorBrush x:Key="NearbyAccentWashBrush" Color="#2000748C"/>
+                    <Color x:Key="NearbyOrbitGlowColor">#3000748C</Color>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <SolidColorBrush x:Key="NearbyAccentBrush" Color="{ThemeResource SystemColorWindowTextColor}"/>
+                    <SolidColorBrush x:Key="NearbyAccentWashBrush" Color="Transparent"/>
+                    <Color x:Key="NearbyOrbitGlowColor">Transparent</Color>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <Style x:Key="NearbySignalStyle" TargetType="ContentControl">
+                <Setter Property="IsTabStop" Value="False"/>
+                <Setter Property="IsHitTestVisible" Value="False"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ContentControl">
+                            <Viewbox>
+                                <Grid Width="24" Height="24">
+                                    <Path Data="M8,8 C5.8,10.2 5.8,13.8 8,16 M16,8 C18.2,10.2 18.2,13.8 16,16 M4.5,4.5 C.4,8.6 .4,15.4 4.5,19.5 M19.5,4.5 C23.6,8.6 23.6,15.4 19.5,19.5"
+                                          Stroke="{TemplateBinding Foreground}" StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                    <Ellipse Width="4" Height="4" Fill="{TemplateBinding Foreground}"/>
+                                </Grid>
+                            </Viewbox>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <DataTemplate x:Key="OrbitMarkerTemplate" x:DataType="local:NearbyDeviceRow">
+                <Border Width="28" Height="28" CornerRadius="14" BorderThickness="1"
+                        Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}">
+                    <Border.BorderBrush>
+                        <SolidColorBrush Color="{x:Bind Tint}" Opacity=".48"/>
+                    </Border.BorderBrush>
+                    <icon:SymbolIcon Symbol="{x:Bind Symbol}" FontSize="12" Foreground="{x:Bind IconBrush}"/>
+                </Border>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
 
     <controls:AuthActionButton x:Name="Trigger" Width="36" Height="32" Padding="0" BorderThickness="0"
                                Background="Transparent" CornerRadius="10" HoverScale="1.10" PressedScale=".92"
                                AnimationTarget="{x:Bind GlyphSurface}" GettingFocus="Surface_GettingFocus">
-        <Grid x:Name="GlyphSurface" Width="26" Height="26" AutomationProperties.AccessibilityView="Raw">
-            <Ellipse Width="18" Height="18" StrokeThickness="1"
-                     Stroke="{ThemeResource TextFillColorSecondaryBrush}"/>
-            <Ellipse Width="6" Height="6" Fill="{ThemeResource AccentFillColorDefaultBrush}"/>
-            <Ellipse Width="4" Height="4" Margin="0,2,3,0" HorizontalAlignment="Right" VerticalAlignment="Top"
-                     Fill="{ThemeResource AccentFillColorDefaultBrush}"/>
-            <Ellipse x:Name="ActiveIndicator" Width="5" Height="5" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                     Fill="{ThemeResource SystemFillColorSuccessBrush}" Visibility="Collapsed"/>
+        <Grid x:Name="GlyphSurface" Width="17" Height="17" AutomationProperties.AccessibilityView="Raw">
+            <ContentControl x:Name="InactiveSignal" Style="{StaticResource NearbySignalStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            <ContentControl x:Name="ActiveSignal" Style="{StaticResource NearbySignalStyle}"
+                            Foreground="{ThemeResource NearbyAccentBrush}" Visibility="Collapsed"/>
         </Grid>
+
         <Button.Flyout>
             <Flyout x:Name="DevicesFlyout" Placement="BottomEdgeAlignedRight"
                     Opening="Flyout_Opening" Opened="Flyout_Opened" Closed="Flyout_Closed">
                 <Flyout.FlyoutPresenterStyle>
                     <Style TargetType="FlyoutPresenter">
                         <Setter Property="Padding" Value="0"/>
+                        <Setter Property="MinWidth" Value="0"/>
                         <Setter Property="CornerRadius" Value="20"/>
+                        <Setter Property="Background" Value="{ThemeResource AcrylicInAppFillColorDefaultBrush}"/>
                     </Style>
                 </Flyout.FlyoutPresenterStyle>
-                <Grid x:Name="Panel" RowSpacing="14" Padding="18" Width="372"
+
+                <Grid x:Name="Panel" Width="356" Height="412" Padding="14" RowSpacing="12"
                       XYFocusKeyboardNavigation="Enabled" KeyDown="Panel_KeyDown" GettingFocus="Surface_GettingFocus">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <Grid ColumnSpacing="12">
+                    <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Spacing="3">
-                            <TextBlock x:Name="TitleText" FontSize="20" FontWeight="SemiBold" TextWrapping="WrapWholeWords"
+                        <Border Width="40" Height="40" CornerRadius="13" Background="{ThemeResource NearbyAccentWashBrush}"
+                                IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+                            <ContentControl Width="20" Height="20" Style="{StaticResource NearbySignalStyle}"
+                                            Foreground="{ThemeResource NearbyAccentBrush}"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock x:Name="TitleText" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"
                                        AutomationProperties.HeadingLevel="Level1"/>
-                            <TextBlock x:Name="StatusText" TextWrapping="WrapWholeWords"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                       AutomationProperties.LiveSetting="Polite"/>
+                            <TextBlock x:Name="SubtitleText" FontSize="11" TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         </StackPanel>
-                        <controls:AuthActionButton x:Name="DiscoveryAction" Grid.Column="1" Padding="11,7" MaxWidth="132"
-                                                   CornerRadius="8" VerticalAlignment="Top" Click="DiscoveryAction_Click"/>
+                        <controls:AuthActionButton x:Name="CloseButton" Grid.Column="2" Width="32" Height="32" Padding="0"
+                                                   BorderThickness="0" CornerRadius="10" UseSystemFocusVisuals="True"
+                                                   Background="{ThemeResource ControlFillColorSecondaryBrush}" Click="Close_Click">
+                            <icon:SymbolIcon Symbol="Dismiss" FontSize="12" AutomationProperties.AccessibilityView="Raw"/>
+                        </controls:AuthActionButton>
                     </Grid>
 
-                    <Grid x:Name="Orbit" Grid.Row="1" Height="118" AutomationProperties.AccessibilityView="Raw">
-                        <Border CornerRadius="14" Background="{ThemeResource ControlFillColorSecondaryBrush}"/>
-                        <Ellipse Width="106" Height="106" Stroke="{ThemeResource ControlStrokeColorSecondaryBrush}" StrokeThickness="1"/>
-                        <Ellipse Width="92" Height="92" Stroke="{ThemeResource ControlStrokeColorDefaultBrush}" StrokeThickness="1" Opacity=".45"/>
-                        <Ellipse Width="78" Height="78" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="1" Opacity=".58"/>
-                        <Ellipse Width="48" Height="48" Fill="{ThemeResource ControlFillColorDefaultBrush}"
-                                 Stroke="{ThemeResource ControlStrokeColorDefaultBrush}" StrokeThickness="1"/>
-                        <FontIcon Glyph="&#xE770;" FontSize="19" Foreground="{ThemeResource AccentFillColorDefaultBrush}"/>
-                        <Grid Width="106" Height="106" RenderTransformOrigin=".5,.5">
-                            <Grid.RenderTransform>
-                                <RotateTransform x:Name="OrbitRotation"/>
-                            </Grid.RenderTransform>
-                            <Ellipse Width="8" Height="8" Margin="0,10,11,0" HorizontalAlignment="Right" VerticalAlignment="Top"
-                                     Fill="{ThemeResource AccentFillColorDefaultBrush}"/>
-                            <Ellipse Width="4" Height="4" Margin="11,0,0,12" HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                                     Fill="{ThemeResource TextFillColorSecondaryBrush}"/>
-                        </Grid>
-                    </Grid>
+                    <ListView x:Name="Devices" Grid.Row="1" SelectionMode="None" Padding="0"
+                              HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollMode="Disabled"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                              ContainerContentChanging="Devices_ContainerContentChanging">
+                        <ListView.Header>
+                            <StackPanel Spacing="12" Margin="2,0,2,6">
+                                <Border Padding="11" CornerRadius="13" Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                                    <StackPanel Spacing="7">
+                                        <TextBlock x:Name="PrivacyText" FontSize="12" TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <Grid ColumnSpacing="8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="VisibilityText" FontSize="13" FontWeight="SemiBold"
+                                                       TextWrapping="Wrap" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
+                                            <ToggleSwitch x:Name="DiscoverySwitch" Grid.Column="1" MinWidth="0" Padding="0"
+                                                          OnContent="" OffContent="" VerticalAlignment="Center"
+                                                          UseSystemFocusVisuals="True" Toggled="DiscoverySwitch_Toggled"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
 
-                    <ListView x:Name="Devices" Grid.Row="2" SelectionMode="None" MaxHeight="262" MinHeight="0"
-                              ScrollViewer.HorizontalScrollBarVisibility="Disabled" ContainerContentChanging="Devices_ContainerContentChanging">
+                                <Grid x:Name="Orbit" Height="153" IsHitTestVisible="False" FlowDirection="LeftToRight"
+                                      AutomationProperties.AccessibilityView="Raw">
+                                    <Border CornerRadius="16" Background="{ThemeResource ControlFillColorSecondaryBrush}"/>
+                                    <Border CornerRadius="16">
+                                        <Border.Background>
+                                            <RadialGradientBrush RadiusX=".48" RadiusY=".78">
+                                                <GradientStop Color="{ThemeResource NearbyOrbitGlowColor}" Offset="0"/>
+                                                <GradientStop Color="Transparent" Offset="1"/>
+                                            </RadialGradientBrush>
+                                        </Border.Background>
+                                    </Border>
+                                    <Viewbox StretchDirection="DownOnly">
+                                        <Grid Width="153" Height="153">
+                                            <Ellipse Width="60" Height="60" StrokeThickness="1"
+                                                     Stroke="{ThemeResource NearbyAccentBrush}" Opacity=".16"/>
+                                            <Ellipse Width="90" Height="90" StrokeThickness="1"
+                                                     Stroke="{ThemeResource NearbyAccentBrush}" Opacity=".19"/>
+                                            <Ellipse Width="120" Height="120" StrokeThickness="1" StrokeDashArray="3,5"
+                                                     Stroke="{ThemeResource NearbyAccentBrush}" Opacity=".29"/>
+                                            <Grid x:Name="Sweep" Width="120" Height="120" Opacity="0" RenderTransformOrigin=".5,.5">
+                                                <Grid.RenderTransform>
+                                                    <RotateTransform x:Name="OrbitRotation"/>
+                                                </Grid.RenderTransform>
+                                                <Path Data="M60,60 L4.4,37.5 A60,60 0 0 1 60,0 Z">
+                                                    <Path.Fill>
+                                                        <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
+                                                            <GradientStop Color="Transparent" Offset=".18"/>
+                                                            <GradientStop Color="{ThemeResource NearbyOrbitGlowColor}" Offset=".96"/>
+                                                        </LinearGradientBrush>
+                                                    </Path.Fill>
+                                                </Path>
+                                            </Grid>
+                                            <Border Width="42" Height="42" CornerRadius="21" BorderThickness="1"
+                                                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                                                    Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}">
+                                                <icon:SymbolIcon Symbol="Desktop" FontSize="21" Foreground="{ThemeResource NearbyAccentBrush}"/>
+                                            </Border>
+                                            <Canvas x:Name="OrbitPeers"/>
+                                        </Grid>
+                                    </Viewbox>
+                                    <Border CornerRadius="16" BorderThickness="1" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"/>
+                                </Grid>
+
+                                <Grid x:Name="EmptyState" Padding="8" ColumnSpacing="9">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="22"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <icon:SymbolIcon x:Name="StatusIcon" FontSize="14" VerticalAlignment="Top" Margin="0,3,0,0"
+                                                     Foreground="{ThemeResource NearbyAccentBrush}" AutomationProperties.AccessibilityView="Raw"/>
+                                    <StackPanel Grid.Column="1" Spacing="3">
+                                        <TextBlock x:Name="StatusText" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap"
+                                                   AutomationProperties.LiveSetting="Polite"/>
+                                        <TextBlock x:Name="StatusDetail" FontSize="11" TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <controls:AuthActionButton x:Name="RetryDiscovery" HorizontalAlignment="Left"
+                                                                   Padding="10,5" Margin="0,4,0,0" MinHeight="28" CornerRadius="8"
+                                                                   Click="RetryDiscovery_Click" UseSystemFocusVisuals="True" Visibility="Collapsed"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock x:Name="DevicesHeading" Margin="2,0" FontSize="13" FontWeight="SemiBold"
+                                           TextWrapping="Wrap" Visibility="Collapsed" AutomationProperties.HeadingLevel="Level2"
+                                           AutomationProperties.LiveSetting="Polite"/>
+                            </StackPanel>
+                        </ListView.Header>
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem">
-                                <Setter Property="Padding" Value="7,5"/>
-                                <Setter Property="Margin" Value="0,0,0,4"/>
+                                <Setter Property="Padding" Value="9,5"/>
+                                <Setter Property="MinHeight" Value="45"/>
+                                <Setter Property="Margin" Value="2,0,2,5"/>
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                <Setter Property="CornerRadius" Value="10"/>
+                                <Setter Property="Background" Value="{ThemeResource ControlFillColorSecondaryBrush}"/>
+                                <Setter Property="CornerRadius" Value="12"/>
                                 <Setter Property="UseSystemFocusVisuals" Value="True"/>
                             </Style>
                         </ListView.ItemContainerStyle>
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="local:NearbyDeviceRow">
-                                <Grid ColumnSpacing="10" AutomationProperties.Name="{x:Bind AccessibleName}">
+                                <Grid ColumnSpacing="9" AutomationProperties.Name="{x:Bind AccessibleName}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="5*"/>
+                                        <ColumnDefinition Width="3*"/>
                                     </Grid.ColumnDefinitions>
-                                    <Grid Width="38" Height="38" AutomationProperties.AccessibilityView="Raw">
-                                        <Ellipse Fill="{ThemeResource ControlFillColorDefaultBrush}"
-                                                 Stroke="{ThemeResource ControlStrokeColorDefaultBrush}" StrokeThickness="1"/>
-                                        <FontIcon Glyph="{x:Bind Glyph}" FontSize="17" Foreground="{ThemeResource AccentFillColorDefaultBrush}"/>
-                                        <Ellipse>
+                                    <Grid Width="33" Height="33" AutomationProperties.AccessibilityView="Raw">
+                                        <Border CornerRadius="10">
+                                            <Border.Background>
+                                                <SolidColorBrush Color="{x:Bind Tint}" Opacity=".15"/>
+                                            </Border.Background>
+                                        </Border>
+                                        <icon:SymbolIcon Symbol="{x:Bind Symbol}" FontSize="15" Foreground="{x:Bind IconBrush}"/>
+                                        <Ellipse Visibility="{x:Bind AvatarVisibility, Mode=OneWay}">
                                             <Ellipse.Fill>
                                                 <ImageBrush ImageSource="{x:Bind Avatar, Mode=OneWay}" Stretch="UniformToFill"/>
                                             </Ellipse.Fill>
                                         </Ellipse>
-                                        <Border Width="16" Height="16" CornerRadius="8" HorizontalAlignment="Right"
-                                                VerticalAlignment="Bottom" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
-                                                Visibility="{x:Bind AvatarBadgeVisibility, Mode=OneWay}">
-                                            <FontIcon Glyph="{x:Bind Glyph}" FontSize="9" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-                                        </Border>
                                     </Grid>
                                     <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                                        <TextBlock Text="{x:Bind Name}" FontFamily="{x:Bind Font}" FontWeight="SemiBold"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{x:Bind Identity}" FontFamily="{x:Bind Font}" TextTrimming="CharacterEllipsis"
-                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Text="{x:Bind PlatformVersion}" FontFamily="{x:Bind Font}" TextTrimming="CharacterEllipsis"
-                                                   FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Text="{x:Bind Name}" FontFamily="{x:Bind Font}" FontSize="13" FontWeight="SemiBold"
+                                                   TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" TextReadingOrder="DetectFromContent"/>
+                                        <TextBlock Text="{x:Bind PlatformVersion}" FontFamily="{x:Bind Font}" FontSize="10"
+                                                   TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                     </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="{x:Bind Identity}" FontFamily="{x:Bind Font}" FontSize="11"
+                                               VerticalAlignment="Center" TextAlignment="End" TextReadingOrder="DetectFromContent"
+                                               MaxLines="2" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
-                    <StackPanel Grid.Row="3" Spacing="6">
-                        <TextBlock x:Name="PrivacyText" FontSize="11" TextWrapping="WrapWholeWords"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                        <TextBlock x:Name="ControllerHint" FontSize="11" TextWrapping="WrapWholeWords"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" Visibility="Collapsed"/>
-                    </StackPanel>
+
+                    <TextBlock x:Name="ControllerHint" Grid.Row="2" FontSize="11" TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" Visibility="Collapsed"/>
                 </Grid>
             </Flyout>
         </Button.Flyout>

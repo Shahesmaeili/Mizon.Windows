@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.UI;
+using Symbol = FluentIcons.Common.Symbol;
 
 namespace Mizon.Windows.UserControls;
 
@@ -69,28 +71,31 @@ public sealed partial class NearbyDevicesButton
     }
 }
 
-public sealed class NearbyDeviceRow(Guid id, string? account, string name, string glyph, string identity, string platformVersion,
-    FontFamily font) : ViewModelBase
+public sealed class NearbyDeviceRow(Guid id, string? account, string name, Symbol symbol, string identity, string platformVersion,
+    SolidColorBrush iconBrush, FontFamily font) : ViewModelBase
 {
     internal Guid Id { get; } = id;
     internal string? Account { get; } = account;
     public string Name { get; } = name;
-    public string Glyph { get; } = glyph;
+    public Symbol Symbol { get; } = symbol;
+    public SolidColorBrush IconBrush { get; } = iconBrush;
+    public Color Tint => IconBrush.Color;
     public string Identity { get; } = identity;
     public string PlatformVersion { get; } = platformVersion;
-    public string AccessibleName => $"{Name}, {Identity}, {PlatformVersion}";
+    public string AccessibleName => Identity.Length == 0 ? $"{Name}, {PlatformVersion}" : $"{Name}, {PlatformVersion}, {Identity}";
     public FontFamily Font { get; } = font;
     public ImageSource? Avatar
     {
         get => field;
         internal set
         {
-            if (SetField(ref field, value)) OnPropertyChanged(nameof(AvatarBadgeVisibility));
+            if (SetField(ref field, value)) OnPropertyChanged(nameof(AvatarVisibility));
         }
     }
 
-    public Visibility AvatarBadgeVisibility => Avatar is null ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility AvatarVisibility => Avatar is null ? Visibility.Collapsed : Visibility.Visible;
 
-    internal bool SamePresentation(NearbyDeviceRow other) => Name == other.Name && Glyph == other.Glyph && Identity == other.Identity
-        && PlatformVersion == other.PlatformVersion && ReferenceEquals(Font, other.Font);
+    internal bool SamePresentation(NearbyDeviceRow other) => Name == other.Name && Symbol == other.Symbol
+        && Identity == other.Identity && Account == other.Account && PlatformVersion == other.PlatformVersion
+        && ReferenceEquals(IconBrush, other.IconBrush) && ReferenceEquals(Font, other.Font);
 }
