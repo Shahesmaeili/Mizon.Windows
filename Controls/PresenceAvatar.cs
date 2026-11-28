@@ -27,6 +27,7 @@ public sealed partial class PresenceAvatar : Grid
         nameof(DisplayName), typeof(string), typeof(PresenceAvatar), new PropertyMetadata(string.Empty, PresentationChanged));
 
     private readonly PersonPicture _picture = new() { IsHitTestVisible = false, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+    private readonly Grid _photoEntranceHost = new() { IsHitTestVisible = false, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
     private readonly Grid _photoHost = new() { IsHitTestVisible = false, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
     private readonly Canvas _badgeHost = new() { IsHitTestVisible = false };
     private readonly Ellipse _badge = new() { IsHitTestVisible = false };
@@ -44,8 +45,9 @@ public sealed partial class PresenceAvatar : Grid
         FlowDirection = FlowDirection.LeftToRight;
         IsHitTestVisible = false;
         _photoHost.Children.Add(_picture);
+        _photoEntranceHost.Children.Add(_photoHost);
         _badgeHost.Children.Add(_badge);
-        Children.Add(_photoHost);
+        Children.Add(_photoEntranceHost);
         Children.Add(_badgeHost);
         AutomationProperties.SetAccessibilityView(_picture, AccessibilityView.Raw);
         AutomationProperties.SetAccessibilityView(_badgeHost, AccessibilityView.Raw);
@@ -59,10 +61,11 @@ public sealed partial class PresenceAvatar : Grid
     public bool IsOnline { get => (bool)GetValue(IsOnlineProperty); set => SetValue(IsOnlineProperty, value); }
     public string StatusText { get => (string?)GetValue(StatusTextProperty) ?? string.Empty; set => SetValue(StatusTextProperty, value); }
     public string DisplayName { get => (string?)GetValue(DisplayNameProperty) ?? string.Empty; set => SetValue(DisplayNameProperty, value); }
-    // Only the photo moves; the exclusion clip and status badge are stationary siblings.
+    // Hover scales the picture inside its clipped host and leaves the badge in place.
     public FrameworkElement AnimationTarget => _picture;
-    // The entrance uses the photo host so it can run independently of the picture's hover scale.
-    internal FrameworkElement ConnectedAnimationTarget => _photoHost;
+    // WinUI owns the entrance visual during the animation. Keep the badge exclusion
+    // clip on its child so the handoff cannot replace or clear it.
+    internal FrameworkElement ConnectedAnimationTarget => _photoEntranceHost;
 
     private static void PresentationChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args) => ((PresenceAvatar)sender).UpdatePresentation();
     private void UpdatePresentation()

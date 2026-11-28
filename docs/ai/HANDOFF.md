@@ -2,6 +2,18 @@
 
 Updated: 2026-11-28. This records the latest source and verification checkpoint. Check Git status, remote changes and active task notes before continuing.
 
+## Header presence cutout during the Welcome transition — 2026-11-28
+
+The Gravity connected animation targets an outer photo host. The transparent
+cutout stays on the inner photo host, so the animation and the badge clip
+use separate composition visuals. Hover still scales the picture inside
+the clip, while the presence badge remains fixed at the physical bottom right.
+The existing presence and navigation MCP scopes are reused.
+
+Verification passed with the Debug x64 WinUI build and the existing presence
+geometry, presence lifecycle, MCP access and controller navigation suites.
+The live rendering of the transition and hover was not inspected.
+
 ## Windows nullability and location access — 2026-11-28
 
 Home no longer requests Windows location access, reads or logs coordinates,
