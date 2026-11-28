@@ -235,12 +235,12 @@ namespace Mizon.Windows.Pages
         private void StartProfileConnectedAnimation()
         {
             _profileConnectedAnimation = ConnectedAnimationService.GetForCurrentView()
-                .GetAnimation("ProfilePictureAnimation");
+                .GetAnimation(WelcomePage.ProfileConnectedAnimationKey);
             if (_profileConnectedAnimation is null) return;
 
             // Keep the destination measured while native caption metrics settle.
             // The prepared animation owns the visual hand-off during this brief gap.
-            ProfilePersonButtton.Opacity = 0;
+            CurrentProfileAvatar.ConnectedAnimationTarget.Opacity = 0;
             _profileEntranceDeadline = DispatcherQueue.CreateTimer();
             _profileEntranceDeadline.Interval = TimeSpan.FromMilliseconds(300);
             _profileEntranceDeadline.IsRepeating = false;
@@ -254,9 +254,10 @@ namespace Mizon.Windows.Pages
 
         private void TryStartProfileConnectedAnimation()
         {
+            var target = CurrentProfileAvatar.ConnectedAnimationTarget;
             if (_profileConnectedAnimation is null
                 || Math.Abs(RightCaptionInset.ActualWidth - RightCaptionInset.Width.Value) > .75
-                || Common.TitleBarRegions.GetPixelBounds(ProfilePersonButtton) is not { } bounds)
+                || Common.TitleBarRegions.GetPixelBounds(target) is not { } bounds)
                 return;
 
             if (_profileEntranceBounds is not { } previous || !previous.Equals(bounds))
@@ -269,7 +270,7 @@ namespace Mizon.Windows.Pages
             var animation = ReleaseProfileEntrance()!;
             try
             {
-                if (!animation.TryStart(ProfilePersonButtton)) animation.Cancel();
+                if (!animation.TryStart(target)) animation.Cancel();
             }
             catch (COMException exception)
             {
@@ -290,7 +291,7 @@ namespace Mizon.Windows.Pages
             var animation = _profileConnectedAnimation;
             _profileConnectedAnimation = null;
             _profileEntranceBounds = null;
-            if (animation is not null) ProfilePersonButtton.Opacity = 1;
+            if (animation is not null) CurrentProfileAvatar.ConnectedAnimationTarget.Opacity = 1;
             return animation;
         }
 

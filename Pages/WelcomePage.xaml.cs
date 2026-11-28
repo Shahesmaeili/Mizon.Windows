@@ -20,13 +20,14 @@ namespace Mizon.Windows.Pages;
 
 public sealed partial class WelcomePage : Page
 {
+    internal const string ProfileConnectedAnimationKey = "WelcomeProfileToHome";
+
     public WelcomePageViewModel ViewModel { get; }
     public LocalizationService Localization => LocalizationService.Current;
     private readonly UISettings _uiSettings = new();
     private CancellationTokenSource? _pageCancellation;
     private WelcomeTaskbarActivity? _activityBadge;
     private bool _initializing;
-    private bool _navigationSubscribed;
     private Window? _hostWindow;
     private AppWindow? _hostAppWindow;
     private AuthHeaderLanguageRegion? _languageRegion;
@@ -52,12 +53,6 @@ public sealed partial class WelcomePage : Page
         Localization.PropertyChanged += Localization_PropertyChanged;
         ViewModel.RefreshLocalization();
         Bindings.Update();
-        if (!_navigationSubscribed)
-        {
-            ViewModel.NavigationService.MainNavigationChanged += NavigationChanged;
-            _navigationSubscribed = true;
-        }
-
         _hostWindow = App.MainMizonWindow;
         _windowActive = true;
         if (_hostWindow is not null)
@@ -105,7 +100,7 @@ public sealed partial class WelcomePage : Page
                 home.ApplyProfile(account, ViewModel.ProfileImagePath, ViewModel.ProfileImage, ViewModel.TaskbarProfileSession);
             }
 
-            ViewModel.NavigationService.MainNavigate(typeof(HomePage));
+            NavigateHome();
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         finally
@@ -130,21 +125,39 @@ public sealed partial class WelcomePage : Page
 
     private void Login_Click(object sender, RoutedEventArgs e) => ViewModel.GoToLogin();
 
-    private void NavigationChanged(object? sender, NavigationChangedEventArgs e)
+    private void NavigateHome()
     {
-        if (e.IsEnteringPage || e.FromPageType != typeof(WelcomePage) || e.ToPageType != typeof(HomePage)) return;
-        if (!_uiSettings.AnimationsEnabled || !ProfileBorder.IsLoaded || ProfileBorder.ActualWidth <= 0) return;
+        var animation = PrepareProfileConnectedAnimation();
+        var navigation = ViewModel.NavigationService;
+        try
+        {
+            // Avoid running the frame's entrance transition over the transferred photo.
+            navigation.MainNavigate(typeof(HomePage),
+                transitionInfoOverride: animation is null ? null : new SuppressNavigationTransitionInfo());
+        }
+        finally
+        {
+            if (navigation.CurrentMainPage is not HomePage) animation?.Cancel();
+        }
+    }
+
+    private ConnectedAnimation? PrepareProfileConnectedAnimation()
+    {
+        if (!_uiSettings.AnimationsEnabled || WelcomeProfileImage is not { Source: not null, Visibility: Visibility.Visible }
+            || !ProfileBorder.IsLoaded || ProfileBorder.ActualWidth <= 0 || ProfileBorder.ActualHeight <= 0)
+            return null;
 
         try
         {
-            // Preserve the original logo/profile connection to the app's title-bar profile button.
             var animation = ConnectedAnimationService.GetForCurrentView()
-                .PrepareToAnimate("ProfilePictureAnimation", ProfileBorder);
-            animation.Configuration = new DirectConnectedAnimationConfiguration();
+                .PrepareToAnimate(ProfileConnectedAnimationKey, ProfileBorder);
+            animation.Configuration = new GravityConnectedAnimationConfiguration();
+            return animation;
         }
         catch (Exception exception)
         {
             AppLog.Error("Welcome profile connected animation could not be prepared.", exception);
+            return null;
         }
     }
 
@@ -275,11 +288,6 @@ public sealed partial class WelcomePage : Page
         _uiSettings.AnimationsEnabledChanged -= MotionPreferenceChanged;
         DetachHostWindow();
         StopAnimations();
-        if (_navigationSubscribed)
-        {
-            ViewModel.NavigationService.MainNavigationChanged -= NavigationChanged;
-            _navigationSubscribed = false;
-        }
     }
 
     private void StopWelcomeRequest()

@@ -61,6 +61,8 @@ public sealed partial class PresenceAvatar : Grid
     public string DisplayName { get => (string?)GetValue(DisplayNameProperty) ?? string.Empty; set => SetValue(DisplayNameProperty, value); }
     // Only the photo moves; the exclusion clip and status badge are stationary siblings.
     public FrameworkElement AnimationTarget => _picture;
+    // The entrance uses the photo host so it can run independently of the picture's hover scale.
+    internal FrameworkElement ConnectedAnimationTarget => _photoHost;
 
     private static void PresentationChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args) => ((PresenceAvatar)sender).UpdatePresentation();
     private void UpdatePresentation()

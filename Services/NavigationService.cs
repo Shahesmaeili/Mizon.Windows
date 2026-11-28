@@ -112,9 +112,10 @@ public class NavigationService
             isEnteringPage: true));
     }
 
-    public void MainNavigate(Type pageType, Dictionary<string, object>? parameter = null)
+    public void MainNavigate(Type pageType, Dictionary<string, object>? parameter = null,
+        NavigationTransitionInfo? transitionInfoOverride = null)
     {
-        _mainFrame?.Navigate(pageType, parameter);
+        _mainFrame?.Navigate(pageType, parameter, transitionInfoOverride);
     }
 
     public void InternalNavigate(Type pageType, Dictionary<string, object>? parameter = null, Image? coverSource = null,

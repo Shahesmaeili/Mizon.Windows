@@ -1,6 +1,21 @@
 # Windows handoff
 
-Updated: 2026-11-25. This records the latest source and verification checkpoint. Check Git status, remote changes and active task notes before continuing.
+Updated: 2026-11-28. This records the latest source and verification checkpoint. Check Git status, remote changes and active task notes before continuing.
+
+## Welcome profile transition — 2026-11-28
+
+Welcome uses WinUI's Gravity connected animation to hand off the loaded
+profile photo to the Home header. Home waits for stable caption and avatar
+bounds, then animates the photo without moving the presence badge. The frame
+does not run its entrance transition over the transferred photo. A missing
+photo or disabled Windows animations skips the handoff. Cancellation or a
+layout timeout restores the photo immediately. The existing account
+navigation, controller focus and MCP contracts remain the entry points.
+
+Verification passed on .NET 11 with the Debug x64 WinUI build and Release
+checks in Mcp.AuthTests, Mcp.AccessTests and Gamepad.NavigationTests. The
+rendered transition, physical controller, Narrator and full WinUI NativeAOT
+publication were not tested.
 
 ## Same-account device presence — 2026-11-25
 
