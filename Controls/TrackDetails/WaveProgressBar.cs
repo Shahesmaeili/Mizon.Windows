@@ -14,13 +14,11 @@ public partial class WaveProgressBar : Control
 
     private const string ElementClip = "PART_Clip";
 
-    private FrameworkElement _waveElement;
-
     private const double TranslateTransformMinY = -20;
 
     private double _translateTransformYRange;
 
-    private TranslateTransform _translateTransform;
+    private TranslateTransform? _translateTransform;
 
     public double Minimum
     {
@@ -87,10 +85,10 @@ public partial class WaveProgressBar : Control
     {
         base.OnApplyTemplate();
 
-        _waveElement = GetTemplateChild(ElementWave) as FrameworkElement;
-        var clipElement = GetTemplateChild(ElementClip) as FrameworkElement;
+        _translateTransform = null;
 
-        if (_waveElement != null && clipElement != null)
+        if (GetTemplateChild(ElementWave) is FrameworkElement waveElement
+            && GetTemplateChild(ElementClip) is FrameworkElement clipElement)
         {
             var clipElementHeight = clipElement.Height;
 
@@ -99,7 +97,7 @@ public partial class WaveProgressBar : Control
                 Y = clipElementHeight
             };
             _translateTransformYRange = clipElementHeight - TranslateTransformMinY;
-            _waveElement.RenderTransform = new TransformGroup
+            waveElement.RenderTransform = new TransformGroup
             {
                 Children = { _translateTransform }
             };

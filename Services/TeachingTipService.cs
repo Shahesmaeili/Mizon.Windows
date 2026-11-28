@@ -4,7 +4,7 @@ namespace Mizon.Windows.Services;
 
 public class TeachingTipService
 {
-    private TeachingTip _teachingTip;
+    private TeachingTip? _teachingTip;
 
     public void Initialize(TeachingTip teachingTip)
     {
@@ -14,9 +14,11 @@ public class TeachingTipService
 
     public void ShowMessage(string title, string subtitle, object? closeButtonContent = null)
     {
-        _teachingTip.Title = title;
-        _teachingTip.Subtitle = subtitle;
-        _teachingTip.IsOpen = true;
-        _teachingTip.CloseButtonContent = closeButtonContent;
+        if (_teachingTip is not { } tip) return;
+
+        tip.Title = title;
+        tip.Subtitle = subtitle;
+        tip.CloseButtonContent = closeButtonContent;
+        tip.IsOpen = true;
     }
 }

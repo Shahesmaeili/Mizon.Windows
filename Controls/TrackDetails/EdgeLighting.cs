@@ -14,15 +14,15 @@ public partial class EdgeLighting : ContentControl
 {
     private const string PART_Border = "PART_Border";
 
-    private Border border;
+    private Border? border;
 
-    private Compositor _compositor;
-    private CompositionRadialGradientBrush brush;
-    private ExpressionAnimation expression;
-    private CompositionPropertySet props;
+    private Compositor? _compositor;
+    private CompositionRadialGradientBrush? brush;
+    private ExpressionAnimation? expression;
+    private CompositionPropertySet? props;
     private ScalarKeyFrameAnimation? progressAnimation;
-    private CompositionSpriteShape bgShape;
-    private CompositionSpriteShape glowShape;
+    private CompositionSpriteShape? bgShape;
+    private CompositionSpriteShape? glowShape;
     private readonly List<CompositionObject> _owned = [];
     private Vector2 _size;
     private CompositionColorGradientStop[]? _gradientStops;
@@ -62,6 +62,7 @@ public partial class EdgeLighting : ContentControl
         props = null;
         expression = null;
         progressAnimation = null;
+        _compositor = null;
         _size = default;
     }
     protected override void OnApplyTemplate()
@@ -113,12 +114,10 @@ public partial class EdgeLighting : ContentControl
         _compositor = ElementCompositionPreview.GetElementVisual(border).Compositor;
 
         // Geometry
-        CompositionRoundedRectangleGeometry roundedRectangleGeometry = null;
-        CompositionEllipseGeometry ellipseGeometry = null;
         if (IsRounded)
         {
             float radius = Math.Min(width, height) / 2f;
-            ellipseGeometry = Own(_compositor.CreateEllipseGeometry());
+            var ellipseGeometry = Own(_compositor.CreateEllipseGeometry());
             ellipseGeometry.Center = new Vector2(width / 2f, height / 2f);
             ellipseGeometry.Radius = new Vector2(radius, radius);
 
@@ -127,7 +126,7 @@ public partial class EdgeLighting : ContentControl
         }
         else
         {
-            roundedRectangleGeometry = Own(_compositor.CreateRoundedRectangleGeometry());
+            var roundedRectangleGeometry = Own(_compositor.CreateRoundedRectangleGeometry());
             roundedRectangleGeometry.Size = new System.Numerics.Vector2(width, height);
             roundedRectangleGeometry.CornerRadius = new System.Numerics.Vector2((float)CornerRadius);
 

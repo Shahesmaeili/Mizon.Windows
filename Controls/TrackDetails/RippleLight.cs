@@ -15,13 +15,11 @@ namespace Mizon.Windows.Controls.TrackDetails;
 
 public partial class RippleLight : XamlLight
 {
-    private static readonly string Id = typeof(RippleLight).FullName;
-
-    private Compositor _compositor;
+    private static readonly string Id = typeof(RippleLight).FullName ?? nameof(RippleLight);
 
     private const float OffsetZRatio = 2.0f;
     private float _rippleOffsetZ;
-    private Vector3KeyFrameAnimation _lightRippleOffsetAnimation;
+    private Vector3KeyFrameAnimation? _lightRippleOffsetAnimation;
 
     public Color Color
     {
@@ -43,12 +41,13 @@ public partial class RippleLight : XamlLight
 
     protected override void OnConnected(UIElement newElement)
     {
-        _compositor = CompositionTarget.GetCompositorForCurrentThread();
+        var compositor = CompositionTarget.GetCompositorForCurrentThread();
 
         var spotLight = CreateSpotLight();
         CompositionLight = spotLight;
 
-        _lightRippleOffsetAnimation = CreateLightRippleOffsetAnimation();
+        _lightRippleOffsetAnimation = compositor.CreateVector3KeyFrameAnimation();
+        _lightRippleOffsetAnimation.Duration = TimeSpan.FromMilliseconds(1200);
 
         SubscribeToPointerEvents();
 
@@ -56,7 +55,7 @@ public partial class RippleLight : XamlLight
 
         SpotLight CreateSpotLight()
         {
-            var light = _compositor.CreateSpotLight();
+            var light = compositor.CreateSpotLight();
 
             light.InnerConeColor = light.OuterConeColor = Color;
             light.InnerConeAngleInDegrees = 90.0f;
@@ -87,7 +86,8 @@ public partial class RippleLight : XamlLight
         CompositionLight?.Dispose();
         CompositionLight = null;
 
-        _lightRippleOffsetAnimation.Dispose();
+        _lightRippleOffsetAnimation?.Dispose();
+        _lightRippleOffsetAnimation = null;
 
         void UnsubscribeFromPointerEvents()
         {
@@ -111,21 +111,13 @@ public partial class RippleLight : XamlLight
     private void OnPointerPressed(object sender, PointerRoutedEventArgs e) =>
         StartLightRippleOffsetAnimation(ToVector2(e.GetCurrentPoint((UIElement)sender).Position));
 
-    private Vector3KeyFrameAnimation CreateLightRippleOffsetAnimation()
-    {
-        var offsetAnimation = _compositor.CreateVector3KeyFrameAnimation();
-        offsetAnimation.Duration = TimeSpan.FromMilliseconds(1200);
-
-        return offsetAnimation;
-    }
-
     private void StartLightRippleOffsetAnimation(Vector2 position)
     {
-        var startingPoisition = new Vector3(position, 0.0f);
-        _lightRippleOffsetAnimation?.InsertKeyFrame(0.0f, startingPoisition);
-        _lightRippleOffsetAnimation?.InsertKeyFrame(1.0f, new Vector3(position.X, position.Y, _rippleOffsetZ));
-
-        CompositionLight?.StartAnimation("Offset", _lightRippleOffsetAnimation);
+        if (_lightRippleOffsetAnimation is not { } animation || CompositionLight is not { } light)
+            return;
+        animation.InsertKeyFrame(0.0f, new Vector3(position, 0.0f));
+        animation.InsertKeyFrame(1.0f, new Vector3(position.X, position.Y, _rippleOffsetZ));
+        light.StartAnimation("Offset", animation);
     }
 
     private float CalculateRippleOffsetZOnDesizedSize(UIElement element)

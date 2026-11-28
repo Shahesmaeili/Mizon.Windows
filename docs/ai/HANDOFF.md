@@ -2,6 +2,26 @@
 
 Updated: 2026-11-28. This records the latest source and verification checkpoint. Check Git status, remote changes and active task notes before continuing.
 
+## Windows nullability and location access — 2026-11-28
+
+Home no longer requests Windows location access, reads or logs coordinates,
+or starts the unused heart-rate scan that was gated on that permission.
+The package no longer declares the location capability. The standalone
+Bluetooth helper remains available.
+
+Nullable reference analysis remains enabled. The fixes model optional XAML
+template parts, media metadata and native resources explicitly. Audio
+initialization publishes the graph after its output nodes are ready. The
+media-cache regression suite references the actual SDK assembly so it
+includes the downloader's current dependencies.
+
+Verified using Visual Studio Debug x64 and Release x64 builds with
+`WarningsAsErrors=nullable`, standalone Palettes and Widgets builds, and
+the automated MCP access, authentication, controller and media-cache
+checks. The source and generated Debug and Release AppX manifests have no location
+capability. Live playback, visual controls, Narrator and controller hardware
+were not exercised.
+
 ## Welcome profile transition — 2026-11-28
 
 Welcome uses WinUI's Gravity connected animation to hand off the loaded

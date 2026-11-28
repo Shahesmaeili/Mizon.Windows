@@ -11,13 +11,9 @@ namespace Mizon.Windows.Controls.TrackDetails;
 public partial class SelectorBarSegmented : SelectorBar
 {
     private const string PART_ItemsView = "PART_ItemsView";
-    private ItemsView _ItemsView { get; set; }
+    private ItemsView? _ItemsView { get; set; }
 
-    private IEnumerable<object> _backupItems;
-
-    private List<int> _selectedIndex;
-
-    public IReadOnlyList<object> SelectedItems { get; internal set; }
+    public IReadOnlyList<object> SelectedItems { get; internal set; } = [];
 
     public int SelectedIndex
     {
@@ -153,44 +149,40 @@ public partial class SelectorBarSegmented : SelectorBar
             _ItemsView.SelectionChanged += _ItemsView_SelectionChanged;
         }
 
+        SelectedItems = _ItemsView?.SelectedItems ?? [];
         UpdateItemsView(Orientation);
         UpdateSelectedIndex(SelectedIndex);
     }
 
     private void _ItemsView_SelectionChanged(ItemsView sender, ItemsViewSelectionChangedEventArgs args)
     {
-        SelectedItems = _ItemsView.SelectedItems;
+        SelectedItems = sender.SelectedItems;
     }
 
     private void UpdateItemsView(Orientation orientation)
     {
-        if (_ItemsView != null)
+        if (_ItemsView is not { } itemsView) return;
+
+        var selectedIndices = new List<int>();
+        var itemsSource = itemsView.ItemsSource;
+        if (FindItemsRepeater(itemsView) is { } itemsRepeater)
         {
-            _selectedIndex = new List<int>();
-            _backupItems = _ItemsView.ItemsSource as IEnumerable<object>;
-
-            var itemsRepeater = FindItemsRepeater(_ItemsView);
-            if (itemsRepeater != null)
+            foreach (SelectorBarItem item in itemsView.SelectedItems)
             {
-                foreach (SelectorBarItem item in _ItemsView.SelectedItems)
-                {
-                    var index = itemsRepeater.GetElementIndex(item);
-                    _selectedIndex.Add(index);
-                }
+                var index = itemsRepeater.GetElementIndex(item);
+                if (index >= 0) selectedIndices.Add(index);
             }
-
-            _ItemsView.ItemsSource = null;
-            _ItemsView.Layout = new StackLayout { Orientation = orientation };
-
-            _ItemsView.ItemsSource = _backupItems;
-
-            foreach (var item in _selectedIndex)
-            {
-                _ItemsView.Select(item);
-            }
-
-            _ItemsView.UpdateLayout();
         }
+
+        itemsView.ItemsSource = null;
+        itemsView.Layout = new StackLayout { Orientation = orientation };
+        itemsView.ItemsSource = itemsSource;
+        foreach (var index in selectedIndices)
+        {
+            itemsView.Select(index);
+        }
+
+        itemsView.UpdateLayout();
     }
     private static ItemsRepeater? FindItemsRepeater(DependencyObject parent)
     {

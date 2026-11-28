@@ -50,28 +50,28 @@ public partial class StoreCarousel : Control
     private const string PART_DescriptionBlock = "PART_DescriptionBlock";
     private const string PART_ActionButtonTextBlock = "PART_ActionButtonTextBlock";
 
-    private DevCompositionShadow primaryBox;
-    private DevCompositionShadow secondaryBox;
-    private DevCompositionShadow tertiaryBox;
+    private DevCompositionShadow? primaryBox;
+    private DevCompositionShadow? secondaryBox;
+    private DevCompositionShadow? tertiaryBox;
 
-    private ImageFrame image;
-    private Grid rootGrid;
-    private Grid sliderGrid;
-    private PipsPager pipsPager;
-    private ArcProgress arc;
-    private Button nextButton;
-    private Button previousButton;
-    private StackPanel actionPanel;
-    private Rectangle fadeRectangle;
+    private ImageFrame? image;
+    private Grid? rootGrid;
+    private Grid? sliderGrid;
+    private PipsPager? pipsPager;
+    private ArcProgress? arc;
+    private Button? nextButton;
+    private Button? previousButton;
+    private StackPanel? actionPanel;
+    private Rectangle? fadeRectangle;
 
-    private Rectangle nextBtnRectangle;
-    private Rectangle previousBtnRectangle;
+    private Rectangle? nextBtnRectangle;
+    private Rectangle? previousBtnRectangle;
 
-    private Button actionButton;
+    private Button? actionButton;
 
-    private TextBlock titleTextBlock;
-    private TextBlock descriptionTextBlock;
-    private TextBlock actionButtonTextBlock;
+    private TextBlock? titleTextBlock;
+    private TextBlock? descriptionTextBlock;
+    private TextBlock? actionButtonTextBlock;
 
     private readonly List<StoreCarouselItem> imageList = new();
     private int _index = 0;
@@ -83,8 +83,8 @@ public partial class StoreCarousel : Control
     private string? layoutState;
     private string? typographyState;
 
-    public event EventHandler<int> SelectedIndexChanged;
-    public event EventHandler<StoreCarouselEventArgs> ItemClick;
+    public event EventHandler<int>? SelectedIndexChanged;
+    public event EventHandler<StoreCarouselEventArgs>? ItemClick;
     public StoreCarousel()
     {
         DefaultStyleKey = typeof(StoreCarousel);
@@ -92,8 +92,19 @@ public partial class StoreCarousel : Control
 
     protected override void OnApplyTemplate()
     {
-        if (image != null)
-            image.SizeChanged -= OnImageSizeChanged;
+        actionButton?.Click -= OnActionButtonClick;
+        sliderGrid?.PointerReleased -= OnSliderPointerReleased;
+        rootGrid?.PointerEntered -= OnSliderPointerEntered;
+        rootGrid?.PointerExited -= OnSliderPointerExited;
+        primaryBox?.PointerReleased -= OnPrimaryBoxPointerReleased;
+        secondaryBox?.PointerReleased -= OnSecondaryBoxPointerReleased;
+        tertiaryBox?.PointerReleased -= OnTertiaryBoxPointerReleased;
+        nextButton?.Click -= OnNextClick;
+        previousButton?.Click -= OnPreviousClick;
+        pipsPager?.SelectedIndexChanged -= OnPipsPagerSelectedIndexChanged;
+        image?.SizeChanged -= OnImageSizeChanged;
+        StopTimer();
+        hoverStateVersion++;
 
         base.OnApplyTemplate();
 
@@ -120,57 +131,33 @@ public partial class StoreCarousel : Control
         descriptionTextBlock = GetTemplateChild(PART_DescriptionBlock) as TextBlock;
         actionButtonTextBlock = GetTemplateChild(PART_ActionButtonTextBlock) as TextBlock;
 
-        actionButton.Click -= OnActionButtonClick;
-        actionButton.Click += OnActionButtonClick;
-
-        sliderGrid.PointerReleased -= OnSliderPointerReleased;
-        sliderGrid.PointerReleased += OnSliderPointerReleased;
-
-        rootGrid.PointerEntered -= OnSliderPointerEntered;
-        rootGrid.PointerEntered += OnSliderPointerEntered;
-
-        rootGrid.PointerExited -= OnSliderPointerExited;
-        rootGrid.PointerExited += OnSliderPointerExited;
+        actionButton?.Click += OnActionButtonClick;
+        sliderGrid?.PointerReleased += OnSliderPointerReleased;
+        rootGrid?.PointerEntered += OnSliderPointerEntered;
+        rootGrid?.PointerExited += OnSliderPointerExited;
 
         KeyDown -= OnKeyDown;
         KeyDown += OnKeyDown;
 
-        primaryBox.PointerReleased -= OnPrimaryBoxPointerReleased;
-        primaryBox.PointerReleased += OnPrimaryBoxPointerReleased;
-
-        secondaryBox.PointerReleased -= OnSecondaryBoxPointerReleased;
-        secondaryBox.PointerReleased += OnSecondaryBoxPointerReleased;
-
-        tertiaryBox.PointerReleased -= OnTertiaryBoxPointerReleased;
-        tertiaryBox.PointerReleased += OnTertiaryBoxPointerReleased;
-
-        nextButton.Click -= OnNextClick;
-        nextButton.Click += OnNextClick;
-
-        previousButton.Click -= OnPreviousClick;
-        previousButton.Click += OnPreviousClick;
-
-        pipsPager.SelectedIndexChanged -= OnPipsPagerSelectedIndexChanged;
-        pipsPager.SelectedIndexChanged += OnPipsPagerSelectedIndexChanged;
+        primaryBox?.PointerReleased += OnPrimaryBoxPointerReleased;
+        secondaryBox?.PointerReleased += OnSecondaryBoxPointerReleased;
+        tertiaryBox?.PointerReleased += OnTertiaryBoxPointerReleased;
+        nextButton?.Click += OnNextClick;
+        previousButton?.Click += OnPreviousClick;
+        pipsPager?.SelectedIndexChanged += OnPipsPagerSelectedIndexChanged;
 
         SizeChanged -= OnSizeChanged;
         SizeChanged += OnSizeChanged;
-        image.SizeChanged -= OnImageSizeChanged;
-        image.SizeChanged += OnImageSizeChanged;
+        image?.SizeChanged += OnImageSizeChanged;
         UpdateLayoutState(ActualWidth);
 
-        if (imageList.Count > 0)
+        pipsPager?.NumberOfPages = imageList.Count;
+        if (image is not null)
         {
-            pipsPager.NumberOfPages = imageList.Count;
-        }
-
-        timer = new PausableDispatcherTimer(ShuffleDuration);
-        timer.Tick -= OnTimerTick;
-        timer.Tick += OnTimerTick;
-
-        if (AutoShuffle)
-        {
-            timer.Start();
+            if ((uint)_index < (uint)imageList.Count) ShowItem(imageList[_index]);
+            timer = new PausableDispatcherTimer(ShuffleDuration);
+            timer.Tick += OnTimerTick;
+            if (AutoShuffle) timer.Start();
         }
 
         ClearLights(sliderGrid);
@@ -190,22 +177,30 @@ public partial class StoreCarousel : Control
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         KeyDown -= OnKeyDown;
+        hoverStateVersion++;
+        StopTimer();
+    }
+
+    private void StopTimer()
+    {
         timer?.Tick -= OnTimerTick;
         timer?.Stop();
         timer = null;
     }
-    private void ClearLights(FrameworkElement element)
+    private void ClearLights(FrameworkElement? element)
     {
         element?.Lights.Clear();
     }
     private void OnActionButtonClick(object sender, RoutedEventArgs e)
     {
+        if ((uint)_index >= (uint)imageList.Count) return;
         var item = imageList[_index];
-        item?.RaiseAction(this, new StoreCarouselEventArgs(item?.Title, item?.Description, item?.ImageSource, false, item?.Parameter));
+        item.RaiseAction(this, new StoreCarouselEventArgs(item.Title, item.Description, item.ImageSource, false, item.Parameter));
     }
 
-    private void AddLights(FrameworkElement element)
+    private void AddLights(FrameworkElement? element)
     {
+        if (element is null) return;
         element.Lights.Add(new AmbLight());
         element.Lights.Add(new RippleLight());
         element.Lights.Add(new HoverLight());
@@ -231,22 +226,22 @@ public partial class StoreCarousel : Control
             if (exitVersion != hoverStateVersion)
                 return;
 
-            arc.ResumeFillAnimation();
+            arc?.ResumeFillAnimation();
             timer?.Resume();
 
-            nextButton.Visibility = Visibility.Collapsed;
-            previousButton.Visibility = Visibility.Collapsed;
+            nextButton?.Visibility = Visibility.Collapsed;
+            previousButton?.Visibility = Visibility.Collapsed;
         });
     }
 
     private void OnSliderPointerEntered(object sender, PointerRoutedEventArgs e)
     {
         hoverStateVersion++;
-        arc.PauseFillAnimation();
+        arc?.PauseFillAnimation();
         timer?.Pause();
 
-        nextButton.Visibility = Visibility.Visible;
-        previousButton.Visibility = Visibility.Visible;
+        nextButton?.Visibility = Visibility.Visible;
+        previousButton?.Visibility = Visibility.Visible;
     }
 
     private bool IsPointerWithinRoot(PointerRoutedEventArgs e)
@@ -262,9 +257,10 @@ public partial class StoreCarousel : Control
     }
     private void OnSliderPointerReleased(object sender, PointerRoutedEventArgs e)
     {
-        var item = imageList[pipsPager.SelectedPageIndex];
-        if (item != null)
-            RaiseItemClick(e, item.Title, item.Description, item.ImageSource, false, item.Parameter);
+        var index = pipsPager?.SelectedPageIndex ?? _index;
+        if ((uint)index >= (uint)imageList.Count) return;
+        var item = imageList[index];
+        RaiseItemClick(e, item.Title, item.Description, item.ImageSource, false, item.Parameter);
     }
     private void RaiseItemClick(PointerRoutedEventArgs e, string? title, string? description, object? imageSource, bool isThumbnail, object? parameter = null)
     {
@@ -285,14 +281,14 @@ public partial class StoreCarousel : Control
         // fixed height between it and the previews. A vertical ScrollViewer offers
         // infinite height here, so the carousel must derive its height from width.
         var width = double.IsFinite(availableSize.Width) ? availableSize.Width : ActualWidth;
-        if (rootGrid != null && width > 0)
+        if (rootGrid is { RowDefinitions.Count: > 2 } layoutRoot && width > 0)
         {
             UpdateLayoutState(width);
             const double gap = 12;
             var isWide = width >= 760;
             var artworkWidth = isWide ? Math.Max(0, width - gap) * 1.6 / 2.6 : width;
-            rootGrid.RowDefinitions[0].Height = new GridLength(artworkWidth * 9 / 16);
-            rootGrid.RowDefinitions[2].Height = new GridLength(isWide
+            layoutRoot.RowDefinitions[0].Height = new GridLength(artworkWidth * 9 / 16);
+            layoutRoot.RowDefinitions[2].Height = new GridLength(isWide
                 ? 0
                 : Math.Max(0, width - gap * 2) / 3 * 9 / 16 + gap);
         }
@@ -344,24 +340,24 @@ public partial class StoreCarousel : Control
         GoToNextPrev(true);
     }
 
-    private void OnTimerTick(object sender, object e)
+    private void OnTimerTick(object? sender, EventArgs e)
     {
         StartTransition();
     }
     private void OnPipsPagerSelectedIndexChanged(PipsPager sender, PipsPagerSelectedIndexChangedEventArgs args)
     {
-        if (pipsPager == null || isUpdatingPager)
+        if (!ReferenceEquals(sender, pipsPager) || isUpdatingPager)
             return;
 
-        SelectedIndexChanged?.Invoke(this, pipsPager.SelectedPageIndex);
+        SelectedIndexChanged?.Invoke(this, sender.SelectedPageIndex);
 
         isCallFromPipsPager = true;
-        GoToIndex(pipsPager.SelectedPageIndex);
+        GoToIndex(sender.SelectedPageIndex);
     }
 
     private void StartTransition()
     {
-        if (imageList.Count < 2)
+        if (imageList.Count < 2 || image is not { } artwork)
             return;
 
         timer?.Stop();
@@ -393,20 +389,13 @@ public partial class StoreCarousel : Control
             isCallFromPipsPager = false;
         }
 
-        image.TransitionMode = effectiveDirection;
+        artwork.TransitionMode = effectiveDirection;
 
         var item = imageList[_index];
-        if (image.Source == null || image.Source.ToString() != item.ImageSource)
+        if (artwork.Source?.ToString() != item.ImageSource)
         {
-            FadeOutInArc(arc);
-
-            image.Source = new Uri(item.ImageSource);
-            titleTextBlock.Text = item.Title;
-            descriptionTextBlock.Text = item.Description;
-            actionButtonTextBlock.Text = item.ActionButtonText;
-            actionButton.Visibility = item.ShowActionButton ? Visibility.Visible : Visibility.Collapsed;
-            UpdateVisuals();
-            RunTextAnimation();
+            if (arc is { } target) FadeOutInArc(target);
+            ShowItem(item);
         }
 
         if (AutoShuffle)
@@ -416,25 +405,25 @@ public partial class StoreCarousel : Control
     }
     private void GoToNextPrev(bool isNext)
     {
-        if (pipsPager.NumberOfPages == 0)
+        if (pipsPager is not { NumberOfPages: > 0 } pager)
             return;
 
-        int newIndex = pipsPager.SelectedPageIndex;
+        int newIndex = pager.SelectedPageIndex;
 
         if (isNext)
         {
             newIndex++;
-            if (newIndex >= pipsPager.NumberOfPages)
+            if (newIndex >= pager.NumberOfPages)
                 newIndex = 0;
         }
         else
         {
             newIndex--;
             if (newIndex < 0)
-                newIndex = pipsPager.NumberOfPages - 1;
+                newIndex = pager.NumberOfPages - 1;
         }
 
-        pipsPager.SelectedPageIndex = newIndex;
+        pager.SelectedPageIndex = newIndex;
     }
 
     public void GoToNext()
@@ -455,50 +444,50 @@ public partial class StoreCarousel : Control
         StartTransition();
     }
 
-    private void OnItemsSourceChanged(IList<StoreCarouselItem> newList)
+    private void OnItemsSourceChanged(IList<StoreCarouselItem>? newList)
     {
         imageList.Clear();
 
         if (newList != null)
             imageList.AddRange(newList);
 
-        if (image != null && imageList.Count > 0)
-        {
-            var item = imageList[0];
+        _index = 0;
+        _previousIndex = -1;
+        if (imageList.Count > 0) ShowItem(imageList[0]);
 
-            image.Source = new Uri(item.ImageSource);
-            titleTextBlock.Text = item.Title;
-            descriptionTextBlock.Text = item.Description;
-            actionButtonTextBlock.Text = item.ActionButtonText;
-            actionButton.Visibility = item.ShowActionButton ? Visibility.Visible : Visibility.Collapsed;
-            UpdateVisuals();
-            RunTextAnimation();
-        }
-
-        if (pipsPager != null)
-            pipsPager.NumberOfPages = imageList.Count;
+        pipsPager?.NumberOfPages = imageList.Count;
     }
 
-    private async void UpdateVisuals()
+    private void ShowItem(StoreCarouselItem item)
     {
-        var item = imageList[pipsPager.SelectedPageIndex];
+        if (image is not { } artwork) return;
+        artwork.Source = Uri.TryCreate(item.ImageSource, UriKind.RelativeOrAbsolute, out var source) ? source : null;
+        titleTextBlock?.Text = item.Title ?? string.Empty;
+        descriptionTextBlock?.Text = item.Description ?? string.Empty;
+        actionButtonTextBlock?.Text = item.ActionButtonText;
+        actionButton?.Visibility = item.ShowActionButton ? Visibility.Visible : Visibility.Collapsed;
+        UpdateVisuals(artwork);
+        RunTextAnimation(artwork);
+    }
 
-        Color color = Colors.Transparent;
-
-        if (image != null)
+    private void UpdateVisuals(ImageFrame artwork)
+    {
+        var color = artwork.ShadowColor;
+        if (fadeRectangle is { } fade)
         {
-            color = image.ShadowColor;
+            fade.Width = artwork.ActualWidth * 0.4;
+            fade.Fill = new SolidColorBrush(color) { Opacity = 0.5 };
+        }
+        if (actionButton is { } button)
+        {
+            button.Background = new SolidColorBrush(DevColorHelper.DarkenColor(color, 0.5f)) { Opacity = 0.9 };
+            button.BorderBrush = CreateLinearGradientBrush(color);
+            button.Resources["ButtonBackgroundPointerOver"] = new SolidColorBrush(color);
+            button.Resources["ButtonForegroundPointerOver"] = new SolidColorBrush(Colors.White);
         }
 
-        fadeRectangle.Width = image.ActualWidth * 0.4;
-        fadeRectangle.Fill = new SolidColorBrush(color) { Opacity = 0.5 };
-        actionButton.Background = new SolidColorBrush(DevColorHelper.DarkenColor(color, 0.5f)) { Opacity = 0.9 };
-        actionButton.BorderBrush = CreateLinearGradientBrush(color);
-        actionButton.Resources["ButtonBackgroundPointerOver"] = new SolidColorBrush(color);
-        actionButton.Resources["ButtonForegroundPointerOver"] = new SolidColorBrush(Colors.White);
-
-        nextBtnRectangle.Fill = new SolidColorBrush(DevColorHelper.DarkenColor(color, 0.5f)) { Opacity = 0.9 };
-        previousBtnRectangle.Fill = new SolidColorBrush(DevColorHelper.DarkenColor(color, 0.5f)) { Opacity = 0.9 };
+        nextBtnRectangle?.Fill = new SolidColorBrush(DevColorHelper.DarkenColor(color, 0.5f)) { Opacity = 0.9 };
+        previousBtnRectangle?.Fill = new SolidColorBrush(DevColorHelper.DarkenColor(color, 0.5f)) { Opacity = 0.9 };
     }
 
     private LinearGradientBrush CreateLinearGradientBrush(Color color)
@@ -523,13 +512,14 @@ public partial class StoreCarousel : Control
         return brush;
     }
 
-    private void RunTextAnimation()
+    private void RunTextAnimation(ImageFrame artwork)
     {
-        if (actionPanel.RenderTransform is not CompositeTransform transform)
+        if (actionPanel is not { } panel) return;
+        if (panel.RenderTransform is not CompositeTransform transform)
         {
             transform = new CompositeTransform();
-            actionPanel.RenderTransform = transform;
-            actionPanel.RenderTransformOrigin = new global::Windows.Foundation.Point(0.5, 0.5);
+            panel.RenderTransform = transform;
+            panel.RenderTransformOrigin = new global::Windows.Foundation.Point(0.5, 0.5);
         }
 
         var storyboard = new Storyboard();
@@ -538,7 +528,7 @@ public partial class StoreCarousel : Control
         {
             From = 100,
             To = 0,
-            Duration = image.TransitionDuration,
+            Duration = artwork.TransitionDuration,
             EnableDependentAnimation = true
         };
         Storyboard.SetTarget(slideAnimation, transform);
@@ -549,10 +539,10 @@ public partial class StoreCarousel : Control
         {
             From = 0,
             To = 1,
-            Duration = image.TransitionDuration,
+            Duration = artwork.TransitionDuration,
             EnableDependentAnimation = true
         };
-        Storyboard.SetTarget(fadeAnimation, actionPanel);
+        Storyboard.SetTarget(fadeAnimation, panel);
         Storyboard.SetTargetProperty(fadeAnimation, "Opacity");
         storyboard.Children.Add(fadeAnimation);
 
@@ -560,7 +550,7 @@ public partial class StoreCarousel : Control
         {
             From = 0.8,
             To = 1,
-            Duration = image.TransitionDuration,
+            Duration = artwork.TransitionDuration,
             EnableDependentAnimation = true
         };
         Storyboard.SetTarget(scaleXAnimation, transform);
@@ -571,7 +561,7 @@ public partial class StoreCarousel : Control
         {
             From = 0.8,
             To = 1,
-            Duration = image.TransitionDuration,
+            Duration = artwork.TransitionDuration,
             EnableDependentAnimation = true
         };
         Storyboard.SetTarget(scaleYAnimation, transform);
@@ -580,7 +570,7 @@ public partial class StoreCarousel : Control
 
         storyboard.Begin();
     }
-    private async void FadeOutInArc(UIElement element)
+    private async void FadeOutInArc(ArcProgress target)
     {
         if (!AutoShuffle) return;
 
@@ -600,13 +590,12 @@ public partial class StoreCarousel : Control
         };
         var storyboardOut = new Storyboard();
         storyboardOut.Children.Add(fadeOut);
-        Storyboard.SetTarget(fadeOut, arc);
+        Storyboard.SetTarget(fadeOut, target);
         Storyboard.SetTargetProperty(fadeOut, "Opacity");
         storyboardOut.Begin();
 
-        await Task.Delay(fadeOutDuration);
-
-        await Task.Delay(postImageDelay);
+        await Task.Delay(fadeOutDuration + postImageDelay);
+        if (!IsLoaded || !ReferenceEquals(target, arc)) return;
 
         var fadeIn = new DoubleAnimation
         {
@@ -616,11 +605,11 @@ public partial class StoreCarousel : Control
         };
         var storyboardIn = new Storyboard();
         storyboardIn.Children.Add(fadeIn);
-        Storyboard.SetTarget(fadeIn, arc);
+        Storyboard.SetTarget(fadeIn, target);
         Storyboard.SetTargetProperty(fadeIn, "Opacity");
         storyboardIn.Begin();
 
         if (arcFillDuration.TotalMilliseconds > 0)
-            arc.StartFillAnimation(arcFillDuration);
+            target.StartFillAnimation(arcFillDuration);
     }
 }

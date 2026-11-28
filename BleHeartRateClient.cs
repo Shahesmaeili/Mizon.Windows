@@ -19,8 +19,8 @@ namespace Mizon.Windows
             Guid.Parse("f1e2d3c4-b5a6-7890-1234-56789abcdef0");
 
 
-        private BluetoothLEDevice _device;
-        private GattCharacteristic _characteristic;
+        private BluetoothLEDevice? _device;
+        private GattCharacteristic? _characteristic;
 
         public event Action<int>? HeartRateReceived;
         public event Action<string>? Log;
@@ -44,24 +44,25 @@ namespace Mizon.Windows
                 return false;
             }
 
-            _device = await BluetoothLEDevice.FromIdAsync(watch.Id);
-            if (_device == null)
+            var device = await BluetoothLEDevice.FromIdAsync(watch.Id);
+            if (device is null)
             {
                 Log?.Invoke("Failed to connect");
                 return false;
             }
 
-            Log?.Invoke($"Connected to {_device.Name}");
+            _device = device;
+            Log?.Invoke($"Connected to {device.Name}");
 
-            return await SetupGattAsync();
+            return await SetupGattAsync(device);
         }
 
         // =============================
         // GATT Setup
         // =============================
-        private async Task<bool> SetupGattAsync()
+        private async Task<bool> SetupGattAsync(BluetoothLEDevice device)
         {
-            var servicesResult = await _device.GetGattServicesAsync();
+            var servicesResult = await device.GetGattServicesAsync();
             if (servicesResult.Status != GattCommunicationStatus.Success)
                 return false;
 
@@ -75,18 +76,19 @@ namespace Mizon.Windows
             }
 
             var charResult = await service.GetCharacteristicsAsync();
-            _characteristic = charResult.Characteristics
+            var characteristic = charResult.Characteristics
                 .FirstOrDefault(c => c.Uuid == CharacteristicUuid);
 
-            if (_characteristic == null)
+            if (characteristic is null)
             {
                 Log?.Invoke("Characteristic not found");
                 return false;
             }
 
-            _characteristic.ValueChanged += OnValueChanged;
+            _characteristic = characteristic;
+            characteristic.ValueChanged += OnValueChanged;
 
-            var status = await _characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
+            var status = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
                 GattClientCharacteristicConfigurationDescriptorValue.Notify);
 
             Log?.Invoke("Subscribed to notifications");
@@ -100,7 +102,7 @@ namespace Mizon.Windows
             GattCharacteristic sender,
             GattValueChangedEventArgs args)
         {
-            var reader = DataReader.FromBuffer(args.CharacteristicValue);
+            using var reader = DataReader.FromBuffer(args.CharacteristicValue);
 
             // Example: single byte BPM
             byte bpm = reader.ReadByte();

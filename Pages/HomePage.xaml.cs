@@ -14,12 +14,10 @@ using Mizon.Windows.ViewModels;
 using Mizon.Windows.ViewModels.Items;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Devices.Geolocation;
 using Windows.Foundation;
 using Windows.Graphics;
 
@@ -136,7 +134,7 @@ namespace Mizon.Windows.Pages
             return false;
         }
 
-        private async void HomePage_Loaded(object sender, RoutedEventArgs e)
+        private void HomePage_Loaded(object sender, RoutedEventArgs e)
         {
             InitializeTitleBarPointerRegions();
             QueueTitleBarRegionUpdate();
@@ -159,57 +157,6 @@ namespace Mizon.Windows.Pages
 
             SynchronizeNavigationSelection();
             _resetMusicLanding = false;
-
-            var access = await RequestLocationAccessAsync();
-
-            if (!access)
-            {
-                Debug.WriteLine("Location access denied.");
-                return;
-            }
-
-            var geolocator = new Geolocator
-            {
-                DesiredAccuracyInMeters = 1,
-                
-            };
-
-            try
-            {
-
-                Geoposition position = await geolocator.GetGeopositionAsync();
-                geolocator.PositionChanged += Geolocator_PositionChanged;
-                
-                double latitude = position.Coordinate.Point.Position.Latitude;
-                double longitude = position.Coordinate.Point.Position.Longitude;
-
-                Debug.WriteLine($"Lat: {latitude}");
-                Debug.WriteLine($"Lon: {longitude}");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error: {ex.Message}");
-            }
-
-
-            var _ble = new BleHeartRateClient();
-            _ble.HeartRateReceived += bpm =>
-            {
-                DispatcherQueue.TryEnqueue(() =>
-                {
-                    
-                });
-            };
-
-            _ble.Log += msg =>
-            {
-                DispatcherQueue.TryEnqueue(() =>
-                {
-                   
-                });
-            };
-
-            await _ble.ConnectAsync();
         }
 
         private void SynchronizeNavigationSelection()
@@ -478,11 +425,6 @@ namespace Mizon.Windows.Pages
             _titleBarRegionFailureLogged = false;
         }
 
-        private void Geolocator_PositionChanged(Geolocator sender, PositionChangedEventArgs args)
-        {
-           
-        }
-
         private void SearchShortcut_Invoked(Microsoft.UI.Xaml.Input.KeyboardAccelerator sender,
             Microsoft.UI.Xaml.Input.KeyboardAcceleratorInvokedEventArgs args)
         {
@@ -536,13 +478,6 @@ namespace Mizon.Windows.Pages
                 ViewModel.NavigationService.InternalNavigate(typeof(MusicsPage), new() { [PageConstants.MUSIC_ID] = music.PublicId });
             else if (item is MainSearchClientItemViewModel client)
                 ViewModel.NavigationService.OpenClientProfile(client.PublicId);
-        }
-
-        private async Task<bool> RequestLocationAccessAsync()
-        {
-            var accessStatus = await Geolocator.RequestAccessAsync();
-
-            return accessStatus == GeolocationAccessStatus.Allowed;
         }
 
         private void NavigationViewMain_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)

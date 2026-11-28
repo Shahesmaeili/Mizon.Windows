@@ -127,7 +127,6 @@
     <rescap:Capability Name="runFullTrust" />
 	  <DeviceCapability Name="bluetooth" />
 	  <DeviceCapability Name="bluetooth.genericAttributeProfile" />
-	  <DeviceCapability Name="location" />
 
   </Capabilities>
 

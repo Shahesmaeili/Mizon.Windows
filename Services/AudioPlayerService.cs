@@ -91,15 +91,15 @@ public interface IAudioPlayerService
 
 public class AudioPlayerService : IAudioPlayerService, IDisposable
 {
-    private AudioGraph _audioGraph;
+    private AudioGraph? _audioGraph;
     private MediaSourceAudioInputNode? _audioInputNode;
     private MediaSourceAudioInputNode? _vocalsInputNode;
     private MediaSourceAudioInputNode? _instrumentalInputNode;
     private AudioSubmixNode? _stemSubmixNode;
-    private AudioFrameOutputNode _frameOutputNode;
-    private AudioDeviceOutputNode _deviceOutputNode;
+    private AudioFrameOutputNode? _frameOutputNode;
+    private AudioDeviceOutputNode? _deviceOutputNode;
     private ReverbEffectDefinition? _reverbEffectDefinition;
-    private SystemMediaTransportControls _smtc;
+    private SystemMediaTransportControls? _smtc;
     private NowPlayingMetadata? _nowPlayingMetadata;
     private string? _currentTrackPath;
     private string? _instrumentalSourcePath;
@@ -278,7 +278,8 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
 
     private void ResumeCore()
     {
-        if (_playState != AudioPlayerState.Paused || (_audioInputNode == null && !IsStemMixing))
+        if (_playState != AudioPlayerState.Paused || (_audioInputNode == null && !IsStemMixing)
+            || _audioGraph is not { } graph)
             return;
 
         _audioInputNode?.Seek(_lastPosition);
@@ -287,13 +288,13 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         _totalSamplesProcessed =
             (long)(_lastPosition.TotalSeconds * _sampleRate);
 
-        _audioGraph.Start();
+        graph.Start();
         StartAudioAnalysis();
         SetPlayState(AudioPlayerState.Playing);
 
         SetDeviceGain(Volume);
 
-        _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
+        _smtc?.PlaybackStatus = MediaPlaybackStatus.Playing;
         UpdateSmtcTimeline(_lastPosition);
 
     }
@@ -311,16 +312,27 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         if (result.Status != AudioGraphCreationStatus.Success)
             throw new Exception("AudioGraph creation failed");
 
-        _audioGraph = result.Graph;
+        var graph = result.Graph;
+        try
+        {
+            var outputResult = await graph.CreateDeviceOutputNodeAsync();
+            if (outputResult.Status != AudioDeviceNodeCreationStatus.Success)
+                throw new InvalidOperationException($"Device output creation failed: {outputResult.Status}.");
 
-        var outputResult = await _audioGraph.CreateDeviceOutputNodeAsync();
-        if (outputResult.Status != AudioDeviceNodeCreationStatus.Success)
-            throw new Exception("Device output creation failed");
-
-        _deviceOutputNode = outputResult.DeviceOutputNode;
-        _deviceOutputNode.OutgoingGain = _volume;
-        _frameOutputNode = _audioGraph.CreateFrameOutputNode();
-        _audioGraph.QuantumStarted += AudioGraph_QuantumStarted;
+            var deviceOutput = outputResult.DeviceOutputNode;
+            deviceOutput.OutgoingGain = _volume;
+            var frameOutput = graph.CreateFrameOutputNode();
+            ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+            graph.QuantumStarted += AudioGraph_QuantumStarted;
+            _deviceOutputNode = deviceOutput;
+            _frameOutputNode = frameOutput;
+            _audioGraph = graph;
+        }
+        catch
+        {
+            graph.Dispose();
+            throw;
+        }
 
         await InitializeSmtcAsync();
         AppLog.Information("Audio graph initialization completed.");
@@ -430,6 +442,8 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
                 await UpdateNowPlayingAsync(_nowPlayingMetadata);
 
             var graph = _audioGraph ?? throw new InvalidOperationException("The audio graph is unavailable.");
+            var deviceOutput = _deviceOutputNode ?? throw new InvalidOperationException("The audio device output is unavailable.");
+            var frameOutput = _frameOutputNode ?? throw new InvalidOperationException("The audio frame output is unavailable.");
             MediaSourceAudioInputNode? primary = null;
             MediaSourceAudioInputNode? instrumental = null;
             AudioSubmixNode? submix = null;
@@ -451,20 +465,20 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
 
                 previousState = _playState;
                 frozen = true;
-                previousPosition = FreezeTimelineForSourceSwitch();
+                previousPosition = FreezeTimelineForSourceSwitch(graph);
                 var duration = instrumental is null ? primary.Duration : GetShortestDuration(primary.Duration, instrumental.Duration);
                 var position = ClampPosition(preservePlayback ? previousPosition : startPosition.GetValueOrDefault(), duration);
 
                 primary.Seek(position);
                 if (instrumental is null)
                 {
-                    primary.AddOutgoingConnection(_deviceOutputNode);
-                    primary.AddOutgoingConnection(_frameOutputNode);
+                    primary.AddOutgoingConnection(deviceOutput);
+                    primary.AddOutgoingConnection(frameOutput);
                 }
                 else
                 {
                     instrumental.Seek(position);
-                    submix = ConnectStemNodes(graph, primary, instrumental, _deviceOutputNode, _frameOutputNode);
+                    submix = ConnectStemNodes(graph, primary, instrumental, deviceOutput, frameOutput);
                     ApplyStemMixGains(primary, instrumental, balance);
                 }
 
@@ -489,10 +503,10 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
 
                 if (!preservePlayback || previousState == AudioPlayerState.Playing)
                 {
-                    _deviceOutputNode.OutgoingGain = Volume;
+                    deviceOutput.OutgoingGain = Volume;
                     graph.Start();
                     StartAudioAnalysis();
-                    _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
+                    _smtc?.PlaybackStatus = MediaPlaybackStatus.Playing;
                     if (previousState != AudioPlayerState.Playing)
                         SetPlayState(AudioPlayerState.Playing);
                     UpdateTaskbarProgress(position, force: true);
@@ -537,7 +551,7 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         }
     }
 
-    private TimeSpan FreezeTimelineForSourceSwitch()
+    private TimeSpan FreezeTimelineForSourceSwitch(AudioGraph graph)
     {
         TimeSpan handoffPosition;
         lock (_timelineSynchronization)
@@ -550,7 +564,7 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         // before Stop waits for the native graph. The switching flag rejects its
         // commit, so the handoff stays frozen after releasing the lock.
         StopAudioAnalysis();
-        _audioGraph.Stop();
+        graph.Stop();
         ResetFrameOutputNode();
         return handoffPosition;
     }
@@ -667,10 +681,10 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         SetPlayState(AudioPlayerState.Paused);
         SetDeviceGain(0);
 
-        _audioGraph.Stop();
+        _audioGraph?.Stop();
         StopAudioAnalysis();
 
-        _smtc.PlaybackStatus = MediaPlaybackStatus.Paused;
+        _smtc?.PlaybackStatus = MediaPlaybackStatus.Paused;
 
         // Update taskbar to paused state
         if (TrackDuration != TimeSpan.Zero)
@@ -732,12 +746,13 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
         SetDeviceGain(0);
 
         StopAudioAnalysis();
-        _audioGraph.Stop();
+        var graph = _audioGraph;
+        graph?.Stop();
         ReleaseInputNodes();
-        _audioGraph.ResetAllNodes();
+        graph?.ResetAllNodes();
         SetTimelineAfterSourceSwitch(TimeSpan.Zero);
 
-        _smtc.PlaybackStatus = MediaPlaybackStatus.Stopped;
+        _smtc?.PlaybackStatus = MediaPlaybackStatus.Stopped;
 
         SetPlayState(AudioPlayerState.Idle);
 
@@ -837,17 +852,17 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
             ReleaseInputNodes();
             previousGraph?.Dispose();
 
-            _audioGraph = newGraph;
             _deviceOutputNode = newOutputNode;
             _frameOutputNode = newFrameNode;
-            _audioGraph.QuantumStarted += AudioGraph_QuantumStarted;
+            _audioGraph = newGraph;
+            newGraph.QuantumStarted += AudioGraph_QuantumStarted;
             _audioInputNode = newInputNode;
             _vocalsInputNode = newVocalsInputNode;
             _instrumentalInputNode = newInstrumentalInputNode;
             _stemSubmixNode = newStemSubmixNode;
             TrackDuration = duration;
-            _sampleRate = (int)_audioGraph.EncodingProperties.SampleRate;
-            _channelCount = (int)_audioGraph.EncodingProperties.ChannelCount;
+            _sampleRate = (int)newGraph.EncodingProperties.SampleRate;
+            _channelCount = (int)newGraph.EncodingProperties.ChannelCount;
             SetTimelineAfterSourceSwitch(resumePosition);
 
             await InitializeSmtcAsync();
@@ -860,15 +875,15 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
 
             if (previousState == AudioPlayerState.Playing)
             {
-                _audioGraph.Start();
+                newGraph.Start();
                 StartAudioAnalysis();
-                _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
+                _smtc?.PlaybackStatus = MediaPlaybackStatus.Playing;
                 SetPlayState(AudioPlayerState.Playing);
                 SetDeviceGain(Volume);
             }
             else
             {
-                _smtc.PlaybackStatus = MediaPlaybackStatus.Paused;
+                _smtc?.PlaybackStatus = MediaPlaybackStatus.Paused;
                 SetPlayState(AudioPlayerState.Paused);
             }
 
@@ -1046,7 +1061,8 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
     {
         if (!_analysisRunning ||
             Volatile.Read(ref _isSourceSwitching) != 0 ||
-            !ReferenceEquals(sender, _audioGraph))
+            !ReferenceEquals(sender, _audioGraph) ||
+            _frameOutputNode is not { } frameOutput)
             return;
 
         try
@@ -1055,7 +1071,7 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
             // be consumed from QuantumStarted, not an arbitrary wall-clock timer, so
             // the timeline follows the actual render quanta after a seek/switch.
             bool reachedEnd;
-            using (var frame = _frameOutputNode.GetFrame())
+            using (var frame = frameOutput.GetFrame())
                 reachedEnd = ProcessAudioFrame(frame);
 
             // Release the frame before a transition can stop or seek the graph.
@@ -1161,16 +1177,21 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
             _lifetimeWindow = null;
         }
         if (_smtc is not null)
+        {
             _smtc.ButtonPressed -= Smtc_ButtonPressed;
+            _smtc = null;
+        }
 
         DisposeAudioGraph();
     }
 
     private void DisposeAudioGraph()
     {
-        var graph = Interlocked.Exchange(ref _audioGraph, null!);
+        var graph = Interlocked.Exchange(ref _audioGraph, null);
         if (graph is null)
             return;
+        _deviceOutputNode = null;
+        _frameOutputNode = null;
 
         // Never stop/dispose the native graph while holding the timeline lock:
         // an in-flight synchronous quantum may still need that lock to finish.
@@ -1224,7 +1245,7 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
                         SetTimelineAfterSourceSwitch(TimeSpan.Zero);
                         UpdateTaskbarProgress(TimeSpan.Zero, force: true);
                         UpdateSmtcTimeline(TimeSpan.Zero);
-                        _smtc.PlaybackStatus = MediaPlaybackStatus.Playing;
+                        _smtc?.PlaybackStatus = MediaPlaybackStatus.Playing;
                         // This runs on the transition worker, never the audio quantum callback.
                         if (Volatile.Read(ref _disposed) == 0)
                             TrackRestarted?.Invoke(this, EventArgs.Empty);
@@ -1232,8 +1253,8 @@ public class AudioPlayerService : IAudioPlayerService, IDisposable
                     }
 
                     StopAudioAnalysis();
-                    _audioGraph.Stop();
-                    _smtc.PlaybackStatus = MediaPlaybackStatus.Stopped;
+                    _audioGraph?.Stop();
+                    _smtc?.PlaybackStatus = MediaPlaybackStatus.Stopped;
                     SetTimelineAfterSourceSwitch(TimeSpan.Zero);
                     SetPlayState(AudioPlayerState.Idle);
                     TrackEnded?.Invoke(this, new TrackEndedEventArgs());

@@ -9,7 +9,7 @@ namespace Mizon.Windows.Controls.TrackDetails;
 
 public partial class AmbLight : XamlLight
 {
-    private static readonly string Id = typeof(AmbLight).FullName;
+    private static readonly string Id = typeof(AmbLight).FullName ?? nameof(AmbLight);
 
     public Color Color
     {
@@ -68,7 +68,8 @@ public partial class AmbLight : XamlLight
     protected override void OnDisconnected(UIElement oldElement)
     {
         RemoveTargetElement(GetId(), oldElement);
-        CompositionLight.Dispose();
+        CompositionLight?.Dispose();
+        CompositionLight = null;
     }
 
     protected override string GetId() => Id;

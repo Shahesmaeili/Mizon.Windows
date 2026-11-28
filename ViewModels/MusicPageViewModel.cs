@@ -2416,9 +2416,10 @@ public partial class MusicPageViewModel : MainViewModel
         var baseApiResponse = await MizonApi.SendRequestAsync(new MediaOperation(new MediaRequest { MediaPublicId = mediaPublicId }), cancellationToken);
 
 
-        if (baseApiResponse.IsSuccess && IsCurrentMusicLoad(musicPublicId, cancellationToken))
+        if (baseApiResponse.IsSuccess && baseApiResponse.Content is { } mediaResponse
+            && IsCurrentMusicLoad(musicPublicId, cancellationToken)
+            && Uri.TryCreate(mediaResponse.StoragePath, UriKind.Absolute, out var uri))
         {
-            var mediaResponse = baseApiResponse.Content;
             var progress = new Progress<MediaDownloader.MediaDownloadProgress>(downloadProgress =>
             {
                 if (!IsCurrentMusicLoad(musicPublicId, cancellationToken)) return;
@@ -2431,7 +2432,7 @@ public partial class MusicPageViewModel : MainViewModel
             CoverDownloadProgress = 0;
             var coverImagePath = await _mediaDownloader.DownloadToCacheAsync(
                 mediaResponse,
-                new Uri(mediaResponse.StoragePath),
+                uri,
                 progress: progress,
                 cancellationToken: cancellationToken);
 

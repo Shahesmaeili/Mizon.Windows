@@ -66,36 +66,36 @@ public partial class StoreCarousel
     public static readonly DependencyProperty PipsPagerVisibilityProperty =
         DependencyProperty.Register(nameof(PipsPagerVisibility), typeof(Visibility), typeof(StoreCarousel), new PropertyMetadata(Visibility.Visible));
 
-    public object PrimaryImageSource
+    public object? PrimaryImageSource
     {
-        get { return (object)GetValue(PrimaryImageSourceProperty); }
+        get { return GetValue(PrimaryImageSourceProperty); }
         set { SetValue(PrimaryImageSourceProperty, value); }
     }
 
     public static readonly DependencyProperty PrimaryImageSourceProperty =
         DependencyProperty.Register(nameof(PrimaryImageSource), typeof(object), typeof(StoreCarousel), new PropertyMetadata(null));
 
-    public object SecondaryImageSource
+    public object? SecondaryImageSource
     {
-        get { return (object)GetValue(SecondaryImageSourceProperty); }
+        get { return GetValue(SecondaryImageSourceProperty); }
         set { SetValue(SecondaryImageSourceProperty, value); }
     }
 
     public static readonly DependencyProperty SecondaryImageSourceProperty =
         DependencyProperty.Register(nameof(SecondaryImageSource), typeof(object), typeof(StoreCarousel), new PropertyMetadata(null));
 
-    public object TertiaryImageSource
+    public object? TertiaryImageSource
     {
-        get { return (object)GetValue(TertiaryImageSourceProperty); }
+        get { return GetValue(TertiaryImageSourceProperty); }
         set { SetValue(TertiaryImageSourceProperty, value); }
     }
 
     public static readonly DependencyProperty TertiaryImageSourceProperty =
         DependencyProperty.Register(nameof(TertiaryImageSource), typeof(object), typeof(StoreCarousel), new PropertyMetadata(null));
 
-    public IList<StoreCarouselItem> ItemsSource
+    public IList<StoreCarouselItem>? ItemsSource
     {
-        get { return (IList<StoreCarouselItem>)GetValue(ItemsSourceProperty); }
+        get { return GetValue(ItemsSourceProperty) as IList<StoreCarouselItem>; }
         set { SetValue(ItemsSourceProperty, value); }
     }
 
@@ -104,6 +104,6 @@ public partial class StoreCarousel
     private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var control = (StoreCarousel)d;
-        control.OnItemsSourceChanged((IList<StoreCarouselItem>)e.NewValue);
+        control.OnItemsSourceChanged(e.NewValue as IList<StoreCarouselItem>);
     }
 }
