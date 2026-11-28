@@ -28,9 +28,10 @@
         <TextBox x:Name="SearchInput" Grid.Row="1" PlaceholderText="جستجوی ایموجی…" TextChanged="Search_TextChanged"
                  CornerRadius="10" FontSize="12" TextAlignment="Right" FlowDirection="LeftToRight"
                  AutomationProperties.Name="جستجوی حال‌وهوا" AutomationProperties.HelpText="نام فارسی یا انگلیسی یا خود ایموجی را وارد کن."/>
-        <Grid Grid.Row="2" MinHeight="48">
+        <Grid Grid.Row="2" MinHeight="48" SizeChanged="EmojiViewport_SizeChanged">
             <controls:MoodEmojiGrid x:Name="EmojiGrid" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Emoji_ItemClick"
                       ContainerContentChanging="Emoji_ContainerContentChanging" Padding="0,2" IsTabStop="True"
+                      HorizontalAlignment="Center" XYFocusKeyboardNavigation="Enabled"
                       ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                       ScrollViewer.HorizontalScrollMode="Disabled" AutomationProperties.Name="انتخاب ایموجی حال‌وهوا">
                 <controls:MoodEmojiGrid.ItemsPanel>

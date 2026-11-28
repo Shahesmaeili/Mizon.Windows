@@ -2,6 +2,21 @@
 
 Updated: 2026-11-28. This records the latest source and verification checkpoint. Check Git status, remote changes and active task notes before continuing.
 
+## Mood picker and taskbar presentation — 2026-11-28
+
+The native mood flyout centers the virtualized emoji grid and keeps the
+profile, mood and nearby controls on the same header baseline. Realized
+items read previews in batches of at most 32 IDs through the typed SDK.
+The picker retains up to four recent encoded batches and 64 decoded
+previews. Closing the flyout cancels its view lifetime. Recycled tiles
+cancel their decode and the last tile waiting for a batch cancels its
+request. The companion reserves its normal mood width and renders the
+cached animated asset when it is ready.
+
+The picker requires the server and SDK batch changes. Debug x64 build and
+headless MCP access and gamepad navigation suites passed. Live opening,
+hover and taskbar rendering were not inspected.
+
 ## Nearby devices panel matches the macOS layout — 2026-11-28
 
 The Windows flyout follows the [Mac panel](https://github.com/Shahesmaeili/Mizon.Apple/blob/b4604d3234cfa26d1999cf0ea0f81688c2b94481/Sources/MizonAppleUI/Pages/NearbyDevicesControl.swift).

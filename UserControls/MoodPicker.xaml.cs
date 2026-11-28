@@ -42,12 +42,14 @@ public sealed partial class MoodPicker : UserControl, IDisposable
 
     internal bool IsSaving => _saving;
 
-    private async void Picker_Loaded(object sender, RoutedEventArgs args)
+    private void Picker_Loaded(object sender, RoutedEventArgs args) => Resume();
+
+    private void Resume()
     {
         if (_disposed || _lifetime is not null || !IsLoaded) return;
         _lifetime = new CancellationTokenSource();
         SynchronizeSelection();
-        await LoadAsync();
+        _ = LoadAsync();
     }
 
     private async Task LoadAsync()
@@ -66,6 +68,7 @@ public sealed partial class MoodPicker : UserControl, IDisposable
             if (!ReferenceEquals(catalog, _catalog))
             {
                 _catalog = catalog;
+                _previews.SetCatalog(catalog);
                 _searchIndex = new SearchEntry[catalog.Count];
                 for (var index = 0; index < catalog.Count; index++)
                 {
@@ -172,7 +175,7 @@ public sealed partial class MoodPicker : UserControl, IDisposable
     {
         if (_disposed) return;
         SetLoading(!_hasCatalog);
-        SynchronizeSelection();
+        Resume();
     }
 
     private void SynchronizeSelection()
@@ -271,6 +274,11 @@ public sealed partial class MoodPicker : UserControl, IDisposable
     private void Picker_Unloaded(object sender, RoutedEventArgs args)
     {
         if (IsLoaded && !_disposed) return;
+        Suspend();
+    }
+
+    internal void Suspend()
+    {
         _searchTimer.Stop();
         _loadRevision++;
         _loading = false;
@@ -278,6 +286,16 @@ public sealed partial class MoodPicker : UserControl, IDisposable
         _lifetime?.Dispose();
         _lifetime = null;
         SetLoading(false);
+    }
+
+    private void EmojiViewport_SizeChanged(object sender, SizeChangedEventArgs args)
+    {
+        const double cellWidth = 48;
+        var width = args.NewSize.Width;
+        if (width <= 0 || !double.IsFinite(width)) return;
+        var columns = Math.Max(1, (int)Math.Floor(width / cellWidth));
+        var gridWidth = Math.Min(width, columns * cellWidth);
+        if (EmojiGrid.Width != gridWidth) EmojiGrid.Width = gridWidth;
     }
 
     public void Dispose()

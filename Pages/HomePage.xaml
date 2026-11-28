@@ -94,9 +94,9 @@ Color="Transparent" />
 
                     <Grid Grid.Column="3" HorizontalAlignment="Right" Margin="8,0,8,0" VerticalAlignment="Center">
                         <Border CornerRadius="8,16,16,8" Background="#0FFFFFFF" IsHitTestVisible="False"/>
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Spacing="2">
 
-                            <usercontrols:NearbyDevicesButton x:Name="NearbyDevicePicker" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                            <usercontrols:NearbyDevicesButton x:Name="NearbyDevicePicker" VerticalAlignment="Center"/>
                             <usercontrols:MoodButton ViewModel="{x:Bind ViewModel}" VerticalAlignment="Center"/>
                             <controls:AuthActionButton x:Name="ProfilePersonButtton" Width="32" Height="32" Padding="0" CornerRadius="16"
                                     Style="{StaticResource ProfileAvatarButtonStyle}" HoverScale="1.06" PressedScale="0.91"

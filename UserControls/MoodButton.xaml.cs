@@ -35,7 +35,7 @@ public sealed partial class MoodButton : UserControl, IDisposable
     private Task<string>? _effectPreparation;
     private Task? _pickerCloseTask;
     private TaskCompletionSource? _pickerCloseCompletion;
-    private bool _disposed, _pickerOpen, _keyboardOpen, _pointerOverPicker, _suppressHover;
+    private bool _disposed, _pickerOpen, _keyboardOpen, _pointerOverPicker;
     private int _animationRevision;
 
     public MoodButton()
@@ -96,7 +96,6 @@ public sealed partial class MoodButton : UserControl, IDisposable
         var mood = ViewModel?.CurrentMood;
         var name = mood is null ? "انتخاب حال‌وهوا" : "حال‌وهوای من: " + (string.IsNullOrWhiteSpace(mood.PersianTitle) ? mood.Title : mood.PersianTitle);
         AutomationProperties.SetName(EmojiButton, name);
-        FallbackEmoji.Text = mood?.Emoji ?? "🤢";
         // Refreshing Me must not rebuild or restart the same composition scene.
         if (mood?.AnimationMediaPublicId == _animationMediaId &&
             ((LoopPlayer.AnimationPath is not null && LoopPlayer.ErrorMessage is null) || _animationRequest is not null))
@@ -141,7 +140,7 @@ public sealed partial class MoodButton : UserControl, IDisposable
     {
         _dismissTimer.Stop();
         _ = WarmEffectAsync();
-        if (!_suppressHover && !_pickerOpen) { _hoverTimer.Stop(); _hoverTimer.Start(); }
+        if (!_pickerOpen) { _hoverTimer.Stop(); _hoverTimer.Start(); }
     }
 
     private void Emoji_PointerExited(object sender, PointerRoutedEventArgs args)
@@ -150,12 +149,14 @@ public sealed partial class MoodButton : UserControl, IDisposable
         // cursor has not left its anchor. Do not immediately close that popup.
         var point = args.GetCurrentPoint(EmojiButton).Position;
         if (point.X >= 0 && point.Y >= 0 && point.X < EmojiButton.ActualWidth && point.Y < EmojiButton.ActualHeight) return;
-        _suppressHover = false;
         _hoverTimer.Stop();
         if (_pickerOpen && !_keyboardOpen) _dismissTimer.Start();
     }
 
-    private void HoverTimer_Tick(DispatcherQueueTimer sender, object args) => OpenPicker(false);
+    private void HoverTimer_Tick(DispatcherQueueTimer sender, object args)
+    {
+        if (EmojiButton.IsPointerOver) OpenPicker(false);
+    }
     private void DismissTimer_Tick(DispatcherQueueTimer sender, object args)
     {
         if (!_pointerOverPicker && !EmojiButton.IsPointerOver && _picker?.IsSaving != true && !_keyboardOpen)
@@ -164,10 +165,22 @@ public sealed partial class MoodButton : UserControl, IDisposable
 
     private void OpenPicker(bool keyboard)
     {
-        if (_disposed || !IsLoaded || XamlRoot is null || ViewModel is null || ViewModel.IsSigningOut || _pickerOpen) return;
+        if (_disposed || !IsLoaded || XamlRoot is null || ViewModel is null || ViewModel.IsSigningOut || PickerFlyout.IsOpen) return;
         _keyboardOpen = keyboard;
         _hoverTimer.Stop();
-        PickerFlyout.ShowAt(EmojiButton, new FlyoutShowOptions { ShowMode = keyboard ? FlyoutShowMode.Standard : FlyoutShowMode.Transient });
+        PickerFlyout.AreOpenCloseAnimationsEnabled = _settings.AnimationsEnabled;
+        try
+        {
+            PickerFlyout.ShowAt(EmojiButton, new FlyoutShowOptions
+            {
+                ShowMode = keyboard ? FlyoutShowMode.Standard : FlyoutShowMode.Transient
+            });
+        }
+        catch (Exception error) when (error is System.Runtime.InteropServices.COMException or InvalidOperationException)
+        {
+            _pickerOpen = _keyboardOpen = _pointerOverPicker = false;
+            AppLog.Error("The mood picker could not open.", error);
+        }
     }
 
     private void Picker_Opening(object sender, object args)
@@ -180,7 +193,7 @@ public sealed partial class MoodButton : UserControl, IDisposable
             _picker.PointerEntered += Picker_PointerEntered;
             _picker.PointerExited += Picker_PointerExited;
             _picker.KeyDown += Picker_KeyDown;
-            PickerHost.Tag = _picker;
+            PickerHost.Content = _picker;
         }
         if (_picker is null) return;
         var size = XamlRoot?.Size ?? new Size(360, 600);
@@ -199,12 +212,20 @@ public sealed partial class MoodButton : UserControl, IDisposable
     {
         _pickerOpen = _pointerOverPicker = _keyboardOpen = false;
         _dismissTimer.Stop();
+        _picker?.Suspend();
         _pickerCloseCompletion?.TrySetResult();
     }
 
     private void Picker_PointerEntered(object sender, PointerRoutedEventArgs args) { _pointerOverPicker = true; _dismissTimer.Stop(); }
     private void Picker_KeyDown(object sender, KeyRoutedEventArgs args)
     {
+        if (args.OriginalKey is VirtualKey.GamepadB or VirtualKey.Escape)
+        {
+            args.Handled = true;
+            PickerFlyout.Hide();
+            EmojiButton.Focus(FocusState.Programmatic);
+            return;
+        }
         // Once the user starts typing/navigating, moving the mouse away must not
         // dismiss the keyboard interaction. Native Escape/light-dismiss still work.
         if (args.Key != VirtualKey.Escape) { _keyboardOpen = true; _dismissTimer.Stop(); }
@@ -218,17 +239,20 @@ public sealed partial class MoodButton : UserControl, IDisposable
         if (!_keyboardOpen) _dismissTimer.Start();
     }
 
-    private void Picker_SelectionSaved(object? sender, EventArgs args) { _suppressHover = true; PickerFlyout.Hide(); }
+    private void Picker_SelectionSaved(object? sender, EventArgs args) => PickerFlyout.Hide();
     private void Emoji_RightTapped(object sender, RightTappedRoutedEventArgs args) { args.Handled = true; OpenPicker(true); }
     private void Emoji_KeyDown(object sender, KeyRoutedEventArgs args)
     {
-        if (args.Key is VirtualKey.Down or VirtualKey.F4) { args.Handled = true; OpenPicker(true); }
+        if (args.OriginalKey is VirtualKey.Down or VirtualKey.F4 or VirtualKey.GamepadDPadDown)
+        {
+            args.Handled = true;
+            OpenPicker(true);
+        }
     }
 
     private async void Emoji_Click(object sender, RoutedEventArgs args)
     {
         _hoverTimer.Stop();
-        _suppressHover = true;
         if (_lifetime is null) return;
         try
         {
@@ -258,8 +282,9 @@ public sealed partial class MoodButton : UserControl, IDisposable
         try
         {
             PickerFlyout.Hide();
-            await completion.Task.WaitAsync(token);
+            await completion.Task.WaitAsync(TimeSpan.FromMilliseconds(350), token);
         }
+        catch (TimeoutException) when (!PickerFlyout.IsOpen) { }
         finally
         {
             PickerFlyout.AreOpenCloseAnimationsEnabled = animate;
@@ -426,6 +451,7 @@ public sealed partial class MoodButton : UserControl, IDisposable
         _animationRequest?.Cancel();
         InvalidateEffect();
         PickerFlyout.Hide();
+        _pickerOpen = _pointerOverPicker = _keyboardOpen = false;
         if (_picker is not null)
         {
             _picker.SelectionSaved -= Picker_SelectionSaved;
@@ -434,7 +460,7 @@ public sealed partial class MoodButton : UserControl, IDisposable
             _picker.KeyDown -= Picker_KeyDown;
             _picker.Dispose();
             _picker = null;
-            PickerHost.Tag = null;
+            PickerHost.Content = null;
         }
         if (_observed is not null) _observed.PropertyChanged -= Model_PropertyChanged;
         _observed = null;
@@ -446,7 +472,6 @@ public sealed partial class MoodButton : UserControl, IDisposable
         _disposed = true;
         Button_Unloaded(this, new RoutedEventArgs());
         LoopPlayer.Dispose();
-        PickerHost.Dispose();
         _hoverTimer.Tick -= HoverTimer_Tick;
         _dismissTimer.Tick -= DismissTimer_Tick;
         Loaded -= Button_Loaded;

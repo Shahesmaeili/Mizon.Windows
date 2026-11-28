@@ -1,13 +1,17 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Mizon.API.Client.Operations.Clients;
 using Mizon.API.Client.Responses.Clients;
-using Mizon.Windows.Common;
 using Mizon.Windows.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Storage.Streams;
 
 namespace Mizon.Windows.Controls;
 
@@ -110,10 +114,13 @@ public sealed partial class MoodEmojiPreview : Grid
 internal sealed class MoodEmojiPreviewCache : IDisposable
 {
     private const int Capacity = 64;
+    private const int RecentBatchCapacity = 4;
     private readonly Dictionary<Guid, ImageSource> _images = [];
     private readonly Queue<Guid> _order = new(Capacity);
     private readonly SemaphoreSlim _decodes = new(2, 2);
     private readonly CancellationTokenSource _lifetime = new();
+    private readonly Dictionary<Guid, PreviewBatch> _batches = [];
+    private readonly Queue<PreviewBatch> _recentBatches = new(RecentBatchCapacity);
     private int _active;
     private bool _disposed, _released;
 
@@ -121,6 +128,20 @@ internal sealed class MoodEmojiPreviewCache : IDisposable
     {
         image = null;
         return !_disposed && _images.TryGetValue(mediaId, out image);
+    }
+
+    internal void SetCatalog(IReadOnlyList<ClientMoodItemResponse> catalog)
+    {
+        _batches.Clear();
+        _recentBatches.Clear();
+        var previewIds = catalog.Select(static item => item.PreviewMediaPublicId)
+            .Where(static id => id.HasValue && id.Value != Guid.Empty)
+            .Select(static id => id.GetValueOrDefault()).Distinct();
+        foreach (var ids in previewIds.Chunk(ClientMoodPreviewsOperation.MaximumImages))
+        {
+            var batch = new PreviewBatch(ids);
+            foreach (var id in ids) _batches.Add(id, batch);
+        }
     }
 
     internal async ValueTask<ImageSource> GetAsync(Guid mediaId, HomePageViewModel model, CancellationToken cancellationToken)
@@ -137,9 +158,20 @@ internal sealed class MoodEmojiPreviewCache : IDisposable
             await _decodes.WaitAsync(token);
             entered = true;
             if (TryGet(mediaId, out cached)) return cached!;
-            var path = await model.GetMoodMediaPathAsync(mediaId, token);
+            if (!_batches.TryGetValue(mediaId, out var batch))
+                throw new IOException("Mood preview is missing from the catalog.");
+            var response = await ReadBatchAsync(batch, model, token);
             token.ThrowIfCancellationRequested();
-            var image = await ImageSourceFactory.LoadFileAsync(path, 96, token);
+            if (!response.Images.TryGetValue(mediaId, out var bytes))
+                throw new IOException("Mood preview did not arrive.");
+            using var stream = new InMemoryRandomAccessStream();
+            using var writer = new DataWriter(stream);
+            writer.WriteBytes(bytes);
+            await writer.StoreAsync().AsTask(token);
+            writer.DetachStream();
+            stream.Seek(0);
+            var image = new BitmapImage { DecodePixelWidth = 64 };
+            await image.SetSourceAsync(stream).AsTask(token);
             token.ThrowIfCancellationRequested();
             if (TryGet(mediaId, out cached)) return cached!;
             if (_images.Count == Capacity) _images.Remove(_order.Dequeue());
@@ -155,6 +187,43 @@ internal sealed class MoodEmojiPreviewCache : IDisposable
         }
     }
 
+    private async Task<ClientMoodPreviewsResponse> ReadBatchAsync(
+        PreviewBatch batch, HomePageViewModel model, CancellationToken token)
+    {
+        if (batch.Result is { } cached) return cached;
+        if (batch.RetryAfter > Environment.TickCount64)
+            throw new IOException("Mood preview batch is temporarily unavailable.");
+
+        var load = batch.Pending ??= new PreviewLoad(model, batch.Ids, _lifetime.Token);
+        load.Readers++;
+        try
+        {
+            var response = await load.Response.WaitAsync(token);
+            token.ThrowIfCancellationRequested();
+            if (batch.Result is null && _batches.TryGetValue(batch.Ids[0], out var current)
+                && ReferenceEquals(current, batch))
+            {
+                if (_recentBatches.Count == RecentBatchCapacity) _recentBatches.Dequeue().Result = null;
+                _recentBatches.Enqueue(batch);
+                batch.Result = response;
+            }
+            return response;
+        }
+        catch (IOException) when (!token.IsCancellationRequested)
+        {
+            batch.RetryAfter = Environment.TickCount64 + 5000;
+            throw;
+        }
+        finally
+        {
+            if (--load.Readers == 0)
+            {
+                batch.Pending = null;
+                _ = load.ReleaseAsync();
+            }
+        }
+    }
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -162,6 +231,8 @@ internal sealed class MoodEmojiPreviewCache : IDisposable
         _lifetime.Cancel();
         _images.Clear();
         _order.Clear();
+        _batches.Clear();
+        _recentBatches.Clear();
         ReleaseWhenIdle();
     }
 
@@ -171,5 +242,37 @@ internal sealed class MoodEmojiPreviewCache : IDisposable
         _released = true;
         _decodes.Dispose();
         _lifetime.Dispose();
+    }
+
+    private sealed class PreviewBatch(Guid[] ids)
+    {
+        internal Guid[] Ids { get; } = ids;
+        internal ClientMoodPreviewsResponse? Result { get; set; }
+        internal PreviewLoad? Pending { get; set; }
+        internal long RetryAfter { get; set; }
+    }
+
+    private sealed class PreviewLoad
+    {
+        private readonly CancellationTokenSource _request;
+        internal Task<ClientMoodPreviewsResponse> Response { get; }
+        internal int Readers { get; set; }
+
+        internal PreviewLoad(HomePageViewModel model, Guid[] ids, CancellationToken lifetime)
+        {
+            _request = CancellationTokenSource.CreateLinkedTokenSource(lifetime);
+            Response = model.GetMoodPreviewsAsync(ids, _request.Token);
+        }
+
+        internal async Task ReleaseAsync()
+        {
+            using (_request)
+            {
+                if (!Response.IsCompleted) _request.Cancel();
+                try { await Response.ConfigureAwait(false); }
+                catch (OperationCanceledException) { }
+                catch (IOException) { }
+            }
+        }
     }
 }

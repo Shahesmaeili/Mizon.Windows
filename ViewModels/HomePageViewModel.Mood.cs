@@ -31,7 +31,7 @@ public partial class HomePageViewModel
     public async Task<IReadOnlyList<ClientMoodItemResponse>> GetMoodTypesAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (_moodCatalog is not null && DateTimeOffset.UtcNow - _moodCatalogLoaded < TimeSpan.FromMinutes(10))
+        if (_moodCatalog is not null && DateTimeOffset.UtcNow - _moodCatalogLoaded < TimeSpan.FromMinutes(30))
             return _moodCatalog;
         if (_moodCatalogTask is null || _moodCatalogTask.IsCompleted) _moodCatalogTask = FetchMoodTypesAsync();
         return await _moodCatalogTask.WaitAsync(cancellationToken);
@@ -70,6 +70,15 @@ public partial class HomePageViewModel
     {
         cancellationToken.ThrowIfCancellationRequested();
         return (_moodMediaCache ??= new MoodMediaCache(MizonApi, _mediaDownloader)).GetAsync(mediaPublicId, cancellationToken);
+    }
+
+    internal async Task<ClientMoodPreviewsResponse> GetMoodPreviewsAsync(Guid[] ids, CancellationToken cancellationToken)
+    {
+        var response = await MizonApi.SendRequestAsync(
+            new ClientMoodPreviewsOperation(new() { MediaPublicIds = ids }), cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        return response.IsSuccess && response.Content is { } content
+            ? content : throw new IOException("Mood previews are unavailable.");
     }
 
     public async Task<bool> SaveMoodAsync(ClientMoodItemResponse? mood, CancellationToken cancellationToken)

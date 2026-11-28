@@ -21,7 +21,6 @@ internal sealed partial class TaskbarMoodButton : Grid, IDisposable
     private const double EffectTaskbarGap = 8;
     private readonly AuthActionButton _button;
     private readonly AnimatedMoodEmoji _loop;
-    private readonly TextBlock _fallback;
     private readonly UISettings _settings = new();
     private readonly CancellationTokenSource _lifetime = new();
     private Guid? _moodId;
@@ -41,22 +40,13 @@ internal sealed partial class TaskbarMoodButton : Grid, IDisposable
         Width = Height = 36;
         HorizontalAlignment = HorizontalAlignment.Center;
         VerticalAlignment = VerticalAlignment.Center;
-        _fallback = new TextBlock
-        {
-            FontFamily = new FontFamily("Segoe UI Emoji"), FontSize = 26,
-            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
-            IsHitTestVisible = false
-        };
-        AutomationProperties.SetAccessibilityView(_fallback, AccessibilityView.Raw);
         _loop = new AnimatedMoodEmoji
         {
             Width = 28, Height = 28, HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
         };
-        _loop.Ready += LoopReady;
         _loop.Failed += LoopFailed;
         var content = new Grid { IsHitTestVisible = false };
-        content.Children.Add(_fallback);
         content.Children.Add(_loop);
         _button = new AuthActionButton
         {
@@ -96,7 +86,6 @@ internal sealed partial class TaskbarMoodButton : Grid, IDisposable
         _effectPath = effectPath;
         HasMood = hasMood;
         Visibility = hasMood ? Visibility.Visible : Visibility.Collapsed;
-        _fallback.Text = hasMood ? snapshot.MoodEmoji! : string.Empty;
         var title = string.IsNullOrWhiteSpace(snapshot.MoodTitle) ? snapshot.MoodEmoji : snapshot.MoodTitle;
         AutomationProperties.SetName(_button, hasMood ? $"حال‌وهوای من: {title}" : "حال‌وهوا");
         AutomationProperties.SetHelpText(_button, "برای پخش انیمیشن حال‌وهوا کلیک کنید یا کلید فاصله را بزنید.");
@@ -105,7 +94,6 @@ internal sealed partial class TaskbarMoodButton : Grid, IDisposable
         if (identityChanged || !PathEquals(_animationPath, animationPath))
         {
             _animationPath = animationPath;
-            _fallback.Visibility = Visibility.Visible;
             _loop.AnimationPath = animationPath;
         }
         _loop.IsPlaybackEnabled = hasMood && _hostVisible;
@@ -165,15 +153,9 @@ internal sealed partial class TaskbarMoodButton : Grid, IDisposable
         _settings.AnimationsEnabledChanged -= MotionPreferenceChanged;
     }
 
-    private void LoopReady(object? sender, EventArgs args)
-    {
-        if (!_disposed) _fallback.Visibility = Visibility.Collapsed;
-    }
-
     private void LoopFailed(object? sender, string message)
     {
         if (_disposed) return;
-        _fallback.Visibility = Visibility.Visible;
         TaskbarPaths.Log("Mood loop: " + message);
     }
 
@@ -403,7 +385,6 @@ internal sealed partial class TaskbarMoodButton : Grid, IDisposable
         _button.Click -= ButtonClicked;
         Loaded -= ButtonLoaded;
         Unloaded -= ButtonUnloaded;
-        _loop.Ready -= LoopReady;
         _loop.Failed -= LoopFailed;
         _loop.Dispose();
         _button.Content = null;
